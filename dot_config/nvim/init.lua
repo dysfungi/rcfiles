@@ -87,8 +87,8 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
-vim.g.mapleader = ' '
-vim.g.maplocalleader = ' '
+vim.g.mapleader = ','
+vim.g.maplocalleader = '\\'
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -159,9 +159,78 @@ vim.opt.scrolloff = 10
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
+-- [Keymap Functions]
+local function recursive_map(mode, keys, exec, opts)
+  opts = opts or {}
+  opts.remap = true
+  opts.noremap = not opts.remap
+  vim.keymap.set(mode, keys, exec, opts)
+end
+
+local function remap(keys, exec, opts)
+  recursive_map({ 'n', 'v', 'o' }, keys, exec, opts)
+end
+
+local function nremap(keys, exec, opts)
+  recursive_map('n', keys, exec, opts)
+end
+
+local function nonrecursive_map(mode, keys, exec, opts)
+  opts = opts or {}
+  opts.noremap = true
+  opts.remap = not opts.noremap
+  vim.keymap.set(mode, keys, exec, opts)
+end
+
+local function noremap(keys, exec, opts)
+  nonrecursive_map({ 'n', 'v', 'o' }, keys, exec, opts)
+end
+
+local function nnoremap(keys, exec, opts)
+  nonrecursive_map('n', keys, exec, opts)
+end
+
+local function inoremap(keys, exec, opts)
+  nonrecursive_map('i', keys, exec, opts)
+end
+
+-- [Keymap Colemak]
+-- https://github.com/theniceboy/nvim?tab=readme-ov-file#keyboard-shortcuts
+-- Modes
+noremap('l', 'i') -- insert
+noremap('L', 'I') -- insert
+-- Escape
+inoremap(',m', '<Esc>') -- Escap
+inoremap(';q', '<Esc>') -- Escap
+-- Cursor Navigation
+-- TODO(dmf): map window navigation?
+noremap('e', 'k') -- up
+noremap('i', 'l') -- right
+noremap('n', 'j') -- down
+noremap('h', 'h') -- left
+-- Word Motions
+noremap('j', 'e') -- forward to the end of word
+-- Search
+noremap('k', 'n') -- find next
+noremap('K', 'N') -- find previous
+-- Create undo points
+inoremap('.', '.<C-g>u')
+inoremap('!', '!<C-g>u')
+inoremap('?', '?<C-g>u')
+inoremap(':', ':<C-g>u')
+inoremap(';', ';<C-g>u')
+inoremap('{', '{<C-g>u')
+inoremap('}', '}<C-g>u')
+-- Misc
+noremap('N', 'K') -- runs keywordprg (program)
+
+-- Fast writes
+nremap('<leader>w', ':w!<CR>')
+
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
+nremap('<leader>h', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -175,10 +244,10 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use n to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use i to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use u to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use e to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -851,7 +920,9 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      --
+      -- [dmf] likes: wildcharm, zaibatsu, lunaperche, elflord, vim
+      vim.cmd.colorscheme 'wildcharm'
 
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
@@ -870,14 +941,36 @@ require('lazy').setup({
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      require('mini.ai').setup {
+        n_lines = 500,
+        -- TODO(dmf): Resolve keybinding conflicts
+        --   https://github.com/echasnovski/mini.ai?tab=readme-ov-file#default-config
+        mappings = {
+          inside = '',
+        },
+      }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
       -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      require('mini.surround').setup {
+        mappings = {
+          -- TODO(dmf): Resolve keybinding conflicts
+          --   https://github.com/echasnovski/mini.surround?tab=readme-ov-file#d
+          add = '',
+          delete = '',
+          find = '',
+          find_left = '',
+          highlight = '',
+          replace = '',
+          update_n_lines = '',
+          --
+          suffix_last = '',
+          suffix_next = '',
+        },
+      }
 
       -- Simple and easy statusline.
       --  You could remove this setup call if you don't like it,
