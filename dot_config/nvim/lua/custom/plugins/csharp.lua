@@ -1,0 +1,3 @@
+return {
+  'iabdelkareem/csharp.nvim',
+}
