@@ -258,6 +258,32 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+-- [[ Commands ]]
+-- See https://neovim.io/doc/user/lua-guide.html#lua-guide-commands-create
+-- See https://github.com/nanotee/nvim-lua-guide#defining-user-commands
+
+local function create_command(name, command, opts)
+  opts = opts or {}
+  vim.api.nvim_create_user_command(name, command, opts)
+end
+
+-- Relative directory commands
+
+local function complete_relative_file(argLead, cmdLine, cursorPos)
+  local current_file_dir = vim.fn.expand '%:p:h'
+  return vim.split(vim.fn.globpath(current_file_dir, argLead .. '*'), '\n')
+end
+
+local relative_edit_opts = {
+  complete = complete_relative_file,
+  nargs = '?',
+}
+
+create_command('Redit', 'edit <args>', relative_edit_opts)
+create_command('Rsplit', 'split <args>', relative_edit_opts)
+create_command('Rvsplit', 'vsplit <args>', relative_edit_opts)
+create_command('Rtabedit', 'tabedit <args>', relative_edit_opts)
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
