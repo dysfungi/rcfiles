@@ -270,9 +270,9 @@ end
 -- Relative directory commands
 
 local function complete_relative_file(argLead, cmdLine, cursorPos)
-	-- builtin.find_files({ cwd = vim.fn.stdpath("config") })
-	local current_file_dir = vim.fn.expand("%:p:h")
-	return vim.split(vim.fn.globpath(current_file_dir, argLead .. "*"), "\n")
+	local current_file_dir = vim.fn.expand("%:p:~:.:h")
+	local prefix = string.gsub(argLead, current_file_dir .. "/", 1)
+	return vim.split(vim.fn.globpath(current_file_dir, prefix .. "*"), "\n")
 end
 
 local relative_edit_opts = {
