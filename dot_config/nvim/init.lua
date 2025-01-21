@@ -473,18 +473,32 @@ require("lazy").setup({
 			-- Telescope picker. This is really useful to discover what Telescope can
 			-- do as well as how to actually do it!
 
+			local telescope_config = require("telescope.config")
+
+			-- https://github.com/nvim-telescope/telescope.nvim/wiki/Configuration-Recipes#file-and-text-search-in-hidden-files-and-directories
+			local vimgrep_arguments = {
+				unpack(telescope_config.values.vimgrep_arguments),
+			}
+			table.insert(vimgrep_arguments, "--hidden")
+			table.insert(vimgrep_arguments, "--glob")
+			table.insert(vimgrep_arguments, "!**/.git/*")
+
 			-- [[ Configure Telescope ]]
 			-- See `:help telescope` and `:help telescope.setup()`
 			require("telescope").setup({
 				-- You can put your default mappings / updates / etc. in here
 				--  All the info you're looking for is in `:help telescope.setup()`
-				--
-				-- defaults = {
-				--   mappings = {
-				--     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-				--   },
-				-- },
-				-- pickers = {}
+				defaults = {
+					vimgrep_arguments = vimgrep_arguments,
+					mappings = {
+						-- i = { ['<c-enter>'] = 'to_fuzzy_refine' },
+					},
+				},
+				pickers = {
+					find_files = {
+						find_command = { "rg", "--files", "--hidden", "--glob", "!**/.git/*" },
+					},
+				},
 				extensions = {
 					["ui-select"] = {
 						require("telescope.themes").get_dropdown(),
