@@ -194,6 +194,10 @@ local function inoremap(keys, exec, opts)
   nonrecursive_map('i', keys, exec, opts)
 end
 
+local function tnoremap(keys, exec, opts)
+  nonrecursive_map('t', keys, exec, opts)
+end
+
 -- [Keymap Colemak]
 -- https://github.com/theniceboy/nvim?tab=readme-ov-file#keyboard-shortcuts
 -- Modes
@@ -223,6 +227,11 @@ inoremap('{', '{<C-g>u')
 inoremap('}', '}<C-g>u')
 -- Misc
 noremap('N', 'K') -- runs keywordprg (program)
+
+-- [Helpers]
+-- Escape modes
+tnoremap('<Esc>', '<C-\\><C-n>')
+tnoremap('<leader>m', '<C-\\><C-n>')
 
 -- Fast writes
 nremap('<leader>w', ':w!<CR>')
