@@ -14,9 +14,6 @@ vim.g['fsharp#workspace_mode_peek_deep_level'] = 5
 --   }),
 --   pattern = { '*.fs', '*.fsi', '*.fsx' },
 -- })
-noremap('<leader><F1>', '<CMD>call fsharp:showTooltip()<CR>', {
-  buffer = true,
-})
 
 -- https://github.com/ionide/Ionide-vim/issues/85#issuecomment-2154200542
 return {
