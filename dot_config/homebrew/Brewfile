@@ -22,10 +22,14 @@ brew "cowsay"
 brew "fortune"
 brew "sl"
 
+# Automation
+brew "watchman"
+
 # CLI
 brew "bash"
 brew "cdargs"
 brew "cheat"
+brew "chezmoi"
 brew "colordiff"
 brew "coreutils"
 brew "direnv"
