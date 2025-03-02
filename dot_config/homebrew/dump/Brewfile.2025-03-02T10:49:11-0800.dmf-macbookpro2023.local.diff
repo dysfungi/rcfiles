@@ -1,0 +1,54 @@
+[1;37m--- /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T10:49:11-0800.dmf-macbookpro2023.local.preinstall	2025-03-02 11:52:25[0;0m
+[1;37m+++ /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T10:49:11-0800.dmf-macbookpro2023.local.postinstall	2025-03-02 11:52:25[0;0m
+[0;36m@@ -1,2 +1,0 @@[0;0m
+[0;31m-tap "ariga/tap"[0;0m
+[0;31m-tap "clintmod/formulas"[0;0m
+[0;36m@@ -5 +2,0 @@[0;0m
+[0;31m-tap "homebrew/services"[0;0m
+[0;36m@@ -8 +4,0 @@[0;0m
+[0;31m-brew "ack"[0;0m
+[0;36m@@ -24,2 +19,0 @@[0;0m
+[0;31m-brew "chezmoi"[0;0m
+[0;31m-brew "cloudflare-cli4"[0;0m
+[0;36m@@ -31 +24,0 @@[0;0m
+[0;31m-brew "dbmate"[0;0m
+[0;36m@@ -35,2 +27,0 @@[0;0m
+[0;31m-brew "harfbuzz"[0;0m
+[0;31m-brew "flyway"[0;0m
+[0;36m@@ -40,0 +32 @@[0;0m
+[0;32m+brew "harfbuzz"[0;0m
+[0;36m@@ -50 +41,0 @@[0;0m
+[0;31m-brew "helm"[0;0m
+[0;36m@@ -58,2 +48,0 @@[0;0m
+[0;31m-brew "k9s"[0;0m
+[0;31m-brew "kubernetes-cli"[0;0m
+[0;36m@@ -68 +56,0 @@[0;0m
+[0;31m-brew "nushell"[0;0m
+[0;36m@@ -72 +59,0 @@[0;0m
+[0;31m-brew "poetry"[0;0m
+[0;36m@@ -79 +65,0 @@[0;0m
+[0;31m-brew "python@3.11"[0;0m
+[0;36m@@ -82 +67,0 @@[0;0m
+[0;31m-brew "rust"[0;0m
+[0;36m@@ -86 +70,0 @@[0;0m
+[0;31m-brew "s3cmd"[0;0m
+[0;36m@@ -94,3 +77,0 @@[0;0m
+[0;31m-brew "telnet"[0;0m
+[0;31m-brew "terraform"[0;0m
+[0;31m-brew "terraform-docs"[0;0m
+[0;36m@@ -98,3 +78,0 @@[0;0m
+[0;31m-brew "tflint"[0;0m
+[0;31m-brew "tfupdate"[0;0m
+[0;31m-brew "the_silver_searcher"[0;0m
+[0;36m@@ -102,3 +79,0 @@[0;0m
+[0;31m-brew "todo-txt"[0;0m
+[0;31m-brew "tree"[0;0m
+[0;31m-brew "trivy"[0;0m
+[0;36m@@ -106 +80,0 @@[0;0m
+[0;31m-brew "vim"[0;0m
+[0;36m@@ -130 +103,0 @@[0;0m
+[0;31m-cask "font-d2coding"[0;0m
+[0;36m@@ -137 +109,0 @@[0;0m
+[0;31m-cask "freecad"[0;0m
+[0;36m@@ -141 +112,0 @@[0;0m
+[0;31m-cask "kitty"[0;0m
