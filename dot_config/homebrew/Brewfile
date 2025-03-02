@@ -136,6 +136,7 @@ brew "jq"
 
 # Javascript/Typescript
 brew "typescript"
+brew "typescript-language-server"
 brew "yarn"
 
 # Python
