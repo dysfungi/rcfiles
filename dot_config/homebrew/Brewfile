@@ -1,8 +1,11 @@
 cask_args appdir: "/Applications"
 
 # Taps
+tap "ariga/tap"
+tap "clintmod/formulas"
 tap "homebrew/bundle"
 tap "homebrew/cask-fonts"
+tap "homebrew/services"
 tap "jesseduffield/lazydocker"
 tap "jesseduffield/lazygit"
 
@@ -16,6 +19,7 @@ cask "font-profontx"
 cask "font-source-code-pro"
 
 # Fun
+brew "ack"
 brew "archey4"
 brew "ascii"
 brew "cowsay"
@@ -42,6 +46,7 @@ brew "moreutils"
 brew "neovim"
 #brew "parallel" # already part of moreutils
 brew "rust-parallel"
+brew "the_silver_searcher" # ag
 brew "tmux"
 brew "xz"
 brew "yadm"
@@ -59,6 +64,7 @@ brew "jp2a"
 brew "libcaca"
 brew "spaceman-diff"
 brew "spark"
+brew "tree"
 
 # Search
 brew "fzf"
@@ -74,6 +80,7 @@ brew "nmap"
 brew "openssh"
 brew "rsync"
 brew "squid"
+brew "telnet"
 brew "wget"
 brew "youtube-dl"
 
@@ -91,10 +98,20 @@ brew "source-highlight"
 brew "watchexec"
 
 # Infrastructure
+brew "cloudflare-cli4"
+brew "helm"
+brew "kubernetes-cli"
+brew "k9s"
 brew "opentofu"
+brew "s3cmd"
+brew "terraform"
+brew "terraform-docs"
+brew "tflint"
+brew "tfupdate"
 brew "vultr"
 
 # Databases
+brew "dbmate"
 brew "sqlite"
 brew "sqlite3"
 
@@ -129,6 +146,7 @@ brew "isort"
 brew "openssl"
 brew "mypy"
 brew "pandoc"
+brew "poetry"
 brew "pylint"
 brew "python3"
 brew "pyright"
@@ -136,6 +154,7 @@ brew "readline"
 brew "zlib"
 
 # Rust
+brew "rust"
 brew "rustup"
 brew "rust-analyzer"
 
@@ -158,6 +177,7 @@ cask "discord"
 cask "docker"
 cask "dropbox"
 cask "firefox" # brew install --cask --adopt firefox
+cask "freecad"
 #cask "geektool"
 cask "git-credential-manager"
 #cask "gimp"
