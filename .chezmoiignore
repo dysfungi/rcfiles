@@ -1,1 +1,5 @@
+# Homebrew
 Brewfile
+
+# Neovim
+lazy-lock.json
