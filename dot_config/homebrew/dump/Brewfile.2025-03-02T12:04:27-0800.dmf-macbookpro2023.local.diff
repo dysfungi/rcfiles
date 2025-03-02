@@ -1,0 +1,35 @@
+--- /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T12:04:27-0800.dmf-macbookpro2023.local.preinstall	2025-03-02 12:04:29
++++ /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T12:04:27-0800.dmf-macbookpro2023.local.postinstall	2025-03-02 12:09:14
+@@ -1,0 +1,2 @@
++tap "ariga/tap"
++tap "clintmod/formulas"
+@@ -2,0 +5 @@
++tap "homebrew/services"
+@@ -4,0 +8 @@
++brew "ack"
+@@ -20,0 +25 @@
++brew "cloudflare-cli4"
+@@ -25,0 +31 @@
++brew "dbmate"
+@@ -42,0 +49 @@
++brew "helm"
+@@ -49,0 +57,2 @@
++brew "k9s"
++brew "kubernetes-cli"
+@@ -60,0 +70 @@
++brew "poetry"
+@@ -68,0 +79 @@
++brew "rust"
+@@ -71,0 +83 @@
++brew "s3cmd"
+@@ -78,0 +91,3 @@
++brew "telnet"
++brew "terraform"
++brew "terraform-docs"
+@@ -79,0 +95,2 @@
++brew "tflint"
++brew "tfupdate"
+@@ -80,0 +98 @@
++brew "tree"
+@@ -111,0 +130 @@
++cask "freecad", args: { appdir: "/Applications" }
