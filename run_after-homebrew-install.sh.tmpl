@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+# https://brew.sh/
+
+if [ "$(uname -s)" != Darwin ]; then
+  echo "Not Darwin; Skipping Homebrew install..."
+  exit 0
+fi
+
+if ! command -v brew > /dev/null; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+dumpSuffix="$(date +%Y-%m-%dT%H:%M:%S%z).$(hostname)"
+configDir="$HOME/.config/homebrew"
+brewFile="${configDir}/Brewfile"
+dumpDir="${configDir}/dump"
+preInstallDumpFile="${dumpDir}/Brewfile.preinstall.${dumpSuffix}"
+postInstallDumpFile="${dumpDir}/Brewfile.postinstall.${dumpSuffix}"
+dumpDiffFile="${dumpDir}/Brewfile.diff.${dumpSuffix}"
+export HOMEBREW_BUNDLE_FILE="${brewFile}"
+
+mkdir -p "${dumpDir}"
+
+# Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
+brew bundle dump --file="${preInstallDumpFile}"
+brew bundle install --cleanup --upgrade --file="${brewFile}"
+brew bundle dump --file="${postInstallDumpFile}"
+diff --unified 0 "${preInstallDumpFile}" "${postInstallDumpFile}" > "${dumpDiffFile}"
