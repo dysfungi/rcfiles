@@ -22,9 +22,9 @@ export HOMEBREW_BUNDLE_FILE="${brewFile}"
 mkdir -p "${dumpDir}"
 
 # Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
-brew bundle dump --file="${preInstallDumpFile}"
+brew bundle dump --describe --file="${preInstallDumpFile}"
 brew bundle install --cleanup --upgrade --file="${brewFile}"
-brew bundle dump --file="${postInstallDumpFile}"
+brew bundle dump --describe --file="${postInstallDumpFile}"
 diff -U0 "${preInstallDumpFile}" "${postInstallDumpFile}" > "${dumpDiffFile}"
 if [ -n "$(cat "${dumpDiffFile}")" ]; then
   echo "Brew bundle diff before and after install, upgrade, and cleanup:"
