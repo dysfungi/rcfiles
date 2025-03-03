@@ -1,0 +1,316 @@
+tap "ariga/tap"
+tap "clintmod/formulas"
+tap "homebrew/bundle"
+tap "homebrew/cask-fonts"
+tap "homebrew/services"
+tap "jesseduffield/lazydocker"
+tap "jesseduffield/lazygit"
+# Search tool like grep, but optimized for programmers
+brew "ack"
+# General-purpose data compression with high compression ratio
+brew "xz"
+# New file format for still image compression
+brew "jpeg-xl"
+# Codec library for encoding and decoding AV1 video streams
+brew "aom"
+# Cryptography and SSL/TLS Toolkit
+brew "openssl@3"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.12"
+# Simple system information tool written in Python
+brew "archey4"
+# List ASCII idiomatic names and octal/decimal code-point forms
+brew "ascii"
+# Extendable version manager with support for Ruby, Node.js, Erlang & more
+brew "asdf"
+# Automatically formats Python code to conform to the PEP 8 style guide
+brew "autopep8"
+# Official Amazon AWS command-line interface
+brew "awscli"
+# Bourne-Again SHell, a UNIX command interpreter
+brew "bash"
+# Collection of portable C++ source libraries
+brew "boost"
+# GNU internationalization (i18n) and localization (l10n) library
+brew "gettext"
+# Directory bookmarking system - Enhanced cd utilities
+brew "cdargs"
+# Create and view interactive cheat sheets for *nix commands
+brew "cheat"
+# Manage your dotfiles across multiple diverse machines, securely
+brew "chezmoi"
+# CLI for Cloudflare API v4
+brew "cloudflare-cli4"
+# Color-highlighted diff(1) output
+brew "colordiff"
+# GNU File, Shell, and Text utilities
+brew "coreutils"
+# Apjanke's fork of the classic cowsay project
+brew "cowsay"
+# SQL-like query language for csv
+brew "csvq"
+# Get a file from an HTTP, HTTPS or FTP server
+brew "curl"
+# Lightweight, framework-agnostic database migration tool
+brew "dbmate"
+# Dictionary Server Protocol (RFC2229) client
+brew "dict"
+# Load/unload environment variables based on $PWD
+brew "direnv"
+# Lint your Python code for style and logical errors
+brew "flake8"
+# Infamous electronic fortune-cookie generator
+brew "fortune"
+# Command-line fuzzy finder written in Go
+brew "fzf"
+# GNU awk utility
+brew "gawk"
+# Google Drive CLI Client
+brew "gdrive"
+# OpenType text shaping engine
+brew "harfbuzz"
+# Library for JPEG-2000 image manipulation
+brew "openjpeg"
+# Interpreter for PostScript and PDF
+brew "ghostscript"
+# Distributed revision control system
+brew "git"
+# GNU implementation of the famous stream editor
+brew "gnu-sed"
+# GNU version of the tar archiving utility
+brew "gnu-tar"
+# GNU Pretty Good Privacy (PGP) package
+brew "gnupg"
+# Open source programming language to build simple/reliable/efficient software
+brew "go"
+# Fast linters runner for Go
+brew "golangci-lint"
+# Language server for the Go language
+brew "gopls"
+# Curl for GraphQL with autocomplete, subscriptions and GraphiQL
+brew "graphqurl"
+# Colorize logfiles and command output
+brew "grc"
+# GNU grep, egrep and fgrep
+brew "grep"
+# Development kit for the Java programming language
+brew "openjdk"
+# Java-based scripting language
+brew "groovy"
+# Kubernetes package manager
+brew "helm"
+# User-friendly cURL replacement (command-line HTTP client)
+brew "httpie"
+# ISO/IEC 23008-12:2017 HEIF file format decoder and encoder
+brew "libheif"
+# Tools and libraries to manipulate images in many formats
+brew "imagemagick"
+# Image loading and rendering library
+brew "imlib2"
+# Sort Python imports automatically
+brew "isort"
+# Convert JPG images to ASCII
+brew "jp2a"
+# Lightweight and flexible command-line JSON processor
+brew "jq"
+# Handy way to save and run project-specific commands
+brew "just"
+# Kubernetes CLI To Manage Your Clusters In Style!
+brew "k9s"
+# Easy way to access the system keyring service from python
+brew "keyring"
+# Kubernetes command-line interface
+brew "kubernetes-cli"
+# Convert pixel information into colored ASCII art
+brew "libcaca"
+# XML security library
+brew "libxmlsec1"
+# Utility for directing compilation
+brew "make"
+# CLI for Node.js style checker and lint tool for Markdown files
+brew "markdownlint-cli"
+# Like jq but for Markdown
+brew "mdq"
+# Collection of tools that nobody wrote when UNIX was young
+brew "moreutils"
+# Experimental optional static type checker for Python
+brew "mypy"
+# Ambitious Vim-fork focused on extensibility and agility
+brew "neovim"
+# Port scanning utility for large networks
+brew "nmap"
+# OCaml package manager
+brew "opam"
+# OpenBSD freely-licensed SSH connectivity tools
+brew "openssh"
+# Drop-in replacement for Terraform. Infrastructure as Code Tool
+brew "opentofu"
+# Swiss-army knife of markup format conversion
+brew "pandoc"
+# Package compiler and linker metadata toolkit
+brew "pkgconf"
+# Python package management tool
+brew "poetry"
+# Framework for managing multi-language pre-commit hooks
+brew "pre-commit"
+# Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
+brew "prettier"
+# Prettier daemon
+brew "prettierd"
+# Linter for prose
+brew "proselint"
+# Cloud native development platform
+brew "pulumi"
+# It's not just a linter that annoys you!
+brew "pylint"
+# Static type checker for Python
+brew "pyright"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.11"
+# Search tool like grep and The Silver Searcher
+brew "ripgrep"
+# Utility that provides fast incremental file transfer
+brew "rsync"
+# Safe, concurrent, practical language
+brew "rust"
+# Experimental Rust compiler front-end for IDEs
+brew "rust-analyzer"
+# Run commands in parallel with Rust's Tokio framework
+brew "rust-parallel"
+# Rust toolchain installer
+brew "rustup"
+# Command-line tool for the Amazon S3 service
+brew "s3cmd"
+# Static analysis and lint tool, for (ba)sh scripts
+brew "shellcheck"
+# Autoformat shell script source code
+brew "shfmt"
+# Prints a steam locomotive if you type sl instead of ls
+brew "sl"
+# Editor of encrypted files
+brew "sops"
+# Source-code syntax highlighter
+brew "source-highlight"
+# Diff images from the command-line
+brew "spaceman-diff"
+# Sparklines for the shell
+brew "spark"
+# Advanced proxy caching server for HTTP, HTTPS, FTP, and Gopher
+brew "squid"
+# Tool Command Language
+brew "tcl-tk"
+# User interface to the TELNET protocol
+brew "telnet"
+# Tool to build, change, and version infrastructure
+brew "terraform"
+# Tool to generate documentation from Terraform modules
+brew "terraform-docs"
+# Terraform Language Server
+brew "terraform-ls"
+# Linter for Terraform files
+brew "tflint"
+# Update version constraints in your Terraform configurations
+brew "tfupdate"
+# Code-search similar to ack
+brew "the_silver_searcher"
+# Terminal multiplexer
+brew "tmux"
+# Display directories as trees (with optional color/HTML output)
+brew "tree"
+# Vulnerability scanner for container images, file systems, and Git repos
+brew "trivy"
+# Language for application scale JavaScript development
+brew "typescript"
+# Language Server Protocol implementation for TypeScript wrapping tsserver
+brew "typescript-language-server"
+# Secures, stores, and tightly controls access to secrets
+brew "vault"
+# Vim script Language Lint
+brew "vint"
+# Tool for creating isolated virtual python environments
+brew "virtualenv"
+# Command-line tool for Vultr services
+brew "vultr"
+# Execute commands when watched files change
+brew "watchexec"
+# Watch files and take action when they change
+brew "watchman"
+# Internet file retriever
+brew "wget"
+# Python-powered, cross-platform, Unix-gazing shell language and command prompt
+brew "xonsh"
+# Yet Another Dotfiles Manager
+brew "yadm"
+# JavaScript package manager
+brew "yarn"
+# Download YouTube videos from the command-line
+brew "youtube-dl"
+# Process YAML, JSON, XML, CSV and properties documents from the CLI
+brew "yq"
+# General-purpose lossless data-compression library
+brew "zlib"
+# UNIX shell (command interpreter)
+brew "zsh"
+# Additional completion definitions for zsh
+brew "zsh-completions"
+# A simple terminal UI for docker, written in Go
+brew "jesseduffield/lazydocker/lazydocker"
+# A simple terminal UI for git commands, written in Go
+brew "jesseduffield/lazygit/lazygit"
+# Password manager that keeps all passwords secure behind one password
+cask "1password", args: { appdir: "/Applications" }
+# Command-line interface for 1Password
+cask "1password-cli", args: { appdir: "/Applications" }
+# Automatic tiling window manager similar to xmonad
+cask "amethyst", args: { appdir: "/Applications" }
+# Voice and text chat software
+cask "discord", args: { appdir: "/Applications" }
+# App to build and share containerised applications and microservices
+cask "docker", args: { appdir: "/Applications" }
+# Developer platform
+cask "dotnet-sdk", args: { appdir: "/Applications" }
+# Client for the Dropbox cloud storage service
+cask "dropbox", args: { appdir: "/Applications" }
+# Web browser
+cask "firefox"
+cask "font-andale-mono"
+cask "font-fira-code", args: { appdir: "/Applications" }
+cask "font-inconsolata"
+cask "font-iosevka"
+cask "font-monofur-nerd-font", args: { appdir: "/Applications" }
+cask "font-profontx", args: { appdir: "/Applications" }
+cask "font-source-code-pro", args: { appdir: "/Applications" }
+# 3D parametric modeller
+cask "freecad", args: { appdir: "/Applications" }
+# Cross-platform Git credential storage for multiple hosting providers
+cask "git-credential-manager", args: { appdir: "/Applications" }
+# Web browser
+cask "google-chrome"
+# Desktop automation application
+cask "hammerspoon", args: { appdir: "/Applications" }
+# Keyboard customiser
+cask "karabiner-elements", args: { appdir: "/Applications" }
+# Password manager application and digital vault
+cask "keeper-password-manager"
+# Multiplayer online battle arena game
+cask "league-of-legends"
+# Privacy-first, open-source platform for knowledge sharing and management
+cask "logseq", args: { appdir: "/Applications" }
+# App to write, plan, collaborate, and get organised
+cask "notion", args: { appdir: "/Applications" }
+# Calendar for professionals and teams
+cask "notion-calendar"
+# Simple application that will prevent iTunes or Apple Music from launching
+cask "notunes", args: { appdir: "/Applications" }
+# Visual client for Helix Core
+cask "p4v"
+# VPN client focusing on security
+cask "protonvpn", args: { appdir: "/Applications" }
+# Instant messaging application focusing on security
+cask "signal", args: { appdir: "/Applications" }
+# To-do list
+cask "todoist", args: { appdir: "/Applications" }
+# Multimedia player
+cask "vlc", args: { appdir: "/Applications" }
+# GPU-accelerated cross-platform terminal emulator and multiplexer
+cask "wezterm", args: { appdir: "/Applications" }

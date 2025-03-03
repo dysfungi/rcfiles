@@ -1,0 +1,113 @@
+--- /Users/dfrank/.config/homebrew/dump/Brewfile.2025-03-03T08:23:05-0800.MLF67N6G9N5W.preinstall	2025-03-03 08:23:28
++++ /Users/dfrank/.config/homebrew/dump/Brewfile.2025-03-03T08:23:05-0800.MLF67N6G9N5W.postinstall	2025-03-03 08:44:16
+@@ -1,0 +1,2 @@
++tap "ariga/tap"
++tap "clintmod/formulas"
+@@ -5,0 +8,2 @@
++# Search tool like grep, but optimized for programmers
++brew "ack"
+@@ -37,0 +42,2 @@
++# CLI for Cloudflare API v4
++brew "cloudflare-cli4"
+@@ -47,0 +54,2 @@
++# Lightweight, framework-agnostic database migration tool
++brew "dbmate"
+@@ -79,0 +88,2 @@
++# Language server for the Go language
++brew "gopls"
+@@ -89,0 +100,2 @@
++# Kubernetes package manager
++brew "helm"
+@@ -109,0 +122,2 @@
++# Kubernetes command-line interface
++brew "kubernetes-cli"
+@@ -117,0 +132,2 @@
++# Like jq but for Markdown
++brew "mdq"
+@@ -125,0 +142,2 @@
++# OCaml package manager
++brew "opam"
+@@ -147,0 +166,2 @@
++# Static type checker for Python
++brew "pyright"
+@@ -153,0 +174,4 @@
++# Safe, concurrent, practical language
++brew "rust"
++# Experimental Rust compiler front-end for IDEs
++brew "rust-analyzer"
+@@ -161,0 +186,2 @@
++# Autoformat shell script source code
++brew "shfmt"
+@@ -179,0 +206,2 @@
++# Tool to generate documentation from Terraform modules
++brew "terraform-docs"
+@@ -181,0 +210,4 @@
++# Linter for Terraform files
++brew "tflint"
++# Update version constraints in your Terraform configurations
++brew "tfupdate"
+@@ -185,0 +218,2 @@
++# Display directories as trees (with optional color/HTML output)
++brew "tree"
+@@ -187,0 +222,4 @@
++# Language for application scale JavaScript development
++brew "typescript"
++# Language Server Protocol implementation for TypeScript wrapping tsserver
++brew "typescript-language-server"
+@@ -197,0 +236,2 @@
++# Watch files and take action when they change
++brew "watchman"
+@@ -242,0 +283,2 @@
++# 3D parametric modeller
++cask "freecad", args: { appdir: "/Applications" }
+@@ -245,2 +286,0 @@
+-# Web browser
+-cask "google-chrome"
+@@ -249,2 +288,0 @@
+-# Open-source video transcoder
+-cask "handbrake"
+@@ -253,4 +290,0 @@
+-# Password manager application and digital vault
+-cask "keeper-password-manager"
+-# Multiplayer online battle arena game
+-cask "league-of-legends"
+@@ -259,2 +293,2 @@
+-# Open source implementation of Microsoft's .NET Framework
+-cask "mono-mdk-for-visual-studio"
++# App to write, plan, collaborate, and get organised
++cask "notion", args: { appdir: "/Applications" }
+@@ -265,6 +298,0 @@
+-# Visual client for Helix Core
+-cask "p4v"
+-# Version control
+-cask "perforce"
+-# Collaboration platform for API development
+-cask "postman"
+@@ -277,2 +304,0 @@
+-# Open-source code editor
+-cask "visual-studio-code"
+@@ -283,24 +308,0 @@
+-# Video communication and virtual meeting platform
+-cask "zoom"
+-vscode "dbaeumer.vscode-eslint"
+-vscode "ecmel.vscode-html-css"
+-vscode "mjcrouch.perforce"
+-vscode "ms-python.debugpy"
+-vscode "ms-python.python"
+-vscode "ms-python.vscode-pylance"
+-vscode "ms-vscode-remote.remote-containers"
+-vscode "ms-vscode-remote.remote-ssh"
+-vscode "ms-vscode-remote.remote-ssh-edit"
+-vscode "ms-vscode-remote.remote-wsl"
+-vscode "ms-vscode-remote.vscode-remote-extensionpack"
+-vscode "ms-vscode.cmake-tools"
+-vscode "ms-vscode.cpptools"
+-vscode "ms-vscode.cpptools-extension-pack"
+-vscode "ms-vscode.cpptools-themes"
+-vscode "ms-vscode.remote-explorer"
+-vscode "ms-vscode.remote-server"
+-vscode "roscop.fastbuild"
+-vscode "shd101wyy.markdown-preview-enhanced"
+-vscode "twxs.cmake"
+-vscode "vadimcn.vscode-lldb"
+-vscode "vscodevim.vim"

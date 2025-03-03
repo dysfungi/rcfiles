@@ -104,8 +104,6 @@ brew "kubernetes-cli"
 brew "k9s"
 brew "opentofu"
 brew "s3cmd"
-brew "terraform"
-brew "terraform-docs"
 brew "tflint"
 brew "tfupdate"
 brew "vultr"
@@ -150,6 +148,8 @@ brew "autopep8"
 brew "flake8"
 brew "gettext"
 brew "isort"
+brew "keyring" # Access the system keyring
+brew "libxmlsec1" # Build with asdf/pyenv
 brew "openssl"
 brew "mypy"
 brew "pandoc"
@@ -209,3 +209,23 @@ cask "todoist"
 #cask "transmission"
 cask "wezterm"
 cask "vlc"
+
+{{- if eq .chezmoi.username "dfrank" }}
+
+# Work - Riot Games
+tap "hashicorp/tap"
+brew "awscli"
+brew "golangci-lint"
+brew "graphqurl"
+brew "hashicorp/tap/terraform"
+brew "hashicorp/tap/vault"
+brew "openjdk"
+brew "groovy"
+brew "pulumi"
+brew "sops" # LOTAPI
+brew "terraform-docs"
+cask "google-chrome"
+cask "keeper-password-manager"
+cask "league-of-legends"
+cask "p4v"
+{{- end }}

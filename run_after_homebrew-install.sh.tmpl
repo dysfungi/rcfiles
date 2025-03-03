@@ -21,7 +21,7 @@ export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
 mkdir -p "${dumpDir}"
 
-# Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile" | sha256sum }}
+# Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
 brew bundle dump --describe --file="${preInstallDumpFile}"
 brew bundle install --cleanup --upgrade --file="${brewFile}"
 brew bundle dump --describe --file="${postInstallDumpFile}"
