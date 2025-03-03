@@ -1,0 +1,4 @@
+# https://github.com/mvdan/sh/blob/master/cmd/shfmt/shfmt.1.scd#examples
+[*.sh]
+indent_style = space
+indent_size = 2
