@@ -139,7 +139,10 @@ brew "typescript"
 brew "typescript-language-server"
 brew "yarn"
 
-# OCampl
+# Markdown
+brew "mdq"
+
+# OCaml
 brew "opam"
 
 # Python
