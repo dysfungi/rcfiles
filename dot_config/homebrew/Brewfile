@@ -164,6 +164,7 @@ brew "rust-analyzer"
 
 # Shell
 brew "shellcheck"
+brew "shfmt"
 brew "tcl-tk"
 brew "xonsh"
 brew "zsh"
@@ -173,7 +174,6 @@ brew "zsh-completions"
 brew "yq"
 
 # Applications
-
 cask "1password"
 cask "1password-cli"
 cask "amethyst"
