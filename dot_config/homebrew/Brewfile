@@ -139,6 +139,9 @@ brew "typescript"
 brew "typescript-language-server"
 brew "yarn"
 
+# OCampl
+brew "opam"
+
 # Python
 brew "autopep8"
 brew "flake8"

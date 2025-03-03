@@ -741,19 +741,21 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        -- clangd = {},
+        -- https://github.com/williamboman/mason-lspconfig.nvim?tab=readme-ov-file#available-lsp-servers
+        ast_grep = {}, -- C, C#, C++, CSS, Dart, Go, HTML, Java, JavaScript, JSX, Kotlin, Lua, Python, Rust, TypeScript
+        awk_ls = {},
+        bashls = {}, -- Bash, Csh, Ksh, Sh, Zsh, etc
+        csharp_ls = {},
+        clangd = {}, -- C, C++, Objective-C, etc.
+        fsautocomplete = {}, -- F#
+        -- harper_ls = {}, -- *
         gopls = {},
-        pyright = {},
-        rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
-        --
-
+        graphql = {},
+        -- groovyls = {},
+        jinja_lsp = {}, -- Django
+        jqls = {},
+        -- kotlin_language_server = {},
+        ltex = {}, -- LaTeX, Markdown, reStructuredText, etc.
         lua_ls = {
           -- cmd = { ... },
           -- filetypes = { ... },
@@ -768,6 +770,22 @@ require('lazy').setup({
             },
           },
         },
+        marksman = {}, -- Markdown
+        ocamllsp = {},
+        pyright = {},
+        rust_analyzer = {},
+        sqls = {},
+        taplo = {}, -- TOML
+        terraformls = {},
+        tflint = {},
+        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
+        --
+        -- Some languages (like typescript) have entire language plugins that can be useful:
+        --    https://github.com/pmizio/typescript-tools.nvim
+        --
+        -- But for many setups, the LSP (`ts_ls`) will work just fine
+        ts_ls = {},
+        yamlls = {},
       }
 
       -- Ensure the servers and tools above are installed
