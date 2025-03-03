@@ -1,9 +1,6 @@
 # General
 **/*.log
 
-# Homebrew
-**/Brewfile
-
 # Neovim
 **/.luarc.json
 **/lazy-lock.json
