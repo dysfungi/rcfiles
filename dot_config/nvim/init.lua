@@ -1135,12 +1135,165 @@ require('lazy').setup({
   -- In normal mode type `<space>sh` then write `lazy.nvim-plugin`
   -- you can continue same window with `<space>sr` which resumes last telescope search
 }, {
+  debug = false,
+  root = vim.fn.stdpath 'data' .. '/lazy', -- directory where plugins will be installed
+  defaults = {
+    -- Set this to `true` to have all your plugins lazy-loaded by default.
+    -- Only do this if you know what you are doing, as it can lead to unexpected behavior.
+    lazy = false, -- should plugins be lazy-loaded?
+    -- It's recommended to leave version=false for now, since a lot the plugin that support versioning,
+    -- have outdated releases, which may break your Neovim install.
+    version = nil, -- always use the latest git commit
+    -- version = "*", -- try installing the latest stable version for plugins that support semver
+    -- default `cond` you can use to globally disable a lot of plugins
+    -- when running inside vscode for example
+    cond = nil, ---@type boolean|fun(self:LazyPlugin):boolean|nil
+  },
+  -- leave nil when passing the spec as the first argument to setup()
+  spec = nil, ---@type LazySpec
+  local_spec = true, -- load project specific .lazy.lua spec files. They will be added at the end of the spec.
+  lockfile = vim.fn.stdpath 'config' .. '/lazy-lock.json', -- lockfile generated after running update.
+  ---@type number? limit the maximum amount of concurrent tasks
+  concurrency = jit.os:find 'Windows' and (vim.uv.available_parallelism() * 2) or nil,
+  git = {
+    -- defaults for the `Lazy log` command
+    -- log = { "--since=3 days ago" }, -- show commits from the last 3 days
+    log = { '-8' }, -- show the last 8 commits
+    timeout = 120, -- kill processes that take more than 2 minutes
+    url_format = 'https://github.com/%s.git',
+    -- lazy.nvim requires git >=2.19.0. If you really want to use lazy with an older version,
+    -- then set the below to false. This should work, but is NOT supported and will
+    -- increase downloads a lot.
+    filter = true,
+    -- rate of network related git operations (clone, fetch, checkout)
+    throttle = {
+      enabled = false, -- not enabled by default
+      -- max 2 ops every 5 seconds
+      rate = 2,
+      duration = 5 * 1000, -- in ms
+    },
+    -- Time in seconds to wait before running fetch again for a plugin.
+    -- Repeated update/check operations will not run again until this
+    -- cooldown period has passed.
+    cooldown = 0,
+  },
+  pkg = {
+    enabled = true,
+    cache = vim.fn.stdpath 'state' .. '/lazy/pkg-cache.lua',
+    -- the first package source that is found for a plugin will be used.
+    sources = {
+      'lazy',
+      'rockspec', -- will only be used when rocks.enabled is true
+      'packspec',
+    },
+  },
+  rocks = {
+    enabled = true,
+    root = vim.fn.stdpath 'data' .. '/lazy-rocks',
+    server = 'https://nvim-neorocks.github.io/rocks-binaries/',
+    -- use hererocks to install luarocks?
+    -- set to `nil` to use hererocks when luarocks is not found
+    -- set to `true` to always use hererocks
+    -- set to `false` to always use luarocks
+    hererocks = nil,
+  },
+  dev = {
+    -- Directory where you store your local plugin projects. If a function is used,
+    -- the plugin directory (e.g. `~/projects/plugin-name`) must be returned.
+    ---@type string | fun(plugin: LazyPlugin): string
+    path = '~/projects',
+    ---@type string[] plugins that match these patterns will use your local versions instead of being fetched from GitHub
+    patterns = {}, -- For example {"folke"}
+    fallback = false, -- Fallback to git when local plugin doesn't exist
+  },
+  install = {
+    -- install missing plugins on startup. This doesn't increase startup time.
+    missing = true,
+    -- try to load one of these colorschemes when starting an installation during startup
+    colorscheme = { 'habamax' },
+  },
+  -- Output options for headless mode
+  headless = {
+    -- show the output from process commands like git
+    process = true,
+    -- show log messages
+    log = true,
+    -- show task start/end
+    task = true,
+    -- use ansi colors
+    colors = true,
+  },
+  diff = {
+    -- diff command <d> can be one of:
+    -- * browser: opens the github compare view. Note that this is always mapped to <K> as well,
+    --   so you can have a different command for diff <d>
+    -- * git: will run git diff and open a buffer with filetype git
+    -- * terminal_git: will open a pseudo terminal with git diff
+    -- * diffview.nvim: will open Diffview to show the diff
+    cmd = 'git',
+  },
+  checker = {
+    -- automatically check for plugin updates
+    enabled = false,
+    concurrency = nil, ---@type number? set to 1 to check for updates very slowly
+    notify = true, -- get a notification when new updates are found
+    frequency = 3600, -- check for updates every hour
+    check_pinned = false, -- check for pinned packages that can't be updated
+  },
+  change_detection = {
+    -- automatically check for config file changes and reload the ui
+    enabled = true,
+    notify = true, -- get a notification when changes are found
+  },
+  performance = {
+    cache = {
+      enabled = true,
+    },
+    reset_packpath = true, -- reset the package path to improve startup time
+    rtp = {
+      reset = true, -- reset the runtime path to $VIMRUNTIME and your config directory
+      ---@type string[]
+      paths = {}, -- add any custom paths here that you want to includes in the rtp
+      ---@type string[] list any plugins you want to disable here
+      disabled_plugins = {
+        -- "gzip",
+        -- "matchit",
+        -- "matchparen",
+        -- "netrwPlugin",
+        -- "tarPlugin",
+        -- "tohtml",
+        -- "tutor",
+        -- "zipPlugin",
+      },
+    },
+  },
+  -- lazy can generate helptags from the headings in markdown readme files,
+  -- so :help works even for plugins that don't have vim docs.
+  -- when the readme opens with :help it will be correctly displayed as markdown
+  readme = {
+    enabled = true,
+    root = vim.fn.stdpath 'state' .. '/lazy/readme',
+    files = { 'README.md', 'lua/**/README.md' },
+    -- only generate markdown helptags for plugins that don't have docs
+    skip_if_doc_exists = true,
+  },
+  state = vim.fn.stdpath 'state' .. '/lazy/state.json', -- state info for checker and other things
+  -- Enable profiling of lazy.nvim. This will add some overhead,
+  -- so only enable this when you are debugging lazy.nvim
+  profiling = {
+    -- Enables extra stats on the debug tab related to the loader cache.
+    -- Additionally gathers stats about all package.loaders
+    loader = false,
+    -- Track each new require in the Lazy profiling tab
+    require = false,
+  },
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
     icons = vim.g.have_nerd_font and {} or {
       cmd = '⌘',
       config = '🛠',
+      debug = '● ',
       event = '📅',
       ft = '📂',
       init = '⚙',
