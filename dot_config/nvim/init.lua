@@ -749,11 +749,11 @@ require('lazy').setup({
         clangd = {}, -- C, C++, Objective-C, etc.
         fsautocomplete = {}, -- F#
         -- harper_ls = {}, -- *
-        gopls = {},
+        -- gopls = {},
         graphql = {},
         -- groovyls = {},
         jinja_lsp = {}, -- Django
-        jqls = {},
+        -- jqls = {},
         -- kotlin_language_server = {},
         ltex = {}, -- LaTeX, Markdown, reStructuredText, etc.
         lua_ls = {
@@ -774,7 +774,7 @@ require('lazy').setup({
         ocamllsp = {},
         pyright = {},
         rust_analyzer = {},
-        sqls = {},
+        -- sqls = {},
         taplo = {}, -- TOML
         terraformls = {},
         tflint = {},
@@ -784,7 +784,9 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {},
+        ts_ls = {
+          filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx' },
+        },
         yamlls = {},
       }
 
