@@ -805,6 +805,10 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       require('mason-tool-installer').setup {
         ensure_installed = {
+          'black', -- Python
+          'isort', -- Python
+          'prettier',
+          'prettierd',
           'stylua', -- Used to format Lua code
         },
       }
