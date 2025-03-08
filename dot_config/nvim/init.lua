@@ -156,6 +156,21 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Return to last edit position when opening files (You want this!)
+-- vim.api.nvim_create_autocmd('BufReadPost', {
+--   group = vim.api.nvim_create_augroup('file-history'),
+--   callback = function(event)
+--
+--   end,
+-- })
+-- autocmd BufReadPost *
+--      \ if line("'\"") > 0 && line("'\"") <= line("$") |
+--      \   exe "normal! g`\"" |
+--      \ endif
+--
+-- Remember info about open buffers on close
+--set viminfo^=%
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -1135,6 +1150,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
+  { import = 'plugins.essential' },
   { import = 'plugins.fun' },
   { import = 'plugins.languages' },
   { import = 'plugins.tools' },
