@@ -741,13 +741,14 @@ require('lazy').setup({
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
+        -- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
         -- https://github.com/williamboman/mason-lspconfig.nvim?tab=readme-ov-file#available-lsp-servers
         ast_grep = {}, -- C, C#, C++, CSS, Dart, Go, HTML, Java, JavaScript, JSX, Kotlin, Lua, Python, Rust, TypeScript
         awk_ls = {},
         bashls = {}, -- Bash, Csh, Ksh, Sh, Zsh, etc
         csharp_ls = {},
         clangd = {}, -- C, C++, Objective-C, etc.
-        fsautocomplete = {}, -- F#
+        -- fsautocomplete = {}, -- F#, but conflicts with ionide-vimn
         -- harper_ls = {}, -- *
         -- gopls = {},
         graphql = {},
