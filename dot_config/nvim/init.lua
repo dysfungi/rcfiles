@@ -826,7 +826,6 @@ require('lazy').setup({
           'prettier',
           'prettierd',
           'stylua', -- Used to format Lua code
-          'tflint', -- Terraform
         },
       }
 
@@ -880,12 +879,25 @@ require('lazy').setup({
         }
       end,
       formatters_by_ft = {
+        -- FYI: You can use 'stop_after_first' to run the first available formatter from the list
+        go = { 'goimports', 'gofmt' },
+        javascript = { 'prettierd', 'prettier', stop_after_first = true },
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        python = { 'isort', 'black' },
-        --
-        -- You can use 'stop_after_first' to run the first available formatter from the list
-        javascript = { 'prettierd', 'prettier', stop_after_first = true },
+        python = function(bufnr)
+          if require('conform').get_formatter_info('ruff_format', bufnr).available then
+            return { 'ruff_format' }
+          else
+            return { 'isort', 'black' }
+          end
+        end,
+        rust = { 'rustfmt', lsp_format = 'fallback' },
+        terraform = { 'tofu_fmt' },
+        ['*'] = { 'codespell' },
+        ['_'] = { 'trim_whitespace' },
+      },
+      default_format_opts = {
+        lsp_format = 'fallback',
       },
     },
   },
