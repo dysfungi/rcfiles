@@ -826,6 +826,7 @@ require('lazy').setup({
           'prettier',
           'prettierd',
           'stylua', -- Used to format Lua code
+          'tflint', -- Terraform
         },
       }
 
