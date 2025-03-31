@@ -1,0 +1,11 @@
+{
+  "theme": null,
+  "themes": {
+    "mode": "light",
+    "light": null,
+    "dark": null
+  },
+  "externals": [
+    "/Users/dmf/Code/ollama-logseq"
+  ]
+}
