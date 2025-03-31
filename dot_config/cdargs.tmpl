@@ -19,4 +19,20 @@ lotapi {{ .chezmoi.homeDir }}/Code/lot-api-service
 mt {{ .chezmoi.homeDir }}/Code/maintenance-tool
 rs-admin {{ .chezmoi.homeDir }}/Code/riotstatus-admin
 rs-page {{ .chezmoi.homeDir }}/Code/riotstatus-page
+{{- else }}
+monorepo {{ .chezmoi.homeDir }}/Code/monorepo
+fsharp {{ .chezmoi.homeDir }}/Code/monorepo/fsharp
+fsharp-api {{ .chezmoi.homeDir }}/Code/monorepo/fsharp/api
+automate-api {{ .chezmoi.homeDir }}/Code/monorepo/fsharp/api/automate
+terraform {{ .chezmoi.homeDir }}/Code/monorepo/terraform
+infrastructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure
+frankenstructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/frankenstructure
+gateway {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/gateway
+monitoring {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/monitoring
+applications {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications
+httpbin {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/httpbin
+n8n {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/n8n
+node-red {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/node-red
+ollama {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/ollama
+windmill {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/windmill
 {{- end }}
