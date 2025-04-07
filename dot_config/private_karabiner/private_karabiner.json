@@ -222,12 +222,12 @@
                     },
                     "simple_modifications": [
                         {
-                            "from": { "pointing_button": "button5" },
-                            "to": [{ "apple_vendor_keyboard_key_code": "mission_control" }]
-                        },
-                        {
                             "from": { "pointing_button": "button4" },
                             "to": [{ "apple_vendor_keyboard_key_code": "spotlight" }]
+                        },
+                        {
+                            "from": { "pointing_button": "button5" },
+                            "to": [{ "apple_vendor_keyboard_key_code": "mission_control" }]
                         }
                     ]
                 },
@@ -236,6 +236,14 @@
                         "is_pointing_device": true,
                         "product_id": 132,
                         "vendor_id": 5426
+                    },
+                    "ignore": false
+                },
+                {
+                    "identifiers": {
+                        "is_pointing_device": true,
+                        "product_id": 6204,
+                        "vendor_id": 4152
                     },
                     "ignore": false
                 }
@@ -266,12 +274,12 @@
                     "to": [{ "key_code": "delete_or_backspace" }]
                 },
                 {
-                    "from": { "pointing_button": "button5" },
-                    "to": [{ "apple_vendor_keyboard_key_code": "mission_control" }]
-                },
-                {
                     "from": { "pointing_button": "button4" },
                     "to": [{ "apple_vendor_keyboard_key_code": "spotlight" }]
+                },
+                {
+                    "from": { "pointing_button": "button5" },
+                    "to": [{ "apple_vendor_keyboard_key_code": "mission_control" }]
                 }
             ],
             "virtual_hid_keyboard": {
