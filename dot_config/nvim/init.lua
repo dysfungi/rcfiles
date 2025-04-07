@@ -801,7 +801,7 @@ require('lazy').setup({
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
         ts_ls = {
-          filetypes = { 'typescript', 'typescriptreact', 'typescript.tsx' },
+          filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'javascript.tsx', 'typescript.tsx' },
         },
         yamlls = {},
       }
@@ -848,7 +848,7 @@ require('lazy').setup({
 
   { -- Autoformat
     'stevearc/conform.nvim',
-    event = { 'BufWritePre' },
+    event = { 'LspAttach', 'BufReadPost', 'BufNewFile', 'BufWritePre' },
     cmd = { 'ConformInfo' },
     keys = {
       {
@@ -861,6 +861,7 @@ require('lazy').setup({
       },
     },
     opts = {
+      log_level = vim.log.levels.TRACE,
       notify_no_formatters = true,
       notify_on_error = true,
       format_on_save = function(bufnr)
@@ -875,11 +876,12 @@ require('lazy').setup({
           lsp_format_opt = 'fallback'
         end
         return {
-          timeout_ms = 1000,
+          timeout_ms = 2500,
           lsp_format = lsp_format_opt,
         }
       end,
       formatters_by_ft = {
+        -- https://github.com/stevearc/conform.nvim#formatters
         -- FYI: You can use 'stop_after_first' to run the first available formatter from the list
         go = { 'goimports', 'gofmt' },
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
@@ -899,6 +901,11 @@ require('lazy').setup({
       },
       default_format_opts = {
         lsp_format = 'fallback',
+      },
+      formatters = {
+        prettier = {
+          prepend_args = { '--prose-wrap', 'always' },
+        },
       },
     },
   },
