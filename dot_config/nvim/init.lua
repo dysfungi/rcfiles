@@ -501,6 +501,15 @@ require('lazy').setup({
 
       -- https://github.com/nvim-telescope/telescope.nvim/wiki/Configuration-Recipes#file-and-text-search-in-hidden-files-and-directories
       local vimgrep_arguments = {
+        -- Default: {
+        --   "rg",
+        --   "--color=never",
+        --   "--no-heading",
+        --   "--with-filename",
+        --   "--line-number",
+        --   "--column",
+        --   "--smart-case"
+        -- }
         unpack(telescope_config.values.vimgrep_arguments),
       }
       table.insert(vimgrep_arguments, '--hidden')
@@ -520,7 +529,8 @@ require('lazy').setup({
         },
         pickers = {
           find_files = {
-            find_command = { 'rg', '--files', '--hidden', '--glob', '!**/.git/*' },
+            find_command = { 'rg', '--files', '--glob', '!**/.git/*' },
+            hidden = true,
           },
         },
         extensions = {
