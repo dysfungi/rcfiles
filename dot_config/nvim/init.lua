@@ -514,17 +514,17 @@ require('lazy').setup({
       }
       table.insert(vimgrep_arguments, '--hidden')
       table.insert(vimgrep_arguments, '--glob')
-      table.insert(vimgrep_arguments, '!**/.git/*')
+      table.insert(vimgrep_arguments, '!**/.git/**')
       table.insert(vimgrep_arguments, '--glob')
-      table.insert(vimgrep_arguments, '!**/*.app/Contents/*')
+      table.insert(vimgrep_arguments, '!**/*.app/Contents/**')
       table.insert(vimgrep_arguments, '--glob')
-      table.insert(vimgrep_arguments, '!**/dist/*')
+      table.insert(vimgrep_arguments, '!**/dist/**')
       table.insert(vimgrep_arguments, '--glob')
-      table.insert(vimgrep_arguments, '!**/node_modules/*')
+      table.insert(vimgrep_arguments, '!**/node_modules/**')
       table.insert(vimgrep_arguments, '--glob')
       table.insert(vimgrep_arguments, '!**/*.lock')
       table.insert(vimgrep_arguments, '--glob')
-      table.insert(vimgrep_arguments, '!**/venv/*')
+      table.insert(vimgrep_arguments, '!**/venv/**')
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
@@ -543,17 +543,17 @@ require('lazy').setup({
               'rg',
               '--files',
               '--glob',
-              '!**/.git/*',
+              '!**/.git/**',
               '--glob',
-              '!**/*.app/Contents/*',
+              '!**/*.app/Contents/**',
               '--glob',
-              '!**/dist/*',
+              '!**/dist/**',
               '--glob',
-              '!**/node_modules/*',
+              '!**/node_modules/**',
               '--glob',
               '!**/*.lock',
               '--glob',
-              '!**/venv/*',
+              '!**/venv/**',
             },
             hidden = true,
           },
