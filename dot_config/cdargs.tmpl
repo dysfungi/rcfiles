@@ -30,8 +30,13 @@ infrastructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure
 frankenstructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/frankenstructure
 gateway {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/gateway
 monitoring {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/monitoring
+modules {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules
+route {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/gateway-route
+postgres {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/vultr-managed-postgres
+probes {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/blackbox-probe
 applications {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications
 httpbin {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/httpbin
+miniflux {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/miniflux
 n8n {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/n8n
 node-red {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/node-red
 ollama {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/ollama
