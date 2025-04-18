@@ -931,6 +931,7 @@ require('lazy').setup({
         end,
         rust = { 'rustfmt', lsp_format = 'fallback' },
         terraform = { 'tofu_fmt' },
+        typescript = { 'prettierd', 'prettier', stop_after_first = true },
         ['*'] = { 'codespell' },
         ['_'] = { 'trim_whitespace' },
       },
