@@ -803,7 +803,7 @@ require('lazy').setup({
         -- gopls = {},
         graphql = {},
         -- groovyls = {},
-        jinja_lsp = {}, -- Django
+        -- jinja_lsp = {}, -- Django
         -- jqls = {},
         -- kotlin_language_server = {},
         ltex = {}, -- LaTeX, Markdown, reStructuredText, etc.
