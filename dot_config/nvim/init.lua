@@ -190,6 +190,10 @@ local function nremap(keys, exec, opts)
   recursive_map('n', keys, exec, opts)
 end
 
+local function nmap(keys, exec, opts)
+  nremap(keys, exec, opts)
+end
+
 local function nonrecursive_map(mode, keys, exec, opts)
   opts = opts or {}
   opts.noremap = true
@@ -255,6 +259,18 @@ nremap('<leader>w', ':w!<CR>')
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 nremap('<leader>h', '<cmd>nohlsearch<CR>')
+
+-- Shortcut for copying the name of the current buffer into the clipboard
+-- https://stackoverflow.com/a/954336
+nremap('<leader>ypf', '<cmd>let @+ = expand("%")<CR>', {
+  desc = '[Y]ank [P]ath of [F]ile (relative)',
+})
+nremap('<leader>ypa', '<cmd>let @+ = expand("%:p")<CR>', {
+  desc = '[Y]ank [P]ath of [A]bsolute',
+})
+nremap('<leader>ypp', '<cmd>let @+ = expand("%:h")<CR>', {
+  desc = '[Y]ank [P]ath of [P]arent (relative)',
+})
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
@@ -441,6 +457,8 @@ require('lazy').setup({
         { '<leader>s', group = '[S]earch' },
         { '<leader>w', group = '[W]orkspace' },
         { '<leader>t', group = '[T]oggle' },
+        { '<leader>y', group = '[Y]ank' },
+        { '<leader>yp', group = '[Y]ank [P]ath' },
         { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } },
       },
     },
