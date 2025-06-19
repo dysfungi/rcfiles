@@ -11,26 +11,28 @@ if ! command -v brew > /dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-runId="$(date +%Y-%m-%dT%H:%M:%S%z).$(hostname)"
 configDir="$HOME/.config/homebrew"
 brewFile="${configDir}/Brewfile"
-dumpDir="${configDir}/dump"
-preInstallDumpFile="${dumpDir}/Brewfile.${runId}.preinstall"
-postInstallDumpFile="${dumpDir}/Brewfile.${runId}.postinstall"
-dumpDiffFile="${dumpDir}/Brewfile.${runId}.diff"
+sourceDir="{{ .chezmoi.sourceDir }}"
+histDir="${sourceDir}/history"
+histFile="${histDir}/Brewfile.$(hostname)"
+export GIT_DIR="${sourceDir}/.git"
+export GIT_WORK_TREE="${sourceDir}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
-mkdir -p "${dumpDir}"
+mkdir -p "${histDir}"
+rm "${histFile}"
 
 # Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
-brew bundle dump --describe --file="${preInstallDumpFile}"
-brew bundle install --cleanup --upgrade --file="${brewFile}"
-brew bundle dump --describe --file="${postInstallDumpFile}"
-diff -U0 "${preInstallDumpFile}" "${postInstallDumpFile}" > "${dumpDiffFile}"
-if [ -n "$(cat "${dumpDiffFile}")" ]; then
-  echo "Brew bundle diff before and after install, upgrade, and cleanup:"
-  cat "${dumpDiffFile}"
-else
-  echo "No changes to Brew bundle; cleaning up dump files..."
-  rm "${preInstallDumpFile}" "${postInstallDumpFile}" "${dumpDiffFile}"
-fi
+brew bundle dump --describe --file="${histFile}"
+git add "${histDir}"
+git commit --allow-empty --message "chore(hist): Save Brewfile dump before install on $(hostname)" -- "${histDir}"
+
+! brew bundle install --cleanup --file="${brewFile}" --upgrade --verbose
+
+rm "${histFile}"
+brew bundle dump --describe --file="${histFile}"
+git add "${histDir}"
+git commit --allow-empty --message "chore(hist): Save Brewfile dump after install on $(hostname)" -- "${histDir}"
+
+git log --grep="$(hostname)" --patch HEAD~1..HEAD
