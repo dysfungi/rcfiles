@@ -28,7 +28,7 @@ brew bundle dump --describe --file="${histFile}"
 git add "${histDir}"
 git commit --allow-empty --message "chore(hist): Save Brewfile dump before install on $(hostname)" -- "${histDir}"
 
-! brew bundle install --cleanup --file="${brewFile}" --upgrade --verbose
+! brew bundle install --cleanup --file="${brewFile}" --upgrade
 
 rm "${histFile}"
 brew bundle dump --describe --file="${histFile}"
