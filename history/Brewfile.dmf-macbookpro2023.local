@@ -13,10 +13,6 @@ brew "xz"
 brew "libtiff"
 # New file format for still image compression
 brew "jpeg-xl"
-# Cryptography and SSL/TLS Toolkit
-brew "openssl@3"
-# Simple system information tool written in Python
-brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
 # GNU internationalization (i18n) and localization (l10n) library
@@ -25,6 +21,8 @@ brew "gettext"
 brew "git"
 # Extendable version manager with support for Ruby, Node.js, Erlang & more
 brew "asdf"
+# Cryptography and SSL/TLS Toolkit
+brew "openssl@3"
 # Automatically formats Python code to conform to the PEP 8 style guide
 brew "autopep8"
 # Bourne-Again SHell, a UNIX command interpreter
