@@ -1,6 +1,10 @@
 # General
 **/*.log
 
+# Backups
+backups/
+backups/**
+
 # Neovim
 **/.luarc.json
 **/lazy-lock.json

@@ -11,28 +11,34 @@ if ! command -v brew > /dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
+userName="$(whoami)"
+hostName="$(hostname)"
+bakSuffix="${userName}.${hostName}"
 configDir="$HOME/.config/homebrew"
 brewFile="${configDir}/Brewfile"
 sourceDir="{{ .chezmoi.sourceDir }}"
-histDir="${sourceDir}/history"
-histFile="${histDir}/Brewfile.$(hostname)"
+bakDir="${sourceDir}/backups"
+bakFile="${bakDir}/Brewfile.${bakSuffix}"
 export GIT_DIR="${sourceDir}/.git"
 export GIT_WORK_TREE="${sourceDir}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
-mkdir -p "${histDir}"
-! rm "${histFile}"
+backup () {
+  local clarifier="${1:?required}"
+
+  ! rm "${bakFile}"
+  brew bundle dump --describe --file="${bakFile}"
+  git add "${bakDir}"
+  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+    git commit --message "chore(backups): Dump Brewfile ${clarifier} install for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+mkdir -p "${bakDir}"
 
 # Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
-brew bundle dump --describe --file="${histFile}"
-git add "${histDir}"
-git commit --allow-empty --message "chore(hist): Save Brewfile dump before install on $(hostname)" -- "${histDir}"
-
+backup before
 ! brew bundle install --cleanup --file="${brewFile}" --upgrade
+backup after
 
-! rm "${histFile}"
-brew bundle dump --describe --file="${histFile}"
-git add "${histDir}"
-git commit --allow-empty --message "chore(hist): Save Brewfile dump after install on $(hostname)" -- "${histDir}"
-
-git log --grep="$(hostname)" --patch HEAD~1..HEAD
+git log --all-match --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
