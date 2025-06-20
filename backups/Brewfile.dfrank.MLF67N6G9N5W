@@ -313,5 +313,3 @@ cask "todoist", args: { appdir: "/Applications" }
 cask "vlc", args: { appdir: "/Applications" }
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm", args: { appdir: "/Applications" }
-# Video communication and virtual meeting platform
-cask "zoom"
