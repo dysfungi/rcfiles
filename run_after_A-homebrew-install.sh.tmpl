@@ -21,7 +21,7 @@ export GIT_WORK_TREE="${sourceDir}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
 mkdir -p "${histDir}"
-rm "${histFile}"
+! rm "${histFile}"
 
 # Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
 brew bundle dump --describe --file="${histFile}"
@@ -30,7 +30,7 @@ git commit --allow-empty --message "chore(hist): Save Brewfile dump before insta
 
 ! brew bundle install --cleanup --file="${brewFile}" --upgrade
 
-rm "${histFile}"
+! rm "${histFile}"
 brew bundle dump --describe --file="${histFile}"
 git add "${histDir}"
 git commit --allow-empty --message "chore(hist): Save Brewfile dump after install on $(hostname)" -- "${histDir}"
