@@ -853,7 +853,10 @@ require('lazy').setup({
         --    https://github.com/pmizio/typescript-tools.nvim
         --
         -- But for many setups, the LSP (`ts_ls`) will work just fine
-        ts_ls = {
+        -- ts_ls = {
+        --   filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'javascript.tsx', 'typescript.tsx' },
+        -- },
+        vtsls = {
           filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'javascript.tsx', 'typescript.tsx' },
         },
         yamlls = {},
@@ -879,6 +882,7 @@ require('lazy').setup({
           'prettier',
           'prettierd',
           'stylua', -- Used to format Lua code
+          'vtsls',
         },
       }
 
