@@ -52,7 +52,6 @@ brew "xz"
 brew "yadm"
 
 # Communication
-brew "ollama", restart_service: :changed
 brew "signal-cli"
 
 # Linters
@@ -62,6 +61,10 @@ brew "prettierd"
 brew "proselint"
 brew "terraform-ls"
 brew "vint"
+
+# Productivity
+brew "ollama", restart_service: :changed
+brew "todoist-cli"
 
 # TUI
 brew "jp2a"
@@ -186,7 +189,7 @@ cask "1password"
 cask "1password-cli"
 cask "amethyst"
 cask "discord"
-cask "docker"
+cask "docker-desktop"
 cask "dropbox"
 cask "firefox" # brew install --cask --adopt firefox
 cask "freecad"
@@ -212,7 +215,7 @@ cask "notunes"
 #cask "proton-pass"
 cask "protonvpn"
 cask "signal"
-cask "todoist"
+cask "todoist-app"
 #cask "transmission"
 cask "wezterm"
 cask "vlc"
