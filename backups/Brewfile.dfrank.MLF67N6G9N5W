@@ -132,6 +132,8 @@ brew "make"
 brew "markdownlint-cli"
 # Like jq but for Markdown
 brew "mdq"
+# Polyglot runtime manager (asdf rust clone)
+brew "mise"
 # Collection of tools that nobody wrote when UNIX was young
 brew "moreutils"
 # Experimental optional static type checker for Python
@@ -264,8 +266,6 @@ cask "1password-cli", args: { appdir: "/Applications" }
 cask "amethyst", args: { appdir: "/Applications" }
 # Voice and text chat software
 cask "discord", args: { appdir: "/Applications" }
-# App to build and share containerised applications and microservices
-cask "docker-desktop", args: { appdir: "/Applications" }
 # Developer platform
 cask "dotnet-sdk", args: { appdir: "/Applications" }
 # Client for the Dropbox cloud storage service
@@ -307,8 +307,6 @@ cask "p4v"
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
-# To-do list
-cask "todoist-app", args: { appdir: "/Applications" }
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
 # GPU-accelerated cross-platform terminal emulator and multiplexer
