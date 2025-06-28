@@ -121,6 +121,8 @@ brew "node"
 brew "markdownlint-cli"
 # Like jq but for Markdown
 brew "mdq"
+# Polyglot runtime manager (asdf rust clone)
+brew "mise"
 # Collection of tools that nobody wrote when UNIX was young
 brew "moreutils"
 # Experimental optional static type checker for Python
@@ -197,6 +199,8 @@ brew "tfupdate"
 brew "the_silver_searcher"
 # Terminal multiplexer
 brew "tmux"
+# CLI for Todoist
+brew "todoist-cli"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
 # Language for application scale JavaScript development
