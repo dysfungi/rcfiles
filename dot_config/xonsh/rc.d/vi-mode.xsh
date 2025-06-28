@@ -1,6 +1,6 @@
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
-from prompt_toolkit.filters import vi_insert_mode
+from prompt_toolkit.filters import vi_insert_mode, vi_navigation_mode
 
 def _configure_vi_mode():
     # https://xon.sh/envvars.html#vi-mode
@@ -23,6 +23,17 @@ def _configure_vi_mode():
         def exit_insert_mode(event):
             # https://python-prompt-toolkit.readthedocs.io/en/master/pages/reference.html#prompt_toolkit.key_binding.vi_state.ViState
             event.cli.vi_state.input_mode = ViInputMode.NAVIGATION
+
+        @bindings.add('l', filter=vi_navigation_mode)
+        def enter_insert_mode(event):
+            event.cli.vi_state.input_mode = ViInputMode.INSERT
+
+        @bindings.add('L', filter=vi_navigation_mode)
+        def enter_insert_mode_before_the_first_non_blank_in_the_line(event):
+            buffer = event.current_buffer
+            document = buffer.document
+            buffer.cursor_position += document.get_start_of_line_position(after_whitespace=True)
+            enter_insert_mode(event)
 
 
 if $XONSH_INTERACTIVE:
