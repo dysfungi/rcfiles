@@ -17,22 +17,26 @@ def _configure_vi_mode():
         # https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#adding-custom-key-bindings
         # https://xon.sh/tutorial_ptk.html
         # https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#vi-input-mode
+        #
+        # Defaults: https://github.com/prompt-toolkit/python-prompt-toolkit/blob/d997aab538e434a6ca07d6bee226fd5b0628262f/src/prompt_toolkit/key_binding/bindings/vi.py#L403
 
         # https://python-prompt-toolkit.readthedocs.io/en/master/pages/reference.html#prompt_toolkit.key_binding.KeyBindings.add
         @bindings.add(",", "m", filter=vi_insert_mode)
-        def exit_insert_mode(event):
+        def _exit_insert_mode(event):
             # https://python-prompt-toolkit.readthedocs.io/en/master/pages/reference.html#prompt_toolkit.key_binding.vi_state.ViState
             event.cli.vi_state.input_mode = ViInputMode.NAVIGATION
 
         @bindings.add('l', filter=vi_navigation_mode)
-        def enter_insert_mode(event):
+        def _enter_insert_mode(event):
             event.cli.vi_state.input_mode = ViInputMode.INSERT
 
         @bindings.add('L', filter=vi_navigation_mode)
-        def enter_insert_mode_before_the_first_non_blank_in_the_line(event):
+        def _enter_insert_mode_before_the_first_non_blank_in_the_line(event):
             buffer = event.current_buffer
             document = buffer.document
-            buffer.cursor_position += document.get_start_of_line_position(after_whitespace=True)
+            buffer.cursor_position += document.get_start_of_line_position(
+                after_whitespace=True,
+            )
             enter_insert_mode(event)
 
 
