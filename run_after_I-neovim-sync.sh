@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-nvim --headless +MasonUpdate +MasonToolsInstallSync +MasonToolsUpdateSync +q
+# https://lazy.folke.io/usage
+nvim --headless "+MasonUpdate" "+MasonToolsInstallSync" "+MasonToolsUpdateSync" "+Lazy! sync" "+qa"
