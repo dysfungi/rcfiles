@@ -1,0 +1,29 @@
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
+from prompt_toolkit.filters import vi_insert_mode
+
+def _configure_vi_mode():
+    # https://xon.sh/envvars.html#vi-mode
+    $VI_MODE = True
+
+    # https://xon.sh/envvars.html#xonsh-copy-on-delete
+    $XONSH_COPY_ON_DELETE = True
+
+    # https://xon.sh/envvars.html#xonsh-use-system-clipboard
+    $XONSH_USE_SYSTEM_CLIPBOARD = True
+
+    @events.on_ptk_create
+    def custom_keybindings(bindings, **kwargs):
+        # https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#adding-custom-key-bindings
+        # https://xon.sh/tutorial_ptk.html
+        # https://python-prompt-toolkit.readthedocs.io/en/master/pages/asking_for_input.html#vi-input-mode
+
+        # https://python-prompt-toolkit.readthedocs.io/en/master/pages/reference.html#prompt_toolkit.key_binding.KeyBindings.add
+        @bindings.add(",", "m", filter=vi_insert_mode)
+        def exit_insert_mode(event):
+            # https://python-prompt-toolkit.readthedocs.io/en/master/pages/reference.html#prompt_toolkit.key_binding.vi_state.ViState
+            event.cli.vi_state.input_mode = ViInputMode.NAVIGATION
+
+
+if $XONSH_INTERACTIVE:
+    _configure_vi_mode()
