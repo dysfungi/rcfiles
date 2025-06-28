@@ -1136,18 +1136,21 @@ require('lazy').setup({
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup {
+        -- https://github.com/echasnovski/mini.surround#default-config
         mappings = {
           -- TODO(dmf): Resolve keybinding conflicts
           --   https://github.com/echasnovski/mini.surround?tab=readme-ov-file#d
-          add = '',
-          delete = '',
-          find = '',
-          find_left = '',
-          highlight = '',
-          replace = '',
-          update_n_lines = '',
+          add = 'sa',
+          delete = 'sd',
+          find = 'sf',
+          find_left = 'sF',
+          highlight = 'sh',
+          replace = 'sr',
+          update_n_lines = 'sn',
           --
+          -- suffix_last = 'l',
           suffix_last = '',
+          -- suffix_next = 'n',
           suffix_next = '',
         },
       }
