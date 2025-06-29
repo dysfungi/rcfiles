@@ -2,6 +2,7 @@ from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
 from prompt_toolkit.filters import vi_insert_mode, vi_navigation_mode
 
+
 def _configure_vi_mode():
     # https://xon.sh/envvars.html#vi-mode
     $VI_MODE = True
@@ -38,6 +39,32 @@ def _configure_vi_mode():
                 after_whitespace=True,
             )
             enter_insert_mode(event)
+
+        @bindings.add('e', filter=vi_navigation_mode)
+        def _navigate_up(event):
+            event.current_buffer.auto_up(
+                count=event.arg,
+                go_to_start_of_line_if_history_changes=True,
+            )
+
+        @bindings.add('n', filter=vi_navigation_mode)
+        def _navigate_down(event):
+            event.current_buffer.auto_down(
+                count=event.arg,
+                go_to_start_of_line_if_history_changes=True,
+            )
+
+        @bindings.add('h', filter=vi_navigation_mode)
+        def _navigate_left(event):
+            buffer = event.current_buffer
+            document = buffer.document
+            buffer.cursor_position += document.get_cursor_left_position(count=event.arg)
+
+        @bindings.add('i', filter=vi_navigation_mode)
+        def _navigate_right(event):
+            buffer = event.current_buffer
+            document = buffer.document
+            buffer.cursor_position += document.get_cursor_right_position(count=event.arg)
 
 
 if $XONSH_INTERACTIVE:
