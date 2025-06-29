@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# https://xon.sh/customization.html#set-xonsh-as-my-default-shell
 if command -v xonsh; then
   XONSH_EXECUTABLE="$(which xonsh)"
   if ! grep -q "${XONSH_EXECUTABLE}" /etc/shells; then
