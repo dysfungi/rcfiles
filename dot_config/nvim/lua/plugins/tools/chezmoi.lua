@@ -5,18 +5,33 @@ return {
   'xvzc/chezmoi.nvim',
   dependencies = { 'nvim-lua/plenary.nvim' },
   opts = {
-    -- https://github.com/xvzc/chezmoi.nvim?tab=readme-ov-file#configuration
+    -- https://github.com/xvzc/chezmoi.nvim#configuration
     edit = {
       watch = true,
       force = false,
     },
-    notification = {
-      on_open = true,
-      on_apply = true,
-      on_watch = true,
+    events = {
+      on_open = {
+        notification = {
+          enabled = true,
+          opts = {},
+        },
+      },
+      on_apply = {
+        notification = {
+          enabled = true,
+          opts = {},
+        },
+      },
+      on_watch = {
+        notification = {
+          enabled = true,
+          opts = {},
+        },
+      },
     },
     telescope = {
-      select = { '<CR>' },
+      select = { '<CR>', '<C-v>', '<C-x>', '<C-t>', '<Tab>', '<S-Tab>' },
     },
   },
   init = function()
