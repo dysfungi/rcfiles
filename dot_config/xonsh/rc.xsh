@@ -25,7 +25,9 @@ $XONSH_STORE_STDOUT = True
 # $PATH #
 #########
 
-$PATH.prepend(p"/usr/local/bin")
+USR_LOCAL_BIN = p"/usr/local/bin"
+if USR_LOCAL_BIN.exists() and str(USR_LOCAL_BIN) not in $PATH:
+    $PATH.insert(0, str(USR_LOCAL_BIN))
 
 ############
 # Homebrew #
@@ -36,4 +38,4 @@ $PATH.prepend(p"/usr/local/bin")
 HOMEBREW_PREFIX = Path($(brew --prefix)) if $(command -v brew) else p'/opt/homebrew'
 HOMEBREW_BIN = HOMEBREW_PREFIX / 'bin'
 if HOMEBREW_BIN.exists() and str(HOMEBREW_BIN) not in $PATH:
-    $PATH.prepend(HOMEBREW_BIN)
+    $PATH.insert(0, str(HOMEBREW_BIN))
