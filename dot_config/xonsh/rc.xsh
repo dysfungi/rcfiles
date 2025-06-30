@@ -21,6 +21,12 @@ $XONSH_HISTORY_MATCH_ANYWHERE = True
 # $XONSH_SHOW_TRACEBACK = True
 $XONSH_STORE_STDOUT = True
 
+#########
+# $PATH #
+#########
+
+$PATH.prepend(p"/usr/local/bin")
+
 ############
 # Homebrew #
 ############
