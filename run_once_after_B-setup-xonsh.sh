@@ -7,5 +7,7 @@ if command -v xonsh; then
   if ! grep -q "${XONSH_EXECUTABLE}" /etc/shells; then
     echo "${XONSH_EXECUTABLE}" | sudo tee -a /etc/shells
   fi
-  chsh -s "${XONSH_EXECUTABLE}"
+  if [ "${XONSH_EXECUTABLE}" != "${SHELL}" ]; then
+    chsh -s "${XONSH_EXECUTABLE}"
+  fi
 fi
