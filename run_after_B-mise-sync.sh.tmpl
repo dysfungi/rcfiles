@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# https://mise.jdx.dev/installing-mise.html#installation-methods
+if ! command -v mise > /dev/null; then
+  curl "https://mise.run" | MISE_INSTALL_PATH="/usr/local/bin/mise" sh
+fi
+
+userName="$(whoami)"
+hostName="$(hostname)"
+bakSuffix="${userName}.${hostName}"
+sourceDir="{{ .chezmoi.sourceDir }}"
+bakDir="${sourceDir}/backups"
+bakFile="${bakDir}/mise-ls.${bakSuffix}"
+export GIT_DIR="${sourceDir}/.git"
+export GIT_WORK_TREE="${sourceDir}"
+
+backup () {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  ! rm "${bakFile}"
+  mise ls > "${bakFile}"
+  git add "${bakDir}"
+  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+    git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+mkdir -p "${bakDir}"
+
+backup before install
+! mise install --yes
+backup after install
+
+backup before upgrade
+! mise upgrade --yes
+backup after upgrade
+
+git log --all-match --grep="mise" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
