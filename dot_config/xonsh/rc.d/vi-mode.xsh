@@ -38,7 +38,7 @@ def _configure_vi_mode():
             buffer.cursor_position += document.get_start_of_line_position(
                 after_whitespace=True,
             )
-            enter_insert_mode(event)
+            _enter_insert_mode(event)
 
         @bindings.add('e', filter=vi_navigation_mode)
         def _navigate_up(event):
