@@ -1,5 +1,24 @@
+# https://mise.jdx.dev/configuration.html
+
 [tools]
+# https://mise.jdx.dev/dev-tools/
 
 node = 'lts'
 ollama = '0'
-python = '3.12'
+# TODO: Python global with mise does not work for xonsh
+# python = '3.12'
+
+[env]
+# https://mise.jdx.dev/environments/
+
+[tasks.build]
+# https://mise.jdx.dev/tasks/
+
+[settings]
+# https://mise.jdx.dev/configuration/settings.html
+
+[plugins]
+#
+
+[alias]
+# https://mise.jdx.dev/dev-tools/aliases.html
