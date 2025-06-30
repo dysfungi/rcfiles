@@ -14,7 +14,7 @@ from xonsh.prompt.base import PromptField, PromptFields
 
 # https://xon.sh/envvars.html#prompt
 $PROMPT = '{YELLOW}{env_name}{RESET} {cwd}{gitstatus.branch}{gitstatus.ahead}{gitstatus.behind} {RED}{last_return_code_if_nonzero:[{BOLD_INTENSE_RED}{}{RED}] }{RESET}{BOLD_BLUE}{prompt_end}{RESET} '
-$RIGHT_PROMPT = '{localtime}'
+$RIGHT_PROMPT = '{mytime}'
 # $PROMPT_REFRESH_INTERVAL = 1
 # $UPDATE_PROMPT_ON_KEYPRESS = True
 
@@ -61,15 +61,21 @@ $PROMPT_FIELDS['prompt_end'] = "@>"
 # PROMPT_FIELDS["shelldate"] #
 ##############################
 
-def get_shelldate():
-    get_shelldate.fulldate %= 10
-    get_shelldate.fulldate += 1
-    if get_shelldate.fulldate == 1:
-        return time.strftime('%Y-%m-%d')
-    return time.strftime('%H:%M')
+class MyTime(PromptField):
+    _name = "mytime"
+    _count: int = 0
+    prefix = "{PURPLE}"
+    suffix = "{RESET}"
 
+    def update(self, ctx):
+        self._count %= 10
+        self._count += 1
+        self.value = (
+            time.strftime('%Y-%m-%d')
+            if self._count == 1
+            else  time.strftime('%H:%M')
+        )
 
-get_shelldate.fulldate = 0
 
 # https://xon.sh/xonshrc.html#display-different-date-information-every-10th-time
-$PROMPT_FIELDS['shelldate'] = get_shelldate
+$PROMPT_FIELDS['mytime'] = MyTime()
