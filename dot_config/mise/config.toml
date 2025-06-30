@@ -1,0 +1,5 @@
+[tools]
+
+node = 'lts'
+ollama = '0'
+python = '3.12'
