@@ -51,26 +51,22 @@ return {
 
     -- telscope-config.lua
     telescope.load_extension 'chezmoi'
-    vim.keymap.set('n', '<leader>sc', telescope.extensions.chezmoi.find_files, {
+    vim.keymap.set('n', '<leader>sc', function()
+      telescope.extensions.chezmoi.find_files {
+        -- You can also search a specific target directory and override arguments
+        -- Here is an example with the default args
+        -- targets = vim.fn.stdpath 'config',
+        args = {
+          '--path-style',
+          'absolute',
+          '--include',
+          'files,scripts',
+          '--exclude',
+          'externals',
+        },
+      }
+    end, {
       desc = '[S]earch [C]hezmoi Files',
     })
-    -- You can also search a specific target directory and override arguments
-    -- Here is an example with the default args
-    -- vim.keymap.set('n', '<leader>scc', function()
-    --   telescope.extensions.chezmoi.find_files {
-    --     targets = vim.fn.stdpath 'config',
-    --     args = {
-    --       '--path-style',
-    --       'absolute',
-    --       '--include',
-    --       'files',
-    --       '--exclude',
-    --       'externals',
-    --     },
-    --   }
-    -- end, {
-    --   desc = '[S]earch [C]hezmoi ~/.[C]onfig Files',
-    -- })
-    -- wk.add { '<leader>sc', group = '[S]earch [C]hezmoi Files' }
   end,
 }
