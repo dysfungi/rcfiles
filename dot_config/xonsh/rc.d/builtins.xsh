@@ -10,3 +10,12 @@ from xonsh.built_ins import XSH
 ######
 
 XSH.aliases["cv"] = 'cdargs @($args) && cd $(cat "$HOME/.cdargsresult")'
+
+XSH.aliases["-"] = "cd -"
+XSH.aliases[".."] = "cd .."
+XSH.aliases["..."] = "cd ../.." # TODO: fix to override Ellipsis
+XSH.aliases["...."] = "cd ../../.."
+XSH.aliases["cd."] = "cd .."
+XSH.aliases["cd.."] = "cd ../.."
+XSH.aliases["cd..."] = "cd ../../.."
+XSH.aliases["cd...."] = "cd ../../../.."
