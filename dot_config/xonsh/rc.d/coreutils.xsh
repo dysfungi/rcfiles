@@ -22,3 +22,16 @@ else:
 XSH.aliases["l"] = ["ls", "-CFAL"]
 XSH.aliases["la"] = ["ls", "-A"]
 XSH.aliases["ll"] = ["ls", "-alFh"]
+
+
+#########
+# TOUCH #
+#########
+
+def _touch_with_parents(args):
+    for file in map(Path, args):
+        file.parent.mkdir(parents=True)
+        file.touch()
+
+
+XSH.aliases["tp"] = _touch_with_parents
