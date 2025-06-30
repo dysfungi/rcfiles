@@ -30,8 +30,8 @@ XSH.aliases["ll"] = ["ls", "-alFh"]
 
 def _touch_with_parents(args):
     for file in map(Path, args):
-        file.parent.mkdir(parents=True)
-        file.touch()
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.touch(exist_ok=True)
 
 
 XSH.aliases["tp"] = _touch_with_parents
