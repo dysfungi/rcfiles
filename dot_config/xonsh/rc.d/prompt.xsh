@@ -19,5 +19,6 @@ def get_shelldate():
 get_shelldate.fulldate = 0
 
 
+$PROMPT_FIELDS['prompt_end'] = "@>"
 # https://xon.sh/xonshrc.html#display-different-date-information-every-10th-time
 $PROMPT_FIELDS['shelldate'] = get_shelldate
