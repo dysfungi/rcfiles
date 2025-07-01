@@ -8,8 +8,7 @@ playground {{ .chezmoi.homeDir }}/Code/playground
 pyground {{ .chezmoi.homeDir }}/Code/playground/python
 goground {{ .chezmoi.homeDir }}/Code/playground/go
 
-{{- if eq .chezmoi.username "dfrank" -}}
-
+{{- if eq .chezmoi.username "dfrank" }}
 reliability {{ .chezmoi.homeDir }}/Code/reliability-infrastructure
 sre {{ .chezmoi.homeDir }}/Code/sre-monorepo
 p4 /Users/shared/p4
@@ -23,8 +22,7 @@ mt {{ .chezmoi.homeDir }}/Code/maintenance-tool
 rs-admin {{ .chezmoi.homeDir }}/Code/riotstatus-admin
 rs-page {{ .chezmoi.homeDir }}/Code/riotstatus-page
 
-{{- else -}}
-
+{{- else }}
 monorepo {{ .chezmoi.homeDir }}/Code/monorepo
 fsharp {{ .chezmoi.homeDir }}/Code/monorepo/fsharp
 fsharp-api {{ .chezmoi.homeDir }}/Code/monorepo/fsharp/api
@@ -45,4 +43,4 @@ miniflux {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/miniflux
 node-red {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/node-red
 ollama {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/ollama
 
-{{- end -}}
+{{- end }}
