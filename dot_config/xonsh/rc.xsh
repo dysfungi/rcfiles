@@ -34,6 +34,12 @@ USR_LOCAL_BIN = p"/usr/local/bin"
 if USR_LOCAL_BIN.exists() and str(USR_LOCAL_BIN) not in $PATH:
     $PATH.insert(0, str(USR_LOCAL_BIN))
 
+#######
+# Env #
+#######
+
+$EDITOR = "nvim"
+
 ############
 # Homebrew #
 ############
