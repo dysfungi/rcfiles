@@ -5,6 +5,7 @@ black
 bottle
 cachetools
 click
+coconut
 doit
 fastapi
 flake8
@@ -23,5 +24,6 @@ pytest
 requests
 ruff
 tenacity
+uv
 xontrib-1password
 xonsh[full]
