@@ -351,6 +351,18 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- [[ Custom Filetypes ]]
+
+-- https://github.com/ngalaiko/tree-sitter-go-template#neovim-integration-using-nvim-treesitter
+vim.filetype.add {
+  extension = {
+    gotmpl = 'gotmpl',
+  },
+  pattern = {
+    ['.*%.tmpl'] = 'gotmpl',
+  },
+}
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -1184,6 +1196,7 @@ require('lazy').setup({
         'bash',
         'c',
         'diff',
+        'gotmpl',
         'html',
         'lua',
         'luadoc',
