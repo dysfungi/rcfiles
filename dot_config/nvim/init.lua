@@ -810,7 +810,7 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
-        -- https://github.com/williamboman/mason-lspconfig.nvim?tab=readme-ov-file#available-lsp-servers
+        -- https://github.com/williamboman/mason-lspconfig.nvim#available-lsp-servers
         ast_grep = {}, -- C, C#, C++, CSS, Dart, Go, HTML, Java, JavaScript, JSX, Kotlin, Lua, Python, Rust, TypeScript
         awk_ls = {},
         bashls = {}, -- Bash, Csh, Ksh, Sh, Zsh, etc
@@ -877,24 +877,12 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       require('mason-tool-installer').setup {
         ensure_installed = {
-          'awk_ls', -- Awk
-          'bashls', -- Python
           'black', -- Python
-          'csharp_ls', -- Dotnet / C#
           'isort', -- Python
-          'lua_ls', -- Lua
-          'marksman', -- Markdown
-          'ocamllsp', -- Ocaml
           'prettier',
           'prettierd',
-          'pyright', -- Python
           'ruff', -- Python
           'stylua', -- Used to format Lua code
-          'taplo', -- TOML
-          'terraformls', -- Terraform
-          'tflint', -- Terraform
-          'vtsls',
-          'yamlls', -- YAML
         },
       }
 
@@ -958,7 +946,7 @@ require('lazy').setup({
         -- Conform can also run multiple formatters sequentially
         python = function(bufnr)
           if require('conform').get_formatter_info('ruff_format', bufnr).available then
-            return { 'ruff_format' }
+            return { 'ruff_organize_imports', 'ruff_fix', 'ruff_format' }
           else
             return { 'isort', 'black' }
           end
