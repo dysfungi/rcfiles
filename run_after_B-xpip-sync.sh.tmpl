@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v xpip > /dev/null; then
-  echo >&2 "WARNING: Could not find xpip"
+if ! command -v xonsh > /dev/null; then
+  echo >&2 "WARNING: Could not find xonsh for xpip"
   exit 0
 fi
 
@@ -21,7 +21,7 @@ backup () {
   local action="${2:?required}"
 
   ! rm "${bakFile}"
-  mise ls > "${bakFile}"
+  xonsh -c "xpip freeze --all > '${bakFile}'"
   git add "${bakDir}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
@@ -31,7 +31,7 @@ backup () {
 mkdir -p "${bakDir}"
 
 backup before install
-! xpip install --constraint="${constraintFile}" --no-input --upgrade
+! xonsh -c "xpip install --constraint='${constraintFile}' --no-input --requirement='${constraintFile}' --upgrade"
 backup after install
 
 git log --all-match --grep="xpip" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
