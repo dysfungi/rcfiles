@@ -213,8 +213,6 @@ brew "vint"
 brew "vultr"
 # Execute commands when watched files change
 brew "watchexec"
-# Watch files and take action when they change
-brew "watchman"
 # Internet file retriever
 brew "wget"
 # Python-powered, cross-platform, Unix-gazing shell language and command prompt
