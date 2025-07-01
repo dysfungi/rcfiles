@@ -1,4 +1,5 @@
 from xonsh.built_ins import XSH
+from _utils import reset_current_job
 
 
 def _rc_mise():
@@ -26,6 +27,7 @@ def _auto_activate_mise():
         hook = $(command mise hook-env -s xonsh)
         if hook:
             execx(hook)
+        reset_current_job()
 
     def _mise(args):
       if args and args[0] in ('deactivate', 'shell', 'sh'):

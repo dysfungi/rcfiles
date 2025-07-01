@@ -18,10 +18,10 @@ $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $PROMPT = "\n".join([
     "{PURPLE}{localtime}{RESET} {INTENSE_WHITE}{short_cwd}{RESET} {BOLD_INTENSE_GREEN}{prompt_end}{RESET} ",
 ])
-$RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}] }{RESET}{current_job}"
+$RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}]}{RESET}"
 # $PROMPT_REFRESH_INTERVAL = 1
+$TITLE = "{current_job:{} | }{user}"
 # $UPDATE_PROMPT_ON_KEYPRESS = True
-
 
 ####################################
 # PROMPT_FIELDS["gitstatus.ahead"] #
