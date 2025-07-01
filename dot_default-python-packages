@@ -23,4 +23,5 @@ pytest
 requests
 ruff
 tenacity
+xontrib-1password
 xonsh[full]
