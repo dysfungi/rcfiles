@@ -40,7 +40,7 @@ idna==3.10
 importlib_metadata==8.7.0
 iniconfig==2.1.0
 installer==0.7.0
-ipython==9.3.0
+ipython==9.4.0
 ipython_pygments_lexers==1.1.1
 isort==6.0.1
 jaraco.classes==3.4.0
@@ -108,12 +108,13 @@ typing-inspection==0.4.1
 typing_extensions==4.14.0
 ujson==5.10.0
 urllib3==2.5.0
-uv==0.7.17
+uv==0.7.18
 virtualenv==20.31.2
 wcwidth==0.2.13
 wheel @ file:///opt/homebrew/Cellar/python%403.13/3.13.2/libexec/wheel-0.45.1-py3-none-any.whl#sha256=b9235939e2096903717cb6bfc132267f8a7e46deb2ec3ef9c5e234ea301795d0
 xattr==1.1.4
 xonsh==0.19.9
 xontrib-1password==0.3.0
+xontrib-term-integrations==0.2.0
 zipp==3.23.0
 zstandard==0.23.0
