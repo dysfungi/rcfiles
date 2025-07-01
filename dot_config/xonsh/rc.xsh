@@ -15,7 +15,6 @@ from xonsh.built_ins import XSH
 
 # [xonsh Env Vars](https://xon.sh/envvars.html)
 $COMPLETIONS_CONFIRM = True
-# $MULTILINE_PROMPT = '`·.,¸,.·*¯`·.,¸,.·*¯'
 $XONSH_AUTOPAIR = True
 $XONSH_CACHE_SCRIPTS = 0
 $XONSH_CACHE_EVERYTHING = 0
