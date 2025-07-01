@@ -14,7 +14,7 @@ from xonsh.prompt.base import PromptField, PromptFields
 
 # https://xon.sh/envvars.html#interactive-prompt
 $BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{RESET}{env_name: {YELLOW}{}}{RESET}"
-# $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
+$MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $PROMPT = "\n".join([
     "{PURPLE}{localtime}{RESET} {INTENSE_WHITE}{short_cwd}{RESET} {BOLD_INTENSE_GREEN}{prompt_end}{RESET} ",
 ])
