@@ -11,7 +11,29 @@ def _auto_activate_mise():
         return
 
     # https://mise.jdx.dev/installing-mise.html#xonsh
-    execx($(mise activate xonsh))
+    # execx($(/opt/homebrew/bin/mise activate xonsh))
+
+    from os               import environ
+    import subprocess
+    from xonsh.built_ins  import XSH
+
+    envx = XSH.env
+    envx[   'MISE_SHELL'] = 'xonsh'
+    environ['MISE_SHELL'] = envx.get_detyped('MISE_SHELL')
+
+    @events.on_pre_prompt
+    def _mise_activate_hook(*args, **kwargs):
+        hook = $(command mise hook-env -s xonsh)
+        if hook:
+            execx(hook)
+
+    def _mise(args):
+      if args and args[0] in ('deactivate', 'shell', 'sh'):
+        return execx($(command mise @(args)))
+      else:
+        return $(command mise @(args))
+
+    XSH.aliases['mise'] = _mise
 
 
 def _alias_mise():
