@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v xpip > /dev/null; then
+  echo >&2 "WARNING: Could not find xpip"
+  exit 0
+fi
+
+userName="$(whoami)"
+hostName="$(hostname)"
+bakSuffix="${userName}.${hostName}"
+sourceDir="{{ .chezmoi.sourceDir }}"
+bakDir="${sourceDir}/backups"
+bakFile="${bakDir}/xpip-freeze.${bakSuffix}"
+constraintFile="${HOME}/.default-python-packages"
+export GIT_DIR="${sourceDir}/.git"
+export GIT_WORK_TREE="${sourceDir}"
+
+backup () {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  ! rm "${bakFile}"
+  mise ls > "${bakFile}"
+  git add "${bakDir}"
+  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+    git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+mkdir -p "${bakDir}"
+
+backup before install
+! xpip install --constraint="${constraintFile}" --no-input --upgrade
+backup after install
+
+git log --all-match --grep="xpip" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
