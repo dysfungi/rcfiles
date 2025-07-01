@@ -877,12 +877,24 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       require('mason-tool-installer').setup {
         ensure_installed = {
+          'awk_ls', -- Awk
+          'bashls', -- Python
           'black', -- Python
+          'csharp_ls', -- Dotnet / C#
           'isort', -- Python
+          'lua_ls', -- Lua
+          'marksman', -- Markdown
+          'ocamllsp', -- Ocaml
           'prettier',
           'prettierd',
+          'pyright', -- Python
+          'ruff', -- Python
           'stylua', -- Used to format Lua code
+          'taplo', -- TOML
+          'terraformls', -- Terraform
+          'tflint', -- Terraform
           'vtsls',
+          'yamlls', -- YAML
         },
       }
 
