@@ -25,6 +25,9 @@ $RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}]}{
 $TITLE = "{current_job:{} | }{user}"
 # $UPDATE_PROMPT_ON_KEYPRESS = True
 
+# https://github.com/jnoortheen/xontrib-term-integrations#usage
+xontrib load term_integration
+
 ####################################
 # PROMPT_FIELDS["gitstatus.ahead"] #
 ####################################
