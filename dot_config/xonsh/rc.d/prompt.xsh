@@ -13,10 +13,12 @@ from xonsh.prompt.base import PromptField, PromptFields
 ##########
 
 # https://xon.sh/envvars.html#interactive-prompt
-$BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{RESET}{env_name: {YELLOW}{}}{RESET}"
-$MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
+# $BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{env_name: {YELLOW}{}}"
+# $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
+$MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
 $PROMPT = "\n".join([
-    "{PURPLE}{localtime}{RESET} {INTENSE_WHITE}{short_cwd}{RESET} {BOLD_INTENSE_GREEN}{prompt_end}{RESET} ",
+    "{GREEN}┬─[{INTENSE_WHITE}{short_cwd}{GREEN}]─[{branch_color}{gitstatus.branch}{BOLD_INTENSE_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{GREEN}]─({YELLOW}{env_name}{GREEN})",
+    "{GREEN}╰─[{PURPLE}{localtime}{GREEN}]─{prompt_end} ",
 ])
 $RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}]}{RESET}"
 # $PROMPT_REFRESH_INTERVAL = 1
@@ -48,7 +50,7 @@ gitstatus_branch.suffix = "{RESET}"
 # PROMPT_FIELDS["prompt_end"] #
 ###############################
 
-$PROMPT_FIELDS["prompt_end"] = "@>"
+$PROMPT_FIELDS["prompt_end"] = "{INTENSE_GREEN}@>{RESET}"
 
 
 ##############################
