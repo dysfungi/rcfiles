@@ -1,5 +1,0 @@
---- /Users/dfrank/.config/homebrew/dump/Brewfile.2025-03-03T09:15:57-0800.MLF67N6G9N5W.preinstall	2025-03-03 09:16:03
-+++ /Users/dfrank/.config/homebrew/dump/Brewfile.2025-03-03T09:15:57-0800.MLF67N6G9N5W.postinstall	2025-03-03 09:16:19
-@@ -246,0 +247,2 @@
-+# Terraform
-+brew "hashicorp/tap/terraform"

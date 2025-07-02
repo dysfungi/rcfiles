@@ -1,5 +1,0 @@
---- /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-29T16:58:07-0700.dmf-macbookpro2023.local.preinstall	2025-03-29 16:58:10
-+++ /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-29T16:58:07-0700.dmf-macbookpro2023.local.postinstall	2025-03-29 16:58:17
-@@ -133 +133 @@
--brew "ollama"
-+brew "ollama", restart_service: :changed

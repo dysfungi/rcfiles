@@ -1,5 +1,0 @@
---- /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T16:55:43-0800.dmf-macbookpro2023.local.preinstall	2025-03-02 16:55:45
-+++ /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T16:55:43-0800.dmf-macbookpro2023.local.postinstall	2025-03-02 16:55:52
-@@ -163,0 +164,2 @@
-+# Autoformat shell script source code
-+brew "shfmt"

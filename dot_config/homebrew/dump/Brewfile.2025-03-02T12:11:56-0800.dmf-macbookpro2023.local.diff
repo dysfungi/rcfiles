@@ -1,5 +1,0 @@
---- /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T12:11:56-0800.dmf-macbookpro2023.local.preinstall	2025-03-02 12:11:59
-+++ /Users/dmf/.config/homebrew/dump/Brewfile.2025-03-02T12:11:56-0800.dmf-macbookpro2023.local.postinstall	2025-03-02 12:12:06
-@@ -185,0 +186,2 @@
-+# Code-search similar to ack
-+brew "the_silver_searcher"
