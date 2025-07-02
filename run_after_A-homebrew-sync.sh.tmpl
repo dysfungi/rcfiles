@@ -27,9 +27,11 @@ export HOMEBREW_BUNDLE_FILE="${brewFile}"
 backup () {
   local clarifier="${1:?required}"
 
-  ! rm "${bakFile}"
+  if [ -e "${bakFile}" ]; then
+    rm "${bakFile}"
+  fi
   brew bundle dump --describe --file="${bakFile}"
-  git add "${bakDir}"
+  git add "${bakFile}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): Dump Brewfile ${clarifier} install for ${userName} on ${hostName}" -- "${bakDir}"
   fi
@@ -39,7 +41,7 @@ mkdir -p "${bakDir}"
 
 # Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
 backup before
-! brew bundle install --cleanup --file="${brewFile}" --upgrade
+brew bundle install --cleanup --file="${brewFile}" --upgrade
 backup after
 
 git log --all-match --grep="Brewfile" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD

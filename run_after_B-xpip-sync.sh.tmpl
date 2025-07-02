@@ -20,9 +20,8 @@ backup () {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  ! rm "${bakFile}"
   xonsh -c "xpip freeze --all > '${bakFile}'"
-  git add "${bakDir}"
+  git add "${bakFile}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
@@ -31,7 +30,7 @@ backup () {
 mkdir -p "${bakDir}"
 
 backup before install
-! xonsh -c "xpip install --no-input --requirement=${reqFile} --upgrade"
+xonsh -c "xpip install --no-input --requirement=${reqFile} --upgrade"
 backup after install
 
 git log --all-match --grep="xpip" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD

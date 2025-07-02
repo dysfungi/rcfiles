@@ -19,9 +19,8 @@ backup () {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  ! rm "${bakFile}"
   mise ls > "${bakFile}"
-  git add "${bakDir}"
+  git add "${bakFile}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
@@ -30,11 +29,11 @@ backup () {
 mkdir -p "${bakDir}"
 
 backup before install
-! mise install --yes
+mise install --yes
 backup after install
 
 backup before upgrade
-! mise upgrade --yes
+mise upgrade --yes
 backup after upgrade
 
 git log --all-match --grep="mise" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
