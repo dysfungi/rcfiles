@@ -1,6 +1,10 @@
 local wk = require 'which-key'
 local telescope = require 'telescope'
 
+vim.cmd [[
+  let $ONLY_SCRIPTS = 'no-script'
+]]
+
 return {
   'xvzc/chezmoi.nvim',
   dependencies = { 'nvim-lua/plenary.nvim' },

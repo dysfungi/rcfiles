@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "$0" != *"${ONLY_SCRIPTS}"* ]]; then
+  echo >&2 "INFO: Only running scripts with '${ONLY_SCRIPTS}'; Skipping $0"
+  exit 0
+else
+  echo >&2 "INFO: Starting $0"
+fi
+
 if ! command -v xonsh > /dev/null; then
   echo >&2 "WARNING: Could not find xonsh for xpip"
   exit 0
@@ -34,3 +41,5 @@ xonsh -c "xpip install --no-input --requirement=${reqFile} --upgrade"
 backup after install
 
 git log --all-match --grep="xpip" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
+
+echo >&2 "INFO: Ending $0"

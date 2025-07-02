@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "$0" != *"${ONLY_SCRIPTS}"* ]]; then
+  echo >&2 "INFO: Only running scripts with '${ONLY_SCRIPTS}'; Skipping $0"
+  exit 0
+else
+  echo >&2 "INFO: Starting $0"
+fi
+
 # https://mise.jdx.dev/installing-mise.html#installation-methods
 if ! command -v mise > /dev/null; then
   curl "https://mise.run" | MISE_INSTALL_PATH="/usr/local/bin/mise" sh
@@ -37,3 +44,5 @@ mise upgrade --yes
 backup after upgrade
 
 git log --all-match --grep="mise" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
+
+echo >&2 "INFO: Ending $0"
