@@ -223,8 +223,8 @@ end
 noremap('l', 'i') -- insert
 noremap('L', 'I') -- insert
 -- Escape
-inoremap(',m', '<Esc>') -- Escap
-inoremap(';q', '<Esc>') -- Escap
+inoremap(',m', '<Esc>') -- Escape
+inoremap(';q', '<Esc>') -- Escape
 -- Cursor Navigation
 -- TODO(dmf): map window navigation?
 noremap('e', 'k') -- up
@@ -248,9 +248,9 @@ inoremap('}', '}<C-g>u')
 noremap('N', 'K') -- runs keywordprg (program)
 
 -- [Helpers]
--- Escape modes
+-- Terminal Escape modes
 tnoremap('<Esc>', '<C-\\><C-n>')
-tnoremap('<leader>m', '<C-\\><C-n>')
+-- tnoremap(',m', '<C-\\><C-n>')
 
 -- Fast writes
 nremap('<leader>w', ':w!<CR>')
