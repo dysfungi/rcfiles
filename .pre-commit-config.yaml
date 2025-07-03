@@ -79,7 +79,7 @@ repos:
         entry: pre-commit autoupdate
         always_run: true
         pass_filenames: false
-        stages: [post-commit]
+        stages: [pre-push]
 
   ###########
   # PYTHON #
