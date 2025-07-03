@@ -58,6 +58,15 @@ repos:
         types: [file]
         files: \.(fs|fsx)$
 
+  #######
+  # LUA #
+  #######
+
+  - repo: https://github.com/JohnnyMorganz/StyLua
+    rev: v2.1.0
+    hooks:
+      - id: stylua # or stylua-system / stylua-github
+
   ##############
   # PRE-COMMIT #
   ##############
