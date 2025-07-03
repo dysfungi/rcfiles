@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ "$0" != *"${ONLY_SCRIPTS}"* ]]; then
+if [[ "$0" != *"${ONLY_SCRIPTS:-}"* ]]; then
   echo >&2 "INFO: Only running scripts with '${ONLY_SCRIPTS}'; Skipping $0"
   exit 0
 else
