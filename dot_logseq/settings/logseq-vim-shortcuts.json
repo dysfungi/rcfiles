@@ -12,33 +12,36 @@
     "copyCurrentBlockContent": "y y",
     "copyCurrentBlockRef": "shift+y",
     "deleteCurrentBlock": "d d",
-    "deleteCurrentAndNextSiblingBlocks": "d j",
-    "deleteCurrentAndPrevSiblingBlocks": "d k",
-    "down": "j",
+    "deleteCurrentAndNextSiblingBlocks": "d n",
+    "deleteCurrentAndPrevSiblingBlocks": "d e",
+    "down": [
+      "j",
+      "n"
+    ],
     "extend": "z o",
     "extendAll": "z shift+o",
-    "highlightFocusIn": "l",
+    "highlightFocusIn": "i",
     "highlightFocusOut": "h",
-    "indent": "shift+l",
+    "indent": "shift+.",
     "insert": [
       "shift+a",
       "a"
     ],
     "insertBefore": [
-      "shift+i",
-      "i"
+      "shift+l",
+      "l"
     ],
     "nextNewBlock": "o",
     "nextSibling": "shift+j",
-    "outdent": "shift+h",
+    "outdent": "shift+,",
     "pasteNext": "p",
     "pastePrev": "shift+p",
     "prevNewBlock": "shift+o",
     "prevSibling": "shift+k",
     "redo": "ctrl+r",
     "search": "/",
-    "searchPrev": "shift+n",
-    "searchNext": "n",
+    "searchPrev": "shift+k",
+    "searchNext": "k",
     "searchCleanup": "s q",
     "searchBaidu": "s b",
     "searchGithub": "s h",
@@ -48,7 +51,7 @@
     "searchYoutube": "s y",
     "top": "shift+t",
     "undo": "u",
-    "up": "k",
+    "up": "e",
     "exitEditing": [
       "mod+j mod+j",
       "ctrl+["
