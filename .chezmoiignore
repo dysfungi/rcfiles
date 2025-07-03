@@ -1,9 +1,13 @@
 # General
-**/*.log
+**/LICENSE
+**/README*
 
 # Backups
 backups/
 backups/**
+
+# Logs
+**/*.log
 
 # Neovim
 **/.luarc.json
