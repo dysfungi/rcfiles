@@ -822,7 +822,7 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
-        -- https://github.com/williamboman/mason-lspconfig.nvim#available-lsp-servers
+        -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
         ast_grep = {}, -- C, C#, C++, CSS, Dart, Go, HTML, Java, JavaScript, JSX, Kotlin, Lua, Python, Rust, TypeScript
         awk_ls = {},
         bashls = {}, -- Bash, Csh, Ksh, Sh, Zsh, etc
@@ -853,7 +853,6 @@ require('lazy').setup({
         },
         marksman = {}, -- Markdown
         ocamllsp = {},
-        pyright = {},
         rust_analyzer = {},
         -- sqls = {},
         taplo = {}, -- TOML
@@ -868,6 +867,7 @@ require('lazy').setup({
         -- ts_ls = {
         --   filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'javascript.tsx', 'typescript.tsx' },
         -- },
+        ty = {},
         vtsls = {
           filetypes = { 'javascript', 'typescript', 'javascriptreact', 'typescriptreact', 'javascript.tsx', 'typescript.tsx' },
         },
