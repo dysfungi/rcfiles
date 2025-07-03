@@ -1,5 +1,5 @@
 {
-  "enableVisualModeIndicator": false,
+  "enableVisualModeIndicator": true,
   "showRecentEmojis": false,
   "disabled": false,
   "keyBindings": {
