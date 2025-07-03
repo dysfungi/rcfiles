@@ -28,6 +28,12 @@ $TITLE = "{current_job:{} | }{user}"
 # https://github.com/jnoortheen/xontrib-term-integrations#usage
 xontrib load term_integration
 
+#############################
+# PROMPT_FIELDS["env_name"] #
+#############################
+
+$PROMPT_FIELDS["env_prefix"] = $PROMPT_FIELDS["env_postfix"] = ""
+
 ####################################
 # PROMPT_FIELDS["gitstatus.ahead"] #
 ####################################
