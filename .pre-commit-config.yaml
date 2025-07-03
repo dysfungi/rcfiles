@@ -41,7 +41,7 @@ repos:
     hooks:
       - id: gitlint
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
 
@@ -78,7 +78,7 @@ repos:
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # https://docs.astral.sh/ruff/integrations/#pre-commit
-    rev: "v0.12.1" # Ruff version.
+    rev: "v0.12.2" # Ruff version.
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
