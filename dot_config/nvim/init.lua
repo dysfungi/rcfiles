@@ -175,18 +175,18 @@ vim.opt.scrolloff = 10
 --  See `:help vim.keymap.set()`
 
 -- [Keymap Functions]
-local function recursive_map(mode, keys, exec, opts)
+function recursive_map(mode, keys, exec, opts)
   opts = opts or {}
   opts.remap = true
   opts.noremap = not opts.remap
   vim.keymap.set(mode, keys, exec, opts)
 end
 
-local function remap(keys, exec, opts)
+function remap(keys, exec, opts)
   recursive_map({ 'n', 'v', 'o' }, keys, exec, opts)
 end
 
-local function nremap(keys, exec, opts)
+function nremap(keys, exec, opts)
   recursive_map('n', keys, exec, opts)
 end
 
@@ -194,26 +194,26 @@ local function nmap(keys, exec, opts)
   nremap(keys, exec, opts)
 end
 
-local function nonrecursive_map(mode, keys, exec, opts)
+function nonrecursive_map(mode, keys, exec, opts)
   opts = opts or {}
   opts.noremap = true
   opts.remap = not opts.noremap
   vim.keymap.set(mode, keys, exec, opts)
 end
 
-local function noremap(keys, exec, opts)
+function noremap(keys, exec, opts)
   nonrecursive_map({ 'n', 'v', 'o' }, keys, exec, opts)
 end
 
-local function nnoremap(keys, exec, opts)
+function nnoremap(keys, exec, opts)
   nonrecursive_map('n', keys, exec, opts)
 end
 
-local function inoremap(keys, exec, opts)
+function inoremap(keys, exec, opts)
   nonrecursive_map('i', keys, exec, opts)
 end
 
-local function tnoremap(keys, exec, opts)
+function tnoremap(keys, exec, opts)
   nonrecursive_map('t', keys, exec, opts)
 end
 

@@ -28,7 +28,7 @@ return {
   init = function()
     wk.add {
       {
-        '<leader>T',
+        '<leader>H',
         '<CMD>call fsharp#showTooltip()<CR>',
         buffer = true,
         desc = 'Show tooltip over cursor for FSharp files',

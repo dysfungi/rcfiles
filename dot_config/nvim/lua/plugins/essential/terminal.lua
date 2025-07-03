@@ -1,15 +1,11 @@
 -- https://neovim.io/doc/user/terminal.html#_start
--- vim.api.nvim_create_autocmd('VimEnter', {
---   desc = 'Auto-open a terminal',
---   pattern = '*',
---   -- command = 'vsplit term://xonsh',
---   callback = function(ev)
---     vim.cmd 'vsplit term://xonsh'
---     vim.cmd 'wincmd h'
---     vim.cmd 'stopinsert'
---   end,
---   nested = true,
--- })
+noremap('<leader>T', function(ev)
+  vim.cmd 'vsplit term://$SHELL'
+  -- vim.cmd 'wincmd h'
+  -- vim.cmd 'stopinsert'
+end, {
+  desc = 'New [T]erminal',
+})
 
 -- https://github.com/rebelot/terminal.nvim#auto-insert-mode
 -- https://github.com/neovim/neovim/issues/2815#issuecomment-110571245
