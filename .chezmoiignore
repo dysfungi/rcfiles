@@ -11,3 +11,6 @@ backups/**
 **/spell/
 **/tags
 **/test.sh
+
+# Pre-commit
+.pre-commit-config.yaml
