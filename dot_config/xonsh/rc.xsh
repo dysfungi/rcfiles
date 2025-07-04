@@ -38,7 +38,8 @@ if USR_LOCAL_BIN.exists() and str(USR_LOCAL_BIN) not in $PATH:
 # Env #
 #######
 
-$EDITOR = "nvim"
+XSH.env.setdefault("EDITOR", "nvim -e")
+XSH.env.setdefault("VISUAL", "nvim")
 
 ############
 # Homebrew #

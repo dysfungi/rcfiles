@@ -13,6 +13,7 @@ httpx
 ipython
 isort
 mypy
+neovim-remote
 pdbpp
 poetry
 pre-commit
