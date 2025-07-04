@@ -1,3 +1,8 @@
+# https://www.chezmoi.io/reference/special-files/chezmoiignore/
+#
+# Chezmoi ignores hidden/dot files!
+# https://www.chezmoi.io/user-guide/frequently-asked-questions/design/#why-does-chezmoi-use-weird-filenames
+
 # General
 **/LICENSE
 **/README*
@@ -15,6 +20,3 @@ backups/**
 **/spell/
 **/tags
 **/test.sh
-
-# Pre-commit
-.pre-commit-config.yaml
