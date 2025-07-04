@@ -1,21 +1,27 @@
 # https://mise.jdx.dev/configuration.html
+# https://mise.jdx.dev/mise-cookbook/python.html#a-python-project-with-virtualenv
+
+min_version = "2024.9.5"
+
+[settings]
+# https://mise.jdx.dev/configuration/settings.html
+
+[settings.python]
+
+# https://mise.jdx.dev/mise-cookbook/python.html#mise-uv
+uv_venv_auto = true
+venv_auto_create = true
+
 
 [tools]
 # https://mise.jdx.dev/dev-tools/
 
 node = 'lts'
 ollama = '0'
+pre-commit = "latest"
 # TODO: Python global with mise does not work for xonsh
-# python = '3.12'
+# python = "{{ get_env(name='PYTHON_VERSION', default='3.12') }}"
 
-[env]
-# https://mise.jdx.dev/environments/
-
-[tasks.build]
-# https://mise.jdx.dev/tasks/
-
-[settings]
-# https://mise.jdx.dev/configuration/settings.html
 
 [plugins]
 #

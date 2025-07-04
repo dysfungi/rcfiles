@@ -1,6 +1,8 @@
+# https://mise.jdx.dev/configuration.html
 # https://mise.jdx.dev/mise-cookbook/python.html#a-python-project-with-virtualenv
 
 min_version = "2024.9.5"
+
 
 [settings]
 
@@ -11,15 +13,21 @@ venv_auto_create = true
 
 
 [env]
+# https://mise.jdx.dev/environments/
 # Use the project name derived from the current directory
 PROJECT_NAME = "{{ config_root | basename }}"
 
 # Automatic virtualenv activation
 _.python.venv = { path = ".venv", create = true }
 
+
 [tools]
 python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 pre-commit = "latest"
+
+
+[tasks]
+# https://mise.jdx.dev/tasks/
 
 [tasks.install]
 description = "Install dependencies"
