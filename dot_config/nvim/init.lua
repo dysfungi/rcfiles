@@ -231,11 +231,17 @@ noremap('e', 'k') -- up
 noremap('i', 'l') -- right
 noremap('n', 'j') -- down
 noremap('h', 'h') -- left
+-- To line [count]
+noremap('H', 'H') -- from top (Home) of window
+noremap('I', 'L') -- from bottom of window
 -- Word Motions
 noremap('j', 'e') -- forward to the end of word
+noremap('J', 'E') -- forward to the end of WORD
+noremap('E', 'J') -- join [count] lines
 -- Search
 noremap('k', 'n') -- find next
 noremap('K', 'N') -- find previous
+noremap('N', 'K') -- runs keywordprg (program) (ie, lookup definition of keyword under cursor)
 -- Create undo points
 inoremap('.', '.<C-g>u')
 inoremap('!', '!<C-g>u')
@@ -244,8 +250,6 @@ inoremap(':', ':<C-g>u')
 inoremap(';', ';<C-g>u')
 inoremap('{', '{<C-g>u')
 inoremap('}', '}<C-g>u')
--- Misc
-noremap('N', 'K') -- runs keywordprg (program)
 
 -- [Helpers]
 -- Terminal Escape modes

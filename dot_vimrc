@@ -763,24 +763,29 @@ inoremap ;p <Esc>
 inoremap ,m <Esc>
 
 " Colemak remap (navigation, undo, next search, insert)
-noremap z u
-noremap u k
-noremap h i
+" Up
+noremap e k
+" Left
+noremap h h
+" Right
 noremap i l
-noremap l e
-noremap e j
-noremap k n
-noremap n h
-noremap K N
-noremap N H
+" Down
+noremap n j
+" To line [count]
+ noremap H H
 noremap I L
-noremap H I
-noremap U K
+" Insert
+noremap l i
+noremap L I
+" Search
+noremap k n
+noremap K N
+" runs keywordprg (program) (ie, lookup definition of keyword under cursor)
+noremap N K
+" Word Motions
+noremap j e
+noremap J E
 noremap E J
-noremap L E
-noremap Z <C-r>
-noremap T U
-noremap l U
 
 " Create undo points
 inoremap . .<C-g>u
