@@ -6,6 +6,8 @@ min_version = "2024.9.5"
 [settings]
 # https://mise.jdx.dev/configuration/settings.html
 
+experimental = true
+
 [settings.python]
 
 # https://mise.jdx.dev/mise-cookbook/python.html#mise-uv
@@ -21,6 +23,7 @@ ollama = '0'
 pre-commit = "latest"
 # TODO: Python global with mise does not work for xonsh
 # python = "{{ get_env(name='PYTHON_VERSION', default='3.12') }}"
+uv = 'latest'
 
 
 [plugins]
