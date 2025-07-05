@@ -1,5 +1,5 @@
 vim.cmd [[
-  let $VISUAL = 'nvr -cc vsplit --remote-wait'
+  let $VISUAL = 'nvr -cc vsplit -c "setlocal bufhidden=delete" --remote-wait'
   let $EDITOR = 'nvim -e'
   let $GIT_EDITOR = $VISUAL
 
