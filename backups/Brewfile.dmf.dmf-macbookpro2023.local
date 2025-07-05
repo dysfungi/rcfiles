@@ -129,6 +129,8 @@ brew "moreutils"
 brew "mypy"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# Control nvim processes using `nvr` command-line tool
+brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Create, run, and share large language models (LLMs)
