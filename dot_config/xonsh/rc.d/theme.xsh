@@ -21,33 +21,48 @@ from xonsh.built_ins import XSH
 from xonsh.tools import register_custom_style
 from xonsh.pyghooks import (
     Token,
-    # pygments_style_by_name,
+    pygments_style_by_name,
     register_custom_pygments_style,
 )
 
 
-def _rc_theme():
-    THEME_NAME = "frank"
-    THEME_BASE = "dracula"
-    THEME_STYLES = {
-        # Token.Color.BLACK: "#008800",
-        Token.Color.BLUE: "#00aaff",
-        # Token.Color.BOLD_BLUE: "#008800",
-        # Token.Color.BOLD_GREEN: "#008800",
-        # Token.Color.GREEN: "#008800",
-        # Token.Color.INTENSE_BLACK: "#008800",
-        # Token.Generic.Output: "#008800",
-        # Token.PTK.Aborting: "#008800",
-        Token.PTK.AutoSuggestion: "#ccffcc",
-    }
+THEME_NAME = "frank"
+THEME_BASE = "dracula"
+THEME_STYLES = {
+    # Token.Color.BLACK: "#444444",
+    Token.Color.BLUE: "#0099ff",
+    Token.Color.CYAN: "#95a5d7",
+    Token.Color.INTENSE_BLUE: "#00bbff",
+    Token.Color.GREEN: "#008800",
+    Token.Color.PURPLE: "#8294c6",
+    Token.Color.YELLOW: "#999900",
+    # Token.Generic.Output: "#cccccc",
+    # Token.PTK.Aborting: "#cccccc",
+    Token.PTK.AutoSuggestion: "#ccffcc",
+}
 
+
+def get_theme(name=THEME_NAME):
+    return pygments_style_by_name(name)
+
+
+def _rc_theme():
+    _set_theme()
+    _alias_theme()
+
+
+def _set_theme():
     try:
-        # TODO(https://github.com/xonsh/xonsh/issues/5163): Use register_custom_style(..., base=THEME_BASE)
         register_custom_style(THEME_NAME, THEME_STYLES, base=THEME_BASE)
     except (KeyError, ValueError):
+        # TODO(https://github.com/xonsh/xonsh/issues/5163): Use register_custom_style(..., base=THEME_BASE)
         register_custom_pygments_style(THEME_NAME, THEME_STYLES, base=THEME_BASE)
 
     $XONSH_COLOR_STYLE = THEME_NAME
+
+
+def _alias_theme():
+    XSH.aliases["theme"] = get_theme
 
 
 if $XONSH_INTERACTIVE:
