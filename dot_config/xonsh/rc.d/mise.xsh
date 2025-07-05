@@ -5,7 +5,7 @@ from _utils import reset_current_job
 def _rc_mise():
     _auto_activate_mise()
     _alias_mise()
-
+    _alias_uv()
 
 def _auto_activate_mise():
     if not $(command -v mise):
@@ -41,6 +41,11 @@ def _auto_activate_mise():
 def _alias_mise():
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
     XSH.aliases["x"] = ["mise", "exec", "--"]
+
+
+def _alias_uv():
+    # https://mise.jdx.dev/getting-started.html#mise-exec-run
+    XSH.aliases["xuv"] = "$UV_PYTHON=@(sys.executable) uv pip @($args)"
 
 
 if $XONSH_INTERACTIVE:

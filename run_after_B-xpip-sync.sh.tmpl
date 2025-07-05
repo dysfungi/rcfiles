@@ -27,7 +27,7 @@ backup () {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  xonsh -c "xpip freeze --all > '${bakFile}'"
+  xonsh -c "\$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
   git add "${bakFile}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
