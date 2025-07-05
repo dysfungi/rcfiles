@@ -10,6 +10,20 @@ fi
 
 # https://mise.jdx.dev/installing-mise.html#installation-methods
 if ! command -v mise > /dev/null; then
+  echo >&2 'WARNING: Could not find mise; installing...'
+  echo >&2 "         PATH=${PATH}"
+  while read -n1 -p "Install mise-en-place? [y/n] " REPLY; do
+    case "${REPLY}" in
+      y*)
+        echo
+        break;;
+      n*)
+        echo
+        exit 2;;
+      *)
+        ;;
+    esac
+  done
   curl "https://mise.run" | MISE_INSTALL_PATH="/usr/local/bin/mise" sh
 fi
 
