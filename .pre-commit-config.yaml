@@ -13,6 +13,9 @@ x-anchors:
 default_language_version:
   python: python3.13
 
+ci:
+  autoupdate_commit_msg: "chore(pre-commit): Auto-update repo revisions"
+
 repos:
   ###########
   # GENERAL #
@@ -66,20 +69,6 @@ repos:
     rev: v2.1.0
     hooks:
       - id: stylua # or stylua-system / stylua-github
-
-  ##############
-  # PRE-COMMIT #
-  ##############
-
-  - repo: local
-    hooks:
-      - id: autoupdate
-        name: pre-commit autoupdate
-        language: system
-        entry: pre-commit autoupdate
-        always_run: true
-        pass_filenames: false
-        stages: [pre-push]
 
   ###########
   # PYTHON #
