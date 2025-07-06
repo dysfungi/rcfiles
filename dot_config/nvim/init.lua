@@ -232,8 +232,8 @@ noremap('i', 'l') -- right
 noremap('n', 'j') -- down
 noremap('h', 'h') -- left
 -- To line [count]
-noremap('H', 'H') -- from top (Home) of window
-noremap('I', 'L') -- from bottom of window
+noremap('H', 'H') -- from top (Home) of window / start of screen
+noremap('I', 'L') -- from bottom of window / end of screen
 -- Word Motions
 noremap('j', 'e') -- forward to the end of word
 noremap('J', 'E') -- forward to the end of WORD
