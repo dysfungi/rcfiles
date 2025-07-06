@@ -12,8 +12,22 @@ from xonsh.prompt.base import PromptField, PromptFields
 # PROMPT #
 ##########
 
+# $PROMPT_REFRESH_INTERVAL = 1
+# $UPDATE_PROMPT_ON_KEYPRESS = True
+
 # https://xon.sh/envvars.html#interactive-prompt
 # $BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{env_name: {YELLOW}{}}"
+try:
+    import xontrib.prompt_vi_mode.xsh
+    from xontrib.prompt_vi_mode import vi_mode
+except ImportError as exc:
+    print(exc)
+    $VI_MODE = True
+else:
+    # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
+    $BOTTOM_TOOLBAR = vi_mode
+    $PROMPT_REFRESH_INTERVAL = 1
+    $UPDATE_PROMPT_ON_KEYPRESS = True
 # $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
 $PROMPT = "\n".join([
@@ -21,9 +35,7 @@ $PROMPT = "\n".join([
     "{GREEN}╰─[{PURPLE}{localtime}{GREEN}]─{prompt_end} ",
 ])
 $RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}]}{RESET}"
-# $PROMPT_REFRESH_INTERVAL = 1
 $TITLE = "{current_job:{} | }{user}"
-# $UPDATE_PROMPT_ON_KEYPRESS = True
 
 # https://github.com/jnoortheen/xontrib-term-integrations#usage
 xontrib load term_integration

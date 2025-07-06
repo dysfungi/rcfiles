@@ -27,7 +27,8 @@ def _rc_vi_mode():
 
 def _configure_vi_mode():
     # https://xon.sh/envvars.html#vi-mode
-    $VI_MODE = True
+    # TODO: Merge into prompt.xsh?
+    # $VI_MODE = True
 
     # https://xon.sh/envvars.html#xonsh-copy-on-delete
     $XONSH_COPY_ON_DELETE = True
