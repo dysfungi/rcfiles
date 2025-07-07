@@ -37,9 +37,6 @@ $PROMPT = "\n".join([
 $RIGHT_PROMPT = "{last_return_code_if_nonzero:{RED}[{BOLD_INTENSE_RED}{}{RED}]}{RESET}"
 $TITLE = "{current_job:{} | }{user}"
 
-# https://github.com/jnoortheen/xontrib-term-integrations#usage
-xontrib load term_integration
-
 #############################
 # PROMPT_FIELDS["env_name"] #
 #############################
