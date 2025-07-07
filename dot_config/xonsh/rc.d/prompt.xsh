@@ -18,7 +18,6 @@ from xonsh.prompt.base import PromptField, PromptFields
 # https://xon.sh/envvars.html#interactive-prompt
 # $BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{env_name: {YELLOW}{}}"
 try:
-    import xontrib.prompt_vi_mode.xsh
     from xontrib.prompt_vi_mode import vi_mode
 except ImportError as exc:
     print(exc)
