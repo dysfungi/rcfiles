@@ -3,6 +3,8 @@ References:
     https://xon.sh/tutorial.html#customizing-the-prompt
 """
 import time
+
+from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
 from xonsh.built_ins import XSH
 from xonsh.prompt import gitstatus, vc
 from xonsh.prompt.base import PromptField, PromptFields
@@ -12,22 +14,31 @@ from xonsh.prompt.base import PromptField, PromptFields
 # PROMPT #
 ##########
 
-# $PROMPT_REFRESH_INTERVAL = 1
-# $UPDATE_PROMPT_ON_KEYPRESS = True
+def _vi_mode_prompt(*args, **kwargs):
+    # https://github.com/t184256/xontrib-prompt-vi-mode
+    prefix = getattr(_vi_mode_prompt, "prefix", "{BACKGROUND_WHITE}")
+    suffix = getattr(_vi_mode_prompt, "suffix", "")
+
+    # TODO: handle case VISUAL, which is not in ViInputMode
+    match XSH.shell.shell.prompter.app.vi_state.input_mode:
+        case ViInputMode.INSERT:
+            inner = "INSERT"
+        case ViInputMode.INSERT_MULTIPLE:
+            inner = "INSERT_MULTIPLE"
+        case ViInputMode.NAVIGATION:
+            inner = "NORMAL"
+        case ViInputMode.REPLACE:
+            inner = "REPLACE"
+        case _:
+            inner = "UNKNOWN"
+
+    return f"{prefix}{inner}{suffix}"
+
 
 # https://xon.sh/envvars.html#interactive-prompt
-# $BOTTOM_TOOLBAR = "{branch_color}{gitstatus.branch}{BOLD_BLUE}{gitstatus.ahead}{BOLD_RED}{gitstatus.behind}{env_name: {YELLOW}{}}"
-try:
-    from xontrib.prompt_vi_mode import vi_mode
-except ImportError as exc:
-    print(exc)
-    $VI_MODE = True
-else:
-    def _vi_mode_prompt():
-        return f"{{BACKGROUND_WHITE}}{vi_mode()}"
-
-    # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
-    $BOTTOM_TOOLBAR = _vi_mode_prompt
+# https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
+$UPDATE_PROMPT_ON_KEYPRESS = True
+$BOTTOM_TOOLBAR = _vi_mode_prompt
 # $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
 $PROMPT = "\n".join([
