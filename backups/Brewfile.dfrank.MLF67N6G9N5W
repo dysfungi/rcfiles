@@ -140,6 +140,8 @@ brew "moreutils"
 brew "mypy"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# Control nvim processes using `nvr` command-line tool
+brew "neovim-remote"
 # Port scanning utility for large networks
 brew "nmap"
 # Create, run, and share large language models (LLMs)
@@ -232,8 +234,6 @@ brew "vint"
 brew "vultr"
 # Execute commands when watched files change
 brew "watchexec"
-# Watch files and take action when they change
-brew "watchman"
 # Internet file retriever
 brew "wget"
 # Python-powered, cross-platform, Unix-gazing shell language and command prompt
