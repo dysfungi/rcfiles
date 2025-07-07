@@ -23,8 +23,11 @@ except ImportError as exc:
     print(exc)
     $VI_MODE = True
 else:
+    def _vi_mode_prompt():
+        return f"{{BACKGROUND_WHITE}}{vi_mode()}"
+
     # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
-    $BOTTOM_TOOLBAR = vi_mode
+    $BOTTOM_TOOLBAR = _vi_mode_prompt
 # $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
 $PROMPT = "\n".join([
