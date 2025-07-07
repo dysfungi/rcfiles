@@ -13,6 +13,10 @@ if ! command -v xonsh > /dev/null; then
   exit 0
 fi
 
+scriptName="$(basename $0)"
+outFile="$(mktemp -t "${scriptName}.out")"
+echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
+
 userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
@@ -36,8 +40,8 @@ backup () {
 
 mkdir -p "${bakDir}"
 
-backup before install
-xonsh --no-rc -c "xpip install --no-input --requirement=${reqFile} --upgrade"
-backup after install
+backup before install >> "${outFile}"
+xonsh --no-rc -c "xpip install --no-input --requirement=${reqFile} --upgrade" >> "${outFile}"
+backup after install >> "${outFile}"
 
 echo >&2 "INFO: Ending $0"
