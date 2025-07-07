@@ -25,8 +25,6 @@ except ImportError as exc:
 else:
     # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
     $BOTTOM_TOOLBAR = vi_mode
-    $PROMPT_REFRESH_INTERVAL = 1
-    $UPDATE_PROMPT_ON_KEYPRESS = True
 # $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
 $MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
 $PROMPT = "\n".join([
