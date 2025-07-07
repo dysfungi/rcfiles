@@ -40,6 +40,4 @@ backup before install
 xonsh --no-rc -c "xpip install --no-input --requirement=${reqFile} --upgrade"
 backup after install
 
-git log --all-match --grep="xpip" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
-
 echo >&2 "INFO: Ending $0"

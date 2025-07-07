@@ -64,6 +64,4 @@ backup before
 brew bundle install --cleanup --file="${brewFile}" --upgrade
 backup after
 
-git log --all-match --grep="Brewfile" --grep="${userName}" --grep="${hostName}" --patch HEAD~1..HEAD
-
 echo >&2 "INFO: Ending $0"
