@@ -45,7 +45,7 @@ def _alias_mise():
 
 def _alias_uv():
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    XSH.aliases["xuv"] = "$UV_PYTHON=@(sys.executable) uv pip @($args)"
+    XSH.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv pip @($args)"
 
 
 if $XONSH_INTERACTIVE:
