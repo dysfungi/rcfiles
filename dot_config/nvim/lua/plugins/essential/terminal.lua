@@ -1,10 +1,24 @@
 -- https://neovim.io/doc/user/terminal.html#_start
-noremap('<leader>T', function(ev)
+noremap('<leader>tx', function(ev)
+  vim.cmd 'split term://$SHELL'
+  -- vim.cmd 'wincmd h'
+  -- vim.cmd 'stopinsert'
+end, {
+  desc = 'New [T]erminal [X]split',
+})
+noremap('<leader>tv', function(ev)
   vim.cmd 'vsplit term://$SHELL'
   -- vim.cmd 'wincmd h'
   -- vim.cmd 'stopinsert'
 end, {
-  desc = 'New [T]erminal',
+  desc = 'New [T]erminal [V]split',
+})
+noremap('<leader>tt', function(ev)
+  vim.cmd 'tabedit term://$SHELL'
+  -- vim.cmd 'wincmd h'
+  -- vim.cmd 'stopinsert'
+end, {
+  desc = 'New [T]erminal [T]ab',
 })
 
 -- https://github.com/rebelot/terminal.nvim#auto-insert-mode
