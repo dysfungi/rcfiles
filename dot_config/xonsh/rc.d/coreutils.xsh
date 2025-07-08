@@ -20,7 +20,9 @@ else:
     XSH.aliases["ls"] = ["ls", "-A"]
 
 XSH.aliases["l"] = ["ls", "-CFAL"]
+XSH.aliases["l1"] = ["ls", "-A1"]
 XSH.aliases["la"] = ["ls", "-A"]
+XSH.aliases["la1"] = ["l1"]
 XSH.aliases["ll"] = ["ls", "-alFh"]
 
 
