@@ -2,8 +2,6 @@
 References:
     https://xon.sh/tutorial.html#customizing-the-prompt
 """
-import time
-
 from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
 from xonsh.built_ins import XSH
 from xonsh.prompt import gitstatus, vc
@@ -80,30 +78,6 @@ gitstatus_branch.suffix = "{RESET}"
 ###############################
 
 $PROMPT_FIELDS["prompt_end"] = "{INTENSE_GREEN}@>{RESET}"
-
-
-##############################
-# PROMPT_FIELDS["shelldate"] #
-##############################
-
-class MyTime(PromptField):
-    _name = "mytime"
-    _count: int = 0
-    prefix = "{PURPLE}"
-    suffix = "{RESET}"
-
-    def update(self, ctx):
-        self._count %= 10
-        self._count += 1
-        self.value = (
-            time.strftime("%Y-%m-%d")
-            if self._count == 1
-            else  time.strftime("%H:%M")
-        )
-
-
-# https://xon.sh/xonshrc.html#display-different-date-information-every-10th-time
-$PROMPT_FIELDS["mytime"] = MyTime()
 
 ################################
 # PROMPT_FIELDS["time_format"] #
