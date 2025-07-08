@@ -47,6 +47,7 @@ def get_theme(name=THEME_NAME):
 
 
 def _rc_theme():
+    # xontrib load dracula  # https://github.com/agoose77/xontrib-dracula
     _set_theme()
     _alias_theme()
 

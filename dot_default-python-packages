@@ -27,6 +27,7 @@ ruff
 tenacity
 uv
 xontrib-1password
+xontrib-dracula
 xontrib-sh
 xontrib-term-integrations # https://github.com/jnoortheen/xontrib-term-integrations
 xonsh[full]
