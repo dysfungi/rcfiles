@@ -16,23 +16,23 @@ from xonsh.prompt.base import PromptField, PromptFields
 
 def _vi_mode_prompt(*args, **kwargs):
     # https://github.com/t184256/xontrib-prompt-vi-mode
-    prefix = getattr(_vi_mode_prompt, "prefix", "{BACKGROUND_WHITE}")
-    suffix = getattr(_vi_mode_prompt, "suffix", "")
-
+    style = "{BLUE}"
+    text = "UNKNOWN"
     # TODO: handle case VISUAL, which is not in ViInputMode
     match XSH.shell.shell.prompter.app.vi_state.input_mode:
         case ViInputMode.INSERT:
-            inner = "INSERT"
+            text = "INSERT"
         case ViInputMode.INSERT_MULTIPLE:
-            inner = "INSERT_MULTIPLE"
+            text = "INSERT_MULTIPLE"
         case ViInputMode.NAVIGATION:
-            inner = "NORMAL"
+            style = "{BLACK}"
+            text = "NORMAL"
         case ViInputMode.REPLACE:
-            inner = "REPLACE"
-        case _:
-            inner = "UNKNOWN"
-
-    return f"{prefix}{inner}{suffix}"
+            text = "REPLACE"
+        case (_ as mode):
+            style = "{INTENSE_RED}"
+            text = mode.name
+    return f"{style} {text} {{RESET}}"
 
 
 # https://xon.sh/envvars.html#interactive-prompt
