@@ -43,6 +43,8 @@ XSH.env.setdefault("VISUAL", "nvim")
 # Homebrew #
 ############
 
+xontrib load homebrew  # https://github.com/eugenesvk/xontrib-homebrew
+
 # Python 3.12+ RuntimeError: Unsupported fstring syntax
 # https://github.com/xonsh/xonsh/issues/5166
 HOMEBREW_PREFIX = Path($(brew --prefix)) if $(command -v brew) else p'/opt/homebrew'
