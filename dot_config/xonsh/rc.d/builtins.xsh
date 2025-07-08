@@ -13,13 +13,20 @@ from xonsh.built_ins import XSH
 XSH.aliases["cv"] = 'cdargs @($args) && cd $(cat "$HOME/.cdargsresult")'
 
 XSH.aliases["-"] = "cd -"
-XSH.aliases[".."] = "cd .."
-XSH.aliases["..."] = "cd ../.." # TODO: fix to override Ellipsis
-XSH.aliases["...."] = "cd ../../.."
-XSH.aliases["cd."] = "cd .."
-XSH.aliases["cd.."] = "cd ../.."
-XSH.aliases["cd..."] = "cd ../../.."
-XSH.aliases["cd...."] = "cd ../../../.."
+XSH.aliases["cd-"] = "cd -"
+
+
+# https://github.com/anki-code/xontrib-rc-awesome/blob/main/xontrib/rc_awesome.xsh#L126
+@aliases.register(".")
+@aliases.register("cd.")
+@aliases.register("..")
+@aliases.register("cd..")
+@aliases.register("...")  # TODO: fix to override Ellipsis
+@aliases.register("cd...")
+@aliases.register("....")
+@aliases.register("cd....")
+def _alias_cd_dots(*args, **kwargs):
+    cd @("../" * len($__ALIAS_NAME.lstrip("cd")))
 
 
 #######
