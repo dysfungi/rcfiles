@@ -11,7 +11,18 @@ References:
     https://python-prompt-toolkit.readthedocs.io/en/master/pages/advanced_topics/key_bindings.html
     https://python-prompt-toolkit.readthedocs.io/en/master/pages/advanced_topics/key_bindings.html#creating-new-vi-text-objects-and-operators
 """
-from prompt_toolkit.filters import vi_insert_mode, vi_navigation_mode
+from prompt_toolkit.filters.app import (
+    vi_digraph_mode,
+    vi_insert_mode,
+    vi_insert_multiple_mode,
+    vi_mode,
+    vi_navigation_mode,
+    vi_recording_macro,
+    vi_replace_mode,
+    # vi_replace_single_mode,
+    vi_selection_mode,
+    vi_waiting_for_text_object_mode,
+)
 from prompt_toolkit.key_binding.bindings.vi import create_operator_decorator, create_text_object_decorator
 from prompt_toolkit.key_binding.key_bindings import KeyBindings
 from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
@@ -85,33 +96,33 @@ def _configure_vi_mode():
             _enter_insert_mode(event)
 
 
-        @bindings.add("e", filter=vi_navigation_mode)
+        @bindings.add("e", filter=vi_navigation_mode | vi_selection_mode)
         def _navigate_up(event):
             event.current_buffer.auto_up(
                 count=event.arg,
                 go_to_start_of_line_if_history_changes=True,
             )
 
-        @bindings.add("n", filter=vi_navigation_mode)
+        @bindings.add("n", filter=vi_navigation_mode | vi_selection_mode)
         def _navigate_down(event):
             event.current_buffer.auto_down(
                 count=event.arg,
                 go_to_start_of_line_if_history_changes=True,
             )
 
-        @bindings.add("h", filter=vi_navigation_mode)
+        @bindings.add("h", filter=vi_navigation_mode | vi_selection_mode)
         def _navigate_left(event):
             buffer = event.current_buffer
             document = buffer.document
             buffer.cursor_position += document.get_cursor_left_position(count=event.arg)
 
-        @bindings.add("i", filter=vi_navigation_mode)
+        @bindings.add("i", filter=vi_navigation_mode | vi_selection_mode)
         def _navigate_right(event):
             buffer = event.current_buffer
             document = buffer.document
             buffer.cursor_position += document.get_cursor_right_position(count=event.arg)
 
-        @bindings.add("I", filter=vi_navigation_mode)
+        @bindings.add("I", filter=vi_navigation_mode | vi_selection_mode)
         def _end_of_screen(event):
             """
             References:
