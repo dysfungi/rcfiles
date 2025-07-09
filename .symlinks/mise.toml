@@ -16,6 +16,7 @@ venv_auto_create = true
 
 
 [tools]
+jq = "latest"
 # https://mise.jdx.dev/dev-tools/
 
 node = 'lts'
@@ -23,7 +24,7 @@ ollama = '0'
 pre-commit = "latest"
 # TODO: Python global with mise does not work for xonsh
 # python = "{{ get_env(name='PYTHON_VERSION', default='3.12') }}"
-uv = 'latest'
+uv = "latest"
 
 
 [plugins]
