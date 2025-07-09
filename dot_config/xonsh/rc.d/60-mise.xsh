@@ -37,4 +37,4 @@ def __rc_interactive(xsh):
     xsh.aliases["x"] = ["mise", "exec", "--"]
 
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    xsh.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv pip @($args)"
+    xsh.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv @($args)"
