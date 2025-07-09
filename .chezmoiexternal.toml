@@ -1,3 +1,17 @@
+[".config/fabric/patterns"]
+type = "archive"
+url = "https://github.com/danielmiessler/Fabric/archive/main.tar.gz"
+refreshPeriod = "168h"
+stripComponents = 3
+include = ["*/data/patterns/**"]
+
+[".config/fabric/strategies"]
+type = "archive"
+url = "https://github.com/danielmiessler/Fabric/archive/main.tar.gz"
+refreshPeriod = "168h"
+stripComponents = 3
+include = ["*/data/strategies/**"]
+
 [".terminfo"]
 type = "file"
 url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/wezterm.terminfo"
