@@ -1,0 +1,22 @@
+# https://github.com/TheR1D/shell_gpt/wiki/Ollama#shellgpt-configuration
+CHAT_CACHE_PATH=/var/folders/64/734p7rx97mz_zbgz2dmyc4s00000gp/T/chat_cache
+CACHE_PATH=/var/folders/64/734p7rx97mz_zbgz2dmyc4s00000gp/T/cache
+CHAT_CACHE_LENGTH=100
+CACHE_LENGTH=100
+REQUEST_TIMEOUT=60
+DEFAULT_MODEL=gemma3n
+DEFAULT_COLOR=magenta
+ROLE_STORAGE_PATH=/Users/dfrank/.config/shell_gpt/roles
+DEFAULT_EXECUTE_SHELL_CMD=false
+DISABLE_STREAMING=false
+CODE_THEME=dracula
+OPENAI_FUNCTIONS_PATH=/Users/dfrank/.config/shell_gpt/functions
+OPENAI_USE_FUNCTIONS=false
+SHOW_FUNCTIONS_OUTPUT=false
+API_BASE_URL=default
+PRETTIFY_MARKDOWN=true
+USE_LITELLM=true
+SHELL_INTERACTION=true
+OS_NAME=auto
+SHELL_NAME=auto
+OPENAI_API_KEY=no-key
