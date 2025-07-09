@@ -60,8 +60,6 @@ brew "dbmate"
 brew "dict"
 # Load/unload environment variables based on $PWD
 brew "direnv"
-# Open-source framework for augmenting humans using AI
-brew "fabric-ai"
 # Lint your Python code for style and logical errors
 brew "flake8"
 # Infamous electronic fortune-cookie generator
