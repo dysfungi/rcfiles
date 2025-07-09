@@ -3,35 +3,31 @@ References:
     https://pubs.opengroup.org/onlinepubs/9699919799//utilities/V3_chap02.html#tag_18_09
 """
 from pathlib import Path
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-######
-# CD #
-######
+@rc(interactive=True)
+def __rc_interactive_cd(xsh):
 
-XSH.aliases["cv"] = 'cdargs @($args) && cd $(cat "$HOME/.cdargsresult")'
+    xsh.aliases["cv"] = 'cdargs @($args) && cd $(cat "$HOME/.cdargsresult")'
 
-XSH.aliases["-"] = "cd -"
-XSH.aliases["cd-"] = "cd -"
+    xsh.aliases["-"] = "cd -"
+    xsh.aliases["cd-"] = "cd -"
 
-
-# https://github.com/anki-code/xontrib-rc-awesome/blob/main/xontrib/rc_awesome.xsh#L126
-@aliases.register(".")
-@aliases.register("cd.")
-@aliases.register("..")
-@aliases.register("cd..")
-@aliases.register("...")  # TODO: fix to override Ellipsis
-@aliases.register("cd...")
-@aliases.register("....")
-@aliases.register("cd....")
-def _alias_cd_dots(*args, **kwargs):
-    cd @("../" * len($__ALIAS_NAME.lstrip("cd")))
+    # https://github.com/anki-code/xontrib-rc-awesome/blob/main/xontrib/rc_awesome.xsh#L126
+    @xsh.aliases.register(".")
+    @xsh.aliases.register("cd.")
+    @xsh.aliases.register("..")
+    @xsh.aliases.register("cd..")
+    @xsh.aliases.register("...")  # TODO: fix to override Ellipsis
+    @xsh.aliases.register("cd...")
+    @xsh.aliases.register("....")
+    @xsh.aliases.register("cd....")
+    def _alias_cd_dots(*args, **kwargs):
+        cd @("../" * len($__ALIAS_NAME.lstrip("cd")))
 
 
-#######
-# PWD #
-#######
-
-XSH.aliases["cwd"] = Path.cwd
-XSH.aliases["wd"] = lambda: Path.cwd().stem
+@rc(interactive=True)
+def __rc_interactive_pwd(xsh):
+    xsh.aliases["cwd"] = Path.cwd
+    xsh.aliases["wd"] = lambda: Path.cwd().stem

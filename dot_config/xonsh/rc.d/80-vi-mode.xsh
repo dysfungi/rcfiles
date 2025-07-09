@@ -11,32 +11,31 @@ References:
     https://python-prompt-toolkit.readthedocs.io/en/master/pages/advanced_topics/key_bindings.html
     https://python-prompt-toolkit.readthedocs.io/en/master/pages/advanced_topics/key_bindings.html#creating-new-vi-text-objects-and-operators
 """
-from prompt_toolkit.filters.app import (
-    vi_digraph_mode,
-    vi_insert_mode,
-    vi_insert_multiple_mode,
-    vi_mode,
-    vi_navigation_mode,
-    vi_recording_macro,
-    vi_replace_mode,
-    # vi_replace_single_mode,
-    vi_selection_mode,
-    vi_waiting_for_text_object_mode,
-)
-from prompt_toolkit.key_binding.bindings.vi import create_operator_decorator, create_text_object_decorator
-from prompt_toolkit.key_binding.key_bindings import KeyBindings
-from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
-from prompt_toolkit.keys import Keys
-from prompt_toolkit.shortcuts.prompt import PromptSession
-from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
-from xonsh.shells.ptk_shell.history import PromptToolkitHistory
+from _utils import rc
 
 
-def _rc_vi_mode():
-    _configure_vi_mode()
+@rc(interactive=True)
+def __rc_interactive():
+    from prompt_toolkit.filters.app import (
+        vi_digraph_mode,
+        vi_insert_mode,
+        vi_insert_multiple_mode,
+        vi_mode,
+        vi_navigation_mode,
+        vi_recording_macro,
+        vi_replace_mode,
+        # vi_replace_single_mode,
+        vi_selection_mode,
+        vi_waiting_for_text_object_mode,
+    )
+    from prompt_toolkit.key_binding.bindings.vi import create_operator_decorator, create_text_object_decorator
+    from prompt_toolkit.key_binding.key_bindings import KeyBindings
+    from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
+    from prompt_toolkit.keys import Keys
+    from prompt_toolkit.shortcuts.prompt import PromptSession
+    from xonsh.shells.ptk_shell.completer import PromptToolkitCompleter
+    from xonsh.shells.ptk_shell.history import PromptToolkitHistory
 
-
-def _configure_vi_mode():
     # https://xon.sh/envvars.html#vi-mode
     $VI_MODE = True
 
@@ -129,7 +128,3 @@ def _configure_vi_mode():
                 https://github.com/prompt-toolkit/python-prompt-toolkit/blob/8f31416/src/prompt_toolkit/key_binding/bindings/vi.py#L1619
             """
             print("TODO(dmf): shift-i -", event)
-
-
-if $XONSH_INTERACTIVE:
-    _rc_vi_mode()

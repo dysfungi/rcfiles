@@ -2,20 +2,21 @@
 References:
     https://xon.sh/tutorial.html#customizing-the-prompt
 """
-from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
-from xonsh.built_ins import XSH
-from xonsh.prompt import gitstatus, vc
-from xonsh.prompt.base import PromptField, PromptFields
+from _utils import rc
 
 
-def _rc_prompt():
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
+    from xonsh.prompt import gitstatus, vc
+    from xonsh.prompt.base import PromptField, PromptFields
 
     def _vi_mode_prompt(*args, **kwargs):
         # https://github.com/t184256/xontrib-prompt-vi-mode
         style = "{BLUE}"
         text = "UNKNOWN"
         # TODO: handle case VISUAL, which is not in ViInputMode
-        match XSH.shell.shell.prompter.app.vi_state.input_mode:
+        match xsh.shell.shell.prompter.app.vi_state.input_mode:
             case ViInputMode.INSERT:
                 text = "INSERT"
             case ViInputMode.INSERT_MULTIPLE:
@@ -53,6 +54,3 @@ def _rc_prompt():
     gitstatus_branch.suffix = "{RESET}"
     $PROMPT_FIELDS["prompt_end"] = "{INTENSE_GREEN}@>{RESET}"
     $PROMPT_FIELDS["time_format"] = "%s"
-
-if $XONSH_INTERACTIVE:
-    _rc_prompt()

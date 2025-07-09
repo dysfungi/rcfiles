@@ -1,6 +1,8 @@
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-if $(command -v nvim):
-    XSH.aliases["vi"] = "nvim"
-    XSH.aliases["vim"] = "nvim"
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    if $(command -v nvim):
+        XSH.aliases["vi"] = "nvim"
+        XSH.aliases["vim"] = "nvim"

@@ -1,9 +1,12 @@
-import webbrowser
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-# https://xon.sh/tutorial.html#callable-aliases
-XSH.aliases["web"] = lambda args: webbrowser.open(*args)
-XSH.aliases["webn"] = lambda args: webbrowser.open_new(*args)
-XSH.aliases["webw"] = "webn"
-XSH.aliases["webt"] = lambda args: webbrowser.open_new_tab(*args)
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    import webbrowser
+
+    # https://xon.sh/tutorial.html#callable-aliases
+    xsh.aliases["web"] = lambda args: webbrowser.open(*args)
+    xsh.aliases["webn"] = lambda args: webbrowser.open_new(*args)
+    xsh.aliases["webw"] = "webn"
+    xsh.aliases["webt"] = lambda args: webbrowser.open_new_tab(*args)

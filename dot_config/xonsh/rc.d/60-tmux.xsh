@@ -1,5 +1,7 @@
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-XSH.aliases["tmx"] = "tmux attach -t @($args) || tmux new -s @($args)"
-XSH.aliases["tmu"] = ["tmx"]
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    xsh.aliases["tmx"] = "tmux attach -t @($args) || tmux new -s @($args)"
+    xsh.aliases["tmu"] = ["tmx"]

@@ -1,7 +1,9 @@
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-XSH.aliases["rp"] = "rust-parallel"
-XSH.aliases["rpar"] = "rust-parallel"
-XSH.aliases["rparallel"] = "rust-parallel"
-XSH.aliases["parallelr"] = "rust-parallel"
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    xsh.aliases["rp"] = "rust-parallel"
+    xsh.aliases["rpar"] = "rust-parallel"
+    xsh.aliases["rparallel"] = "rust-parallel"
+    xsh.aliases["parallelr"] = "rust-parallel"

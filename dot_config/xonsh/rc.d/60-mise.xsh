@@ -1,26 +1,12 @@
-from xonsh.built_ins import XSH
-from _utils import reset_current_job
+from _utils import rc, reset_current_job
 
 
-def _rc_mise():
-    _auto_activate_mise()
-    _alias_mise()
-    _alias_uv()
-
-def _auto_activate_mise():
-    if not $(command -v mise):
-        return
-
-    # https://mise.jdx.dev/installing-mise.html#xonsh
-    # execx($(/opt/homebrew/bin/mise activate xonsh))
-
-    from os               import environ
+def _activate_mise(xsh):
     import subprocess
-    from xonsh.built_ins  import XSH
+    from os import environ
 
-    envx = XSH.env
-    envx[   'MISE_SHELL'] = 'xonsh'
-    environ['MISE_SHELL'] = envx.get_detyped('MISE_SHELL')
+    xsh.env['MISE_SHELL'] = 'xonsh'
+    xsh.env['MISE_SHELL'] = xsh.env.get_detyped('MISE_SHELL')
 
     @events.on_pre_prompt
     def _mise_activate_hook(*args, **kwargs):
@@ -30,23 +16,25 @@ def _auto_activate_mise():
         reset_current_job()
 
     def _mise(args):
-      if args and args[0] in ('deactivate', 'shell', 'sh'):
-        return execx($(command mise @(args)))
-      else:
-        return $(command mise @(args))
+        if args and args[0] in ('deactivate', 'shell', 'sh'):
+            return execx($(command mise @(args)))
+        else:
+            return $(command mise @(args))
 
-    XSH.aliases['mise'] = _mise
+    xsh.aliases['mise'] = _mise
 
 
-def _alias_mise():
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    if not $(command -v mise):
+        return
+
+    # https://mise.jdx.dev/installing-mise.html#xonsh
+    # execx($(/opt/homebrew/bin/mise activate xonsh))
+    _activate_mise(xsh)
+
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    XSH.aliases["x"] = ["mise", "exec", "--"]
+    xsh.aliases["x"] = ["mise", "exec", "--"]
 
-
-def _alias_uv():
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    XSH.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv pip @($args)"
-
-
-if $XONSH_INTERACTIVE:
-    _rc_mise()
+    xsh.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv pip @($args)"

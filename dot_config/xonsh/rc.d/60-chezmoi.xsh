@@ -1,12 +1,9 @@
-from xonsh.built_ins import XSH
+from _utils import rc
 
 
-def _rc_chezmoi():
-    XSH.aliases["chez"] = "chezmoi"
-    XSH.aliases["chezad"] = "chezmoi add"
-    XSH.aliases["chezap"] = "chezmoi apply"
-    XSH.aliases["chezd"] = "chezmoi diff"
-
-
-if $XONSH_INTERACTIVE:
-    _rc_chezmoi()
+@rc(interactive=True)
+def __rc_interactive(xsh):
+    xsh.aliases["chez"] = "chezmoi"
+    xsh.aliases["chezad"] = "chezmoi add"
+    xsh.aliases["chezap"] = "chezmoi apply"
+    xsh.aliases["chezd"] = "chezmoi diff"
