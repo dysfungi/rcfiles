@@ -26,7 +26,18 @@ return {
   },
 
   opts = {
-    model = 'deepseek-r1:1.5b',
+    -- https://apxml.com/posts/best-local-llm-apple-silicon-mac
+    --
+    -- Macs with 16GM - 18GB RAM:
+    --
+    --   [2025-07-04]
+    --   M1 Pro (16GB)
+    --   -------------
+    --   llama3:8b, deepseek-coder-v2:16b-lite, wizardlm2:7b, gemma:7b, qwen:14b
+    --
+    -- model = 'llama3:8b',
+    -- model = 'deepseek-coder-v2:16b',
+    model = 'gemma3n',
     url = 'http://127.0.0.1:11434',
     -- url = 'https://ollama.frank.sh',
     serve = {
