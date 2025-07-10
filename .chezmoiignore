@@ -7,10 +7,6 @@
 **/LICENSE
 **/README*
 
-# Backups
-backups/
-backups/**
-
 # Logs
 **/*.log
 
