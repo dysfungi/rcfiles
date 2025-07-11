@@ -10,13 +10,13 @@ logger = logging.getLogger(__name__)
 def __python_aliases(aliases):
     from pprint import pprint
 
-    @aliases.register
-    def _p(args):
+    @aliases.register("p")
+    def _print(args):
         logger.debug("args=%r", args)
         print(*args)
 
-    @aliases.register
-    def _pp(args):
+    @aliases.register("pp")
+    def _pretty_print(args):
         logger.debug("args=%r", args)
         for arg in args:
             pprint(arg)
