@@ -1,21 +1,23 @@
+import logging
+
 from _utils import rc
+
+
+logger = logging.getLogger(__name__)
 
 
 @rc(interactive=True)
 def __python_aliases(aliases):
     from pprint import pprint
-    from sys import stderr
 
     @aliases.register
     def _p(args):
-        if $XONSH_DEBUG:
-            print(f"DEBUG: {args=}", file=stderr)
+        logger.debug("args=%r", args)
         print(*args)
 
     @aliases.register
     def _pp(args):
-        if $XONSH_DEBUG:
-            print(f"DEBUG: {args=}", file=stderr)
+        logger.debug("args=%r", args)
         pprint(args)
 
 
