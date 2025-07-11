@@ -22,7 +22,22 @@ def __python_aliases(aliases):
 
 
 @rc(interactive=True)
+def __gnu_aliases(aliases):
+    if !(command -v gsed >/dev/null):
+        aliases["sed"] = ["gsed"]
+
+
+@rc(interactive=True)
+def __fun_aliases(aliases):
+    aliases["starwars"] = ["telnet", "towel.blinkenlights.nl"]
+
+    aliases["sitenamr"] = r"grep '^[a-z].*[^aeiou]er$' /usr/share/dict/words | shuf -n 1 | sed -r -e 's/er$/r/' -e r's/^(\w)/\1/'"
+    aliases["sitenamd"] = r"grep '^[a-z].*[^aeiou]ed$' /usr/share/dict/words | shuf -n 1 | sed -r -e 's/ed$/d/' -e r's/^(\w)/\1/'"
+
+
+@rc(interactive=True)
 def __miscellaneous_aliases(aliases):
+    import requests
 
     @aliases.register
     @aliases.return_command
@@ -31,3 +46,16 @@ def __miscellaneous_aliases(aliases):
         hours_in_minutes = hours * 60 * 60
         print(f"Caffeinating for {hours} hour(s)")
         return ["caffeinate", "-t", str(hours_in_minutes)]
+
+    @aliases.register("eip")
+    def _external_ip(args):
+        response = requests.get("https://icanhazip.com")
+        print(response.text.strip())
+
+    aliases["iip"] = "/sbin/ifconfig | awk '/inet / { print $2; }' | grep -Fv 127.0.0.1"
+
+    @aliases.register("aip")
+    def _all_ip(args):
+        internal = $(iip)
+        external = $(eip)
+        print(f"External IP:\n{external}\n\nInternal IP:\n{internal}")
