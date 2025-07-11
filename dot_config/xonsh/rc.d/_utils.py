@@ -50,11 +50,14 @@ def rc(
             if login is not None and XSH.env["XONSH_LOGIN"] != _login:
                 return
 
-            if "xsh" in sig.parameters:
-                kwargs["xsh"] = XSH
+            if "aliases" in sig.parameters:
+                kwargs["aliases"] = XSH.aliases
 
             if "xession" in sig.parameters:
                 kwargs["xession"] = XSH
+
+            if "xsh" in sig.parameters:
+                kwargs["xsh"] = XSH
 
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
