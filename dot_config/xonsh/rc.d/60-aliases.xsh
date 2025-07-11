@@ -18,7 +18,8 @@ def __python_aliases(aliases):
     @aliases.register
     def _pp(args):
         logger.debug("args=%r", args)
-        pprint(args)
+        for arg in args:
+            pprint(arg)
 
 
 @rc(interactive=True)
