@@ -62,7 +62,7 @@ packaging==25.0
 parso==0.8.4
 pathspec==0.12.1
 pbr==6.1.1
-pbs-installer==2025.7.8
+pbs-installer==2025.7.12
 pdbpp==0.11.6
 pexpect==4.9.0
 pkginfo==1.12.1.2
