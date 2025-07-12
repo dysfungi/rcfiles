@@ -211,6 +211,8 @@ brew "tree"
 brew "typescript"
 # Language Server Protocol implementation for TypeScript wrapping tsserver
 brew "typescript-language-server"
+# Extremely fast Python package installer and resolver, written in Rust
+brew "uv"
 # Vim script Language Lint
 brew "vint"
 # Command-line tool for Vultr services
