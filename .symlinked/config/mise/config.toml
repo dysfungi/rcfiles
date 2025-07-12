@@ -3,6 +3,7 @@
 
 min_version = "2024.9.5"
 
+
 [settings]
 # https://mise.jdx.dev/configuration/settings.html
 
@@ -16,9 +17,8 @@ venv_auto_create = true
 
 
 [tools]
-jq = "latest"
 # https://mise.jdx.dev/dev-tools/
-
+jq = "latest"
 node = 'lts'
 ollama = '0'
 pre-commit = "latest"
