@@ -2,10 +2,11 @@ from _utils import rc
 
 
 @rc(interactive=True)
-def __rc_interactive():
+def __rc_interactive_load_xontribs():
     # https://github.com/drmikecrowe/xontrib-1password#disabling
     # NOTE(https://github.com/xonsh/xonsh/issues/5872): $XONTRIBS_AUTOLOAD_DISABLED is not respected
     $XONTRIBS_AUTOLOAD_DISABLED = False
+    $XONTRIB_1PASSWORD_ENABLED = True
 
     xontrib load 1password  # https://github.com/drmikecrowe/xontrib-1password
     xontrib load coconut  # https://github.com/evhub/coconut
@@ -15,5 +16,5 @@ def __rc_interactive():
 
 
 @rc(interactive=False)
-def __rc_non_interactive():
+def __rc_non_interactive_disable_xontribs():
     $XONTRIBS_AUTOLOAD_DISABLED = True
