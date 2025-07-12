@@ -57,6 +57,8 @@ brew "dbmate"
 brew "dict"
 # Load/unload environment variables based on $PWD
 brew "direnv"
+# Open-source framework for augmenting humans using AI
+brew "fabric-ai"
 # Lint your Python code for style and logical errors
 brew "flake8"
 # Infamous electronic fortune-cookie generator
@@ -209,8 +211,6 @@ brew "tree"
 brew "typescript"
 # Language Server Protocol implementation for TypeScript wrapping tsserver
 brew "typescript-language-server"
-# Extremely fast Python package installer and resolver, written in Rust
-brew "uv"
 # Vim script Language Lint
 brew "vint"
 # Command-line tool for Vultr services
