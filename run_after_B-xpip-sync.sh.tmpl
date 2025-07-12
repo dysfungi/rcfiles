@@ -41,7 +41,7 @@ backup () {
 mkdir -p "${bakDir}"
 
 backup before install >> "${outFile}"
-xonsh --no-rc -c "xpip install --no-input --requirement=${reqFile} --upgrade" >> "${outFile}"
+xonsh --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade" >> "${outFile}"
 backup after install >> "${outFile}"
 
 echo >&2 "INFO: Ending $0"
