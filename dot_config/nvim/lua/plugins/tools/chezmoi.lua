@@ -64,7 +64,7 @@ return {
           '--path-style',
           'absolute',
           '--include',
-          'files,scripts',
+          'files,scripts,symlinks',
           '--exclude',
           'externals',
         },
