@@ -16,3 +16,6 @@
 **/spell/
 **/tags
 **/test.sh
+
+# Node
+**/node_modules/
