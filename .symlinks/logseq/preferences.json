@@ -1,0 +1,13 @@
+{
+  "theme": null,
+  "themes": {
+    "mode": "light",
+    "light": null,
+    "dark": null
+  },
+  "externals": [],
+  "pinnedToolbarItems": [
+    "logseq-excalidraw:logseq-plugin-excalidraw",
+    "logseq-awesome-props:AwesomeProps"
+  ]
+}

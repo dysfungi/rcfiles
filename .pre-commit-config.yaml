@@ -5,7 +5,7 @@ x-anchors:
     # https://pre-commit.com/#regular-expressions
     - &fixes_exclude |-
       (?x)^(
-        dot_logseq/.*\.json
+        \.symlinks/.*
         |dot_config/configstore/.*\.json
         |dot_config/.*karabiner/.*\.json
       )$

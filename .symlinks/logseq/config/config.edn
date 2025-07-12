@@ -9,4 +9,4 @@
 ;;   {:shortcuts {:ui/toggle-theme "t z"
 ;;                :ui/toggle-brackets "t b"}}
 
-{}
+{:shortcuts {:editor/new-whiteboard []}}

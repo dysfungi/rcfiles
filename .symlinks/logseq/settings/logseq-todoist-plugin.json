@@ -1,0 +1,16 @@
+{
+  "apiToken": "31016cb881ab4830c37a7984713130c3b5fc7f02",
+  "": "",
+  "sendDefaultProject": "Inbox (2293908659)",
+  "sendDefaultLabel": "logseq (2167816851)",
+  "sendDefaultDeadline": true,
+  "sendAppendUri": true,
+  "retrieveDefaultProject": "Inbox (2293908659)",
+  "projectNameAsParentBlk": true,
+  "retrieveAppendTodo": true,
+  "retrieveAppendTodoistId": true,
+  "retrieveAppendUrl": true,
+  "retrieveClearTasks": false,
+  "retrieveAppendCreationDateTime": false,
+  "disabled": false
+}

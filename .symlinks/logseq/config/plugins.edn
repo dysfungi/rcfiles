@@ -4,4 +4,5 @@
  :logseq-diagrams-as-code {:version "0.0.21", :repo "npgrosser/logseq-diagrams-as-code", :effect false, :theme false}
  :logseq-awesome-props {:version "v1.10.0", :repo "yoyurec/logseq-awesome-props", :effect true, :theme false}
  :logseq-tabs {:version "v1.19.4", :repo "pengx17/logseq-plugin-tabs", :effect true, :theme false}
- :logseq-vim-editor {:version "v0.0.6", :repo "vipzhicheng/logseq-plugin-vim-editor", :effect true, :theme false}}
+ :logseq-vim-editor {:version "v0.0.6", :repo "vipzhicheng/logseq-plugin-vim-editor", :effect true, :theme false}
+ :logseq-todoist-plugin {:version "v6.0.2", :repo "hkgnp/logseq-todoist-plugin", :effect false, :theme false}}
