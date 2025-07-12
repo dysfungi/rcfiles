@@ -5,21 +5,21 @@ local config = {}
 -- config.default_prog = { '/opt/homebrew/bin/xonsh', '--no-rc' }
 
 -- config.term = "wezterm"
-config.term = "xterm-256color"
+config.term = 'xterm-256color'
 config.enable_tab_bar = true
 -- config.color_scheme = 'Batman'
 
 -- https://wezfurlong.org/wezterm/config/fonts.html
 -- Test: != {(`'"Illegal10O"'`)}
 config.font = wezterm.font_with_fallback {
-    {family='Iosevka', weight='Regular', stretch='Expanded'},
-    {family='Fira Code'},
-    {family='Lotion', weight='Bold'},
-    'Source Code Pro',
-    'Monofur Nerd Font',
-    'D2Coding',
-    {family='Inconsolata', stretch='Normal'},
-    'Andale Mono',
+  { family = 'Iosevka', weight = 'Regular', stretch = 'Expanded' },
+  { family = 'Fira Code' },
+  { family = 'Lotion', weight = 'Bold' },
+  'Source Code Pro',
+  'Monofur Nerd Font',
+  'D2Coding',
+  { family = 'Inconsolata', stretch = 'Normal' },
+  'Andale Mono',
 }
 
 -- Set window opacity
@@ -45,13 +45,13 @@ config.keys = {
     key = ',',
     mods = 'CMD',
     action = wezterm.action.SpawnCommandInNewTab {
-      cwd = os.getenv('WEZTERM_CONFIG_DIR'),
+      cwd = os.getenv 'WEZTERM_CONFIG_DIR',
       set_environment_variables = {
-          TERM = 'screen-256color',
+        TERM = 'screen-256color',
       },
       args = {
         'vi',
-        os.getenv('WEZTERM_CONFIG_FILE'),
+        os.getenv 'WEZTERM_CONFIG_FILE',
       },
     },
   },

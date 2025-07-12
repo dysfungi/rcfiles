@@ -13,7 +13,7 @@ if ! command -v xonsh > /dev/null; then
   exit 0
 fi
 
-scriptName="$(basename $0)"
+scriptName="$(basename "$0")"
 outFile="$(mktemp -t "${scriptName}.out")"
 echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
 

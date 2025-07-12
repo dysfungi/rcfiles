@@ -27,7 +27,7 @@ if ! command -v mise > /dev/null; then
   curl "https://mise.run" | MISE_INSTALL_PATH="/usr/local/bin/mise" sh
 fi
 
-scriptName="$(basename $0)"
+scriptName="$(basename "$0")"
 outFile="$(mktemp -t "${scriptName}.out")"
 echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
 
