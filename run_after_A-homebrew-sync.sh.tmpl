@@ -13,25 +13,6 @@ if [ "$(uname -s)" != Darwin ]; then
   exit 0
 fi
 
-if ! command -v brew > /dev/null; then
-  echo >&2 'WARNING: Could not find brew; installing...'
-  echo >&2 "         PATH=${PATH}"
-  while read -n1 -p "Install Homebrew? [y/n] " REPLY; do
-    case "${REPLY}" in
-      y*)
-        echo
-        break;;
-      n*)
-        echo
-        exit 2;;
-      *)
-        ;;
-    esac
-  done
-  # https://brew.sh/
-  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-fi
-
 scriptName="$(basename "$0")"
 outFile="$(mktemp -t "${scriptName}.out")"
 echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
