@@ -1,6 +1,12 @@
 from _utils import rc, reset_current_job
 
 
+@rc(interactive=True)
+def __rc_interactive_env_essential(xsh):
+    xsh.env.setdefault("EDITOR", "nvim -e")
+    xsh.env.setdefault("VISUAL", "nvim")
+
+
 def _activate_mise(xsh):
     import subprocess
     from os import environ
@@ -24,17 +30,11 @@ def _activate_mise(xsh):
     xsh.aliases['mise'] = _mise
 
 
-@rc(interactive=True)
-def __rc_interactive(xsh):
-    if not $(command -v mise):
+@rc
+def __rc_env_mise(xsh):
+    if !(xontrib load mise):  # https://github.com/eugenesvk/xontrib-mise
         return
 
     # https://mise.jdx.dev/installing-mise.html#xonsh
     # execx($(/opt/homebrew/bin/mise activate xonsh))
     _activate_mise(xsh)
-
-    # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    xsh.aliases["x"] = ["mise", "exec", "--"]
-
-    # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    xsh.aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv @($args)"

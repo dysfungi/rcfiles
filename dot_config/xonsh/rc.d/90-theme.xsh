@@ -21,12 +21,12 @@ from _utils import rc
 
 
 @rc(interactive=False)
-def __rc_non_interactive():
+def __rc_non_interactive_theme():
     $XONSH_COLOR_STYLE = "default"
 
 
 @rc(interactive=True)
-def __rc_interactive(xsh):
+def __rc_interactive_theme(aliases):
     from xonsh.tools import register_custom_style
     from xonsh.pyghooks import (
         Token,
@@ -35,7 +35,7 @@ def __rc_interactive(xsh):
     )
 
     THEME_NAME = "frank"
-    THEME_BASE = "dracula"
+    THEME_BASE = "dracula" if !(xontrib load dracula) else "inkpot"  # https://github.com/agoose77/xontrib-dracula
     THEME_STYLES = {
         # Token.Color.BLACK: "#444444",
         Token.Color.BLUE: "#0099ff",
@@ -60,4 +60,4 @@ def __rc_interactive(xsh):
     def get_theme(name=THEME_NAME):
         return pygments_style_by_name(name)
 
-    xsh.aliases["theme"] = get_theme
+    aliases["theme"] = get_theme

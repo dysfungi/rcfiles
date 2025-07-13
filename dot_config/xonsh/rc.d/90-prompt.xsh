@@ -6,7 +6,7 @@ from _utils import rc
 
 
 @rc(interactive=True)
-def __rc_interactive(xsh):
+def __rc_interactive_prompt(xsh):
     from prompt_toolkit.key_binding.vi_state import InputMode as ViInputMode
     from xonsh.prompt import gitstatus, vc
     from xonsh.prompt.base import PromptField, PromptFields
@@ -30,7 +30,6 @@ def __rc_interactive(xsh):
                 style = "{INTENSE_RED}"
                 text = mode.name
         return f"{style} {text} {{RESET}}"
-
 
     # https://xon.sh/envvars.html#interactive-prompt
     # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
