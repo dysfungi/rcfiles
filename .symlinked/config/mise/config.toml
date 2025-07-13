@@ -21,7 +21,9 @@ venv_auto_create = true
 jq = "latest"
 node = 'lts'
 ollama = '0'
+poetry = "latest"
 pre-commit = "latest"
+ruff = "latest"
 # TODO: Python global with mise does not work for xonsh
 # python = "{{ get_env(name='PYTHON_VERSION', default='3.12') }}"
 uv = "latest"
