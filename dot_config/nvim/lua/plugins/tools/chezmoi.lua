@@ -42,8 +42,12 @@ return {
       pattern = { os.getenv 'HOME' .. '/.local/share/chezmoi/*' },
       callback = function(ev)
         local filename = vim.fs.basename(ev.file)
+        local dirname = vim.fs.dirname(ev.file)
         if vim.startswith(filename, 'run_') then
           -- Skip watch/apply for scripts.
+          return
+        elseif vim.startswith(filename, '.') or vim.startswith(dirname, '.') then
+          -- Skip watch/apply for dot files.
           return
         end
         local bufnr = ev.buf
