@@ -1,0 +1,53 @@
+[".config/fabric/patterns"]
+type = "archive"
+url = "https://github.com/danielmiessler/Fabric/archive/main.tar.gz"
+refreshPeriod = "168h"
+stripComponents = 3
+include = ["*/data/patterns/**"]
+
+[".config/fabric/strategies"]
+type = "archive"
+url = "https://github.com/danielmiessler/Fabric/archive/main.tar.gz"
+refreshPeriod = "168h"
+stripComponents = 3
+include = ["*/data/strategies/**"]
+
+[".logseq/plugins/logseq-todo-plugin"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "ahonn/logseq-plugin-todo" "logseq-plugin-todo-*.zip" | quote }}
+exact = true
+stripComponents = 1
+refreshPeriod = "672h"
+
+[".logseq/plugins/logseq-todoist-plugin"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "benjypng/logseq-todoist-plugin" "logseq-todoist-plugin.zip" | quote }}
+exact = true
+stripComponents = 1
+refreshPeriod = "672h"
+
+[".logseq/plugins/logseq-vim-editor"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "vipzhicheng/logseq-plugin-vim-editor" "logseq-plugin-vim-editor-*.tar.gz" | quote }}
+exact = true
+stripComponents = 1
+refreshPeriod = "672h"
+
+[".logseq/plugins/logseq-vim-shortcuts"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "vipzhicheng/logseq-plugin-vim-shortcuts" "logseq-plugin-vim-shortcuts-*.tar.gz" | quote }}
+exact = true
+stripComponents = 1
+refreshPeriod = "672h"
+
+[".logseq/plugins/ollama-logseq"]
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "omagdy7/ollama-logseq" "ollama-logseq-*.zip" | quote }}
+exact = true
+stripComponents = 1
+refreshPeriod = "672h"
+
+[".terminfo"]
+type = "file"
+url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/wezterm.terminfo"
+refreshPeriod = "168h"
