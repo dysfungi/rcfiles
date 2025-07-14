@@ -3,42 +3,43 @@ from pathlib import Path
 from _utils import rc
 
 
-def _unique_path_prepend(path: Path):
+def _unique_path_prepend(path: Path, *, manpath: bool = False):
     if not path.exists():
         return
 
     strpath = str(path)
-    if strpath in $PATH:
+    envpath = $MANPATH if manpath else $PATH
+    if strpath in envpath:
         return
+    envpath.insert(0, strpath)
 
-    $PATH.insert(0, strpath)
 
-
-def _unique_path_append(path: Path):
+def _unique_path_append(path: Path, *, manpath: bool = False):
     if not path.exists():
         return
 
     strpath = str(path)
-    if strpath in $PATH:
+    envpath = $MANPATH if manpath else $PATH
+    if strpath in envpath:
         return
+    envpath.append(strpath)
 
-    $PATH.append(strpath)
 
-
-@rc
+@rc(login=True)
 def __rc_paths_macos():
     # https://xon.sh/platform-issues.html#path-helper
     source-bash --seterrprevcmd "" /etc/profile
 
 
-@rc
+@rc(login=True)
 def __rc_paths_common():
     usr_local = p"/usr/local"
-    _unique_path_prepend(usr_local / "sbin")
-    _unique_path_prepend(usr_local / "bin")
+    _unique_path_append(usr_local / "sbin")
+    _unique_path_append(usr_local / "bin")
+    _unique_path_append(usr_local / "share" / "man", manpath=True)
 
 
-@rc
+@rc(login=True)
 def __rc_paths_homebrew():
     if !(xontrib load homebrew):  # https://github.com/eugenesvk/xontrib-homebrew
         return
@@ -46,9 +47,11 @@ def __rc_paths_homebrew():
     homebrew_prefix = p"/opt/homebrew"
     _unique_path_prepend(homebrew_prefix / "sbin")
     _unique_path_prepend(homebrew_prefix / "bin")
+    _unique_path_prepend(homebrew_prefix / "share" / "man", manpath=True)
 
 
-@rc
+@rc(login=True)
 def __rc_paths_mise():
-    local_bin = p"~/.local/bin"
-    _unique_path_append(local_bin)
+    local_prefix = p"~/.local"
+    _unique_path_append(local_prefix / "bin")
+    _unique_path_append(local_prefix / "share" / "man", manpath=True)
