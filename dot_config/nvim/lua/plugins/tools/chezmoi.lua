@@ -1,10 +1,6 @@
 local wk = require 'which-key'
 local telescope = require 'telescope'
 
-vim.cmd [[
-  let $ONLY_SCRIPTS = 'no-script'
-]]
-
 return {
   'xvzc/chezmoi.nvim',
   dependencies = { 'nvim-lua/plenary.nvim' },
@@ -45,6 +41,11 @@ return {
     vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
       pattern = { os.getenv 'HOME' .. '/.local/share/chezmoi/*' },
       callback = function(ev)
+        local filename = vim.fs.basename(ev.file)
+        if vim.startswith(filename, 'run_') then
+          -- Skip watch/apply for scripts.
+          return
+        end
         local bufnr = ev.buf
         local edit_watch = function()
           require('chezmoi.commands.__edit').watch(bufnr)
@@ -64,7 +65,7 @@ return {
           '--path-style',
           'absolute',
           '--include',
-          'files,scripts,symlinks',
+          'files,symlinks',
           '--exclude',
           'externals',
         },
