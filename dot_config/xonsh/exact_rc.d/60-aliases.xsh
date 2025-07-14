@@ -119,6 +119,7 @@ def __rc_interactive_aliases_chezmoi(aliases):
     aliases["chezad"] = "chezmoi add"
     aliases["chezap"] = "chezmoi apply"
     aliases["chezd"] = "chezmoi diff"
+    aliases["chezrun"] = "sh -c $(chezmoi execute-template --file @($args))"
 
 
 @rc(interactive=True)
