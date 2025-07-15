@@ -17,14 +17,13 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 configDir="$HOME/.config/homebrew"
 brewFile="${configDir}/Brewfile"
-sourceDir="{{ .chezmoi.sourceDir }}"
-bakDir="${sourceDir}/.backups"
+bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/Brewfile.${bakSuffix}"
-export GIT_DIR="${sourceDir}/.git"
-export GIT_WORK_TREE="${sourceDir}"
+export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
-backup () {
+backup() {
   local clarifier="${1:?required}"
 
   if [ -e "${bakFile}" ]; then
@@ -39,9 +38,10 @@ backup () {
 
 mkdir -p "${bakDir}"
 
-# Brewfile SHA256: {{ include "dot_config/homebrew/Brewfile.tmpl" | sha256sum }}
-backup before >> "${outFile}"
-brew bundle install --cleanup --file="${brewFile}" --upgrade >> "${outFile}"
-backup after >> "${outFile}"
+{
+  backup before
+  brew bundle install --cleanup --file="${brewFile}" --upgrade
+  backup after
+} >>"${outFile}"
 
 echo >&2 "INFO: Ending $0"

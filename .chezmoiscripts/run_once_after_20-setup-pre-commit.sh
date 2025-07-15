@@ -2,5 +2,5 @@
 # shellcheck shell=bash
 set -euo pipefail
 
-cd "{{ .chezmoi.sourceDir }}"
+cd "${CHEZMOI_SOURCE_DIR}"
 pre-commit install
