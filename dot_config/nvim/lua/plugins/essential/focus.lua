@@ -1,6 +1,6 @@
 return {
-  'nvim-focus/focus.nvim',
-  version = '*',
+  "nvim-focus/focus.nvim",
+  version = "*",
   opts = {
     -- https://github.com/nvim-focus/focus.nvim#configuration
     enable = true,

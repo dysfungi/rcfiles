@@ -1,25 +1,25 @@
-local wezterm = require 'wezterm'
+local wezterm = require "wezterm"
 local config = {}
 
 -- https://wezterm.org/config/lua/config/default_prog.html
 -- config.default_prog = { '/opt/homebrew/bin/xonsh', '--no-rc' }
 
 -- config.term = "wezterm"
-config.term = 'xterm-256color'
+config.term = "xterm-256color"
 config.enable_tab_bar = true
 -- config.color_scheme = 'Batman'
 
 -- https://wezfurlong.org/wezterm/config/fonts.html
 -- Test: != {(`'"Illegal10O"'`)}
 config.font = wezterm.font_with_fallback {
-  { family = 'Iosevka', weight = 'Regular', stretch = 'Expanded' },
-  { family = 'Fira Code' },
-  { family = 'Lotion', weight = 'Bold' },
-  'Source Code Pro',
-  'Monofur Nerd Font',
-  'D2Coding',
-  { family = 'Inconsolata', stretch = 'Normal' },
-  'Andale Mono',
+  { family = "Iosevka", weight = "Regular", stretch = "Expanded" },
+  { family = "Fira Code" },
+  { family = "Lotion", weight = "Bold" },
+  "Source Code Pro",
+  "Monofur Nerd Font",
+  "D2Coding",
+  { family = "Inconsolata", stretch = "Normal" },
+  "Andale Mono",
 }
 
 -- Set window opacity
@@ -35,23 +35,23 @@ config.keys = {
   -- Turn off the default CMD-m Hide action, allowing CMD-m to
   -- be potentially recognized and handled by the tab
   {
-    key = 'm',
-    mods = 'CMD',
+    key = "m",
+    mods = "CMD",
     action = wezterm.action.DisableDefaultAssignment,
   },
   -- Add shortcut to open config really quickly
   -- https://blog-v2.ansidev.xyz/posts/2023-05-18-wezterm-cheatsheet#open-wezterm-config-file-quickly
   {
-    key = ',',
-    mods = 'CMD',
+    key = ",",
+    mods = "CMD",
     action = wezterm.action.SpawnCommandInNewTab {
-      cwd = os.getenv 'WEZTERM_CONFIG_DIR',
+      cwd = os.getenv "WEZTERM_CONFIG_DIR",
       set_environment_variables = {
-        TERM = 'screen-256color',
+        TERM = "screen-256color",
       },
       args = {
-        'vi',
-        os.getenv 'WEZTERM_CONFIG_FILE',
+        "vi",
+        os.getenv "WEZTERM_CONFIG_FILE",
       },
     },
   },
@@ -59,7 +59,7 @@ config.keys = {
 
 -- Maximized window on startup
 -- https://blog-v2.ansidev.xyz/posts/2023-05-18-wezterm-cheatsheet#maximized-window-on-start-up
-wezterm.on('gui-startup', function(cmd)
+wezterm.on("gui-startup", function(cmd)
   local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
   window:gui_window():maximize()
 end)

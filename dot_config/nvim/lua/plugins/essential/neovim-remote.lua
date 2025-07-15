@@ -18,5 +18,5 @@ vim.cmd [[
 -- })
 
 return {
-  'mhinz/neovim-remote',
+  "mhinz/neovim-remote",
 }

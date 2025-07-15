@@ -1,4 +1,4 @@
 return {
-  'meatballs/vim-xonsh',
+  "meatballs/vim-xonsh",
   -- 'abhishekmukherg/xonsh-vim',
 }

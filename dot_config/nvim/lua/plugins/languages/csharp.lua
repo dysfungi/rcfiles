@@ -1,3 +1,3 @@
 return {
-  'iabdelkareem/csharp.nvim',
+  "iabdelkareem/csharp.nvim",
 }
