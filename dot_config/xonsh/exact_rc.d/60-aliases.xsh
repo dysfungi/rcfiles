@@ -209,7 +209,7 @@ def __rc_interactive_aliases_miscellaneous(aliases):
     def _caff(args):
         hours = int(args[0]) if args else 8
         hours_in_minutes = hours * 60 * 60
-        print(f"Caffeinating for {hours} hour(s)")
+        print(f"Caffeinating for {hours} hour(s)...")
         return ["caffeinate", "-t", str(hours_in_minutes)]
 
     @aliases.register("eip")
