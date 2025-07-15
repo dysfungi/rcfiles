@@ -9,7 +9,7 @@ bottle==0.13.4
 build==1.2.2.post1
 cachecontrol==0.14.3
 cachetools==6.1.0
-certifi==2025.7.9
+certifi==2025.7.14
 cffi==1.17.1
 cfgv==3.4.0
 charset-normalizer==3.4.2
@@ -54,7 +54,7 @@ mccabe==0.7.0
 mdurl==0.1.2
 more-itertools==10.7.0
 msgpack==1.1.1
-mypy==1.16.1
+mypy==1.17.0
 mypy-extensions==1.1.0
 neovim-remote==2.5.1
 nodeenv==1.9.1
