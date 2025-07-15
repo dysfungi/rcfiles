@@ -893,8 +893,6 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       require('mason-tool-installer').setup {
         ensure_installed = {
-          'black', -- Python
-          'isort', -- Python
           'prettier',
           'prettierd',
           'ruff', -- Python
@@ -964,7 +962,7 @@ require('lazy').setup({
           if require('conform').get_formatter_info('ruff_format', bufnr).available then
             return { 'ruff_organize_imports', 'ruff_fix', 'ruff_format' }
           else
-            return { 'isort', 'black' }
+            return { 'ruff_organize_imports', 'ruff_fix', 'ruff_format' }
           end
         end,
         rust = { 'rustfmt', lsp_format = 'fallback' },
