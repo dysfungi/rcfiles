@@ -38,3 +38,9 @@ def __rc_env_mise(xsh):
     # https://mise.jdx.dev/installing-mise.html#xonsh
     # execx($(/opt/homebrew/bin/mise activate xonsh))
     _activate_mise(xsh)
+
+
+@rc(interactive=True)
+def __rc_env_chezmoi():
+    $CHEZMOI_SOURCE_DIR = $(chezmoi source-path)
+    $CHEZMOI_WORKING_TREE = $(chezmoi data --format=json | jq --raw-output '.chezmoi.workingTree')

@@ -124,9 +124,6 @@ def __rc_interactive_aliases_chezmoi(aliases):
             $CHEZMOI_GITHUB_ACCESS_TOKEN = str(OnePass("op://Private/GitHub Token - Chezmoi/password"))
         chezmoi @(args)
 
-    $CHEZMOI_SOURCE_DIR = $(chezmoi source-path)
-    $CHEZMOI_WORKING_TREE = $(chezmoi data --format=json | jq --raw-output '.chezmoi.workingTree')
-
     aliases["chezad"] = "chez add"
     aliases["chezap"] = "chez apply"
     aliases["chezd"] = "chez diff"
