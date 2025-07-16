@@ -12,7 +12,7 @@ def __rc_interactive_secrets():
     def _load_secrets():
         with ${...}.swap(XONTRIB_1PASSWORD_ENABLED=True):
             result = "success"
-            chezmoi_github_token = OnePass("op://Private/GitHub Token - Chezmoi/password")
+            chezmoi_github_token = OnePass("op://CLI/GitHub Token - Chezmoi/password")
             try:
                 $CHEZMOI_GITHUB_ACCESS_TOKEN
             except KeyError:
