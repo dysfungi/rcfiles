@@ -11,10 +11,11 @@ def __rc_interactive_prompt(xsh):
     from xonsh.prompt import gitstatus, vc
     from xonsh.prompt.base import PromptField, PromptFields
 
-    def _vi_mode_prompt(*args, **kwargs):
+    def _vi_input_mode():
         # https://github.com/t184256/xontrib-prompt-vi-mode
         style = "{BLUE}"
         text = "UNKNOWN"
+
         # TODO: handle case VISUAL, which is not in ViInputMode
         match xsh.shell.shell.prompter.app.vi_state.input_mode:
             case ViInputMode.INSERT:
@@ -29,12 +30,17 @@ def __rc_interactive_prompt(xsh):
             case (_ as mode):
                 style = "{INTENSE_RED}"
                 text = mode.name
+
         return f"{style} {text} {{RESET}}"
+
+    def _bottom_toolbar():
+        $PROMPT_FIELDS["threaded_result"] = " ".join($PROMPT_FIELDS.setdefault("threaded_results", []))
+        return f"{_vi_input_mode()}{{threaded_result:{{RED}}{{}}{{RESET}}}}"
 
     # https://xon.sh/envvars.html#interactive-prompt
     # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
     $UPDATE_PROMPT_ON_KEYPRESS = True
-    $BOTTOM_TOOLBAR = _vi_mode_prompt
+    $BOTTOM_TOOLBAR = _bottom_toolbar
     # $MULTILINE_PROMPT = "`·.,¸,.·*¯`·.,¸,.·*¯"
     $MULTILINE_PROMPT = "{GREEN}╰──────────────{INTENSE_GREEN}··{RESET}"
     $PROMPT = "\n".join([
@@ -46,10 +52,9 @@ def __rc_interactive_prompt(xsh):
 
     $PROMPT_FIELDS["env_prefix"] = $PROMPT_FIELDS["env_postfix"] = ""
     # https://xon.sh/api/_autosummary/cmd/xonsh.prompt.gitstatus.html
-    gitstatus_ahead = $PROMPT_FIELDS["gitstatus.ahead"]
-    gitstatus_behind = $PROMPT_FIELDS["gitstatus.behind"]
     gitstatus_branch = $PROMPT_FIELDS["gitstatus.branch"]
     gitstatus_branch.prefix = ""
     gitstatus_branch.suffix = "{RESET}"
     $PROMPT_FIELDS["prompt_end"] = "{INTENSE_GREEN}@>{RESET}"
     $PROMPT_FIELDS["time_format"] = "%s"
+    $PROMPT_FIELDS["vi_input_mode"] = _vi_input_mode  # TODO: fix

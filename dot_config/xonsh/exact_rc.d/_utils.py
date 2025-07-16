@@ -1,5 +1,6 @@
 import functools
 import inspect
+import threading
 from typing import Any, Callable, Optional
 
 from xonsh.built_ins import XSH
@@ -11,7 +12,7 @@ def rc(
     autorun: bool = True,
     interactive: Optional[bool] = None,
     login: Optional[bool] = None,
-):
+) -> Callable[..., Any]:
     """Decorator to wrap functions in RC files. Auto-runs wrapped
     functions by default and can specify if the function should only
     be run in interactive or login shells.
@@ -25,7 +26,9 @@ def rc(
     "non_login" is in the function name.
     """
 
-    def decorator(func: Callable[..., Any], *, _interactive=interactive, _login=login):
+    def decorator(
+        func: Callable[..., Any], *, _interactive=interactive, _login=login
+    ) -> Callable[..., Any]:
         if _interactive is None:
             match func.__name__:
                 case x if "non_interactive" in x:
@@ -43,7 +46,7 @@ def rc(
         sig = inspect.signature(func)
 
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, **kwargs) -> Any:
             if interactive is not None and XSH.env["XONSH_INTERACTIVE"] != _interactive:
                 return
 
@@ -70,6 +73,39 @@ def rc(
         return wrapper
 
     return decorator if func is None else decorator(func)
+
+
+def threaded(
+    *,
+    event: Callable[..., Any],
+    attribute: str = "thread",
+    bottom_toolbar_result: bool = True,
+) -> Callable[..., Any]:
+    """Decorator to add a thread instance as an attribute on the decorated function."""
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                result = func(*args, **kwargs)
+            except Exception as exc:
+                result = exc
+                raise
+            finally:
+                if bottom_toolbar_result:
+                    XSH.env["PROMPT_FIELDS"].setdefault("threaded_results", []).append(
+                        f"{event.__class__.__name__}({func.__name__}={result})"
+                    )
+
+        @event
+        def _threaded_event_handler(*args, **kwargs):
+            thread = threading.Thread(target=wrapper, args=args, kwargs=kwargs)
+            setattr(func, attribute, thread)
+            thread.start()
+
+        return func
+
+    return decorator
 
 
 def reset_current_job():

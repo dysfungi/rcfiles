@@ -115,15 +115,7 @@ def __rc_interactive_aliases_neovim(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_chezmoi(aliases):
-
-    @aliases.register("chez")
-    def _chezmoi(args: list[str]):
-        try:
-            $CHEZMOI_GITHUB_ACCESS_TOKEN
-        except KeyError:
-            $CHEZMOI_GITHUB_ACCESS_TOKEN = str(OnePass("op://Private/GitHub Token - Chezmoi/password"))
-        chezmoi @(args)
-
+    aliases["chez"] = "chezmoi @($args)"
     aliases["chezad"] = "chez add"
     aliases["chezap"] = "chez apply"
     aliases["chezd"] = "chez diff"
