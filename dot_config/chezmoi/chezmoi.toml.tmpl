@@ -1,6 +1,21 @@
 [data]
 name = "Derek M Frank"
+{{ if eq .chezmoi.username "dmf" -}}{{/* Mine */ -}}
 email = "derek@frank.sh"
+isMyMachine = true
+isWorkMachine = false
+isRiotMachine = false
+{{ else if eq .chezmoi.username "dfrank" -}}{{/* Work: Riot Games */ -}}
+email = "dfrank@riotgames.com"
+isMyMachine = false
+isWorkMachine = true
+isRiotMachine = true
+{{ else -}}{{/* Work */ -}}
+email = "derek@frank.sh"
+isMyMachine = false
+isWorkMachine = true
+isRiotMachine = false
+{{ end -}}
 
 [cd]
 args = [

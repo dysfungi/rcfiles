@@ -8,7 +8,7 @@ playground {{ .chezmoi.homeDir }}/Code/playground
 pyground {{ .chezmoi.homeDir }}/Code/playground/python
 goground {{ .chezmoi.homeDir }}/Code/playground/go
 
-{{- if eq .chezmoi.username "dfrank" }}
+{{- if .isRiotMachine }}
 reliability {{ .chezmoi.homeDir }}/Code/reliability-infrastructure
 sre {{ .chezmoi.homeDir }}/Code/sre-monorepo
 p4 /Users/shared/p4
