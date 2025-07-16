@@ -87,14 +87,17 @@ def threaded(
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             try:
-                result = func(*args, **kwargs)
+                func(*args, **kwargs)
             except Exception as exc:
-                result = exc
-                raise
-            finally:
                 if bottom_toolbar_result:
-                    XSH.env["PROMPT_FIELDS"].setdefault("threaded_results", []).append(
-                        f"{event.__class__.__name__}({func.__name__}={result})"
+                    XSH.env.setdefault("THREADED_RESULTS", []).append(
+                        f"{{RED}}{event.__class__.__name__}({func.__name__}={exc})"
+                    )
+                raise
+            else:
+                if bottom_toolbar_result:
+                    XSH.env.setdefault("THREADED_RESULTS", []).append(
+                        f"{{GREEN}}{event.__class__.__name__}({func.__name__}=OK)"
                     )
 
         @event

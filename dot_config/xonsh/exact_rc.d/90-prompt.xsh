@@ -34,8 +34,8 @@ def __rc_interactive_prompt(xsh):
         return f"{style} {text} {{RESET}}"
 
     def _bottom_toolbar():
-        $PROMPT_FIELDS["threaded_result"] = " ".join($PROMPT_FIELDS.setdefault("threaded_results", []))
-        return f"{_vi_input_mode()}{{threaded_result:{{RED}}{{}}{{RESET}}}}"
+        $PROMPT_FIELDS["threaded_results"] = " ".join(${...}.setdefault("THREADED_RESULTS", []))
+        return f"{_vi_input_mode()}{{threaded_results:{{}}{{RESET}}}}"
 
     # https://xon.sh/envvars.html#interactive-prompt
     # https://github.com/xonsh/xonsh/issues/5301#issuecomment-1995160635
