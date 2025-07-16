@@ -6,7 +6,8 @@ def __rc_interactive_secrets():
     $XONTRIB_1PASSWORD_ENABLED = False
     xontrib load 1password  # https://github.com/drmikecrowe/xontrib-1password
 
-    $OP_SERVICE_ACCOUNT_TOKEN = $(cat ~/.secrets/OP_SERVICE_ACCOUNT_TOKEN)
+    for secret_file in p"~/.secrets".glob("*"):
+        ${secret_file.name} = $(cat @(secret_file))
 
     @threaded(event=events.on_post_init)
     def _load_secrets():
