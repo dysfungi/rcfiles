@@ -42,5 +42,41 @@ def __rc_env_mise(xsh):
 
 @rc(interactive=True)
 def __rc_env_chezmoi():
-    $CHEZMOI_SOURCE_DIR = $(chezmoi source-path)
-    $CHEZMOI_WORKING_TREE = $(chezmoi data --format=json | jq --raw-output '.chezmoi.workingTree')
+    import json
+
+    data = json.loads($(chezmoi data --format=json))
+    data_chezmoi = data["chezmoi"]
+
+    $CHEZMOI_SOURCE_DIR = data_chezmoi["sourceDir"]
+    $CHEZMOI_WORKING_TREE = data_chezmoi["workingTree"]
+
+    $IS_MY_MACHINE = data["isMyMachine"]
+    $IS_WORK_MACHINE = data["isWorkMachine"]
+    $IS_RIOT_MACHINE = data["isRiotMachine"]
+
+
+@rc(interactive=True)
+def __rc_env_riot():
+    if not $IS_RIOT_MACHINE:
+        return
+
+    # AWS
+    $AWS_PROFILE = "product-services"
+
+    # Gandalf
+    $GANDALF_ENABLE_AUTOUPGRADE = 1
+
+    # Go
+    $GO111MODULE = "on"
+    $GOPRIVATE = "*.riotgames.com"
+
+    # P4/Perforce & LCU
+    p4_root_dir = p"/Users/Shared/p4"
+    p4_depot_dir = p4_root_dir / "depot"
+    p4_lol_dir = p4_depot_dir / "LoL"
+    p4_lol_main_dir = p4_lol_dir / "__MAIN__"
+    p4_lol_code_dir = p4_lol_main_dir / "code"
+    $P4CONFIG = p4_lol_code_dir / "RiotClient" / "DevTools" / "VSCodeWorkspace" / ".p4config"
+
+    # Vault
+    $VAULT_ADDR = "https://vault.security.riotgames.io"

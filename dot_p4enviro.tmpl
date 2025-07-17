@@ -1,0 +1,8 @@
+{{- if .isRiotMachine -}}{{- /* List/Set values with `p4 set` */ -}}
+P4CHARSET=utf8
+P4CLIENT={{ .chezmoi.username }}_{{ .chezmoi.hostname }}
+P4IGNORE=.p4ignore
+P4PORT=PERFLAX01:1666
+P4USER={{ .chezmoi.username }}
+P4_PERFLAX01:1666_CHARSET=auto
+{{- end -}}

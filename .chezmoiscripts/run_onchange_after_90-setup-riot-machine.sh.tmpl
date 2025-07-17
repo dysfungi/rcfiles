@@ -1,0 +1,55 @@
+{{- if .isRiotMachine -}}
+#!/usr/bin/env bash
+set -euo pipefail
+# https://www.notion.so/riotgames/Setup-LCU-on-MacOS-2327f9530fb2805188aede5050b25bd9
+
+echo >&2 "INFO: Starting $0"
+
+if [ "$(uname -s)" != Darwin ]; then
+  echo "Not Darwin; Skipping Riot setup..."
+  exit 1
+fi
+
+P4_DIR="/Users/Shared/p4"
+DEPOT_DIR="${P4_DIR}/depot"
+LOL_DIR="${DEPOT_DIR}/LoL"
+DEVROOT_DIR="${LOL_DIR}/__MAIN__/DevRoot"
+DEVROOT_TOOLS_EXT_DIR="${DEVROOT_DIR}/Tools/Ext"
+CLIENT_DIR="${DEVROOT_DIR}/Client"
+CLIENT_TOOLS_DIR="${CLIENT_DIR}/tools"
+
+CT_BIN="${CLIENT_TOOLS_DIR}/client-tools/bin"
+PLUGINATOR_BIN="${CLIENT_TOOLS_DIR}/pluginator/bin"
+NODE_BIN="${DEVROOT_TOOLS_EXT_DIR}/Node/22.2.0/mac/bin"
+YARN_BIN="${DEVROOT_TOOLS_EXT_DIR}/Yarn"
+
+mkdir -p "${LOL_DIR}"
+
+cat >"${DEPOT_DIR}/.p4ignore" <<-EOF
+LoL/*/DevRoot/Client/.p4config
+LoL/*/DevRoot/Client/.vscode/*
+LoL/*/DevRoot/Client/fe/*/dist
+LoL/*/DevRoot/Client/fe/pluginator.config.js
+LoL/*/DevRoot/Client/node_modules/*
+LoL/*/DevRoot/Logs
+LoL/*/DevRoot/TMP
+LoL/*/code/RiotClient/DevTools/VSCodeWorkspace/.p4config
+LoL/*/tmp
+LoL/.mise.toml
+LoL/mise.toml
+EOF
+
+cat >"${LOL_DIR}/.mise.toml" <<-EOF
+[env]
+_.path = [
+    "${PLUGINATOR_BIN}",
+    "${CT_BIN}",
+    "${NODE_BIN}",
+    "${YARN_BIN}",
+]
+EOF
+
+mise --cd="${LOL_DIR}" use node@22.2.0 yarn@1.22.22
+
+echo >&2 "INFO: Ending $0"
+{{- end -}}
