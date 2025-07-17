@@ -27,12 +27,11 @@ def __rc_non_interactive_theme():
 
 @rc(interactive=True)
 def __rc_interactive_theme(aliases):
-    from xonsh.tools import register_custom_style
     from xonsh.pyghooks import (
         Token,
-        pygments_style_by_name,
         register_custom_pygments_style,
     )
+    from xonsh.tools import register_custom_style
 
     THEME_NAME = "frank"
     THEME_BASE = "dracula" if !(xontrib load dracula) else "inkpot"  # https://github.com/agoose77/xontrib-dracula
@@ -56,8 +55,3 @@ def __rc_interactive_theme(aliases):
         register_custom_pygments_style(THEME_NAME, THEME_STYLES, base=THEME_BASE)
 
     $XONSH_COLOR_STYLE = THEME_NAME
-
-    def get_theme(name=THEME_NAME):
-        return pygments_style_by_name(name)
-
-    aliases["theme"] = get_theme

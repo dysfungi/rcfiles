@@ -2,6 +2,22 @@ from _utils import rc
 
 
 @rc(interactive=True)
+def __rc_interactive_aliases_xonsh(aliases):
+    import pprint
+
+    from xonsh.ansi_colors import ansi_style_by_name
+    from xonsh.pyghooks import pygments_style_by_name
+
+    @aliases.register("theme")
+    def _show_theme(args: list[str]):
+        theme_name = args[0] if args else $XONSH_COLOR_STYLE
+        pprint.pprint({
+            "ansi": ansi_style_by_name(theme_name),
+            "pygments": pygments_style_by_name(theme_name),
+        })
+
+
+@rc(interactive=True)
 def __rc_interactive_aliases_mise(aliases):
     # https://mise.jdx.dev/getting-started.html#mise-exec-run
     aliases["x"] = ["mise", "exec", "--"]
