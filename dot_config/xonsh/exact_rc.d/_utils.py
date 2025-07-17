@@ -90,13 +90,13 @@ def threaded(
                 func(*args, **kwargs)
             except Exception as exc:
                 if bottom_toolbar_result:
-                    XSH.env.setdefault("THREADED_RESULTS", []).append(
+                    threaded.results.append(
                         f"{{RED}}{event.__class__.__name__}({func.__name__}={exc})"
                     )
                 raise
             else:
                 if bottom_toolbar_result:
-                    XSH.env.setdefault("THREADED_RESULTS", []).append(
+                    threaded.results.append(
                         f"{{GREEN}}{event.__class__.__name__}({func.__name__}=OK)"
                     )
 
@@ -109,6 +109,9 @@ def threaded(
         return func
 
     return decorator
+
+
+setattr(threaded, "results", [])
 
 
 def reset_current_job():

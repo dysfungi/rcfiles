@@ -2,7 +2,7 @@
 References:
     https://xon.sh/tutorial.html#customizing-the-prompt
 """
-from _utils import rc
+from _utils import rc, threaded
 
 
 @rc(interactive=True)
@@ -34,7 +34,7 @@ def __rc_interactive_prompt(xsh):
         return f"{style} {text} {{RESET}}"
 
     def _bottom_toolbar():
-        $PROMPT_FIELDS["threaded_results"] = " ".join(${...}.setdefault("THREADED_RESULTS", []))
+        $PROMPT_FIELDS["threaded_results"] = " ".join(threaded.results)
         return f"{_vi_input_mode()}{{threaded_results:{{}}{{RESET}}}}"
 
     # https://xon.sh/envvars.html#interactive-prompt
