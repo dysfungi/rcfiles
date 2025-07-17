@@ -318,7 +318,14 @@ cask "signal", args: { appdir: "/Applications" }
 cask "todoist-app", args: { appdir: "/Applications" }
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
+# Binary releases of VS Code without MS branding/telemetry/licensing
+cask "vscodium"
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm", args: { appdir: "/Applications" }
 # Video communication and virtual meeting platform
 cask "zoom", args: { appdir: "/Applications" }
+vscode "dbaeumer.vscode-eslint"
+vscode "esbenp.prettier-vscode"
+vscode "mjcrouch.perforce"
+vscode "sysoev.language-stylus"
+vscode "vadimcn.vscode-lldb"
