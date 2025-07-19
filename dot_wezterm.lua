@@ -4,8 +4,10 @@ local config = {}
 -- https://wezterm.org/config/lua/config/default_prog.html
 -- config.default_prog = { '/opt/homebrew/bin/xonsh', '--no-rc' }
 
--- config.term = "wezterm"
-config.term = "xterm-256color"
+-- https://wezterm.org/config/lua/config/term.html
+config.term = "wezterm"
+-- config.term = "xterm-256color"
+
 config.enable_tab_bar = true
 -- config.color_scheme = 'Batman'
 
