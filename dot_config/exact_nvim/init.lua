@@ -293,10 +293,10 @@ vim.keymap.set(
 -- vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
-vim.keymap.set("n", "<left>", '<cmd>echo "Use n to move!!"<CR>')
+vim.keymap.set("n", "<left>", '<cmd>echo "Use h to move!!"<CR>')
 vim.keymap.set("n", "<right>", '<cmd>echo "Use i to move!!"<CR>')
-vim.keymap.set("n", "<up>", '<cmd>echo "Use u to move!!"<CR>')
-vim.keymap.set("n", "<down>", '<cmd>echo "Use e to move!!"<CR>')
+vim.keymap.set("n", "<up>", '<cmd>echo "Use e to move!!"<CR>')
+vim.keymap.set("n", "<down>", '<cmd>echo "Use n to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
