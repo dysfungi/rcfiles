@@ -24,8 +24,6 @@ brew "gettext"
 brew "git"
 # Extendable version manager with support for Ruby, Node.js, Erlang & more
 brew "asdf"
-# Automatically formats Python code to conform to the PEP 8 style guide
-brew "autopep8"
 # Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
 # Collection of portable C++ source libraries
@@ -40,6 +38,8 @@ brew "cheat"
 brew "chezmoi"
 # CLI for Cloudflare API v4
 brew "cloudflare-cli4"
+# Simple, elegant, Pythonic functional programming
+brew "coconut"
 # Color-highlighted diff(1) output
 brew "colordiff"
 # GNU File, Shell, and Text utilities
@@ -58,8 +58,6 @@ brew "dict"
 brew "direnv"
 # Open-source framework for augmenting humans using AI
 brew "fabric-ai"
-# Lint your Python code for style and logical errors
-brew "flake8"
 # Infamous electronic fortune-cookie generator
 brew "fortune"
 # Command-line fuzzy finder written in Go
@@ -96,8 +94,6 @@ brew "httpie"
 brew "libraw"
 # Tools and libraries to manipulate images in many formats
 brew "imagemagick"
-# Sort Python imports automatically
-brew "isort"
 # Convert JPG images to ASCII
 brew "jp2a"
 # Lightweight and flexible command-line JSON processor
@@ -154,14 +150,14 @@ brew "prettier"
 brew "prettierd"
 # Linter for prose
 brew "proselint"
-# It's not just a linter that annoys you!
-brew "pylint"
-# Static type checker for Python
-brew "pyright"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # Utility that provides fast incremental file transfer
 brew "rsync"
+# Extremely fast Python linter, written in Rust
+brew "ruff"
+# Language Server Protocol implementation for Ruff
+brew "ruff-lsp"
 # Safe, concurrent, practical language
 brew "rust"
 # Experimental Rust compiler front-end for IDEs
@@ -188,6 +184,8 @@ brew "spaceman-diff"
 brew "spark"
 # Advanced proxy caching server for HTTP, HTTPS, FTP, and Gopher
 brew "squid"
+# Opinionated Lua code formatter
+brew "stylua"
 # Tool Command Language
 brew "tcl-tk"
 # User interface to the TELNET protocol
