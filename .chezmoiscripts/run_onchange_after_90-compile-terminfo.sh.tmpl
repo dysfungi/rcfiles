@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# ~/.terminfo hash: {{ include "~/.terminfo" | sha256sum }}
+{{ range (joinPath .chezmoi.homeDir ".config/terminfo/*.terminfo" | glob) -}}
+# {{ . }} hash: {{ include . | sha256sum }}
+{{ end }}
 
 echo >&2 "INFO: Starting $0"
 
 # https://wezterm.org/config/lua/config/term.html
-for terminfo in ~/.terminfo/*.terminfo; do
+for terminfo in ~/.config/terminfo/*.terminfo; do
   tic -x -o "${HOME}/.terminfo" "${terminfo}"
 done
 
