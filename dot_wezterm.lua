@@ -19,14 +19,15 @@ config.enable_tab_bar = true
 -- https://wezfurlong.org/wezterm/config/fonts.html
 -- Test: != {(`'"Illegal10O"'`)}
 config.font = wezterm.font_with_fallback {
-  { family = "Iosevka", weight = "Regular", stretch = "Expanded" },
-  { family = "Fira Code" },
-  { family = "Lotion", weight = "Bold" },
-  "Source Code Pro",
-  "Monofur Nerd Font",
-  "D2Coding",
-  { family = "Inconsolata", stretch = "Normal" },
+  { family = "Iosevka", weight = "Regular", stretch = "Expanded" }, -- https://www.programmingfonts.org/#iosevka
+  { family = "Fira Code" }, -- https://www.programmingfonts.org/#firacode
+  { family = "Lotion", weight = "Bold" }, -- https://www.programmingfonts.org/#lotion
+  "Source Code Pro", -- https://www.programmingfonts.org/#source-code-pro
+  "Monofur Nerd Font", -- https://www.programmingfonts.org/#monofur
+  "D2Coding", -- https://www.programmingfonts.org/#d2coding
+  { family = "Inconsolata", stretch = "Normal" }, -- https://www.programmingfonts.org/#inconsolata
   "Andale Mono",
+  { family = "JetBrains Mono" }, -- https://www.programmingfonts.org/#jetbrainsmono
 }
 
 -- Set window opacity
