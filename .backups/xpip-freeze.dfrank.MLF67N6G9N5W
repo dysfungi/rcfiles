@@ -63,7 +63,7 @@ parso==0.8.4
 pathspec==0.12.1
 pbr==6.1.1
 pbs-installer==2025.7.2
-pdbpp==0.11.6
+pdbpp==0.11.7
 pexpect==4.9.0
 pip @ file:///private/var/folders/y4/8dcllrc96x32z0w3fgrlx6_m0000gn/T/tmp3ni52tb0/pip-24.3.1-py3-none-any.whl
 pkginfo==1.12.1.2
