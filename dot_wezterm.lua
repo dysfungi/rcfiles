@@ -1,6 +1,11 @@
 local wezterm = require "wezterm"
 local config = {}
 
+-- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
+config.set_environment_variables = {
+  PATH = "/opt/homebrew/bin:/usr/local/bin:" .. os.getenv "PATH",
+}
+
 -- https://wezterm.org/config/lua/config/default_prog.html
 -- config.default_prog = { '/opt/homebrew/bin/xonsh', '--no-rc' }
 
@@ -52,8 +57,9 @@ config.keys = {
         TERM = "screen-256color",
       },
       args = {
-        "vi",
-        os.getenv "WEZTERM_CONFIG_FILE",
+        "nvim",
+        -- os.getenv "WEZTERM_CONFIG_FILE",
+        wezterm.home_dir .. "/.local/share/chezmoi/dot_wezterm.lua",
       },
     },
   },
