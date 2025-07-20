@@ -25,8 +25,14 @@ def __rc_interactive_aliases_mise(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_uv(aliases):
-    # https://mise.jdx.dev/getting-started.html#mise-exec-run
-    aliases["xuv"] = "$UV_PYTHON=@(__import__('sys').executable) uv @($args)"
+    import sys
+
+    @aliases.register("xuv")
+    def _xonsh_uv(args: list[str]):
+        # https://mise.jdx.dev/getting-started.html#mise-exec-run
+        # https://github.com/astral-sh/uv/issues/4635#issuecomment-2197754249
+        # https://github.com/xonsh/xonsh/issues/5883
+        $UV_PYTHON=@(sys.executable) uv @(args)
 
 
 @rc(interactive=True)
@@ -56,7 +62,11 @@ def __rc_interactive_aliases_builtin(aliases):
     """
     from pathlib import Path
 
-    aliases["cv"] = 'cdargs @($args) && cd $(cat "$HOME/.cdargsresult")'
+    @aliases.register("cv")
+    @aliases.return_command
+    def _cdargs_cv(args: list[str]):
+        cdargs @(args)
+        return ["cd", $(cat '$HOME/.cdargsresult')]
 
     aliases["-"] = aliases["cd-"] = "cd -"
 
@@ -118,7 +128,11 @@ def __rc_interactive_aliases_written_in_rust(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_tmux(aliases):
-    aliases["tmx"] = aliases["tmu"] = "tmux attach -t @($args) || tmux new -s @($args)"
+
+    @aliases.register("tmx")
+    @aliases.register("tmu")
+    def _tmux(args: list[str]):
+        tmux attach -t @(args) || tmux new -s @(args)
 
 
 @rc(interactive=True)
@@ -131,11 +145,21 @@ def __rc_interactive_aliases_neovim(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_chezmoi(aliases):
-    aliases["chez"] = "chezmoi @($args)"
+
+    @aliases.register("chez")
+    @aliases.return_command
+    def _chez(args: list[str]):
+        return ["chezmoi", *args]
+
     aliases["chezad"] = "chez add"
     aliases["chezap"] = "chez apply"
     aliases["chezd"] = "chez diff"
-    aliases["chezrun"] = "sh -c $(chez execute-template --file @($args))"
+
+    @aliases.register("chezrun")
+    @aliases.return_command
+    def _chezrun(args: list[str]):
+        script = $(chez execute-template --file @(args))
+        return ["sh", "-c", script]
 
 
 @rc(interactive=True)
@@ -169,22 +193,23 @@ def __rc_interactive_aliases_web_browser(aliases):
     aliases["webt"] = lambda args: webbrowser.open_new_tab(*args)
 
     def _search(base_url: str, string_args: list[str], *, query_varname: str = "q"):
-        query_varvalue = '+'.join(map(urllib.parse.quote, args))
+        query_varvalue = '+'.join(map(urllib.parse.quote, string_args))
         url = f"{base_url}?{query_varname}={query_varvalue}"
+        print(f"Opening {url} in the browser...")
         webbrowser.open(url)
 
     @aliases.register("ddg")
     @aliases.register("duckduckgo")
-    def _duckduckgo(args, **kwargs):
+    def _duckduckgo(args: list[str], **kwargs):
         _search("https://duckduckgo.com/", args)
 
     @aliases.register("google")
-    def _google(args, **kwargs):
+    def _google(args: list[str], **kwargs):
         _search("https://google.com/search", args)
 
 
     @aliases.register("kagi")
-    def _google(args, **kwargs):
+    def _kagi(args: list[str], **kwargs):
         _search("https://kagi.com/search", args)
 
     # Default
@@ -192,9 +217,20 @@ def __rc_interactive_aliases_web_browser(aliases):
     aliases["s"] = "search"
 
     # Refined
-    aliases["pypi"] = "search '!pypi' @($args)"
-    aliases["py3"] = "search '!py3' @($args)"
-    aliases["py2"] = "search '!py2' @($args)"
+    @aliases.register("pypi")
+    @aliases.return_command
+    def _search_bang(args: list[str]):
+        return ["search", "!pypi", *args]
+
+    @aliases.register("py3")
+    @aliases.return_command
+    def _search_bang(args: list[str]):
+        return ["search", "!py3", *args]
+
+    @aliases.register("py2")
+    @aliases.return_command
+    def _search_bang(args: list[str]):
+        return ["search", "!py2", *args]
 
 
 @rc(interactive=True)
