@@ -17,32 +17,22 @@ def rc(
     functions by default and can specify if the function should only
     be run in interactive or login shells.
 
-    If ``interactive`` is not set, then it will be set to ``True`` if
-    "interactive" is in the function name and ``False`` if
-    "non_interactive" is in the function name.
+    The following arg names will be auto-set:
 
-    If ``login`` is not set, then it will be set to ``True`` if
-    "login" is in the function name and ``False`` if
-    "non_login" is in the function name.
+        aliases: __xonsh__.aliases
+        env: __xonsh__.env
+        imp: __xonsh__.imp
+        xession: __xonsh__
+        xsh: __xonsh__
+
     """
 
     def decorator(
-        func: Callable[..., Any], *, _interactive=interactive, _login=login
+        func: Callable[..., Any],
+        *,
+        _interactive=interactive,
+        _login=login,
     ) -> Callable[..., Any]:
-        if _interactive is None:
-            match func.__name__:
-                case x if "non_interactive" in x:
-                    _interactive = False
-                case x if "interactive" in x:
-                    _interactive = True
-
-        if _login is None:
-            match func.__name__:
-                case x if "non_login" in x:
-                    _login = False
-                case x if "login" in x:
-                    _login = True
-
         sig = inspect.signature(func)
 
         @functools.wraps(func)
@@ -53,14 +43,17 @@ def rc(
             if login is not None and XSH.env["XONSH_LOGIN"] != _login:
                 return
 
-            if "aliases" in sig.parameters:
-                kwargs["aliases"] = XSH.aliases
-
-            if "xession" in sig.parameters:
-                kwargs["xession"] = XSH
-
-            if "xsh" in sig.parameters:
-                kwargs["xsh"] = XSH
+            kwargs.update(
+                (name, value)
+                for name, value in {
+                    "aliases": XSH.aliases,
+                    "env": XSH.env,
+                    "imp": XSH.imp,
+                    "xession": XSH,
+                    "xsh": XSH,
+                }.items()
+                if name in sig.parameters
+            )
 
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
