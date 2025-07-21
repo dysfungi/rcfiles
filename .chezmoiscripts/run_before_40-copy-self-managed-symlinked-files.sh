@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-symlinkedDir="${CHEZMOI_SOURCE_DIR}/.symlinked/"
+symlinkedDir="${CHEZMOI_SOURCE_DIR}/.symlinked"
 configDir="${HOME}/.config"
 sourceLazyLockFile="${symlinkedDir}/config/nvim/lazy-lock.${USER}.${HOSTNAME}.json"
 targetLazyLockFile="${configDir}/nvim/lazy-lock.json"
