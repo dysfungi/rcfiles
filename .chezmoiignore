@@ -12,7 +12,6 @@
 
 # Neovim
 **/.luarc.json
-**/lazy-lock.json
 **/spell/
 **/tags
 **/test.sh
