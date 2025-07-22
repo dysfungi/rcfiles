@@ -9,4 +9,15 @@
 ;;   {:shortcuts {:ui/toggle-theme "t z"
 ;;                :ui/toggle-brackets "t b"}}
 
-{:shortcuts {:editor/new-whiteboard []}}
+{
+ ;; Specify the first day of the week.
+ ;; Available options:
+ ;;  - integer from 0 to 6 (Monday to Sunday)
+ ;; Default value: 6 (Sunday)
+ :start-of-week 0
+
+ ;; Fix VIM shortcuts by disabling conflict with `n`:
+ :shortcuts {:editor/new-whiteboard []
+
+ ;; Add shortcut for opening a graph:
+ :graph/open ["alt+shift+g" "g o"]}}
