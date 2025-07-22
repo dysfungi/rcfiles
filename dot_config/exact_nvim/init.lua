@@ -552,7 +552,7 @@ require("lazy").setup({
         -- }
         unpack(telescope_config.values.vimgrep_arguments),
       }
-      table.insert(vimgrep_arguments, "--hidden")
+      table.insert(vimgrep_arguments, "--follow")
       table.insert(vimgrep_arguments, "--glob")
       table.insert(vimgrep_arguments, "!**/.git/**")
       table.insert(vimgrep_arguments, "--glob")
@@ -565,6 +565,18 @@ require("lazy").setup({
       table.insert(vimgrep_arguments, "!**/*.lock")
       table.insert(vimgrep_arguments, "--glob")
       table.insert(vimgrep_arguments, "!**/venv/**")
+      table.insert(vimgrep_arguments, "--hidden")
+      table.insert(vimgrep_arguments, "--iglob") -- media/images/video/audio
+      table.insert(vimgrep_arguments, "!**/*.{gif,jpeg,jpg,ogg,png,svg,wad,wad.client,webm}")
+      table.insert(vimgrep_arguments, "--iglob") -- binaries
+      table.insert(vimgrep_arguments, "!**/*.{bin,bundle,dll,exe,pak,skel,uni,wasm}")
+      table.insert(vimgrep_arguments, "--iglob") -- databases, encryption
+      table.insert(vimgrep_arguments, "!**/*.{data,db,enc}")
+      table.insert(vimgrep_arguments, "--iglob") -- fonts
+      table.insert(vimgrep_arguments, "!**/*.{otf,ttc,ttf,woff}")
+      table.insert(vimgrep_arguments, "--no-binary")
+      table.insert(vimgrep_arguments, "--type-not")
+      table.insert(vimgrep_arguments, "svg")
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
@@ -582,6 +594,7 @@ require("lazy").setup({
             find_command = {
               "rg",
               "--files",
+              "--follow",
               "--glob",
               "!**/.git/**",
               "--glob",
@@ -594,6 +607,18 @@ require("lazy").setup({
               "!**/*.lock",
               "--glob",
               "!**/venv/**",
+              "--hidden",
+              "--iglob",
+              "!**/*.{gif,jpeg,jpg,ogg,png,svg,wad,wad.client,webm}",
+              "--iglob",
+              "!**/*.{bin,bundle,dll,exe,pak,skel,uni,wasm}",
+              "--iglob",
+              "!**/*.{data,db,enc}",
+              "--iglob",
+              "!**/*.{otf,ttc,ttf,woff}",
+              "--no-binary",
+              "--type-not",
+              "svg",
             },
             hidden = true,
           },
