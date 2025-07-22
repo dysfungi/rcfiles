@@ -9,7 +9,16 @@
 ;;   {:shortcuts {:ui/toggle-theme "t z"
 ;;                :ui/toggle-brackets "t b"}}
 
-{
+{:meta/version 1
+
+ ;; Specify the journal filename format using a valid date format string.
+ ;; !Warning:
+ ;;   This configuration is not retroactive and affects only new journals.
+ ;;   To show old journal files in the app, manually rename the files in the
+ ;;   journal directory to match the new format.
+ ;; Default value: "yyyy_MM_dd"
+ :journal/file-name-format "yyyy-MM-dd"
+
  ;; Specify the first day of the week.
  ;; Available options:
  ;;  - integer from 0 to 6 (Monday to Sunday)
