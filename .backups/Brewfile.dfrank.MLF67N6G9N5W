@@ -312,6 +312,8 @@ cask "p4v"
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
+# Video game digital distribution service
+cask "steam"
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
 # Multimedia player
