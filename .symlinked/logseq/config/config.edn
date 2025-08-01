@@ -30,3 +30,12 @@
 
  ;; Add shortcut for opening a graph:
  :graph/open ["alt+shift+g" "g o"]}}
+
+ ;; Add custom commands to the command palette
+ ;; Example usage:
+ ;; :commands
+ ;; [
+ ;;  ["js" "Javascript"]
+ ;;  ["md" "Markdown"]
+ ;;  ]
+ :commands []
