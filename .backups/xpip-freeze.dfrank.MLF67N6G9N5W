@@ -19,6 +19,7 @@ cloudpickle==3.1.1
 coconut==3.1.2
 cpyparsing==2.4.7.2.4.1
 crashtest==0.4.1
+datadog==0.52.1
 decorator==5.2.1
 distlib==0.3.9
 doit==0.36.0
@@ -54,7 +55,7 @@ mccabe==0.7.0
 mdurl==0.1.2
 more-itertools==10.7.0
 msgpack==1.1.1
-mypy==1.17.0
+mypy==1.17.1
 mypy-extensions==1.1.0
 neovim-remote==2.5.1
 nodeenv==1.9.1
@@ -92,7 +93,7 @@ pyyaml==6.0.2
 rapidfuzz==3.13.0
 requests==2.32.4
 requests-toolbelt==1.0.0
-rich==14.0.0
+rich==14.1.0
 ruff==0.12.2
 setuptools==80.9.0
 shellingham==1.5.4
