@@ -1,0 +1,6 @@
+{{- if .isRiotMachine -}}
+[Connection]
+apikey = {{ .chezmoi.username }}
+appkey = dogshell
+api_host = http://lope.ddproxy.globalriot.aws-usw2-prod.main.rc.rcluster.io
+{{- end -}}
