@@ -25,11 +25,13 @@
  ;; Default value: 6 (Sunday)
  :start-of-week 0
 
- ;; Fix VIM shortcuts by disabling conflict with `n`:
- :shortcuts {:editor/new-whiteboard []
+ :shortcuts {
+  ;; Fix VIM shortcuts by disabling conflict with `n`:
+  :editor/new-whiteboard []
 
- ;; Add shortcut for opening a graph:
- :graph/open ["alt+shift+g" "g o"]}}
+  ;; Add shortcut for opening a graph:
+  :graph/open ["alt+shift+g" "g o"]
+ }
 
  ;; Add custom commands to the command palette
  ;; Example usage:
@@ -39,3 +41,58 @@
  ;;  ["md" "Markdown"]
  ;;  ]
  :commands []
+
+ ;; The following queries will be displayed at the bottom of today's journal page.
+ ;; The "NOW" query returns tasks with "NOW" or "DOING" status.
+ ;; The "NEXT" query returns tasks with "NOW", "LATER", or "TODO" status.
+ :default-queries {
+  :journals [
+   {:title "🔨 NOW"
+    :query [:find (pull ?h [*])
+            :in $ ?start ?today
+            :where
+            [?h :block/marker ?marker]
+            [(contains? #{"NOW" "DOING"} ?marker)]
+            [?h :block/page ?p]
+            [?p :block/journal? true]
+            [?p :block/journal-day ?d]
+            [(>= ?d ?start)]
+            [(<= ?d ?today)]]
+    :inputs [:365d :today]
+    :result-transform (fn [result]
+                        (sort-by (fn [h]
+                                   (get h :block/priority "Z")) result))
+    :group-by-page? true
+    :collapsed? false}
+   {:title "📅 NEXT"
+    :query [:find (pull ?h [*])
+            :in $ ?start ?next
+            :where
+            [?h :block/marker ?marker]
+            [(contains? #{"NOW" "LATER" "DOING" "TODO"} ?marker)]
+            [?h :block/page ?p]
+            [?p :block/journal? true]
+            [?p :block/journal-day ?d]
+            [(> ?d ?start)]
+            [(< ?d ?next)]]
+    :inputs [:today :365d-after]
+    :group-by-page? true
+    :collapsed? false}
+   {:title "🔙 BACKLOG"
+    :query [:find (pull ?h [*])
+            :in $ ?start ?today
+            :where
+            [?h :block/marker ?marker]
+            [(contains? #{"LATER" "TODO"} ?marker)]
+            [?h :block/page ?p]
+            [?p :block/journal? true]
+            [?p :block/journal-day ?d]
+            [(>= ?d ?start)]
+            [(<= ?d ?today)]]
+    :inputs [:365d :today]
+    :group-by-page? true
+    :collapsed? true}
+ ]
+}
+
+} ;; END
