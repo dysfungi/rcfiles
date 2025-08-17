@@ -269,6 +269,8 @@ cask "git-credential-manager", args: { appdir: "/Applications" }
 cask "hammerspoon"
 # Keyboard customiser
 cask "karabiner-elements"
+# Multiplayer online battle arena game
+cask "league-of-legends", args: { appdir: "/Applications" }
 # Privacy-first, open-source platform for knowledge sharing and management
 cask "logseq", args: { appdir: "/Applications" }
 # Calendar for professionals and teams
