@@ -8,10 +8,6 @@ if [ "$(uname -s)" != Darwin ]; then
   exit 0
 fi
 
-scriptName="$(basename "$0")"
-outFile="$(mktemp -t "${scriptName}.out")"
-echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
-
 userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
@@ -38,10 +34,8 @@ backup() {
 
 mkdir -p "${bakDir}"
 
-{
-  backup before
-  brew bundle install --cleanup --file="${brewFile}" --upgrade
-  backup after
-} >>"${outFile}"
+backup before
+brew bundle install --cleanup --file="${brewFile}" --upgrade
+backup after
 
 echo >&2 "INFO: Ending $0"

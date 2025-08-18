@@ -8,10 +8,6 @@ if ! command -v xonsh >/dev/null; then
   exit 0
 fi
 
-scriptName="$(basename "$0")"
-outFile="$(mktemp -t "${scriptName}.out")"
-echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
-
 userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
@@ -34,10 +30,8 @@ backup() {
 
 mkdir -p "${bakDir}"
 
-{
-  backup before install
-  xonsh --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
-  backup after install
-} >>"${outFile}"
+backup before install
+xonsh --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
+backup after install
 
 echo >&2 "INFO: Ending $0"

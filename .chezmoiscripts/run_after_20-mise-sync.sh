@@ -3,10 +3,6 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-scriptName="$(basename "$0")"
-outFile="$(mktemp -t "${scriptName}.out")"
-echo >&2 "INFO: Stdout file for ${scriptName} - ${outFile}"
-
 userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
@@ -28,14 +24,12 @@ backup() {
 
 mkdir -p "${bakDir}"
 
-{
-  backup before install
-  mise install --yes
-  backup after install
+backup before install
+mise install --yes
+backup after install
 
-  backup before upgrade
-  mise upgrade --yes
-  backup after upgrade
-} >>"${outFile}"
+backup before upgrade
+mise upgrade --yes
+backup after upgrade
 
 echo >&2 "INFO: Ending $0"
