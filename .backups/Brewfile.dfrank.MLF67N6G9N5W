@@ -145,6 +145,8 @@ brew "neovim-remote"
 brew "nmap"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
+# Utility that provides fast incremental file transfer
+brew "rsync"
 # OCaml package manager
 brew "opam"
 # OpenBSD freely-licensed SSH connectivity tools
@@ -169,8 +171,6 @@ brew "proselint"
 brew "pulumi"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Utility that provides fast incremental file transfer
-brew "rsync"
 # Extremely fast Python linter, written in Rust
 brew "ruff"
 # Language Server Protocol implementation for Ruff
