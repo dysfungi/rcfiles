@@ -119,8 +119,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -300,8 +298,6 @@ cask "keeper-password-manager"
 cask "league-of-legends"
 # Privacy-first, open-source platform for knowledge sharing and management
 cask "logseq", args: { appdir: "/Applications" }
-# Calendar for professionals and teams
-cask "notion-calendar"
 # Simple application that will prevent iTunes or Apple Music from launching
 cask "notunes", args: { appdir: "/Applications" }
 # Use it to gain instant access to operations and complete control over the system
