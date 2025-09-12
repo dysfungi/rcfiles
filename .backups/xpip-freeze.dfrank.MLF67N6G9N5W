@@ -55,7 +55,7 @@ mccabe==0.7.0
 mdurl==0.1.2
 more-itertools==10.7.0
 msgpack==1.1.1
-mypy==1.17.1
+mypy==1.18.1
 mypy-extensions==1.1.0
 neovim-remote==2.5.1
 nodeenv==1.9.1
