@@ -7,6 +7,6 @@ poetry      2.1.4    ~/.config/mise/config.toml  latest
 pre-commit  4.3.0    ~/.config/mise/config.toml  latest
 python      3.11.7
 python      3.13.5
-ruff        0.12.12  ~/.config/mise/config.toml  latest
-uv          0.8.15   ~/.config/mise/config.toml  latest
+ruff        0.13.0   ~/.config/mise/config.toml  latest
+uv          0.8.17   ~/.config/mise/config.toml  latest
 yarn        1.22.22
