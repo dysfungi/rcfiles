@@ -119,8 +119,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -312,6 +310,8 @@ cask "p4v"
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
+# Team communication and collaboration software
+cask "slack", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
 # Multimedia player
