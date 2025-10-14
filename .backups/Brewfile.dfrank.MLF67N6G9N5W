@@ -119,6 +119,8 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -147,6 +149,8 @@ brew "ollama", restart_service: :changed
 brew "rsync"
 # OCaml package manager
 brew "opam"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # OpenBSD freely-licensed SSH connectivity tools
 brew "openssh"
 # Drop-in replacement for Terraform. Infrastructure as Code Tool
