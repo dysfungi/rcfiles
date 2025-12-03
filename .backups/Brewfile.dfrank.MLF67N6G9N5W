@@ -115,18 +115,16 @@ brew "jq"
 brew "just"
 # Kubernetes CLI To Manage Your Clusters In Style!
 brew "k9s"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # Easy way to access the system keyring service from python
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
 brew "libxmlsec1"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.14"
 # Utility for directing compilation
 brew "make"
 # CLI for Node.js style checker and lint tool for Markdown files
