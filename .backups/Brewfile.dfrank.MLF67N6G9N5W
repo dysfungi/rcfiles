@@ -39,6 +39,8 @@ brew "cdargs"
 brew "cheat"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # CLI for Cloudflare API v4
 brew "cloudflare-cli4"
 # Simple, elegant, Pythonic functional programming
@@ -115,12 +117,12 @@ brew "jq"
 brew "just"
 # Kubernetes CLI To Manage Your Clusters In Style!
 brew "k9s"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.14"
 # Easy way to access the system keyring service from python
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
