@@ -81,7 +81,7 @@ brew "ghostscript"
 brew "gnu-sed"
 # GNU version of the tar archiving utility
 brew "gnu-tar"
-# GNU Pretty Good Privacy (PGP) package
+# GNU Privacy Guard (OpenPGP)
 brew "gnupg"
 # Open source programming language to build simple/reliable/efficient software
 brew "go"
@@ -105,7 +105,7 @@ brew "helm"
 brew "httpie"
 # ISO/IEC 23008-12:2017 HEIF file format decoder and encoder
 brew "libheif"
-# Tools and libraries to manipulate images in many formats
+# Tools and libraries to manipulate images in select formats
 brew "imagemagick"
 # Image loading and rendering library
 brew "imlib2"
