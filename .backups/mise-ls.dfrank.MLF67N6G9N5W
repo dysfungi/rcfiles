@@ -2,12 +2,12 @@ go          1.22.2
 jq          1.8.1    ~/.config/mise/config.toml  latest
 node        22.2.0
 node        22.20.0
-node        24.11.1  ~/.config/mise/config.toml  lts
-ollama      0.13.2   ~/.config/mise/config.toml  0
-poetry      2.2.1    ~/.config/mise/config.toml  latest
-pre-commit  4.5.0    ~/.config/mise/config.toml  latest
+node        24.13.0  ~/.config/mise/config.toml  lts
+ollama      0.14.2   ~/.config/mise/config.toml  0
+poetry      2.3.1    ~/.config/mise/config.toml  latest
+pre-commit  4.5.1    ~/.config/mise/config.toml  latest
 python      3.11.7
 python      3.13.5
-ruff        0.14.8   ~/.config/mise/config.toml  latest
-uv          0.9.16   ~/.config/mise/config.toml  latest
+ruff        0.14.13  ~/.config/mise/config.toml  latest
+uv          0.9.26   ~/.config/mise/config.toml  latest
 yarn        1.22.22
