@@ -1,4 +1,5 @@
 {
+  "disabled": true,
   "apiToken": "31016cb881ab4830c37a7984713130c3b5fc7f02",
   "": "",
   "sendDefaultProject": "Inbox (2293908659)",
@@ -11,6 +12,5 @@
   "retrieveAppendTodoistId": true,
   "retrieveAppendUrl": true,
   "retrieveClearTasks": false,
-  "retrieveAppendCreationDateTime": false,
-  "disabled": false
+  "retrieveAppendCreationDateTime": false
 }
