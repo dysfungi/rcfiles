@@ -3,6 +3,9 @@ from pathlib import Path
 from _utils import rc
 
 
+@.env.setdefault("MANPATH", [])
+
+
 def _unique_path_prepend(path: Path, *, manpath: bool = False):
     if not path.exists():
         return
