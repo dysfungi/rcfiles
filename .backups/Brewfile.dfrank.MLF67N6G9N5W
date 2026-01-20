@@ -125,8 +125,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
