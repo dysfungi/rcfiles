@@ -8,11 +8,7 @@ def __rc_interactive_env_essential(xsh):
 
 
 def _activate_mise(xsh):
-    import subprocess
-    from os import environ
-
-    xsh.env['MISE_SHELL'] = 'xonsh'
-    xsh.env['MISE_SHELL'] = xsh.env.get_detyped('MISE_SHELL')
+    xsh.env.setdefault("MISE_SHELL", "xonsh")
 
     @events.on_pre_prompt
     def _mise_activate_hook(*args, **kwargs):
