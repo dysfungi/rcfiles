@@ -25,14 +25,12 @@ brew "python@3.12"
 brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
-# GNU internationalization (i18n) and localization (l10n) library
-brew "gettext"
-# Distributed revision control system
-brew "git"
 # Extendable version manager with support for Ruby, Node.js, Erlang & more
 brew "asdf"
 # Official Amazon AWS command-line interface
 brew "awscli"
+# GNU internationalization (i18n) and localization (l10n) library
+brew "gettext"
 # Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
 # Collection of portable C++ source libraries
@@ -75,12 +73,16 @@ brew "fzf"
 brew "gawk"
 # Google Drive CLI Client
 brew "gdrive"
+# Interact with Google Gemini AI models from the command-line
+brew "gemini-cli"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Library for JPEG-2000 image manipulation
 brew "openjpeg"
 # Interpreter for PostScript and PDF
 brew "ghostscript"
+# Distributed revision control system
+brew "git"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU version of the tar archiving utility
@@ -125,8 +127,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
