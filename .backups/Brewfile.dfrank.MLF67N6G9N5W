@@ -322,6 +322,8 @@ cask "signal", args: { appdir: "/Applications" }
 cask "slack", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
+# Set up, configure, manage and analyze your UniFi network
+cask "ubiquiti-unifi-controller"
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
 # Binary releases of VS Code without MS branding/telemetry/licensing
