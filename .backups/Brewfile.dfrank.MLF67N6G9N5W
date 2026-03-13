@@ -127,8 +127,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -322,8 +320,6 @@ cask "signal", args: { appdir: "/Applications" }
 cask "slack", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
-# Set up, configure, manage and analyze your UniFi network
-cask "ubiquiti-unifi-controller"
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
 # Binary releases of VS Code without MS branding/telemetry/licensing
