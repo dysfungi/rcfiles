@@ -1,0 +1,20 @@
+{{- if .isRiotMachine -}}
+
+[plugins]
+# https://mise.jdx.dev/plugin-usage.html#configuration
+
+riot = "git@gh.riotgames.com:gkisel/mise-plugin-riot.git"
+
+[tools]
+gh = "latest" # gh auth login --hostname gh.riotgames.com --git-protocol ssh --skip-ssh-key
+
+# https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
+# Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.
+# "riot:riot-certs" = "latest"
+
+# "riot:keyconjurer" = "latest"
+# "riot:p4" = "latest"
+# "riot:gandalf" = "latest"
+# "riot:ritopls" = "latest"
+
+{{- end -}}
