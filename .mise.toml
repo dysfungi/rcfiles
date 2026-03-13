@@ -8,8 +8,7 @@ min_version = "2024.9.5"
 
 [settings.python]
 # https://mise.jdx.dev/mise-cookbook/python.html#mise-uv
-uv_venv_auto = true
-venv_auto_create = true
+uv_venv_auto = "create|source"
 
 
 [env]
