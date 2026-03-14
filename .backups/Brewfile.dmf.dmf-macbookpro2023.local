@@ -14,16 +14,18 @@ brew "libtiff"
 brew "jpeg-xl"
 # Cryptography and SSL/TLS Toolkit
 brew "openssl@3"
+# Library for command-line editing
+brew "readline"
+# Command-line interface for SQLite
+brew "sqlite"
 # Simple system information tool written in Python
 brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
-# GNU internationalization (i18n) and localization (l10n) library
-brew "gettext"
-# Distributed revision control system
-brew "git"
 # Extendable version manager with support for Ruby, Node.js, Erlang & more
 brew "asdf"
+# GNU internationalization (i18n) and localization (l10n) library
+brew "gettext"
 # Bourne-Again SHell, a UNIX command interpreter
 brew "bash"
 # Collection of portable C++ source libraries
@@ -66,10 +68,16 @@ brew "fzf"
 brew "gawk"
 # Google Drive CLI Client
 brew "gdrive"
+# Open-source, cross-platform JavaScript runtime environment
+brew "node"
+# Interact with Google Gemini AI models from the command-line
+brew "gemini-cli"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Interpreter for PostScript and PDF
 brew "ghostscript"
+# Distributed revision control system
+brew "git"
 # GNU implementation of the famous stream editor
 brew "gnu-sed"
 # GNU version of the tar archiving utility
@@ -106,14 +114,14 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
 brew "libxmlsec1"
 # Utility for directing compilation
 brew "make"
-# Open-source, cross-platform JavaScript runtime environment
-brew "node"
 # CLI for Node.js style checker and lint tool for Markdown files
 brew "markdownlint-cli"
 # Like jq but for Markdown
@@ -132,6 +140,8 @@ brew "neovim-remote"
 brew "nmap"
 # Create, run, and share large language models (LLMs)
 brew "ollama", restart_service: :changed
+# Utility that provides fast incremental file transfer
+brew "rsync"
 # OCaml package manager
 brew "opam"
 # OpenBSD freely-licensed SSH connectivity tools
@@ -152,8 +162,6 @@ brew "prettierd"
 brew "proselint"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
-# Utility that provides fast incremental file transfer
-brew "rsync"
 # Extremely fast Python linter, written in Rust
 brew "ruff"
 # Language Server Protocol implementation for Ruff
@@ -279,6 +287,8 @@ cask "notunes"
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
+# Video game digital distribution service
+cask "steam", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
 # Multimedia player
