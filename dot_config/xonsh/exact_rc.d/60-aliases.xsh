@@ -1,4 +1,8 @@
+import logging
+
 from _utils import rc
+
+logger = logging.getLogger(__name__)
 
 
 @rc(interactive=True)
@@ -243,7 +247,11 @@ def __rc_interactive_aliases_fun(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_miscellaneous(aliases):
-    import requests
+    try:
+        import requests
+    except ImportError:
+        logger.error("requests library not found - skipping miscellaneous aliases")
+        return
 
     @aliases.register
     @aliases.return_command

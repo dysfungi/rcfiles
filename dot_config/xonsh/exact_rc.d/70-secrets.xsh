@@ -6,8 +6,11 @@ logger = logging.getLogger(__name__)
 
 @rc(interactive=True)
 def __rc_interactive_secrets():
+    # https://github.com/drmikecrowe/xontrib-1password
     $XONTRIB_1PASSWORD_ENABLED = False
-    xontrib load 1password  # https://github.com/drmikecrowe/xontrib-1password
+    if not !(xontrib load 1password):
+        logger.error("Failed to load xontrib 1password - secrets will not be loaded from 1Password")
+        return
 
     for secret_file in p"~/.secrets".glob("*"):
         secret_value = $(cat @(secret_file))
