@@ -17,11 +17,21 @@ reqFile="${HOME}/.default-python-packages"
 export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
 export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
+# https://xon.sh/customization.html#set-xonsh-as-my-default-shell
+if command -v xonsh; then
+  BREW_XONSH="$(brew --prefix)/bin/xonsh"
+  if [ -e "$BREW_XONSH" ]; then
+    XONSH_EXECUTABLE="${BREW_XONSH}"
+  else
+    XONSH_EXECUTABLE="$(which xonsh)"
+  fi
+fi
+
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  xonsh --no-rc -c "import sys; \$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
+  ${XONSH_EXECUTABLE} --no-rc -c "import sys; \$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
   git add "${bakFile}"
   if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
     git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
@@ -31,7 +41,7 @@ backup() {
 mkdir -p "${bakDir}"
 
 backup before install
-xonsh --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
+${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
 backup after install
 
 echo >&2 "INFO: Ending $0"

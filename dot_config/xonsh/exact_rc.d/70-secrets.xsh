@@ -8,7 +8,10 @@ logger = logging.getLogger(__name__)
 def __rc_interactive_secrets():
     # https://github.com/drmikecrowe/xontrib-1password
     $XONTRIB_1PASSWORD_ENABLED = False
-    if not !(xontrib load 1password):
+    try:
+        # if not !(xontrib load 1password):
+        import xontrib_1password
+    except ImportError:
         logger.error("Failed to load xontrib 1password - secrets will not be loaded from 1Password")
         return
 
