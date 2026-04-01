@@ -27,6 +27,8 @@ brew "archey4"
 brew "ascii"
 # Extendable version manager with support for Ruby, Node.js, Erlang & more
 brew "asdf"
+# Interpreted, interactive, object-oriented programming language
+brew "python@3.14"
 # Official Amazon AWS command-line interface
 brew "awscli"
 # GNU internationalization (i18n) and localization (l10n) library
@@ -41,8 +43,6 @@ brew "cdargs"
 brew "cheat"
 # Manage your dotfiles across multiple diverse machines, securely
 brew "chezmoi"
-# Interpreted, interactive, object-oriented programming language
-brew "python@3.14"
 # CLI for Cloudflare API v4
 brew "cloudflare-cli4"
 # Simple, elegant, Pythonic functional programming
@@ -127,6 +127,8 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -318,6 +320,8 @@ cask "protonvpn", args: { appdir: "/Applications" }
 cask "signal", args: { appdir: "/Applications" }
 # Team communication and collaboration software
 cask "slack", args: { appdir: "/Applications" }
+# Video game digital distribution service
+cask "steam", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
 # Set up, configure, manage and analyze your UniFi network
@@ -328,6 +332,8 @@ cask "vlc", args: { appdir: "/Applications" }
 cask "vscodium"
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm", args: { appdir: "/Applications" }
+# Connect to Windows
+cask "windows-app", args: { appdir: "/Applications" }
 # Video communication and virtual meeting platform
 cask "zoom", args: { appdir: "/Applications" }
 vscode "dbaeumer.vscode-eslint"
