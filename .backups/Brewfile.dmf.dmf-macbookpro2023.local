@@ -98,8 +98,6 @@ brew "grep"
 brew "helm"
 # User-friendly cURL replacement (command-line HTTP client)
 brew "httpie"
-# Library for reading RAW files from digital photo cameras
-brew "libraw"
 # Tools and libraries to manipulate images in select formats
 brew "imagemagick"
 # Convert JPG images to ASCII
@@ -118,6 +116,8 @@ brew "kubernetes-cli"
 brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
+# Library for reading RAW files from digital photo cameras
+brew "libraw"
 # XML security library
 brew "libxmlsec1"
 # Utility for directing compilation
@@ -291,6 +291,8 @@ cask "signal", args: { appdir: "/Applications" }
 cask "steam", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
+# Set up, configure, manage and analyze your UniFi network
+cask "ubiquiti-unifi-controller", args: { appdir: "/Applications" }
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
 # GPU-accelerated cross-platform terminal emulator and multiplexer
