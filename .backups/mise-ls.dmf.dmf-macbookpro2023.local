@@ -2,7 +2,7 @@ jq          1.8.1     ~/.config/mise/config.toml  latest
 node        22.18.0
 node        23.0.0
 node        24.14.1   ~/.config/mise/config.toml  lts
-ollama      0.20.0    ~/.config/mise/config.toml  0
+ollama      0.20.2    ~/.config/mise/config.toml  0
 poetry      2.3.3     ~/.config/mise/config.toml  latest
 pre-commit  4.5.1     ~/.config/mise/config.toml  latest
 python      3.12-dev
