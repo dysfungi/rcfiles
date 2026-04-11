@@ -1,3 +1,5 @@
+import sys
+
 from _utils import rc, reset_current_job
 
 
@@ -5,6 +7,7 @@ from _utils import rc, reset_current_job
 def __rc_interactive_env_essential(xsh):
     xsh.env.setdefault("EDITOR", "nvim -e")
     xsh.env.setdefault("VISUAL", "nvim")
+    xsh.env.setdefault("SHELL", next((arg for arg in sys.argv if "xonsh" in arg), "xonsh"))
 
 
 def _activate_mise(xsh):
