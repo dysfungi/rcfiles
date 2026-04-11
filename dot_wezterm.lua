@@ -2,9 +2,11 @@ local wezterm = require "wezterm"
 local config = {}
 
 -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
-config.set_environment_variables = {
-  PATH = "/opt/homebrew/bin:/usr/local/bin:" .. os.getenv "PATH",
-}
+if wezterm.target_triple:find "darwin" then
+  config.set_environment_variables = {
+    PATH = "/opt/homebrew/bin:/usr/local/bin:" .. os.getenv "PATH",
+  }
+end
 
 -- https://wezterm.org/config/lua/config/default_prog.html
 -- config.default_prog = { '/opt/homebrew/bin/xonsh', '--no-rc' }
