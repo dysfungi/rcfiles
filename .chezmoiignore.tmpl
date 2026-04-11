@@ -1,0 +1,135 @@
+##########################################
+# https://www.chezmoi.io/reference/special-files/chezmoiignore/
+#
+# Chezmoi ignores hidden/dot files!
+# https://www.chezmoi.io/user-guide/frequently-asked-questions/design/#why-does-chezmoi-use-weird-filenames
+#
+# This ignore file is heavily inspired by:
+#   https://github.com/KevinNitroG/dotfiles/blob/cdefce4e682690b5412c00ba2e06022a7a96218b/home/.chezmoiignore.tmpl
+##########################################
+
+# General
+**/LICENSE
+**/README*
+
+# Logs
+**/*.log
+
+# Neovim
+**/.luarc.json
+**/spell/
+**/tags
+**/test.sh
+
+# Node
+**/node_modules/
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyi
+
+##########################################
+
+{{ if .isWindows }}
+
+.local/bin/*.sh
+
+.config/Code/
+.config/bat/
+.config/crontab/
+.config/crontab/**
+.config/fd/
+.config/gdu/
+.config/kanata/
+.config/kitty
+.config/kitty/**
+.config/lazygit/
+.config/rclone/
+.config/rclone/**
+.config/vlc/
+
+.font/
+.npm-global/
+
+.tmux.conf
+.zprofile
+.zsh*
+
+{{ else }}
+
+.config/autohotkey/
+.config/autohotkey/**
+.config/komorebi/
+.config/microsoft-office/
+.config/scoop/
+.config/scoop/**
+.config/whkdrc/
+.config/windows-tasks-scheduler/
+.config/xinmeng/
+.config/yasb/
+AppData/
+AppData/**
+Documents/
+Documents/**
+
+.vsvimrc
+.wslconfig
+
+{{ end }}
+
+##########################################
+
+{{ if not .isDarwin }}
+
+.chezmoiscripts/darwin/**
+
+{{ end }}
+
+{{ if not .isLinux }}
+
+.chezmoiscripts/linux/**
+
+.gtkrc-2.0.mine
+
+.config/.ktrashrc
+.config/.trashrc
+.config/brave-flags.conf
+.config/chrome-flags.conf
+.config/chromium-flags.conf
+.config/code-flags.conf
+.config/dolphinrc
+.config/electron-flags.conf
+.config/kdeglobals
+.config/libinput-gestures.conf
+.config/mimeapps.list
+.config/spotify-flags.conf
+
+.config/fcitx5/
+.config/fcitx5/**
+.config/gammastep/
+.config/hypr/
+.config/hypr/**
+.config/sddm/
+.config/systemd/
+.config/systemd/**
+.config/tlp/
+
+{{ end }}
+
+{{ if not .isUnixLike }}
+
+.chezmoiscripts/unix-like/**
+
+{{ end }}
+
+{{ if not .isWindows }}
+
+.chezmoiscripts/windows/**
+**.bat
+**.ps1
+**.reg
+
+{{ end }}
+
+##########################################

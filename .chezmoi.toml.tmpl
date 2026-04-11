@@ -1,5 +1,13 @@
 [data]
 name = "Derek M Frank"
+
+isBsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
+isDarwin = {{ eq .chezmoi.os "darwin" }}
+isLinux = {{ eq .chezmoi.os "linux" }}
+isMac = {{ eq .chezmoi.os "darwin" }}
+isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
+isWindows = {{ eq .chezmoi.os "windows" }}
+
 {{ if eq .chezmoi.username "dmf" -}}{{/* Mine */ -}}
 
 email = "derek@frank.sh"
