@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import xonsh.platform
+
 from _utils import rc
 
 
@@ -32,6 +34,19 @@ def _unique_path_append(path: Path, *, manpath: bool = False):
 def __rc_paths_macos():
     # https://xon.sh/platform-issues.html#path-helper
     source-bash --seterrprevcmd "" /etc/profile
+
+
+@rc(login=True)
+def __rc_paths_windows():
+    if not xonsh.platform.ON_WINDOWS:
+        return
+
+    # Common Windows paths for Neovim, Git, etc. if not in PATH
+    if "ProgramFiles" in ${...}:
+        _unique_path_prepend(p($ProgramFiles) / "Neovim" / "bin")
+
+    # Local bin for user-installed tools (including mise)
+    _unique_path_prepend(p("~/.local/bin"))
 
 
 @rc(login=True)
