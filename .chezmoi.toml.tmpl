@@ -44,7 +44,12 @@ args = [
 exclude = ["scripts"]
 
 [hooks.read-source-state.pre]
+{{- if eq .chezmoi.os "windows" }}
+command = "powershell"
+args = ["-NoProfile", ".local/share/chezmoi/.install-1password.ps1"]
+{{- else }}
 command = ".local/share/chezmoi/.install-1password.sh"
+{{- end }}
 
 [onepassword]
 mode = "service"
