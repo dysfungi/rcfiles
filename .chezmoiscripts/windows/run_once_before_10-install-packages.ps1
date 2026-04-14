@@ -13,10 +13,10 @@ $packages = @(
     "GitHub.cli",
     "jdx.mise",
     "LLVM.LLVM", # for clangd / Unreal development
+    "Mamba.Micromamba",
     "Neovim.Neovim",
     "sharkdp.fd",
-    "wez.wezterm",
-    "xonsh.xonsh"
+    "wez.wezterm"
 )
 
 foreach ($package in $packages) {
