@@ -1,10 +1,71 @@
 local wezterm = require "wezterm"
 local config = {}
 
--- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
-if wezterm.target_triple:find "darwin" then
+local isDarwin = wezterm.target_triple:find "[-]apple[-]darwin" -- https://doc.rust-lang.org/nightly/rustc/platform-support/apple-darwin.html
+local isLinux = wezterm.target_triple:find "[-]linux[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/aarch64-unknown-linux-gnu.html
+local isWindows = wezterm.target_triple:find "[-]pc[-]windows[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/x86_64-pc-cygwin.html
+local isUnixLike = isDarwin or isLinux
+
+local modifierKey = "CTRL"
+
+if isUnixLike then
+  local usrBin = "/usr/bin"
+  local usrLocalBin = "/usr/local/bin"
+  local homebrewBin = "/opt/homebrew/bin"
+
+  local myPaths = {
+    usrLocalBin,
+    usrBin,
+    os.getenv "PATH",
+  }
+
+  if isDarwin then
+    modifierKey = "CMD"
+
+    table.insert(myPaths, 1, homebrewBin)
+    config.default_prog = { homebrewBin .. "/xonsh" }
+  else
+    modifierKey = "SUPER"
+
+    config.default_prog = { "xonsh" }
+  end
+
+  -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
   config.set_environment_variables = {
-    PATH = "/opt/homebrew/bin:/usr/local/bin:" .. os.getenv "PATH",
+    PATH = table.concat(myPaths, ":"),
+  }
+elseif isWindows then
+  modifierKey = "SUPER"
+
+  local gitBin = "C:/Program Files/Git/bin"
+  local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
+
+  -- config.default_prog = { "powershell.exe" }
+  config.default_prog = { gitBin .. "/bash.exe" }
+  -- config.default_prog = { "xbin-xonsh" }
+  -- config.default_prog = { gitBin .. "/bash.exe", "-c", "xbin-xonsh" }
+
+  config.set_environment_variables = {
+    PATH = table.concat({
+      xonshBin,
+      gitBin,
+      os.getenv "PATH",
+    }, ";"),
+  }
+
+  config.launch_menu = {
+    {
+      label = "Bash",
+      args = { gitBin .. "/bash.exe" },
+    },
+    {
+      label = "Xonsh",
+      args = { gitBin .. "/bash.exe", "-c", xonshBin .. "/xbin-xonsh" },
+    },
+    {
+      label = "Powershell",
+      args = { "powershell.exe", "-NoLogo" },
+    },
   }
 end
 
@@ -30,6 +91,7 @@ config.font = wezterm.font_with_fallback {
   { family = "Inconsolata", stretch = "Normal" }, -- https://www.programmingfonts.org/#inconsolata
   "Andale Mono",
   { family = "JetBrains Mono" }, -- https://www.programmingfonts.org/#jetbrainsmono
+  "Monospace",
 }
 
 -- Set window opacity
@@ -46,14 +108,14 @@ config.keys = {
   -- be potentially recognized and handled by the tab
   {
     key = "m",
-    mods = "CMD",
+    mods = modifierKey,
     action = wezterm.action.DisableDefaultAssignment,
   },
   -- Add shortcut to open config really quickly
   -- https://blog-v2.ansidev.xyz/posts/2023-05-18-wezterm-cheatsheet#open-wezterm-config-file-quickly
   {
     key = ",",
-    mods = "CMD",
+    mods = modifierKey,
     action = wezterm.action.SpawnCommandInNewTab {
       cwd = os.getenv "WEZTERM_CONFIG_DIR",
       set_environment_variables = {
