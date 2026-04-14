@@ -1,0 +1,6 @@
+jq      1.8.1    C:\Users\dfrank\.config\mise\config.toml  latest
+node    24.14.1  C:\Users\dfrank\.config\mise\config.toml  lts
+ollama  0.20.7   C:\Users\dfrank\.config\mise\config.toml  0
+poetry  2.3.4    C:\Users\dfrank\.config\mise\config.toml  latest
+ruff    0.15.10  C:\Users\dfrank\.config\mise\config.toml  latest
+uv      0.11.6   C:\Users\dfrank\.config\mise\config.toml  latest
