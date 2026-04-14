@@ -31,6 +31,10 @@ isRiotMachine = false
 
 {{ end -}}
 
+{{- if not (exec "printenv" "OP_SERVICE_ACCOUNT_TOKEN") }}
+opServiceAccountToken = {{ promptString "1Password service account token" | quote }}
+{{ end -}}
+
 [cd]
 args = [
     # "--rc=~/.config/xonsh/rc.xsh",
