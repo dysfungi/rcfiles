@@ -17,14 +17,20 @@ uv_venv_auto = "create|source"
 
 [tools]
 # https://mise.jdx.dev/dev-tools/
+
 jq = "latest"
 node = 'lts'
 ollama = '0'
 poetry = "latest"
-pre-commit = "latest"
 ruff = "latest"
 # TODO: Python global with mise does not work for xonsh
 uv = "latest"
+
+{{ if not .isWindows -}}
+
+pre-commit = "latest"
+
+{{- end }}
 
 
 [plugins]
