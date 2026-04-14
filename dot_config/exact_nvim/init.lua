@@ -1260,6 +1260,7 @@ require("lazy").setup({
       ensure_installed = {
         "bash",
         "c",
+        "cpp",
         "diff",
         "gotmpl",
         "html",
@@ -1270,6 +1271,7 @@ require("lazy").setup({
         "query",
         "vim",
         "vimdoc",
+        "xonsh",
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
