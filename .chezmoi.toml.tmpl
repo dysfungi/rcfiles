@@ -57,3 +57,8 @@ command = ".local/share/chezmoi/.install-1password.sh"
 
 [onepassword]
 mode = "service"
+
+[interpreters.sh]
+{{- if eq .chezmoi.os "windows" }}
+command = "C:\\Program Files\\Git\\bin\\bash.exe"
+{{- end }}
