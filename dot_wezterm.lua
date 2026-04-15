@@ -60,7 +60,7 @@ elseif isWindows then
     },
     {
       label = "Xonsh",
-      args = { gitBin .. "/bash.exe", "-c", xonshBin .. "/xbin-xonsh" },
+      args = { xonshBin .. "/xbin-xonsh" },
     },
     {
       label = "Powershell",
