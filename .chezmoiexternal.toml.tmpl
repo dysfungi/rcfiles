@@ -56,3 +56,16 @@ refreshPeriod = "672h"
 type = "file"
 url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/xterm-256color-italic.terminfo"
 refreshPeriod = "672h"
+
+{{- $iosevkaUrl := gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" }}
+{{- if .isMac }}
+["Library/Fonts/Iosevka"]
+    type = "archive"
+    url = {{ $iosevkaUrl | quote }}
+    refreshPeriod = "168h"
+{{- else if .isWindows }}
+["AppData/Local/Microsoft/Windows/Fonts/Iosevka"]
+    type = "archive"
+    url = {{ $iosevkaUrl | quote }}
+    refreshPeriod = "168h"
+{{- end }}
