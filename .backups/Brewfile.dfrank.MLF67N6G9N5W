@@ -127,6 +127,8 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
+# Simple terminal UI for git commands
+brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -273,10 +275,6 @@ cask "1password", args: { appdir: "/Applications" }
 cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
-# OpenAI's coding agent that runs in your terminal
-cask "codex"
-# OpenAI's Codex desktop app for managing coding agents
-cask "codex-app"
 # Voice and text chat software
 cask "discord", args: { appdir: "/Applications" }
 # App to build and share containerised applications and microservices
