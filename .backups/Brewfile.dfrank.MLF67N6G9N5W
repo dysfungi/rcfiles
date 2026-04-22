@@ -4,7 +4,6 @@ tap "hashicorp/tap"
 tap "homebrew/bundle"
 tap "homebrew/services"
 tap "jesseduffield/lazydocker"
-tap "jesseduffield/lazygit"
 # Search tool like grep, but optimized for programmers
 brew "ack"
 # General-purpose data compression with high compression ratio
@@ -127,8 +126,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
