@@ -127,8 +127,6 @@ brew "k9s"
 brew "keyring"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Simple terminal UI for git commands
-brew "lazygit"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -275,6 +273,8 @@ cask "1password", args: { appdir: "/Applications" }
 cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
+# OpenAI's coding agent that runs in your terminal
+cask "codex", args: { appdir: "/Applications" }
 # OpenAI's Codex desktop app for managing coding agents
 cask "codex-app", args: { appdir: "/Applications" }
 # Voice and text chat software
@@ -294,8 +294,6 @@ cask "font-iosevka"
 cask "font-monofur-nerd-font", args: { appdir: "/Applications" }
 cask "font-profontx", args: { appdir: "/Applications" }
 cask "font-source-code-pro", args: { appdir: "/Applications" }
-# 3D parametric modeller
-cask "freecad", args: { appdir: "/Applications" }
 # Cross-platform Git credential storage for multiple hosting providers
 cask "git-credential-manager", args: { appdir: "/Applications" }
 # Web browser
@@ -316,8 +314,6 @@ cask "notunes", args: { appdir: "/Applications" }
 cask "p4"
 # Visual client for Helix Core
 cask "p4v"
-# VPN client focusing on security
-cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
 # Team communication and collaboration software
@@ -326,8 +322,6 @@ cask "slack", args: { appdir: "/Applications" }
 cask "steam", args: { appdir: "/Applications" }
 # To-do list
 cask "todoist-app", args: { appdir: "/Applications" }
-# Set up, configure, manage and analyze your UniFi network
-cask "ubiquiti-unifi-controller"
 # Multimedia player
 cask "vlc", args: { appdir: "/Applications" }
 # Binary releases of VS Code without MS branding/telemetry/licensing
