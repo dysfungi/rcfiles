@@ -1,9 +1,12 @@
 import functools
 import inspect
+import logging
 import threading
 from typing import Any, Callable, Optional
 
 from xonsh.built_ins import XSH
+
+logger = logging.getLogger(__name__)
 
 
 def rc(
@@ -12,6 +15,7 @@ def rc(
     autorun: bool = True,
     interactive: Optional[bool] = None,
     login: Optional[bool] = None,
+    suppress: bool = True,
 ) -> Callable[..., Any]:
     """Decorator to wrap functions in RC files. Auto-runs wrapped
     functions by default and can specify if the function should only
@@ -58,7 +62,18 @@ def rc(
             bound_args = sig.bind(*args, **kwargs)
             bound_args.apply_defaults()
 
-            return func(*bound_args.args, **bound_args.kwargs)
+            try:
+                return func(*bound_args.args, **bound_args.kwargs)
+            except Exception:
+                logger.exception(
+                    "Failed to call %s with %s",
+                    getattr(func, "__code__", func),
+                    bound_args,
+                )
+                if suppress:
+                    return
+                else:
+                    raise
 
         if autorun:
             wrapper()
