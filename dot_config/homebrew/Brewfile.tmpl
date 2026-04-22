@@ -63,8 +63,6 @@ brew "terraform-ls"
 brew "vint"
 
 # Productivity
-brew "fabric-ai"
-brew "ollama", restart_service: :changed
 brew "todoist-cli"
 
 # TUI
@@ -188,7 +186,10 @@ brew "zsh-completions"
 brew "yq"
 
 # AI/LLMs
+brew "codex"
+brew "fabric-ai"
 brew "gemini-cli"
+brew "ollama", restart_service: :changed
 
 # Applications
 cask "1password"
@@ -198,7 +199,6 @@ cask "discord"
 cask "docker-desktop"
 cask "dropbox"
 cask "firefox" # brew install --cask --adopt firefox
-cask "freecad"
 #cask "geektool"
 cask "git-credential-manager"
 #cask "gimp"
@@ -215,20 +215,24 @@ cask "logseq"
 #cask "macs-fan-control"
 #cask "mailmate"
 cask "notunes"
+cask "signal"
+cask "steam"
+cask "todoist-app"
+#cask "transmission"
+#cask "ubiquiti-unifi-controller"
+cask "wezterm"
+cask "vlc"
+
+{{- if .isMyMachine }}
+
+#cask "freecad"
 #cask "protonmail-bridge"
 #cask "proton-drive"
 #cask "proton-mail"
 #cask "proton-pass"
 cask "protonvpn"
-cask "signal"
-cask "steam"
-cask "todoist-app"
-#cask "transmission"
-cask "ubiquiti-unifi-controller"
-cask "wezterm"
-cask "vlc"
 
-{{- if .isRiotMachine }}
+{{- else if .isRiotMachine }}
 
 # Work - Riot Games
 tap "hashicorp/tap"
@@ -242,6 +246,7 @@ brew "groovy"
 brew "pulumi"
 brew "sops" # LOTAPI
 brew "terraform-docs"
+cask "codex-app"
 cask "google-chrome"
 cask "keeper-password-manager"
 cask "p4"
@@ -250,4 +255,5 @@ cask "slack"
 cask "vscodium" # VS Code / visual-studio-code alternative
 cask "windows-app" # microsoft-remote-desktop replacement
 cask "zoom"
+
 {{- end }}
