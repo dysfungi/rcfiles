@@ -1,12 +1,17 @@
+# shellcheck shell=bash
 export LSCOLORS="exfxcxdxbxegedabagacad"
 export CLICOLOR=true
 
-fpath=($DOTFILES/functions $fpath)
+fpath=("$DOTFILES/functions" "${fpath[@]}")
 
-autoload -U $DOTFILES/functions/*(:t)
+for _dotfile_function in "$DOTFILES"/functions/*(.N); do
+	autoload -U "${_dotfile_function:t}"
+done
+unset _dotfile_function
 
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
+# shellcheck disable=SC2034
 SAVEHIST=10000
 
 setopt NO_BG_NICE # don't nice background tasks
