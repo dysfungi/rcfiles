@@ -1,46 +1,53 @@
+{{- $codeDir := joinPath .chezmoi.homeDir "Code" -}}
+{{- $dropboxDir := joinPath .chezmoi.homeDir "Dropbox" -}}
+{{- $perforceDir := joinPath .chezmoi.homeDir "Perforce" -}}
 chez {{ .chezmoi.sourceDir }}
 dot {{ .chezmoi.homeDir }}/.dotfiles
-dropbox {{ .chezmoi.homeDir }}/Dropbox
-notes {{ .chezmoi.homeDir }}/Dropbox/notes
-code {{ .chezmoi.homeDir }}/Code
-www {{ .chezmoi.homeDir }}/Code/defrank.github.io
-playground {{ .chezmoi.homeDir }}/Code/playground
-pyground {{ .chezmoi.homeDir }}/Code/playground/python
-goground {{ .chezmoi.homeDir }}/Code/playground/go
+dropbox {{ $dropboxDir }}
+notes {{ $dropboxDir }}/notes
+code {{ $codeDir }}
+www {{ $codeDir }}/defrank.github.io
+playground {{ $codeDir }}/playground
+pyground {{ $codeDir }}/playground/python
+goground {{ $codeDir }}/playground/go
 
 {{- if .isRiotMachine }}
-reliability {{ .chezmoi.homeDir }}/Code/reliability-infrastructure
-sre {{ .chezmoi.homeDir }}/Code/sre-monorepo
-p4 /Users/shared/p4
+reliability {{ $codeDir }}/reliability-infrastructure
+sre {{ $codeDir }}/sre-monorepo
 main /Users/shared/p4/depot/LoL/__MAIN__/
 devroot /Users/shared/p4/depot/LoL/__MAIN__/DevRoot
 lcu /Users/shared/p4/depot/LoL/__MAIN__/DevRoot/Client
-lol {{ .chezmoi.homeDir }}/Code/keystone-products.league-of-legends
-lime {{ .chezmoi.homeDir }}/Code/lime-monorepo
-lotapi {{ .chezmoi.homeDir }}/Code/lot-api-service
-mt {{ .chezmoi.homeDir }}/Code/maintenance-tool
-rs-admin {{ .chezmoi.homeDir }}/Code/riotstatus-admin
-rs-page {{ .chezmoi.homeDir }}/Code/riotstatus-page
+lol {{ $codeDir }}/keystone-products.league-of-legends
+lime {{ $codeDir }}/lime-monorepo
+lotapi {{ $codeDir }}/lot-api-service
+mt {{ $codeDir }}/maintenance-tool
+rs-admin {{ $codeDir }}/riotstatus-admin
+rs-page {{ $codeDir }}/riotstatus-page
+p4 {{ $perforceDir }}
+flyingfox {{ $perforceDir }}/flyingfox/dev-main
+flx {{ $perforceDir }}/flyingfox/dev-main
+lion {{ $perforceDir }}/lion/dev-main
+2xko {{ $perforceDir }}/lion/dev-main
 
 {{- else }}
-monorepo {{ .chezmoi.homeDir }}/Code/monorepo
-fsharp {{ .chezmoi.homeDir }}/Code/monorepo/fsharp
-fsharp-api {{ .chezmoi.homeDir }}/Code/monorepo/fsharp/api
-automate-api {{ .chezmoi.homeDir }}/Code/monorepo/fsharp/api/automate
-terraform {{ .chezmoi.homeDir }}/Code/monorepo/terraform
-infrastructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure
-frankenstructure {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/frankenstructure
-gateway {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/gateway
-monitoring {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/monitoring
-observability {{ .chezmoi.homeDir }}/Code/monorepo/terraform/infrastructure/observability
-modules {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules
-route {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/gateway-route
-postgres {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/vultr-managed-postgres
-probes {{ .chezmoi.homeDir }}/Code/monorepo/terraform/modules/blackbox-probe
-applications {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications
-httpbin {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/httpbin
-miniflux {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/miniflux
-node-red {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/node-red
-ollama {{ .chezmoi.homeDir }}/Code/monorepo/terraform/applications/ollama
+monorepo {{ $codeDir }}/monorepo
+fsharp {{ $codeDir }}/monorepo/fsharp
+fsharp-api {{ $codeDir }}/monorepo/fsharp/api
+automate-api {{ $codeDir }}/monorepo/fsharp/api/automate
+terraform {{ $codeDir }}/monorepo/terraform
+infrastructure {{ $codeDir }}/monorepo/terraform/infrastructure
+frankenstructure {{ $codeDir }}/monorepo/terraform/infrastructure/frankenstructure
+gateway {{ $codeDir }}/monorepo/terraform/infrastructure/gateway
+monitoring {{ $codeDir }}/monorepo/terraform/infrastructure/monitoring
+observability {{ $codeDir }}/monorepo/terraform/infrastructure/observability
+modules {{ $codeDir }}/monorepo/terraform/modules
+route {{ $codeDir }}/monorepo/terraform/modules/gateway-route
+postgres {{ $codeDir }}/monorepo/terraform/modules/vultr-managed-postgres
+probes {{ $codeDir }}/monorepo/terraform/modules/blackbox-probe
+applications {{ $codeDir }}/monorepo/terraform/applications
+httpbin {{ $codeDir }}/monorepo/terraform/applications/httpbin
+miniflux {{ $codeDir }}/monorepo/terraform/applications/miniflux
+node-red {{ $codeDir }}/monorepo/terraform/applications/node-red
+ollama {{ $codeDir }}/monorepo/terraform/applications/ollama
 
 {{- end }}
