@@ -3,7 +3,6 @@ tap "clintmod/formulas"
 tap "hashicorp/tap"
 tap "homebrew/bundle"
 tap "homebrew/services"
-tap "jesseduffield/lazydocker"
 # Search tool like grep, but optimized for programmers
 brew "ack"
 # General-purpose data compression with high compression ratio
@@ -266,8 +265,6 @@ brew "zsh-completions"
 brew "hashicorp/tap/terraform"
 # Vault
 brew "hashicorp/tap/vault"
-# A simple terminal UI for docker, written in Go
-brew "jesseduffield/lazydocker/lazydocker"
 # Password manager that keeps all passwords secure behind one password
 cask "1password", args: { appdir: "/Applications" }
 # Command-line interface for 1Password
