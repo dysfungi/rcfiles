@@ -1,3 +1,33 @@
+{{- if .isRiotMachine -}}
+
+#### https://gh.riotgames.com/live-operations/agent-skills ####
+
+[riot-liveops-dot-agents-agents]
+    targetPath = ".agents/agents"
+    type = "archive"
+    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+    refreshPeriod = "168h"
+    include = ["*/agents/**"]
+    stripComponents = 2
+
+[riot-liveops-dot-agents-skills]
+    targetPath = ".agents/skills"
+    type = "archive"
+    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+    refreshPeriod = "168h"
+    include = ["*/skills/**"]
+    stripComponents = 2
+
+[riot-liveops-dot-agents-agents-skills]
+    targetPath = ".agents/skills"
+    type = "archive"
+    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+    refreshPeriod = "168h"
+    include = ["*/agents/*/skills/**"]
+    stripComponents = 4
+
+{{- end }}
+
 [".config/fabric/patterns"]
 type = "archive"
 url = "https://github.com/danielmiessler/Fabric/archive/main.tar.gz"
