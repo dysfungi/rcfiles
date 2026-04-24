@@ -1,0 +1,9 @@
+[".config/terminfo/wezterm.terminfo"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/wezterm.terminfo"
+    refreshPeriod = "672h"
+
+[".config/terminfo/xterm-256color-italic.terminfo"]
+    type = "file"
+    url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/xterm-256color-italic.terminfo"
+    refreshPeriod = "672h"
