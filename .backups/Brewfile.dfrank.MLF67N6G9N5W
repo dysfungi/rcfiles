@@ -290,10 +290,8 @@ cask "firefox"
 cask "font-andale-mono"
 cask "font-fira-code", args: { appdir: "/Applications" }
 cask "font-inconsolata"
-cask "font-iosevka"
 cask "font-monofur-nerd-font", args: { appdir: "/Applications" }
 cask "font-profontx", args: { appdir: "/Applications" }
-cask "font-source-code-pro", args: { appdir: "/Applications" }
 # Cross-platform Git credential storage for multiple hosting providers
 cask "git-credential-manager", args: { appdir: "/Applications" }
 # Web browser
