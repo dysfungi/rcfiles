@@ -94,15 +94,28 @@ type = "file"
 url = "https://raw.githubusercontent.com/wezterm/wezterm/main/termwiz/data/xterm-256color-italic.terminfo"
 refreshPeriod = "672h"
 
-{{- $iosevkaUrl := gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" }}
-{{- if .isMac }}
-["Library/Fonts/Iosevka"]
+{{ $fontsDir := ternary "Library/Fonts" (ternary "AppData/Local/Microsoft/Windows/Fonts" "TODO(linux)" .isWindows) .isMac }}
+
+[fonts-iosevka]
+    targetPath = {{ joinPath $fontsDir "Iosevka" | quote }}
     type = "archive"
-    url = {{ $iosevkaUrl | quote }}
+    url = {{ gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" | quote }}
     refreshPeriod = "168h"
-{{- else if .isWindows }}
-["AppData/Local/Microsoft/Windows/Fonts/Iosevka"]
+
+[fonts-powerlevel10k]
+    targetPath = {{ joinPath $fontsDir "PowerLevel10k" | quote }}
     type = "archive"
-    url = {{ $iosevkaUrl | quote }}
+    url = "https://github.com/romkatv/powerlevel10k-media/archive/master.tar.gz"
+    exact = false
+    stripComponents = 1
     refreshPeriod = "168h"
-{{- end }}
+    include = ["*/*.ttf"]
+
+[fonts-source_code_pro]
+    targetPath = {{ joinPath $fontsDir "SourceCodePro" | quote }}
+    type = "archive"
+    url = "https://github.com/adobe-fonts/source-code-pro/archive/master.tar.gz"
+    exact = false
+    stripComponents = 2
+    refreshPeriod = "168h"
+    include = ["**/*.ttf"]
