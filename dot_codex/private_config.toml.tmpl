@@ -24,10 +24,27 @@ last_updated = "2026-04-23T19:25:37Z"
 source_type = "local"
 source = "{{ .chezmoi.homeDir }}/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
+[marketplaces.openai-primary-runtime]
+last_updated = "2026-04-23T19:25:37Z"
+source_type = "local"
+source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
 [mcp_servers.atlassian-rovo]
 url = "https://mcp.atlassian.com/v1/mcp"
 
+[plugins."browser-use@openai-bundled"]
+enabled = true
+
 [plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
 enabled = true
 
 [projects."{{ .chezmoi.homeDir }}/Documents/Codex/2026-04-21-please-help-me-bootstrap-atlassian-rovo"]
