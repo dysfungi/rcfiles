@@ -2,6 +2,8 @@
 
 model_reasoning_effort = "high"
 personality = "pragmatic"
+cli_auth_credentials_store = "file" # ~/.codex/auth.json
+mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 
 {{ else if .isRiotMachine -}}
 
@@ -11,6 +13,8 @@ model = "gpt-5.3-codex"
 model_reasoning_effort = "high"
 personality = "pragmatic"
 notify = ["{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/computer-use/1.0.755/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+cli_auth_credentials_store = "file" # ~/.codex/auth.json
+mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 
 [model_providers.truefoundry]
 name = "TrueFoundry"
