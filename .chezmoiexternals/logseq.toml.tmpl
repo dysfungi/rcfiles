@@ -21,14 +21,14 @@
 
 [".logseq/plugins/logseq-vim-shortcuts"]
     type = "archive"
-    url = {{ gitHubLatestReleaseAssetURL "vipzhicheng/logseq-plugin-vim-shortcuts" "logseq-plugin-vim-shortcuts-*.tar.gz" | quote }}
+    url = {{ gitHubReleaseAssetURL "vipzhicheng/logseq-plugin-vim-shortcuts" (gitHubLatestTag "vipzhicheng/logseq-plugin-vim-shortcuts").GetName "*" | quote }}
     exact = true
     stripComponents = 1
     refreshPeriod = "672h"
 
 [".logseq/plugins/ollama-logseq"]
     type = "archive"
-    url = {{ gitHubLatestReleaseAssetURL "omagdy7/ollama-logseq" "ollama-logseq-*.zip" | quote }}
+    url = {{ gitHubReleaseAssetURL "omagdy7/ollama-logseq" (gitHubLatestTag "omagdy7/ollama-logseq").GetName "*" | quote }}
     exact = true
     stripComponents = 1
     refreshPeriod = "672h"
