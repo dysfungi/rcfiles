@@ -71,3 +71,6 @@ mode = "service"
 {{- if eq .chezmoi.os "windows" }}
 command = "C:\\Program Files\\Git\\bin\\bash.exe"
 {{- end }}
+
+[scriptEnv]
+MISE_GITHUB_TOKEN = {{ onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" | quote }}
