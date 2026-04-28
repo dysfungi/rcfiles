@@ -1271,7 +1271,6 @@ require("lazy").setup({
         "query",
         "vim",
         "vimdoc",
-        "xonsh",
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
