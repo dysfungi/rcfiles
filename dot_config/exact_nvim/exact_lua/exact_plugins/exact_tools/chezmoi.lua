@@ -38,28 +38,46 @@ return {
     -- Treat all files in chezmoi source directory as chezmoi files
     -- The below configuration wll allow you to automatically apply changes on files under chezmoi source path.
     -- e.g. ~/.local/share/chezmoi/*
+    local home = vim.env.HOME or vim.env.USERPROFILE or vim.fn.expand "~"
+    home = home and home ~= "" and home:gsub("\\", "/") or nil
+
+    if not home or home == "~" then
+      vim.schedule(function()
+        vim.notify(
+          "chezmoi.nvim: unable to resolve home dir (HOME/USERPROFILE); watch autocmd disabled",
+          vim.log.levels.WARN
+        )
+      end)
+      return
+    end
+
     vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
-      pattern = { os.getenv "HOME" .. "/.local/share/chezmoi/*" },
+      pattern = { home .. "/.local/share/chezmoi/*" },
       callback = function(ev)
         local filename = vim.fs.basename(ev.file)
         local dirname = vim.fs.dirname(ev.file)
         if vim.startswith(filename, "run_") then
           -- Skip watch/apply for scripts.
           return
-        elseif vim.startswith(filename, ".") or vim.startswith(dirname, ".") then
+        end
+        if vim.startswith(filename, ".") or vim.startswith(dirname, ".") then
           -- Skip watch/apply for dot files.
           return
         end
         local bufnr = ev.buf
-        local edit_watch = function()
+        vim.schedule(function()
           require("chezmoi.commands.__edit").watch(bufnr)
-        end
-        vim.schedule(edit_watch)
+        end)
       end,
     })
 
+    if not pcall(telescope.load_extension, "chezmoi") then
+      vim.schedule(function()
+        vim.notify("chezmoi.nvim: failed to load telescope extension", vim.log.levels.WARN)
+      end)
+    end
+
     -- telscope-config.lua
-    telescope.load_extension "chezmoi"
     vim.keymap.set("n", "<leader>sc", function()
       telescope.extensions.chezmoi.find_files {
         -- You can also search a specific target directory and override arguments
