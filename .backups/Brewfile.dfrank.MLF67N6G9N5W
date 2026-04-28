@@ -270,6 +270,8 @@ brew "hashicorp/tap/terraform"
 brew "hashicorp/tap/vault"
 # Password manager that keeps all passwords secure behind one password
 cask "1password", args: { appdir: "/Applications" }
+# Command-line interface for 1Password
+cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
 # OpenAI's coding agent that runs in your terminal
