@@ -41,7 +41,7 @@ Remove-Item $tempFile, $dbFile -ErrorAction SilentlyContinue
 
 # 3. Install 1Password and Git (Early dependencies)
 Write-Host "Installing 1Password and Git..."
-$packages = @("AgileBits.1Password", "Git.Git")
+$packages = @("AgileBits.1Password", "AgileBits.1Password.CLI", "Git.Git")
 foreach ($package in $packages) {
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }
