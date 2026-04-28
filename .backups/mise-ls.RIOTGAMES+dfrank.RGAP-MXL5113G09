@@ -1,8 +1,9 @@
-jq      1.8.1              C:\Users\dfrank\.config\mise\config.toml  latest
+jq      1.8.1             C:\Users\dfrank\.config\mise\config.toml  latest
 node    24.14.1
-node    24.15.0 (missing)  C:\Users\dfrank\.config\mise\config.toml  lts
+node    24.15.0           C:\Users\dfrank\.config\mise\config.toml  lts
 ollama  0.20.7
-ollama  0.21.2 (missing)   C:\Users\dfrank\.config\mise\config.toml  0
-poetry  2.3.4              C:\Users\dfrank\.config\mise\config.toml  latest
-ruff    0.15.10            C:\Users\dfrank\.config\mise\config.toml  latest
-uv      0.11.6             C:\Users\dfrank\.config\mise\config.toml  latest
+ollama  0.22.0            C:\Users\dfrank\.config\mise\config.toml  0
+poetry  2.3.4             C:\Users\dfrank\.config\mise\config.toml  latest
+ruff    0.15.10           C:\Users\dfrank\.config\mise\config.toml  latest
+uv      0.11.6
+uv      0.11.7 (missing)  C:\Users\dfrank\.config\mise\config.toml  latest
