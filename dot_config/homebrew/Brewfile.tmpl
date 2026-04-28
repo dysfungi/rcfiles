@@ -5,6 +5,7 @@ tap "ariga/tap"
 tap "clintmod/formulas"
 tap "homebrew/bundle"
 tap "homebrew/services"
+tap "1password/tap" # Workaround invalid homebrew/cask 1password-cli definition
 
 # Fonts
 cask "font-andale-mono"
@@ -189,7 +190,7 @@ brew "ollama", restart_service: :changed
 
 # Applications
 cask "1password"
-cask "1password-cli"
+cask "1password/tap/1password-cli"
 cask "amethyst"
 cask "discord"
 cask "docker-desktop"
