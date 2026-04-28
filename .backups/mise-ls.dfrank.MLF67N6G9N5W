@@ -1,15 +1,15 @@
-gh          2.91.0   ~/.config/mise/conf.d/riot.toml  latest
+gh          2.92.0   ~/.config/mise/conf.d/riot.toml  latest
 go          1.22.2
 jq          1.8.1    ~/.config/mise/config.toml       latest
 node        22.2.0
 node        22.20.0
 node        24.15.0  ~/.config/mise/config.toml       lts
-ollama      0.21.2   ~/.config/mise/config.toml       0
+ollama      0.22.0   ~/.config/mise/config.toml       0
 poetry      2.3.4    ~/.config/mise/config.toml       latest
 pre-commit  4.6.0    ~/.config/mise/config.toml       latest
 python      3.11.7
 python      3.13.5
 python      3.14.3
 ruff        0.15.11  ~/.config/mise/config.toml       latest
-uv          0.11.7   ~/.config/mise/config.toml       latest
+uv          0.11.8   ~/.config/mise/config.toml       latest
 yarn        1.22.22
