@@ -123,6 +123,11 @@ if isWindows then
       "Iosevka Slab",
     }
   else
+    if iosevkaDir then
+      wezterm.log_warn("Iosevka fonts not found in " .. iosevkaDir .. "; falling back to Consolas")
+    else
+      wezterm.log_warn "LOCALAPPDATA is unset; falling back to Consolas"
+    end
     config.font = wezterm.font "Consolas"
   end
 else
