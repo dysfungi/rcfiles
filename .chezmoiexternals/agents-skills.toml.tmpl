@@ -6,6 +6,14 @@
     include = ["*/codex/**"]
     stripComponents = 2
 
+[gemini-pickle-rick-extension]
+    targetPath = ".gemini/extensions/pickle-rick"
+    type = "archive"
+    url = "https://github.com/galz10/pickle-rick-extension/archive/main.tar.gz"
+    exact = true
+    stripComponents = 1
+    refreshPeriod = "168h"
+
 {{ if .isRiotMachine -}}
 
 #### https://gh.riotgames.com/live-operations/agent-skills ####
@@ -34,4 +42,4 @@
     include = ["*/agents/*/skills/**"]
     stripComponents = 4
 
-{{- end }}
+{{- end -}}
