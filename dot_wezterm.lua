@@ -8,6 +8,26 @@ local isUnixLike = isDarwin or isLinux
 
 local modifierKey = "CTRL"
 
+local function hasAnyFonts(dir)
+  if not dir then
+    return false
+  end
+
+  local patterns = {
+    dir .. "/*.ttf",
+    dir .. "/*.otf",
+    dir .. "/*.ttc",
+  }
+
+  for _, pattern in ipairs(patterns) do
+    if #wezterm.glob(pattern) > 0 then
+      return true
+    end
+  end
+
+  return false
+end
+
 if isUnixLike then
   local usrBin = "/usr/bin"
   local usrLocalBin = "/usr/local/bin"
@@ -84,19 +104,42 @@ config.enable_tab_bar = true
 -- config.color_scheme = 'Batman'
 
 -- https://wezfurlong.org/wezterm/config/fonts.html
--- Test: != {(`'"Illegal10O"'`)}
-config.font = wezterm.font_with_fallback {
-  { family = "Iosevka", weight = "Regular", stretch = "Expanded" }, -- https://www.programmingfonts.org/#iosevka
-  { family = "Fira Code" }, -- https://www.programmingfonts.org/#firacode
-  { family = "Lotion", weight = "Bold" }, -- https://www.programmingfonts.org/#lotion
-  "Source Code Pro", -- https://www.programmingfonts.org/#source-code-pro
-  "Monofur Nerd Font", -- https://www.programmingfonts.org/#monofur
-  "D2Coding", -- https://www.programmingfonts.org/#d2coding
-  { family = "Inconsolata", stretch = "Normal" }, -- https://www.programmingfonts.org/#inconsolata
-  "Andale Mono",
-  { family = "JetBrains Mono" }, -- https://www.programmingfonts.org/#jetbrainsmono
-  "Monospace",
-}
+-- Keep Windows on a conservative stack to avoid dwrote panics from
+-- unavailable/invalid family+variant combinations.
+if isWindows then
+  local localAppData = os.getenv "LOCALAPPDATA"
+  local iosevkaDir = localAppData
+    and (localAppData:gsub("\\", "/") .. "/Microsoft/Windows/Fonts/Iosevka")
+
+  if hasAnyFonts(iosevkaDir) then
+    -- Prefer scanning known Iosevka files directly on Windows.
+    -- This avoids DirectWrite resolver issues with broken system registrations.
+    config.font_locator = "ConfigDirsOnly"
+    config.font_dirs = { iosevkaDir }
+    config.font = wezterm.font_with_fallback {
+      "Iosevka",
+      "Iosevka Fixed",
+      "Iosevka Term",
+      "Iosevka Slab",
+    }
+  else
+    config.font = wezterm.font "Consolas"
+  end
+else
+  -- Test: != {(`'"Illegal10O"'`)}
+  config.font = wezterm.font_with_fallback {
+    { family = "Iosevka", weight = "Regular", stretch = "Expanded" }, -- https://www.programmingfonts.org/#iosevka
+    { family = "Fira Code" }, -- https://www.programmingfonts.org/#firacode
+    { family = "Lotion", weight = "Bold" }, -- https://www.programmingfonts.org/#lotion
+    "Source Code Pro", -- https://www.programmingfonts.org/#source-code-pro
+    "Monofur Nerd Font", -- https://www.programmingfonts.org/#monofur
+    "D2Coding", -- https://www.programmingfonts.org/#d2coding
+    { family = "Inconsolata", stretch = "Normal" }, -- https://www.programmingfonts.org/#inconsolata
+    "Andale Mono",
+    { family = "JetBrains Mono" }, -- https://www.programmingfonts.org/#jetbrainsmono
+    "Monospace",
+  }
+end
 
 -- Set window opacity
 -- https://blog-v2.ansidev.xyz/posts/2023-05-18-wezterm-cheatsheet#set-window-opacity
