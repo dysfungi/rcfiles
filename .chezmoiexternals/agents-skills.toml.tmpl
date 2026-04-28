@@ -1,4 +1,12 @@
-{{- if .isRiotMachine -}}
+[codex-pickle-rick-skill]
+    targetPath = ".codex/skills/pickle-rick"
+    type = "archive"
+    url = "https://github.com/averystormknight-hue/pickle-rick-multi-cli/archive/main.tar.gz"
+    refreshPeriod = "168h"
+    include = ["*/codex/**"]
+    stripComponents = 2
+
+{{ if .isRiotMachine -}}
 
 #### https://gh.riotgames.com/live-operations/agent-skills ####
 
