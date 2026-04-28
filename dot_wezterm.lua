@@ -66,6 +66,10 @@ elseif isWindows then
       label = "Powershell",
       args = { "powershell.exe", "-NoLogo" },
     },
+    {
+      label = "Wezterm (Admin)",
+      args = { "powershell.exe", "-NoLogo", "-Command", '"Start-Process Wezterm -Verb RunAs"' },
+    },
   }
 end
 
