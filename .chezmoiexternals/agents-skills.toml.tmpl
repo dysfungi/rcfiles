@@ -5,14 +5,15 @@
     refreshPeriod = "168h"
     include = ["*/codex/**"]
     stripComponents = 2
+    exact = true
 
 [gemini-pickle-rick-extension]
     targetPath = ".gemini/extensions/pickle-rick"
     type = "archive"
     url = "https://github.com/galz10/pickle-rick-extension/archive/main.tar.gz"
-    exact = true
     stripComponents = 1
     refreshPeriod = "168h"
+    exact = true
 
 {{ if .isRiotMachine -}}
 
