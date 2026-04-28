@@ -1,5 +1,5 @@
 local wezterm = require "wezterm"
-local config = {}
+local config = wezterm.config_builder and wezterm.config_builder() or {}
 
 local isDarwin = wezterm.target_triple:find "[-]apple[-]darwin" -- https://doc.rust-lang.org/nightly/rustc/platform-support/apple-darwin.html
 local isLinux = wezterm.target_triple:find "[-]linux[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/aarch64-unknown-linux-gnu.html
