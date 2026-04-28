@@ -83,7 +83,8 @@ Documents/**
 
 {{ if not .isDarwin }}
 
-.chezmoiscripts/darwin/**
+.chezmoiscripts/*.darwin.*
+.chezmoiscripts/**/*.darwin.*
 
 {{ end }}
 
@@ -120,21 +121,20 @@ Documents/**
 
 {{ if not .isUnixLike }}
 
-.chezmoiscripts/unix-like/**
+.chezmoiscripts/*.unix-like.*
+.chezmoiscripts/**/*.unix-like.*
 
 {{ end }}
 
 {{ if not .isWindows }}
 
-.chezmoiscripts/windows/**
+.chezmoiscripts/*.windows.*
+.chezmoiscripts/**/*.windows.*
 
 **.bat
 **.ps1
 **.reg
 
 {{ end }}
-
-# Shared scripts run on all platforms
-!.chezmoiscripts/shared/**
 
 ##########################################
