@@ -18,4 +18,22 @@ Open Powershell and run:
 winget install twpayne.chezmoi AgileBits.1Password
 ```
 
+For first-time bootstrapping with 1Password service mode, set the token in the
+PowerShell session before running `chezmoi init`:
+
+```ps1
+$env:OP_SERVICE_ACCOUNT_TOKEN = Read-Host "OP_SERVICE_ACCOUNT_TOKEN"
+chezmoi init <repo>
+Remove-Item Env:OP_SERVICE_ACCOUNT_TOKEN
+```
+
+Or write the token once to `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`:
+
+```ps1
+$token = Read-Host "OP_SERVICE_ACCOUNT_TOKEN"
+$secretDir = Join-Path $HOME ".secrets"
+New-Item -ItemType Directory -Path $secretDir -Force | Out-Null
+Set-Content -LiteralPath (Join-Path $secretDir "OP_SERVICE_ACCOUNT_TOKEN") -NoNewline -Value $token
+```
+
 [chez-new-machine]: https://www.chezmoi.io/user-guide/daily-operations/#install-chezmoi-and-your-dotfiles-on-a-new-machine-with-a-single-command

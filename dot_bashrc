@@ -1,0 +1,3 @@
+if [ -f "$HOME/.config/sh/load-secrets.sh" ]; then
+  . "$HOME/.config/sh/load-secrets.sh"
+fi
