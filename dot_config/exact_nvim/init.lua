@@ -1328,7 +1328,7 @@ require("lazy").setup({
         "vim",
         "vimdoc",
         "yaml",
-        "zsh",
+        -- "zsh",
       },
       -- Autoinstall languages that are not installed
       auto_install = true,
