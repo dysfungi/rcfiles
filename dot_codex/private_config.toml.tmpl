@@ -57,8 +57,17 @@ trust_level = "trusted"
 [projects."{{ .chezmoi.homeDir }}/Documents/Codex/2026-04-21-what-jira-tasks-are-assigned-to"]
 trust_level = "trusted"
 
+{{ if .isWindows -}}
+
 [projects."{{ .chezmoi.homeDir }}/Perforce/flyingfox/dev-main"]
 trust_level = "trusted"
+
+{{ else -}}
+
+[projects.'t:\p4\flyingfox\dev-main']
+trust_level = "trusted"
+
+{{- end }}
 
 {{- end }}
 
@@ -70,3 +79,6 @@ trust_level = "trusted"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 3
+
+[windows]
+sandbox = "elevated"
