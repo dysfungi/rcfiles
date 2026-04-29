@@ -1,4 +1,4 @@
-{{- if .isRiotMachine -}}
+{{- if and .isRiotMachine (not .isWindows) -}}
 
 [plugins]
 # https://mise.jdx.dev/plugin-usage.html#configuration

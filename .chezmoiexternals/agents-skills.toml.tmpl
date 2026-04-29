@@ -15,7 +15,7 @@
     refreshPeriod = "168h"
     exact = true
 
-{{ if .isRiotMachine -}}
+{{ if and .isRiotMachine (not .isWindows) -}}
 
 #### https://gh.riotgames.com/live-operations/agent-skills ####
 
