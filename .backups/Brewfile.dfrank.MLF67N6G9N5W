@@ -315,6 +315,8 @@ cask "notunes", args: { appdir: "/Applications" }
 cask "p4"
 # Visual client for Helix Core
 cask "p4v"
+# Remote desktop
+cask "parsec", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
 # Team communication and collaboration software
