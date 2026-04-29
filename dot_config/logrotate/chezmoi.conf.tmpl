@@ -1,0 +1,14 @@
+# Managed by chezmoi.
+# Add additional log files by appending new stanzas below.
+
+{{ .chezmoi.homeDir }}/.local/state/nvim/lsp.log {
+    size 128M
+    rotate 5
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d-%H%M%S
+}
