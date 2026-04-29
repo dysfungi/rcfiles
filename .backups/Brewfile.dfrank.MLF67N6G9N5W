@@ -134,6 +134,8 @@ brew "lazygit"
 brew "libcaca"
 # XML security library
 brew "libxmlsec1"
+# Rotates, compresses, and mails system logs
+brew "logrotate"
 # Utility for directing compilation
 brew "make"
 # CLI for Node.js style checker and lint tool for Markdown files
