@@ -15,6 +15,7 @@ $packages = @(
     "LLVM.LLVM", # for clangd / Unreal development
     "Mamba.Micromamba",
     "Neovim.Neovim",
+    "OpenAI.Codex",
     "sharkdp.fd",
     "wez.wezterm"
 )
