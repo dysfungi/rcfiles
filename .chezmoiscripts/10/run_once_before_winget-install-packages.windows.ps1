@@ -16,6 +16,7 @@ $packages = @(
     "Mamba.Micromamba",
     "Neovim.Neovim",
     "OpenAI.Codex",
+    "Parsec.Parsec",
     "sharkdp.fd",
     "wez.wezterm"
 )
