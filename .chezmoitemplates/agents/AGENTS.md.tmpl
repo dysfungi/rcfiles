@@ -51,9 +51,12 @@
 
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
 
-## Context Compression/Compaction
+## Memory & Learning
 
-- Always extract and share learnings that could be added to an `AGENTS.md` file before compacting (ie, "learning as instructions").
-- Treat compaction as blocked until those learnings are listed explicitly; if there are none, say that explicitly before compacting.
-- Before compacting, propose concrete `AGENTS.md` deltas or state that no durable instruction changes were learned.
+- Treat "learning as instructions" as a continuous task, not a compaction-time task (eg, `/compact` in Codex, `/compress` in Gemini).
+- When a durable workflow preference, correction, or constraint is discovered during the turn, update the relevant `AGENTS.md` source immediately instead of deferring it to `/compact`.
+- Use the shared template for cross-repo or cross-tool guidance.
+- Use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
+- Do not wait for `/compact` to capture durable learnings.
+- Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
