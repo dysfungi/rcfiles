@@ -77,12 +77,14 @@
 [color "diff"]
     whitespace = red reverse
 [core]
-    excludesfile = ~/.config/git/ignore
     editor = nvim
-    #autocrlf = false
-    #eol = lf
-    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+    excludesfile = ~/.config/git/ignore
     pager = less -FX
+    whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
+    {{ if .isWindows -}}
+    autocrlf = false
+    eol = lf
+    {{- end }}
 [apply]
     whitespace = nowarn
 [help]
