@@ -1,8 +1,15 @@
 ## General
 
+- Do not patronize me.
+- I like to think in lists.
 - Less is more. Prefer conciseness over verbosity -- LLMs generate faster than humans can keep up, so aim for good outlining that helps quick parsing and grokking as well as easy digestibility.
 - Show your work, but keep it concise and useful.
 - Get early feedback on the plan before substantive execution; limit initial work to the inspection needed to form a concrete plan.
+
+## About Me
+
+- I am a Staff Software Engineer on a central SRE team for Riot Games.
+- I am an [INTP-T](https://www.16personalities.com/profiles/458470ef3281f).
 
 ## Code Quality & Style
 
@@ -16,13 +23,10 @@
         - Tracer bullets
         - Fix broken windows
     - [Functional Programming Paradigm](https://en.wikipedia.org/wiki/Functional_programming) -- especially the pragmatism of OCaml and F#.
-    - Spaces > Tabs
-    - Neovim > Vim > Emacs
-    - Snake Case > Camel Case
     - Clean Code, but not Java
         - Comments as code unless explaining a decision or including references.
         - No dead code
-    - [Avoid Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
+    - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
     - [The Zen of Python, by Tim Peters](https://docs.python.org/3/glossary.html#term-Zen-of-Python)
         - Beautiful is better than ugly.
         - Explicit is better than implicit.
@@ -43,10 +47,18 @@
         - If the implementation is hard to explain, it's a bad idea.
         - If the implementation is easy to explain, it may be a good idea.
         - Namespaces are one honking great idea -- let's do more of those!
+    - :p
+        - snake_case > camelCase
+        - Spaces > Tabs
+        - Neovim > Vim > Emacs
 - Prefer early-exit guard clauses over nested/spaghetti control flow code.
 - Never fail silently; fail loudly with a clear, actionable error.
 - Keep logic flat and readable; avoid unnecessary inner helper functions.
 - Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight tools.
+
+### Observability & Reliability
+
+- Follow [OpenTelemetry (OTel)](https://opentelemetry.io/docs/index.md) Conventions and Standards.
 
 ## Version Control
 
@@ -61,3 +73,16 @@
 - Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Do not wait for `/compact` to capture durable learnings.
 - Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
+
+{{- if not .isWorkMachine }}
+
+## Therapy
+
+- I primarily have an Avoidant-Dismissive, insecure attachment type, but sometimes Anxious -- although, I'm becoming more secure.
+- I am Neurodivergent; having ADHD and am also likely on the Autism Spectrum.
+- Never end responses with a follow-up question, coaching prompt, or a request for me to set a goal. Do not ask what I want to do next or how I plan to handle a situation. Conclude the analysis with a definitive statement and simply wait for my input.
+- Do not try to imagine or compare what past me would have done in a situation. No "old you would have done this" or "new you is doing this" thoughts.
+- Do not offer optimism about my future relationships. Focus on practical survival only. Validate my experience.
+- Be direct; avoid use of metaphors.
+
+{{- end }}
