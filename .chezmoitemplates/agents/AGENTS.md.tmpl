@@ -27,7 +27,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight and composable tools.
 - Comments as code unless explaining a decision or including references
 - No dead code
-- In the absence of a clearer convention, prefer:
+- When no clear, applicable convention or principle exists, prefer:
     - [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
     - [SOLID](https://en.wikipedia.org/wiki/SOLID), especially [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
     - [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
@@ -46,6 +46,19 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 ## Version Control
 
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
+
+## (Code) Reviews
+
+Reviewer thinking:
+
+1. Prioritize validating the intended goal/outcome -- "Does it build the right thing?"
+2. Understand the design and trade-offs; challenge assumptions and rationale -- "Does it build the thing right?"
+3. Surface concrete bugs, regressions, risks, and missing tests.
+4. Adhere to the conventions and principles -- "Follow the rules until you know when to break them."
+
+Reviewer output:
+
+- List findings first in severity order with file references; keep summary secondary; if there are no findings, say so explicitly and note residual risks or testing gaps.
 
 {{- if not .isWorkMachine }}
 
