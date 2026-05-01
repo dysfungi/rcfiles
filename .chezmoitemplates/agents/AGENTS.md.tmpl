@@ -1,78 +1,51 @@
+## How to Use This File
+
+- Treat imperative language in this file (eg, `do not`, `never`, `follow`, `before ending`) as requirements.
+- Treat preference language (eg, `prefer`, `use this context`, `in the absence of`) as defaults when the task, codebase, or higher-priority instructions do not define a better convention.
+
 ## General
 
 - Do not patronize me.
-- I like to think in lists.
 - Less is more. Prefer conciseness over verbosity -- LLMs generate faster than humans can keep up, so aim for good outlining that helps quick parsing and grokking as well as easy digestibility.
-- Show your work, but keep it concise and useful.
-- Get early feedback on the plan before substantive execution; limit initial work to the inspection needed to form a concrete plan.
+- Show your work when it materially affects correctness, cost, or risk. Keep it concise and audit-friendly. For calculations and estimates, show inputs, formula, and result in one line when practical (eg, `foo(4) * bar(100) * baz(30) * $1.37 / 100 = $164.40`).
+- Get early feedback on the plan before substantive execution when the task is ambiguous, high-risk, or wide in scope. Otherwise, proceed after only the inspection needed to form a concrete plan.
 
-## About Me
+## User Context
+
+_Use this context to calibrate communication style and assumptions, not as a substitute for explicit requirements._
 
 - I am a Staff Software Engineer on a central SRE team for Riot Games.
 - I am an [INTP-T](https://www.16personalities.com/profiles/458470ef3281f).
+- I like to think in lists.
 
-## Code Quality & Style
+## Programming & Engineering
 
-- Follow codebase or relevant community conventions and style (eg, Python has [PEP-0008](https://peps.python.org/pep-0008/) and [Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python)), but, in the absence of clear convention, then use the following personal inspirations and preferences as the default:
-    - [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
-    - [SOLID](https://en.wikipedia.org/wiki/SOLID)
-        - [Single responsibility principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
-    - [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
-    - [UNIX Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
-    - [The Pragmatic Programmer](https://en.wikipedia.org/wiki/The_Pragmatic_Programmer)
-        - Tracer bullets
-        - Fix broken windows
-    - [Functional Programming Paradigm](https://en.wikipedia.org/wiki/Functional_programming) -- especially the pragmatism of OCaml and F#.
-    - Clean Code, but not Java
-        - Comments as code unless explaining a decision or including references.
-        - No dead code
-    - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
-    - [The Zen of Python, by Tim Peters](https://docs.python.org/3/glossary.html#term-Zen-of-Python)
-        - Beautiful is better than ugly.
-        - Explicit is better than implicit.
-        - Simple is better than complex.
-        - Complex is better than complicated.
-        - Flat is better than nested.
-        - Sparse is better than dense.
-        - Readability counts.
-        - Special cases aren't special enough to break the rules.
-        - Although practicality beats purity.
-        - Errors should never pass silently.
-        - Unless explicitly silenced.
-        - In the face of ambiguity, refuse the temptation to guess.
-        - There should be one-- and preferably only one --obvious way to do it.
-        - Although that way may not be obvious at first unless you're Dutch.
-        - Now is better than never.
-        - Although never is often better than *right* now.
-        - If the implementation is hard to explain, it's a bad idea.
-        - If the implementation is easy to explain, it may be a good idea.
-        - Namespaces are one honking great idea -- let's do more of those!
-    - :p
-        - snake_case > camelCase
-        - Spaces > Tabs
-        - Neovim > Vim > Emacs
+- Follow codebase or relevant community conventions and style (eg, Python has [PEP-0008](https://peps.python.org/pep-0008/) and [Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python)).
 - Prefer early-exit guard clauses over nested/spaghetti control flow code.
 - Never fail silently; fail loudly with a clear, actionable error.
 - Keep logic flat and readable; avoid unnecessary inner helper functions.
-- Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight tools.
+- Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight and composable tools.
+- Comments as code unless explaining a decision or including references
+- No dead code
+- In the absence of a clearer convention, prefer:
+    - [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
+    - [SOLID](https://en.wikipedia.org/wiki/SOLID), especially [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
+    - [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
+    - [UNIX Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
+    - [The Pragmatic Programmer](https://en.wikipedia.org/wiki/The_Pragmatic_Programmer), especially tracer bullets and fixing broken windows
+    - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming), especially the pragmatism of OCaml and F#
+    - [The Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python): explicit, simple, flat, sparse, readable, practical, loud on errors, unambiguous, and easy to explain
+    - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
+    - snake_case > camelCase
+    - Spaces > Tabs
 
-### Observability & Reliability
+## Observability & Reliability
 
 - Follow [OpenTelemetry (OTel)](https://opentelemetry.io/docs/index.md) Conventions and Standards.
 
 ## Version Control
 
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
-
-## Memory & Learning
-
-- Treat "learning as instructions" as a continuous task, not a compaction-time task (eg, `/compact` in Codex, `/compress` in Gemini).
-- When a durable workflow preference, correction, or constraint is discovered during the turn, update the relevant `AGENTS.md` source immediately instead of deferring it to `/compact`.
-- Use the shared template for cross-repo or cross-tool guidance.
-- Use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
-- Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
-- Do not wait for `/compact` to capture durable learnings.
-- Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
 
 {{- if not .isWorkMachine }}
 
@@ -86,3 +59,13 @@
 - Be direct; avoid use of metaphors.
 
 {{- end }}
+
+## Memory & Learning as Instructions
+
+- Treat "learning as instructions" as a continuous task.
+- When a stable, reusable workflow preference, correction, or constraint is discovered during the turn, update the relevant `AGENTS.md` source immediately.
+- Do not update `AGENTS.md` for one-off task details, transient incidents, or speculative preferences.
+- Use the shared template for cross-repo or cross-tool guidance.
+- Use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
+- Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
+- Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
