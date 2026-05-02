@@ -3,6 +3,14 @@
     "preferredEditor": "neovim",
     "vimMode": true
   },
+  "mcpServers": {
+    {{- if .isRiotMachine }}
+    "notionMCP": { {{- /* https://www.notion.so/riotgames/Notion-MCP-28d7f9530fb280a9bb76efcffb92d161?v=1eb7f9530fb2808cb97e000cd41c76b4 */}}
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.notion.com/mcp"]
+    }
+    {{- end }}
+  },
   "security": {
     "auth": {
       "selectedType": "oauth-personal"

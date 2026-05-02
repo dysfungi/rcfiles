@@ -8,6 +8,7 @@ mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 {{ else if .isRiotMachine -}}
 
 # https://www.notion.so/riotgames/Codex-CLI-2a77f9530fb28064ad81e4d1e6b19ea9?v=1eb7f9530fb2808cb97e000cd41c76b4&source=copy_link#2a77f9530fb28088967dcee527e752f6
+
 model_provider = "truefoundry" # must be first line in doc
 model = "gpt-5.4" # "gpt-5.3-codex"
 model_reasoning_effort = "xhigh"
@@ -33,8 +34,11 @@ last_updated = "2026-04-23T19:25:37Z"
 source_type = "local"
 source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
-[mcp_servers.atlassian-rovo]
+[mcp_servers.atlassian-rovo] # https://www.notion.so/riotgames/Atlassian-Rovo-Jira-MCP-2a37f9530fb2808a8bbcd4feef6824a7?v=1eb7f9530fb2808cb97e000cd41c76b4
 url = "https://mcp.atlassian.com/v1/mcp"
+
+[mcp_servers.notion] # https://www.notion.so/riotgames/Notion-MCP-28d7f9530fb280a9bb76efcffb92d161?v=1eb7f9530fb2808cb97e000cd41c76b4
+url = "https://mcp.notion.com/mcp"
 
 [plugins."browser-use@openai-bundled"]
 enabled = true
