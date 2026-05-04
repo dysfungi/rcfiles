@@ -75,6 +75,34 @@ Reviewer output:
 
 {{- end }}
 
+## Auditability
+
+- For any durable, auditable body authored by an LLM agent (eg, Git commit messages, Jira comments, PR descriptions, incident notes, or change records), explicitly state that the work was done by an LLM/agent, preferably via an `Authored By` field whose value names the tool/agent used.
+- For any officially recorded or saved work/output, include a concise auditable summary that explains each material change, decision, or update in a natural flow, combining what changed with why it mattered for each item/topic.
+- Apply that per-item summary rule to Git commit bodies, Jira comments, PR updates/descriptions, incident notes, change records, and similar durable records.
+- If changing a Jira ticket's saved fields in a meaningful way (eg, title, description, acceptance criteria, scope, or status), add a Jira comment that records each material ticket change together with its rationale.
+- Include compact audit metadata in that body with, at minimum:
+    - `Authored By` (eg, `OpenAI Codex (v0.128.0)`, `Gemini CLI v0.40.1`)
+    - `Model` (eg, `gpt-5.4`, `gemini-2.5-pro`)
+    - `Model Provider` (eg, `OpenAI`, `Google`, `TrueFoundry`)
+    - `Session ID` (the tool/session/conversation identifier needed to recover the run later)
+    - `Username` (eg, `dfrank`)
+    - `Hostname` (eg, `MLF67N6G9N5W`)
+- Record the source for each audit attribute inline, not as one shared field, using a short source label (eg, `Authored By: OpenAI Codex (v0.128.0) (source: session)`, `Model: gpt-5.4 (source: session)`, `Model Provider: TrueFoundry (source: session)`, `Session ID: 019df4d2-497a-7da2-9ad1-93acc1da0870 (source: session)`, `Username: dfrank (source: session)`, `Hostname: MLF67N6G9N5W (source: session)`, `Model Provider: TrueFoundry (source: config.toml)`).
+- Keep source labels terse. Prefer `session` for values derived from the current live session/runtime context and a config filename like `~/.codex/config.toml` for values derived from applied config. Do not use verbose labels like `current session runtime metadata`, `current session status title`, or `fallback` unless explicitly requested.
+- For `Authored By`, prefer the exact tool/agent name and version from the current live session/runtime context. If the current session shows that value in a status/title area, use that exact value.
+- For `Authored By`, `Model`, and `Model Provider`, prefer values already available in the current live session/runtime context, including current session status/UI metadata when exposed there.
+- For `Username` and `Hostname`, derive the values from the current username and hostname in the live session/runtime context.
+- Prefer explicit current-session/runtime metadata for each audit attribute when available.
+- If current session/runtime metadata and applied config disagree, prefer the current live session/runtime value for that attribute.
+- Do not start, resume, fork, or otherwise launch a fresh CLI invocation to derive current-session audit metadata, because CLI flags or overrides can differ from the live session you are documenting.
+- Only fall back to the best explicit applied config value for a specific audit attribute when that specific attribute is not available in the current live session/runtime context, and record that source inline.
+- If falling back to config, use the tool's active applied config for the current environment (eg, `~/.codex/config.toml`), not repo templates, dotfiles source templates, or other unapplied config sources (eg, `dot_codex/private_config.toml.tmpl`).
+- Copy audit attribute values exactly as shown by their source. Do not infer unstated values from API base URLs, proxies, gateways, or assumed upstream vendors.
+- For `Session ID`, prefer the current tool/session/conversation identifier exposed by the session/runtime with the highest relevant precedence (eg, `CODEX_THREAD_ID` is better than a parent session ID). When it comes from the live session/runtime context, `source: session` is sufficient unless more detail is requested.
+- If a value is unavailable from both the current live session/runtime context and the active applied config, write `unknown (source: unavailable)` rather than guessing, normalizing, or omitting it.
+- Keep audit metadata easy to grep and copy so the session can be recovered later.
+
 ## Memory & Learning as Instructions
 
 - Treat "learning as instructions" as a continuous task.
