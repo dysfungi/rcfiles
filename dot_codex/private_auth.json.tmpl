@@ -1,5 +1,7 @@
 {
+  {{ if .isRiotMachine -}}
   "auth_mode": "apikey",
   "OPENAI_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
   "OPENAI_API_KEY": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote }}
+  {{- end }}
 }
