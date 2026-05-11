@@ -1,5 +1,7 @@
-{
+{ {{- /* https://geminicli.com/docs/reference/configuration/#available-settings-in-settingsjson */}}
   "general": {
+    "defaultApprovalMode": "default",
+    "devtools": false,
     "preferredEditor": "neovim",
     "vimMode": true
   },
@@ -20,9 +22,38 @@
     }
     {{- end }}
   },
+  "model": {
+    "compressionThreshold": "0.5",
+    {{ if .isMyMachine -}}
+    "name": "gemini-3.1-pro"
+    {{- end }}
+  },
   "security": {
     "auth": {
+      {{ if .isMyMachine -}}
+      "selectedType": "gemini-api-key"
+      {{ else if .isRiotMachine -}}
       "selectedType": "oauth-personal"
+      {{- end }}
+    }
+  },
+  "ui": {
+    "footer": {
+      "hideContextPercentage": false,
+      "hideModelInfo": false,
+      "hideSandboxStatus": false,
+      "items": [ "workspace"
+               , "git-branch"
+               , "sandbox"
+               , "model-name"
+               , "context-used"
+               , "quota"
+               , "memory-usage"
+               , "code-changes"
+               , "token-count"
+               ],
+      "showLabels": true,
+      "showMemoryUsage": true
     }
   }
 }
