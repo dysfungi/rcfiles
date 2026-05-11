@@ -278,8 +278,6 @@ cask "1password-cli", args: { appdir: "/Applications" }
 cask "amethyst", args: { appdir: "/Applications" }
 # OpenAI's coding agent that runs in your terminal
 cask "codex", args: { appdir: "/Applications" }
-# OpenAI's Codex desktop app for managing coding agents
-cask "codex-app", args: { appdir: "/Applications" }
 # Voice and text chat software
 cask "discord", args: { appdir: "/Applications" }
 # App to build and share containerised applications and microservices
