@@ -8,6 +8,7 @@ x-anchors:
         \.symlinked/.*
         |dot_config/configstore/.*\.json
         |dot_config/.*karabiner/.*\.json
+        |modify_private_dot_claude.json
       )$
 
 default_language_version:
@@ -27,6 +28,10 @@ repos:
       - id: check-case-conflict
       - id: check-executables-have-shebangs
       - id: check-json
+        exclude: |-
+          (?x)^(
+            modify_private_dot_claude.json
+          )$
       - id: check-merge-conflict
       - id: check-toml
       - id: end-of-file-fixer

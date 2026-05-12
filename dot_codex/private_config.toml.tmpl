@@ -17,12 +17,7 @@ notify = ["{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/computer-u
 cli_auth_credentials_store = "file" # ~/.codex/auth.json
 mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 
-[model_providers.truefoundry]
-name = "TrueFoundry"
-base_url = "https://truefoundry.riotgames.io/api/llm"
-env_key = "OPENAI_API_KEY"
-wire_api = "responses"
-supports_websockets = false
+{{ end -}}
 
 [marketplaces.openai-bundled]
 last_updated = "2026-04-23T19:25:37Z"
@@ -34,17 +29,30 @@ last_updated = "2026-04-23T19:25:37Z"
 source_type = "local"
 source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
-[mcp_servers.atlassian-rovo] # https://www.notion.so/riotgames/Atlassian-Rovo-Jira-MCP-2a37f9530fb2808a8bbcd4feef6824a7?v=1eb7f9530fb2808cb97e000cd41c76b4
-url = "https://mcp.atlassian.com/v1/mcp"
+{{- $mcpServersIn := .my.mcpServers -}}
+{{- if .isRiotMachine -}}
+  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
+{{- end -}}
+{{- range $mcpName, $mcp := $mcpServersIn }}
 
-[mcp_servers.datadog] # http://notion.so/riotgames/Datadog-MCP-2f17f9530fb2801aa246d6772418c003?v=1eb7f9530fb2808cb97e000cd41c76b4
-url = "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
+[mcp_servers.{{ $mcpName }}] {{ $mcp.docUrl  | comment "# " }}
+url = {{ $mcp.serverUrl | quote }}
 
-[mcp_servers.notion] # https://www.notion.so/riotgames/Notion-MCP-28d7f9530fb280a9bb76efcffb92d161?v=1eb7f9530fb2808cb97e000cd41c76b4
-url = "https://mcp.notion.com/mcp"
+{{- end }}
 
-[mcp_servers.riot-lore] # https://gh.riotgames.com/clde/glue-lore
-url = "https://riot-lore-beta.rcluster.io/lore/v1/mcp"
+{{ if .isRiotMachine -}}
+
+[model_providers.truefoundry]
+name = "TrueFoundry"
+base_url = "https://truefoundry.riotgames.io/api/llm"
+env_key = "OPENAI_API_KEY"
+wire_api = "responses"
+supports_websockets = false
+
+{{ end -}}
+
+[notice.model_migrations]
+"gpt-5.3-codex" = "gpt-5.4"
 
 [plugins."browser-use@openai-bundled"]
 enabled = true
@@ -61,6 +69,8 @@ enabled = true
 [plugins."spreadsheets@openai-primary-runtime"]
 enabled = true
 
+{{ if .isRiotMachine -}}
+
 {{ if .isWindows -}}
 
 [projects.'t:\p4\flyingfox\dev-main']
@@ -75,11 +85,17 @@ trust_level = "trusted"
 
 {{- end }}
 
-[projects."{{ .chezmoi.homeDir }}/.local/share/chezmoi"]
+{{- $projectsIn := .my.projects -}}
+{{- if .isRiotMachine -}}
+  {{- $projectsIn = concat $projectsIn .riot.projects -}}
+{{- end -}}
+{{- range $index, $project := $projectsIn }}
+
+{{ $projectKey := ($project.isHomeRelative | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
+[projects.{{ $projectKey | quote }}]
 trust_level = "trusted"
 
-[notice.model_migrations]
-"gpt-5.3-codex" = "gpt-5.4"
+{{ end -}}
 
 [tui]
 status_line = [
@@ -87,22 +103,22 @@ status_line = [
   "current-dir",
   "git-branch",
   "run-state",
-  "context-remaining",
   "context-used",
-  "five-hour-limit",
-  "weekly-limit",
+  "context-remaining",
   "context-window-size",
   "used-tokens",
   "total-input-tokens",
   "total-output-tokens",
+  "five-hour-limit",
+  "weekly-limit",
   "session-id",
-  "fast-mode",
   "thread-title",
   "task-progress",
+  "fast-mode",
 ]
 
 [tui.model_availability_nux]
-"gpt-5.5" = 3
+"gpt-5.5" = 4
 
 [windows]
 sandbox = "elevated"

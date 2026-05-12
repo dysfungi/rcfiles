@@ -1,0 +1,6 @@
+my:
+  projects:
+    - path: ".local/share/chezmoi"
+      isHomeRelative: true
+riot:
+  projects: []

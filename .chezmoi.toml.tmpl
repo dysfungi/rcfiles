@@ -8,40 +8,30 @@ isMac = {{ eq .chezmoi.os "darwin" }}
 isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
 isWindows = {{ eq .chezmoi.os "windows" }}
 
-{{ if eq .chezmoi.username "dmf" -}}{{/* Mine */ -}}
-
-email = "derek@frank.sh"
-isMyMachine = true
-isWorkMachine = false
-isRiotMachine = false
-
-{{ else if eq .chezmoi.username "dfrank" "RIOTGAMES\\dfrank" "RIOTGAMES+dfrank" -}}{{/* Work: Riot Games */ -}}
-
-email = "dfrank@riotgames.com"
-isMyMachine = false
-isWorkMachine = true
-isRiotMachine = true
-riotGithubToken = {{ onepasswordRead "op://Riot/GitHub - Personal Access Token/password" | quote }}
-
-{{ else -}}{{/* Work */ -}}
-
-email = "derek@frank.sh"
-isMyMachine = false
-isWorkMachine = true
-isRiotMachine = false
-
+{{ $isMyMachine := eq .chezmoi.username "dmf" -}}
+{{ $isWorkMachine := not $isMyMachine -}}
+{{ $isRiotMachine := eq .chezmoi.username "dfrank" "RIOTGAMES\\dfrank" "RIOTGAMES+dfrank" -}}
+{{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
+  {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
+email = {{ $isRiotMachine | ternary "dfrank@riotgames.com" "derek@frank.sh" | quote }}
+isMyMachine = {{ $isMyMachine }}
+isWorkMachine = {{ $isWorkMachine }}
+isRiotMachine = {{ $isRiotMachine }}
 
-{{- $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
-{{- $opTokenFile := joinPath .chezmoi.homeDir ".secrets" "OP_SERVICE_ACCOUNT_TOKEN" -}}
-{{- if not $opToken -}}
-  {{- if stat $opTokenFile -}}
-    {{- $opToken = include $opTokenFile | trim -}}
-  {{- else -}}
-    {{- $opToken = promptString "1Password service account token" -}}
-  {{- end -}}
-{{- end -}}
+{{- if $isRiotMachine }}
+riotGithubToken = {{ onepasswordRead "op://Riot/GitHub - Personal Access Token/password" | quote }}
+{{- end }}
 
+{{ $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
+{{ $opTokenFile := joinPath .chezmoi.homeDir ".secrets" "OP_SERVICE_ACCOUNT_TOKEN" -}}
+{{ if not $opToken -}}
+  {{ if stat $opTokenFile -}}
+    {{ $opToken = include $opTokenFile | trim -}}
+  {{ else -}}
+    {{ $opToken = promptString "1Password service account token" -}}
+  {{ end -}}
+{{ end -}}
 opServiceAccountToken = {{ $opToken | quote }}
 
 [cd]
