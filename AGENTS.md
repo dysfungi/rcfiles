@@ -15,3 +15,8 @@
 - Use `feat(...)` only when the repo gains a new user-facing managed capability, workflow, or generated surface area, not merely because a package gets installed.
 - If a repo-managed behavior is intentionally removed in a materially disruptive way and you want semantic emphasis, prefer `chore(...)!` with a `BREAKING CHANGE:` note rather than reclassifying it as `feat`.
 - Let the scope name the subsystem being managed (eg, `homebrew`, `git`, `zsh`) while the type continues to describe the repo-maintenance intent.
+
+## Also See
+
+- [CLAUDE.md](./CLAUDE.md) — bootstrapping instructions for new machines.
+- [README.md](./README.md)

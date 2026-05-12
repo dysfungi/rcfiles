@@ -111,3 +111,18 @@ Reviewer output:
 - Use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
+
+## Also See
+
+{{ if not (hasSuffix "/AGENTS.md" $.chezmoi.targetFile) -}}
+- `AGENTS.md`
+{{ end -}}
+{{ if not (hasSuffix "/CLAUDE.md" $.chezmoi.targetFile) -}}
+- `CLAUDE.md`
+{{ end -}}
+{{ if not (hasSuffix "/GEMINI.md" $.chezmoi.targetFile) -}}
+- `GEMINI.md`
+{{ end -}}
+{{ if not (hasSuffix "/README.md" $.chezmoi.targetFile) -}}
+- `README.md`
+{{ end -}}
