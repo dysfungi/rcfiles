@@ -6,6 +6,9 @@
 # Node
 **/node_modules/
 
+# Claude
+**/.claude/settings.local.json
+
 ##########################################################
 # github.com/github/gitignore/blob/main/Python.gitignore #
 ##########################################################
