@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Chezmoi Workflow
+
+- When running `chezmoi apply` for specific files, pass **target paths** (e.g. `~/.config/nvim/init.lua`), not source-relative paths (e.g. `dot_config/exact_nvim/init.lua`). Chezmoi maps source names to target names; passing source paths returns a "not managed" error.
+
 ## Code Style & Quality
 
 - Prefer Chezmoi-native file management/templates over scripts that mutate config files.

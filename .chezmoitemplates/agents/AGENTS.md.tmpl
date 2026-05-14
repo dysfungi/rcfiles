@@ -45,6 +45,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 ## Debugging
 
 - Only test one hypothesis/variable at a time unless applying a `git bisect` style strategy.
+- For Neovim plugin operations (Lazy update, TSInstall, Mason installs, checkhealth, etc.), prefer `nvim --headless "..." "+qa"` over asking the user to run commands interactively inside Neovim.
 
 ## Observability & Reliability
 
