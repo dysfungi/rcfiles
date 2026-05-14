@@ -919,9 +919,12 @@ require("lazy").setup({
         rust_analyzer = {},
         -- sqls = {},
         taplo = {}, -- TOML
-        terraformls = {},
-        tflint = {},
-        tofu_ls = {},
+        -- TODO: terraform LSPs disabled; caused freeze via duplicate document_highlight
+        -- on CursorHold (updatetime=250ms) competing across terraformls+tofu_ls+tflint.
+        -- Re-enable one at a time after investigating root cause.
+        -- terraformls = {},
+        -- tflint = {},
+        -- tofu_ls = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -970,7 +973,16 @@ require("lazy").setup({
       require("mason-lspconfig").setup {
         automatic_installation = true,
         ensure_installed = vim.tbl_keys(servers or {}),
+        -- Terraform LSPs cause Neovim freezes on HCL buffers (Neovim 0.12).
+        -- Exclude from automatic_enable (vim.lsp.enable()) AND add no-op handlers
+        -- to prevent lspconfig-based setup, covering both the old and new code paths.
+        automatic_enable = {
+          exclude = { "terraformls", "tflint", "tofu_ls" },
+        },
         handlers = {
+          ["terraformls"] = function() end,
+          ["tflint"] = function() end,
+          ["tofu_ls"] = function() end,
           function(server_name)
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
