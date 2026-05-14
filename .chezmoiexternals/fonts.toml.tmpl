@@ -1,10 +1,14 @@
 {{ $fontsDir := ternary "Library/Fonts" (ternary "AppData/Local/Microsoft/Windows/Fonts" "TODO(linux)" .isWindows) .isMac }}
+{{- /* Windows memory-maps loaded fonts; they can't be overwritten while in use.
+       Disable refresh so chezmoi only extracts once (during init, before fonts load).
+       Font updates on Windows require a logout/re-login regardless. */}}
+{{ $refreshPeriod := ternary "0" "168h" .isWindows }}
 
 [fonts-iosevka]
     targetPath = {{ joinPath $fontsDir "Iosevka" | quote }}
     type = "archive"
     url = {{ gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" | quote }}
-    refreshPeriod = "168h"
+    refreshPeriod = {{ $refreshPeriod | quote }}
 
 [fonts-powerlevel10k]
     targetPath = {{ joinPath $fontsDir "PowerLevel10k" | quote }}
@@ -12,7 +16,7 @@
     url = "https://github.com/romkatv/powerlevel10k-media/archive/master.tar.gz"
     exact = false
     stripComponents = 1
-    refreshPeriod = "168h"
+    refreshPeriod = {{ $refreshPeriod | quote }}
     include = ["*/*.ttf"]
 
 [fonts-source_code_pro]
@@ -21,5 +25,5 @@
     url = "https://github.com/adobe-fonts/source-code-pro/archive/master.tar.gz"
     exact = false
     stripComponents = 2
-    refreshPeriod = "168h"
+    refreshPeriod = {{ $refreshPeriod | quote }}
     include = ["**/*.ttf"]
