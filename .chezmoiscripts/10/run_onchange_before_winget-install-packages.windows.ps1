@@ -8,6 +8,8 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 Write-Host "Installing Windows packages with winget..."
 
 $packages = @(
+    "Anthropic.ClaudeCode",
+    "arndawg.tmux-windows",
     "BurntSushi.ripgrep.MSVC",
     "Git.Git",
     "GitHub.cli",
