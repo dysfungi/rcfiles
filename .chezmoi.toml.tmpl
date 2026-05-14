@@ -62,5 +62,8 @@ mode = "service"
 command = "C:\\Program Files\\Git\\bin\\bash.exe"
 {{- end }}
 
+[github]
+token = {{ onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" | quote }}
+
 [scriptEnv]
 MISE_GITHUB_TOKEN = {{ onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" | quote }}
