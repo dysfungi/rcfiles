@@ -85,6 +85,11 @@ P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
 -- Set <space> as the leader key
+-- Ensure Homebrew bin is in PATH so tools like tree-sitter-cli are accessible.
+if vim.fn.isdirectory "/opt/homebrew/bin" == 1 then
+  vim.env.PATH = "/opt/homebrew/bin:" .. vim.env.PATH
+end
+
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ","
@@ -1252,101 +1257,89 @@ require("lazy").setup({
     end,
   },
   { -- Highlight, edit, and navigate code
+    -- main branch required for Neovim 0.12+; master branch is archived/incompatible
+    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/main/README.md
     "nvim-treesitter/nvim-treesitter",
-    build = ":TSUpdate",
-    main = "nvim-treesitter.configs", -- Sets main module to use for opts
-    -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
-    opts = {
-      ensure_installed = {
-        -- https://github.com/nvim-treesitter/nvim-treesitter/blob/main/SUPPORTED_LANGUAGES.md
-        "awk",
-        "bash",
-        "c",
-        "c_sharp",
-        "clojure",
-        "commonlisp",
-        "cpp",
-        "css",
-        "csv",
-        "diff",
-        "dockerfile",
-        "editorconfig",
-        "elixir",
-        "elm",
-        "erlang",
-        "fsharp",
-        "git_config",
-        "git_rebase",
-        "gitattributes",
-        "gitcommit",
-        "gitignore",
-        "go",
-        "goctl",
-        "gomod",
-        "gosum",
-        "gotmpl",
-        "gowork",
-        "gpg",
-        "graphql",
-        "groovy",
-        "helm",
-        "html",
-        "java",
-        "javadoc",
-        "javascript",
-        "jq",
-        "jsdoc",
-        "json",
-        "kotlin",
-        "llvm",
-        "lua",
-        "luadoc",
-        "make",
-        "markdown",
-        "markdown_inline",
-        "mermaid",
-        "nginx",
-        "ocaml",
-        "ocaml_interface",
-        "query",
-        "passwd",
-        "pem",
-        "perl",
-        "powershell",
-        "printf",
-        "promql",
-        "python",
-        "readline",
-        "regex",
-        "rst",
-        "rust",
-        "sql",
-        "ssh_config",
-        "terraform",
-        "tmux",
-        "typescript",
-        "vim",
-        "vimdoc",
-        "yaml",
-        -- "zsh",
-      },
-      -- Autoinstall languages that are not installed
-      auto_install = true,
-      highlight = {
-        enable = true,
-        -- Some languages depend on vim's regex highlighting system (such as Ruby) for indent rules.
-        --  If you are experiencing weird indenting issues, add the language to
-        --  the list of additional_vim_regex_highlighting and disabled languages for indent.
-        additional_vim_regex_highlighting = { "ruby" },
-      },
-      indent = { enable = true, disable = { "ruby" } },
-    },
-    -- There are additional nvim-treesitter modules that you can use to interact
-    -- with nvim-treesitter. You should go explore a few and see what interests you:
-    --
-    --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
-    --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
-    --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    branch = "main",
+    lazy = false,
+    -- build runs only on plugin install/update (via chezmoi apply -> Lazy! sync),
+    -- not on every startup — avoids stampeding parallel compiler jobs on open.
+    -- https://github.com/nvim-treesitter/nvim-treesitter/blob/main/SUPPORTED_LANGUAGES.md
+    build = function()
+      require("nvim-treesitter")
+        .install({
+          "awk",
+          "bash",
+          "c",
+          "c_sharp",
+          "clojure",
+          "commonlisp",
+          "cpp",
+          "css",
+          "csv",
+          "diff",
+          "dockerfile",
+          "editorconfig",
+          "elixir",
+          "elm",
+          "erlang",
+          "fsharp",
+          "git_config",
+          "git_rebase",
+          "gitattributes",
+          "gitcommit",
+          "gitignore",
+          "go",
+          "goctl",
+          "gomod",
+          "gosum",
+          "gotmpl",
+          "gowork",
+          "gpg",
+          "graphql",
+          "groovy",
+          "helm",
+          "html",
+          "java",
+          "javadoc",
+          "javascript",
+          "jq",
+          "jsdoc",
+          "json",
+          "kotlin",
+          "llvm",
+          "lua",
+          "luadoc",
+          "make",
+          "markdown",
+          "markdown_inline",
+          "mermaid",
+          "nginx",
+          "ocaml",
+          "ocaml_interface",
+          "query",
+          "passwd",
+          "pem",
+          "perl",
+          "powershell",
+          "printf",
+          "promql",
+          "python",
+          "readline",
+          "regex",
+          "rst",
+          "rust",
+          "sql",
+          "ssh_config",
+          "terraform",
+          "tmux",
+          "typescript",
+          "vim",
+          "vimdoc",
+          "yaml",
+        })
+        :wait(300000)
+    end,
   },
 
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
