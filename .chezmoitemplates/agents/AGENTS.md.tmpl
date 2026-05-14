@@ -49,6 +49,8 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 ## Version Control
 
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
+- Auto-proceed on read-only git operations (`status`, `diff`, `log`, `show`, `branch`, `pull`, `push`, `push --force-with-lease`, etc.) without asking.
+- Pause and surface intent before any write or history-altering operation (`commit`, `push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
 
 ## (Code) Reviews
 
