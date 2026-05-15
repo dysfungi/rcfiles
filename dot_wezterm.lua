@@ -8,6 +8,24 @@ local isUnixLike = isDarwin or isLinux
 
 local modifierKey = "CTRL"
 
+local function fileExists(path)
+  local f = io.open(path, "r")
+  if f then
+    f:close()
+    return true
+  end
+  return false
+end
+
+local function firstExisting(paths)
+  for _, path in ipairs(paths) do
+    if fileExists(path) then
+      return path
+    end
+  end
+  return nil
+end
+
 local function hasAnyFonts(dir)
   if not dir then
     return false
@@ -43,17 +61,28 @@ if isUnixLike then
     modifierKey = "CMD"
 
     table.insert(myPaths, 1, homebrewBin)
-    config.default_prog = { homebrewBin .. "/xonsh" }
-  else
+    local tmux = homebrewBin .. "/tmux"
+    local xonsh = homebrewBin .. "/xonsh"
+    config.default_prog = fileExists(tmux) and { tmux, "new-session", "-A", "-s", "main" }
+      or { xonsh }
+    -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
+    config.set_environment_variables = {
+      PATH = table.concat(myPaths, ":"),
+      SHELL = xonsh,
+    }
+  else -- Linux
     modifierKey = "SUPER"
 
-    config.default_prog = { "xonsh" }
+    local tmux = firstExisting { "/usr/local/bin/tmux", "/usr/bin/tmux" }
+    local xonsh = firstExisting { "/usr/local/bin/xonsh", wezterm.home_dir .. "/.local/bin/xonsh" }
+      or "xonsh"
+    config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } or { xonsh }
+    -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
+    config.set_environment_variables = {
+      PATH = table.concat(myPaths, ":"),
+      SHELL = xonsh,
+    }
   end
-
-  -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
-  config.set_environment_variables = {
-    PATH = table.concat(myPaths, ":"),
-  }
 elseif isWindows then
   modifierKey = "SUPER"
 
@@ -61,7 +90,15 @@ elseif isWindows then
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
   -- config.default_prog = { "powershell.exe" }
-  config.default_prog = { gitBin .. "/bash.exe" }
+  -- config.default_prog = { gitBin .. "/bash.exe" }
+  -- bash -i sources user PATH so tmux can be found; exec replaces bash (no lingering shell)
+  -- falls back to bash if tmux is not in PATH
+  config.default_prog = {
+    gitBin .. "/bash.exe",
+    "-i",
+    "-c",
+    "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+  }
   -- config.default_prog = { "xbin-xonsh" }
   -- config.default_prog = { gitBin .. "/bash.exe", "-c", "xbin-xonsh" }
 
@@ -71,6 +108,7 @@ elseif isWindows then
       gitBin,
       os.getenv "PATH",
     }, ";"),
+    SHELL = gitBin .. "/bash.exe",
   }
 
   config.launch_menu = {
