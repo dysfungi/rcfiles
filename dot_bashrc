@@ -1,3 +1,8 @@
 if [ -f "$HOME/.config/sh/load-secrets.sh" ]; then
   . "$HOME/.config/sh/load-secrets.sh"
 fi
+
+# https://mise.jdx.dev/shells.html#bash
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
