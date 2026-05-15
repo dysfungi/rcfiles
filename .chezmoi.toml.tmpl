@@ -49,9 +49,11 @@ exclude = ["scripts"]
 [hooks.read-source-state.pre]
 {{- if eq .chezmoi.os "windows" }}
 command = "powershell"
-args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.ps1"]
-{{- else }}
-command = ".local/share/chezmoi/.bootstrap.sh"
+args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1"]
+{{- else if eq .chezmoi.os "darwin" }}
+command = ".local/share/chezmoi/.bootstrap.darwin.sh"
+{{- else if eq .chezmoi.os "linux" }}
+command = ".local/share/chezmoi/.bootstrap.linux.sh"
 {{- end }}
 
 [onepassword]

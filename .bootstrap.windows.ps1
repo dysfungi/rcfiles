@@ -1,8 +1,8 @@
-# Force loud failure if not running as Administrator
+# Bootstrap script for Windows. Requires Administrator for Developer Mode and WSL.
+# Exits gracefully when not elevated — chezmoi operations should not be blocked.
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Error "CRITICAL: This script must be run as Administrator to enable Developer Mode and install packages."
-    Write-Host "Please restart your PowerShell session as Administrator and try again." -ForegroundColor Red
-    exit 1
+    Write-Host "INFO: Not running as Administrator. Skipping bootstrap (run as Admin to provision)." -ForegroundColor Yellow
+    exit 0
 }
 
 # 1. Enable Developer Mode (Registry)
