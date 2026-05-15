@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+{{ range (joinPath .chezmoi.homeDir ".config/terminfo/*.terminfo" | glob) -}}
+# {{ . }} hash: {{ include . | sha256sum }}
+{{ end }}
+
+echo >&2 "INFO: Starting $0"
+
+if ! wsl.exe --list --quiet >/dev/null 2>&1; then
+  echo >&2 "WARN: WSL not available. Skipping terminfo compilation."
+  exit 0
+fi
+
+WIN_TERMINFO_DIR="{{ .chezmoi.homeDir }}/.config/terminfo"
+# Convert Windows path to /mnt/c/ for WSL access
+WSL_MNT_DIR="/mnt/c${WIN_TERMINFO_DIR#C:}"
+WSL_MNT_DIR="${WSL_MNT_DIR//\\//}"
+
+for terminfo in "${WIN_TERMINFO_DIR}"/*.terminfo; do
+  basename="$(basename "${terminfo}")"
+  echo >&2 "INFO: Compiling ${basename} in WSL..."
+  wsl.exe -- bash -c "tic -x -o \"\${HOME}/.terminfo\" \"${WSL_MNT_DIR}/${basename}\""
+done
+
+echo >&2 "INFO: Ending $0"
