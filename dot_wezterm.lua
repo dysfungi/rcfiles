@@ -97,7 +97,10 @@ elseif isWindows then
     gitBin .. "/bash.exe",
     "-i",
     "-c",
-    "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+    -- cd normalizes CWD to POSIX $HOME before tmux inherits it; without this,
+    -- WezTerm passes the Windows-native path (C:/Users/…) and bash shows it
+    -- instead of ~.
+    "cd && command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
   }
   -- config.default_prog = { "xbin-xonsh" }
   -- config.default_prog = { gitBin .. "/bash.exe", "-c", "xbin-xonsh" }
