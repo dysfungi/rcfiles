@@ -89,36 +89,18 @@ elseif isWindows then
   local gitBin = "C:/Program Files/Git/bin"
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
-  -- Prefer WSL2 when a distribution is installed AND the dfrank user is configured.
-  -- Checking only wsl --list is insufficient: a freshly-installed distro with no user
-  -- setup will boot as root and exit immediately, crashing the WezTerm window.
-  local wslReady = false
-  local wslListOk, _, _ = wezterm.run_child_process { "wsl.exe", "--list", "--quiet" }
-  if wslListOk then
-    local homeOk, _, _ = wezterm.run_child_process { "wsl.exe", "--", "test", "-d", "/home/dfrank" }
-    wslReady = homeOk
-  end
-  if wslReady then
-    config.default_prog = {
-      "wsl.exe",
-      "--cd",
-      "~",
-      "--",
-      "bash",
-      "-c",
-      "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
-    }
-  else
-    -- bash -i sources ~/.bashrc (mise shims); exec replaces bash (no lingering shell)
-    -- Also used as fallback when WSL is installed but dfrank user is not yet configured.
-    config.default_prog = {
-      gitBin .. "/bash.exe",
-      "-i",
-      "-c",
-      -- cd normalizes CWD to POSIX $HOME before tmux inherits it
-      "cd && command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
-    }
-  end
+  -- Always target WSL; || exec bash inside the command is the fallback when WSL is not
+  -- yet configured. Subprocess checks (wsl.exe --list, wsl.exe -- test) block Lua config
+  -- evaluation synchronously and can trigger WSL initialization → hang → crash.
+  config.default_prog = {
+    "wsl.exe",
+    "--cd",
+    "~",
+    "--",
+    "bash",
+    "-c",
+    "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+  }
 
   config.set_environment_variables = {
     PATH = table.concat({
