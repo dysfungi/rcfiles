@@ -9,12 +9,6 @@ min_version = "2024.9.5"
 
 experimental = true
 
-[settings.python]
-
-# https://mise.jdx.dev/mise-cookbook/python.html#mise-uv
-uv_venv_auto = "create|source"
-
-
 [tools]
 # https://mise.jdx.dev/dev-tools/
 
@@ -22,8 +16,8 @@ jq = "latest"
 node = 'lts'
 ollama = '0'
 poetry = "latest"
+python = "3.13"
 ruff = "latest"
-# TODO: Python global with mise does not work for xonsh
 uv = "latest"
 
 {{ if not .isWindows -}}
