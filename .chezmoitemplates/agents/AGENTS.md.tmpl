@@ -9,9 +9,7 @@
 
 - Before running any shell command or tool invocation, confirm which OS and platform the current session is running on. Do not assume based on the user's question or the subject matter (eg, asking about a Windows tool does not mean the session is on Windows).
 - Do not patronize me.
-- Less is more. Prefer conciseness over verbosity -- LLMs generate faster than humans can keep up, so aim for good outlining that helps quick parsing and grokking as well as easy digestibility.
 - Show your work when it materially affects correctness, cost, or risk. Keep it concise and audit-friendly. For calculations and estimates, show inputs, formula, and result in one line when practical (eg, `foo(4) * bar(100) * baz(30) * $1.37 / 100 = $164.40`).
-- Get early feedback on the plan before substantive execution when the task is ambiguous, high-risk, or wide in scope. Otherwise, proceed after only the inspection needed to form a concrete plan.
 
 ## User Context
 
@@ -21,9 +19,20 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - I am an [INTP-T](https://www.16personalities.com/profiles/458470ef3281f).
 - I am Neurodivergent; having ADHD and am also likely on the Autism Spectrum.
 - I like to think in lists.
+- CLI-first: prefer CLI tools over GUI/Electron equivalents (eg, nvim, tmux, wezterm, claude CLI, git CLI).
+
+## Communication
+
+- [Less is more][less-is-more]. LLMs generate faster than humans can keep up -- aim for concise, scannable output that aids quick parsing.
+
+## Planning
+
+- Get early feedback on the plan before substantive execution when the task is ambiguous, high-risk, or wide in scope. Otherwise, proceed after only the inspection needed to form a concrete plan.
+- Plans must be concise and scannable -- use clean Markdown hierarchy (headings, tables, bullet lists), not dense prose or confusing sub-numbering (eg, `1a`, `1b`).
 
 ## Programming & Engineering
 
+- [Less is more][less-is-more] applies to code too -- prefer simple over simplistic, and aim for concise, modular, and elegant code.
 - Follow codebase or relevant community conventions and style (eg, Python has [PEP-0008](https://peps.python.org/pep-0008/) and [Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python)).
 - Prefer early-exit guard clauses over nested/spaghetti control flow code.
 - Never fail silently; fail loudly with a clear, actionable error.
@@ -112,6 +121,11 @@ Reviewer output:
 
 ## Productivity
 
+**Workflow:**
+
+- Implement instruction and convention changes before the code they govern.
+- Always test and iterate on changes -- verify each phase before proceeding to the next. If testing surfaces design decisions that need alignment, return to plan mode.
+
 **Task Tracking:**
 
 - Always maintain an active tasklist throughout every session using whatever task-tracking mechanism the tool provides.
@@ -124,10 +138,13 @@ Reviewer output:
 - Treat "learning as instructions" as a continuous task.
 - When a stable, reusable workflow preference, correction, or constraint is discovered during the turn, update the relevant `AGENTS.md` source immediately.
 - Do not update `AGENTS.md` for one-off task details, transient incidents, or speculative preferences.
+- Write instructions to `AGENTS.md`, not tool-specific files (`CLAUDE.md`, `GEMINI.md`, etc.) -- the shared template renders into all tool configs. Think multi-tool and multi-platform.
 - Use the shared template for cross-repo or cross-tool guidance.
 - Use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Do not duplicate global/shared instructions in repo-local `AGENTS.md` files. Keep shared guidance canonical in the shared template, and use repo-local `AGENTS.md` only for repository-specific deltas or overrides.
 - Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
+
+[less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
 
 ## Also See
 

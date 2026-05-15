@@ -14,6 +14,18 @@
 - Keep shared files (eg, INSTRUCTIONS.md) render-only in .chezmoitemplates, then render tool-specific files instead of installing as a custom dotfile (eg, `.chezmoitemplates/agents/AGENTS.md.tmpl` is better than `~/.config/agents/AGENTS.md`).
 - Avoid global env/token side effects; scope credentials by host/tool when possible.
 - For script execution order in Chezmoi, rely on explicit numeric ordering conventions, not environment folder grouping alone.
+- When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
+
+## Platform Conventions
+
+- Prefer OS-specific files (`.darwin.sh`, `.linux.sh`, `.windows.ps1`) over in-script platform branching (`if/case` on `uname`, distro checks, etc.). Let `.chezmoiignore.tmpl` handle platform filtering.
+- Use consistent platform suffix naming: `.darwin.*`, `.linux.*`, `.windows.*`, `.unix-like.*` (genuinely cross-Unix only), `.shared.*` (all platforms).
+
+## Package Management
+
+- Package definitions live in `.chezmoidata/packages.yaml` — do not hardcode package lists in scripts (except bootstrap-critical deps in `.bootstrap.*.sh`/`.bootstrap.*.ps1`).
+- Package entry schema and ordering convention is documented in the `.chezmoidata/packages.yaml` header comment.
+- Package sync scripts must: backup before and after to `.backups/<tool>.<user>@<host>.log`, git-commit each snapshot, remove packages not in the declared list (declarative sync). The git diff history in `.backups/` is the audit trail.
 
 ## Commit Semantics
 
