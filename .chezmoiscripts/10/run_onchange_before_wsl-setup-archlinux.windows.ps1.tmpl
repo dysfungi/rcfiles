@@ -2,19 +2,17 @@
 # Idempotent — safe to re-run when script content changes (run_onchange).
 
 $ErrorActionPreference = "Stop"
+Write-Host "INFO: Starting $PSCommandPath"
 
-$distros = wsl --list --quiet 2>$null
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($distros)) {
-    Write-Output "No WSL distributions installed. Skipping."
+# wsl --list outputs UTF-16LE; strip null bytes so -match works
+wsl -d archlinux -- echo ok 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Arch Linux WSL distro not available. Skipping."
+    Write-Host "INFO: Ending $PSCommandPath"
     exit 0
 }
 
-if (-not ($distros -match 'archlinux')) {
-    Write-Output "Arch Linux WSL distro not found. Skipping."
-    exit 0
-}
-
-Write-Output "Installing core packages in Arch Linux WSL..."
+Write-Host "Installing core packages in Arch Linux WSL..."
 wsl -d archlinux -u root -- bash -c 'pacman -Syu --noconfirm --needed base-devel git chezmoi tmux'
 if ($LASTEXITCODE -ne 0) {
     Write-Error "FATAL: pacman install failed in Arch Linux WSL."
@@ -23,17 +21,18 @@ if ($LASTEXITCODE -ne 0) {
 
 wsl -d archlinux -u root -- id {{ .chezmoi.username }} 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Write-Output "Creating WSL user '{{ .chezmoi.username }}'..."
+    Write-Host "Creating WSL user '{{ .chezmoi.username }}'..."
     wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .chezmoi.username }}; passwd -l {{ .chezmoi.username }}; printf '[user]\ndefault={{ .chezmoi.username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "FATAL: WSL user creation failed."
         exit 1
     }
     wsl --terminate archlinux
-    Write-Output "WSL user '{{ .chezmoi.username }}' created. Distro restarted."
+    Write-Host "WSL user '{{ .chezmoi.username }}' created. Distro restarted."
 } else {
-    Write-Output "WSL user '{{ .chezmoi.username }}' already exists."
+    Write-Host "WSL user '{{ .chezmoi.username }}' already exists."
 }
 
 wsl --set-default archlinux
-Write-Output "Done. Arch Linux is the default WSL distro."
+Write-Host "Arch Linux is the default WSL distro."
+Write-Host "INFO: Ending $PSCommandPath"

@@ -1,7 +1,9 @@
 # Bootstrap script for Windows. Requires Administrator for Developer Mode and WSL.
 # Exits gracefully when not elevated — chezmoi operations should not be blocked.
+Write-Host "INFO: Starting $PSCommandPath"
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "INFO: Not running as Administrator. Skipping bootstrap (run as Admin to provision)." -ForegroundColor Yellow
+    Write-Host "INFO: Ending $PSCommandPath"
     exit 0
 }
 
@@ -57,3 +59,4 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($distros)) {
 } else {
     Write-Host "WSL already has distributions installed. Skipping."
 }
+Write-Host "INFO: Ending $PSCommandPath"

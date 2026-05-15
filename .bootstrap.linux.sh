@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo >&2 "INFO: Starting $0"
+
 # shellcheck source=/dev/null
 source /etc/os-release
 
@@ -24,3 +26,5 @@ case "${ID}" in
     exit 1
     ;;
 esac
+
+echo >&2 "INFO: Ending $0"

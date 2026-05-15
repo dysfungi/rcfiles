@@ -1,3 +1,5 @@
+Write-Host "INFO: Starting $PSCommandPath"
+
 # Self-elevate the script if required
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     $arguments = "& '" + $MyInvocation.MyCommand.Definition + "'"
@@ -21,3 +23,4 @@ if (Test-Path $fontDir) {
         }
     }
 }
+Write-Host "INFO: Ending $PSCommandPath"

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo >&2 "INFO: Starting $0"
+
 export PATH="${PATH}:/opt/homebrew/bin"
 
 if ! command -v brew >/dev/null; then
@@ -11,3 +13,5 @@ fi
 if ! command -v op >/dev/null; then
   brew install 1password-cli
 fi
+
+echo >&2 "INFO: Ending $0"

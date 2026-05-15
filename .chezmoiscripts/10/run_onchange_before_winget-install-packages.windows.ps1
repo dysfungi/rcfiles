@@ -1,3 +1,5 @@
+Write-Host "INFO: Starting $PSCommandPath"
+
 # Self-elevate the script if required
 if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     $arguments = "& '" + $MyInvocation.MyCommand.Definition + "'"
@@ -40,3 +42,4 @@ if (-not (Test-Path $configHome)) {
 $env:XDG_CONFIG_HOME = $configHome
 
 Write-Host "Windows package installation complete."
+Write-Host "INFO: Ending $PSCommandPath"

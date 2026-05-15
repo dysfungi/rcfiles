@@ -14,6 +14,7 @@
 - Keep shared files (eg, INSTRUCTIONS.md) render-only in .chezmoitemplates, then render tool-specific files instead of installing as a custom dotfile (eg, `.chezmoitemplates/agents/AGENTS.md.tmpl` is better than `~/.config/agents/AGENTS.md`).
 - Avoid global env/token side effects; scope credentials by host/tool when possible.
 - For script execution order in Chezmoi, rely on explicit numeric ordering conventions, not environment folder grouping alone.
+- All chezmoi scripts must log start/end to stderr: sh scripts use `echo >&2 "INFO: Starting $0"` / `echo >&2 "INFO: Ending $0"`; PowerShell scripts use `Write-Host "INFO: Starting $PSCommandPath"` / `Write-Host "INFO: Ending $PSCommandPath"`.
 - When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
 
 ## Platform Conventions
