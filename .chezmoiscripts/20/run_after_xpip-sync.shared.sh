@@ -18,13 +18,14 @@ export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
 export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
 # https://xon.sh/customization.html#set-xonsh-as-my-default-shell
-if command -v xonsh; then
-  BREW_XONSH="$(brew --prefix)/bin/xonsh"
-  if [ -e "$BREW_XONSH" ]; then
-    XONSH_EXECUTABLE="${BREW_XONSH}"
-  else
-    XONSH_EXECUTABLE="$(which xonsh)"
+if command -v xonsh >/dev/null; then
+  if command -v brew >/dev/null; then
+    BREW_XONSH="$(brew --prefix)/bin/xonsh"
+    if [ -e "$BREW_XONSH" ]; then
+      XONSH_EXECUTABLE="${BREW_XONSH}"
+    fi
   fi
+  XONSH_EXECUTABLE="${XONSH_EXECUTABLE:-$(which xonsh)}"
 fi
 
 backup() {
