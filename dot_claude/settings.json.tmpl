@@ -11,14 +11,39 @@
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1"
     {{- end }}
   },
-  "theme": "dark-daltonized",
-  "statusLine": {
-    "type": "command",
-    "command": "python3 ~/.claude/statusline.py"
-  },
   "permissions": {
+    "allow": [
+      "Bash(brew *)",
+      "Bash(chezmoi *)",
+      "Bash(git *)",
+      "Bash(git push *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(grep *)",
+      "Bash(kill *)",
+      "Bash(mise *)",
+      "Bash(nvim *)",
+      "Bash(pgrep *)",
+      "Bash(pip *)",
+      "Bash(pip3 *)",
+      "Bash(pkill *)",
+      "Bash(rg *)",
+      "Bash(tmux *)",
+      "Bash(xargs *)",
+      "Bash(xonsh *)"
+    ],
     "ask": [
+      "Bash(brew install *)",
       "Bash(git commit *)"
+    ],
+    "deny": [
+      "Bash(chezmoi destroy *)",
+      "Bash(chezmoi purge *)",
+      "Bash(git push --force *)"
     ]
-  }
+  },
+  "statusLine": {
+    "command": "python3 ~/.claude/statusline.py",
+    "type": "command"
+  },
+  "theme": "dark-daltonized"
 }
