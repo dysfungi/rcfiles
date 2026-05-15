@@ -15,7 +15,8 @@ def __rc_interactive_load_xontribs():
     # xontrib load coconut  # https://github.com/evhub/coconut
 
     xontrib load coreutils  # https://github.com/xonsh/xontrib-coreutils
-    xontrib load term_integration  # https://github.com/jnoortheen/xontrib-term-integrations#usage
+    if not @.imp.xonsh.platform.ON_WINDOWS:
+        xontrib load term_integration  # https://github.com/jnoortheen/xontrib-term-integrations#usage
 
 
 @rc(interactive=False)

@@ -56,5 +56,5 @@ def __rc_interactive_prompt(xsh):
     gitstatus_branch.prefix = ""
     gitstatus_branch.suffix = "{RESET}"
     $PROMPT_FIELDS["prompt_end"] = "{INTENSE_GREEN}@>{RESET}"
-    $PROMPT_FIELDS["time_format"] = "%s"
+    $PROMPT_FIELDS["time_format"] = "%H:%M:%S" if @.imp.xonsh.platform.ON_WINDOWS else "%s"
     $PROMPT_FIELDS["vi_input_mode"] = _vi_input_mode  # TODO: fix

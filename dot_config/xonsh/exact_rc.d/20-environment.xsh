@@ -11,20 +11,22 @@ def __rc_interactive_env_essential(xsh):
 
 
 def _activate_mise(xsh):
+    import shutil
     xsh.env.setdefault("MISE_SHELL", "xonsh")
+    _mise_bin = shutil.which("mise") or "mise"
 
     @events.on_pre_prompt
     def _mise_activate_hook(*args, **kwargs):
-        hook = $(command mise hook-env -s xonsh)
+        hook = $(@(_mise_bin) hook-env -s xonsh)
         if hook:
             execx(hook)
         reset_current_job()
 
     def _mise(args):
         if args and args[0] in ('deactivate', 'shell', 'sh'):
-            return execx($(command mise @(args)))
+            return execx($(@(_mise_bin) @(args)))
         else:
-            return $(command mise @(args))
+            return $(@(_mise_bin) @(args))
 
     xsh.aliases['mise'] = _mise
 
@@ -43,7 +45,12 @@ def __rc_env_mise(xsh):
 def __rc_env_chezmoi():
     import json
 
-    data = json.loads($(chezmoi data --format=json))
+    try:
+        data = json.loads($(chezmoi data --format=json))
+    except Exception as e:
+        print(f"warning: chezmoi data failed: {e}", file=sys.stderr)
+        return
+
     data_chezmoi = data["chezmoi"]
 
     $CHEZMOI_SOURCE_DIR = data_chezmoi["sourceDir"]
@@ -56,7 +63,7 @@ def __rc_env_chezmoi():
 
 @rc(interactive=True)
 def __rc_env_riot():
-    if not $IS_RIOT_MACHINE:
+    if not ${...}.get("IS_RIOT_MACHINE", False):
         return
 
     # AWS

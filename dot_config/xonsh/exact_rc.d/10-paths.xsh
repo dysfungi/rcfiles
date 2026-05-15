@@ -44,10 +44,10 @@ def __rc_paths_windows():
 
     # Common Windows paths for Neovim, Git, etc. if not in PATH
     if "ProgramFiles" in ${...}:
-        _unique_path_prepend(p($ProgramFiles) / "Neovim" / "bin")
+        _unique_path_prepend(Path($ProgramFiles) / "Neovim" / "bin")
 
     # Local bin for user-installed tools (including mise)
-    _unique_path_prepend(p("~/.local/bin"))
+    _unique_path_prepend(p"~/.local/bin")
 
 
 @rc(login=True)

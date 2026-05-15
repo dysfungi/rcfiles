@@ -96,13 +96,16 @@ def __rc_interactive_aliases_gnu_coreutils(aliases):
     References:
         https://pubs.opengroup.org/onlinepubs/9699919799//utilities/V3_chap02.html#tag_18_09
     """
+    import shutil
+    from pathlib import Path
+
     # https://xon.sh/xonshrc.html#get-better-colors-from-the-ls-command
     # $LS_COLORS='rs=0:di=01;36:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:'
 
-    if !(command -v gls >/dev/null):
+    if shutil.which("gls"):
         aliases["ls"] = ["gls", "--color=auto"]
-    elif !(ls --color):
-        aliases["ls"] = ["gls", "--color=auto"]
+    elif not @.imp.xonsh.platform.ON_WINDOWS and !(ls --color):
+        aliases["ls"] = ["ls", "--color=auto"]
     else:
         aliases["ls"] = ["ls", "-A"]
 
@@ -121,7 +124,8 @@ def __rc_interactive_aliases_gnu_coreutils(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_gnu_moreutils(aliases):
-    if !(command -v gsed >/dev/null):
+    import shutil
+    if shutil.which("gsed"):
         aliases["sed"] = ["gsed"]
 
 
@@ -141,7 +145,8 @@ def __rc_interactive_aliases_tmux(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_neovim(aliases):
-    if not !(command -v nvim >/dev/null):
+    import shutil
+    if not shutil.which("nvim"):
         return
 
     aliases["vi"] = aliases["vim"] = "nvim"
