@@ -89,17 +89,13 @@ elseif isWindows then
   local gitBin = "C:/Program Files/Git/bin"
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
-  -- Always target WSL; || exec bash inside the command is the fallback when WSL is not
-  -- yet configured. Subprocess checks (wsl.exe --list, wsl.exe -- test) block Lua config
-  -- evaluation synchronously and can trigger WSL initialization → hang → crash.
+  -- Git Bash is a silent trampoline: tries WSL, then falls back to an interactive Git Bash
+  -- session if wsl.exe exits non-zero (unconfigured distro, WSL not installed, etc.).
+  -- No Lua subprocess calls → no blocking at config load, no crash on WSL failure.
   config.default_prog = {
-    "wsl.exe",
-    "--cd",
-    "~",
-    "--",
-    "bash",
+    gitBin .. "/bash.exe",
     "-c",
-    "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+    "wsl.exe --cd ~ -- bash -c 'command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash' || exec bash",
   }
 
   config.set_environment_variables = {
