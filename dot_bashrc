@@ -4,5 +4,12 @@ fi
 
 # https://mise.jdx.dev/shells.html#bash
 if command -v mise >/dev/null 2>&1; then
-  eval "$(mise activate bash)"
+  if [ -n "${MSYSTEM:-}" ]; then
+    # Full activation adds PROMPT_COMMAND hooks that conflict with `bash -i -c` in WezTerm.
+    # --shims adds the shims dir to PATH without hooks (sufficient for Git Bash sessions).
+    # $MSYSTEM (MINGW64, MINGW32, MSYS) is set by MSYS2/Git Bash and never by WSL2 or Linux.
+    eval "$(mise activate bash --shims)"
+  else
+    eval "$(mise activate bash)"
+  fi
 fi
