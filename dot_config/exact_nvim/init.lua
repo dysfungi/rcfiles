@@ -883,13 +883,15 @@ require("lazy").setup({
       --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+      local is_windows = vim.fn.has "win32" == 1
+
       local servers = {
         -- https://www.andersevenrud.net/neovim.github.io/lsp/configurations/
         -- https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md
         ast_grep = {}, -- C, C#, C++, CSS, Dart, Go, HTML, Java, JavaScript, JSX, Kotlin, Lua, Python, Rust, TypeScript
         awk_ls = {},
         bashls = {}, -- Bash, Csh, Ksh, Sh, Zsh, etc
-        csharp_ls = {},
+        roslyn = {}, -- C# (replaces csharp_ls; better Windows support)
         clangd = {}, -- C, C++, Objective-C, etc.
         -- fsautocomplete = {}, -- F#, but conflicts with ionide-vimn
         -- harper_ls = {}, -- *
@@ -915,7 +917,7 @@ require("lazy").setup({
           },
         },
         marksman = {}, -- Markdown
-        ocamllsp = {},
+        ocamllsp = is_windows and nil or {}, -- opam not available on Windows
         rust_analyzer = {},
         -- sqls = {},
         taplo = {}, -- TOML
@@ -962,7 +964,6 @@ require("lazy").setup({
         ensure_installed = {
           "prettier",
           "prettierd",
-          "ruff", -- Python
           "stylua", -- Used to format Lua code
         },
       }
