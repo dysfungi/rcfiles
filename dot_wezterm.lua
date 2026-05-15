@@ -89,21 +89,29 @@ elseif isWindows then
   local gitBin = "C:/Program Files/Git/bin"
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
-  -- config.default_prog = { "powershell.exe" }
-  -- config.default_prog = { gitBin .. "/bash.exe" }
-  -- bash -i sources user PATH so tmux can be found; exec replaces bash (no lingering shell)
-  -- falls back to bash if tmux is not in PATH
-  config.default_prog = {
-    gitBin .. "/bash.exe",
-    "-i",
-    "-c",
-    -- cd normalizes CWD to POSIX $HOME before tmux inherits it; without this,
-    -- WezTerm passes the Windows-native path (C:/Users/…) and bash shows it
-    -- instead of ~.
-    "cd && command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
-  }
-  -- config.default_prog = { "xbin-xonsh" }
-  -- config.default_prog = { gitBin .. "/bash.exe", "-c", "xbin-xonsh" }
+  -- Prefer WSL2 (full Linux) when a distribution is installed; fall back to Git Bash.
+  -- wsl.exe --list exits non-zero when no distributions are installed.
+  local wslOk, _, _ = wezterm.run_child_process { "wsl.exe", "--list", "--quiet" }
+  if wslOk then
+    config.default_prog = {
+      "wsl.exe",
+      "--cd",
+      "~",
+      "--",
+      "bash",
+      "-c",
+      "command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+    }
+  else
+    -- bash -i sources ~/.bashrc (mise shims); exec replaces bash (no lingering shell)
+    config.default_prog = {
+      gitBin .. "/bash.exe",
+      "-i",
+      "-c",
+      -- cd normalizes CWD to POSIX $HOME before tmux inherits it
+      "cd && command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash",
+    }
+  end
 
   config.set_environment_variables = {
     PATH = table.concat({
@@ -116,7 +124,11 @@ elseif isWindows then
 
   config.launch_menu = {
     {
-      label = "Bash",
+      label = "WSL2 (Ubuntu)",
+      args = { "wsl.exe", "--cd", "~" },
+    },
+    {
+      label = "Git Bash",
       args = { gitBin .. "/bash.exe" },
     },
     {
