@@ -20,12 +20,9 @@ python = "3.13"
 ruff = "latest"
 uv = "latest"
 
-{{ if .isWindows -}}
-tmux = "latest"
-{{- end }}
-
 {{ if not .isWindows -}}
 pre-commit = "latest"
+tmux = "latest"
 {{- end }}
 
 
