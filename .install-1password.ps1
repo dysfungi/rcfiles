@@ -46,14 +46,14 @@ foreach ($package in $packages) {
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }
 
-# 4. Install WSL with Arch Linux
-# Interactive first-run: WSL will prompt for a username and password when it launches.
+# 4. Install WSL with Arch Linux (no interactive launch; user setup handled by chezmoi)
 Write-Host "Checking WSL distributions..."
 $distros = wsl --list --quiet 2>$null
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($distros)) {
-    Write-Host "No WSL distributions found. Installing Arch Linux..."
-    Write-Host "WSL will launch Arch Linux and prompt you to create a user account."
-    wsl --install --distribution archlinux
+    Write-Host "Installing Arch Linux..."
+    wsl --install --distribution archlinux --no-launch
+    wsl --set-default archlinux
+    Write-Host "Done. Run 'chezmoi apply' to complete WSL user setup."
 } else {
     Write-Host "WSL already has distributions installed. Skipping."
 }
