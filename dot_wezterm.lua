@@ -89,13 +89,12 @@ elseif isWindows then
   local gitBin = "C:/Program Files/Git/bin"
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
-  -- Git Bash is a silent trampoline: tries WSL, then falls back to an interactive Git Bash
-  -- session if wsl.exe exits non-zero (unconfigured distro, WSL not installed, etc.).
-  -- No Lua subprocess calls → no blocking at config load, no crash on WSL failure.
+  -- Git Bash trampoline: tries WSL (with terminfo guard before tmux), then falls back
+  -- to Git Bash tmux. No Lua subprocess calls → no blocking at config load.
   config.default_prog = {
     gitBin .. "/bash.exe",
     "-c",
-    "wsl.exe --cd ~ -- bash -c 'command -v tmux > /dev/null 2>&1 && exec tmux new-session -A -s main || exec bash' || exec bash",
+    "wsl.exe --cd ~ -- bash -c 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec bash -l; fi' || exec tmux new-session -A -s main",
   }
 
   config.set_environment_variables = {
@@ -105,13 +104,12 @@ elseif isWindows then
       os.getenv "PATH",
     }, ";"),
     SHELL = gitBin .. "/bash.exe",
-    TERM = "xterm-256color", -- wezterm terminfo absent from Git Bash and fresh WSL distros
   }
 
   config.launch_menu = {
     {
-      label = "WSL2 (Ubuntu)",
-      args = { "wsl.exe", "--cd", "~" },
+      label = "WSL2 (Arch Linux)",
+      args = { "wsl.exe", "-d", "archlinux", "--cd", "~" },
     },
     {
       label = "Git Bash",
