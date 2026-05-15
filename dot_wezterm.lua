@@ -105,6 +105,7 @@ elseif isWindows then
       os.getenv "PATH",
     }, ";"),
     SHELL = gitBin .. "/bash.exe",
+    TERM = "xterm-256color", -- wezterm terminfo absent from Git Bash and fresh WSL distros
   }
 
   config.launch_menu = {
