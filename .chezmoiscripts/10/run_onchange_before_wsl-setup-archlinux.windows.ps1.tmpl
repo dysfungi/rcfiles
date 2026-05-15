@@ -1,6 +1,8 @@
 # Provision Arch Linux WSL distro: create user, install core packages, set as default.
 # Idempotent — safe to re-run when script content changes (run_onchange).
 
+$ErrorActionPreference = "Stop"
+
 $distros = wsl --list --quiet 2>$null
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($distros)) {
     Write-Output "No WSL distributions installed. Skipping."
@@ -12,28 +14,26 @@ if (-not ($distros -match 'archlinux')) {
     exit 0
 }
 
-# Install core packages
 Write-Output "Installing core packages in Arch Linux WSL..."
-wsl -d archlinux -u root -- bash -c 'pacman -Syu --noconfirm --needed base-devel tmux'
+wsl -d archlinux -u root -- bash -c 'pacman -Syu --noconfirm --needed base-devel git chezmoi tmux'
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "FATAL: pacman install failed in Arch Linux WSL."
+    exit 1
+}
 
-# Create user if missing
 wsl -d archlinux -u root -- id {{ .chezmoi.username }} 2>$null
 if ($LASTEXITCODE -ne 0) {
     Write-Output "Creating WSL user '{{ .chezmoi.username }}'..."
-    wsl -d archlinux -u root -- bash -c @'
-set -e
-useradd -m -G wheel {{ .chezmoi.username }}
-passwd -l {{ .chezmoi.username }}
-printf "[user]\ndefault={{ .chezmoi.username }}\n" > /etc/wsl.conf
-echo "%wheel ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/wheel
-chmod 0440 /etc/sudoers.d/wheel
-'@
-
+    wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .chezmoi.username }}; passwd -l {{ .chezmoi.username }}; printf '[user]\ndefault={{ .chezmoi.username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "FATAL: WSL user creation failed."
+        exit 1
+    }
     wsl --terminate archlinux
+    Write-Output "WSL user '{{ .chezmoi.username }}' created. Distro restarted."
 } else {
     Write-Output "WSL user '{{ .chezmoi.username }}' already exists."
 }
 
-# Ensure Arch is the default distro
 wsl --set-default archlinux
 Write-Output "Done. Arch Linux is the default WSL distro."
