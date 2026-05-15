@@ -1,4 +1,6 @@
 local no_tmux_session = vim.env.TMUX == nil
+-- hologram.nvim calls ioctl (Unix syscall) on load; both plugins are Unix-only
+local not_windows = vim.fn.has "win32" == 0
 
 return {
   {
@@ -18,7 +20,7 @@ return {
   },
   {
     "giusgad/pets.nvim",
-    cond = no_tmux_session,
+    cond = no_tmux_session and not_windows,
     dependencies = {
       "MunifTanjim/nui.nvim",
       {
