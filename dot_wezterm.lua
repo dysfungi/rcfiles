@@ -89,10 +89,16 @@ elseif isWindows then
   local gitBin = "C:/Program Files/Git/bin"
   local xonshBin = wezterm.home_dir .. "/.local/xonsh-env/xbin"
 
-  -- Prefer WSL2 (full Linux) when a distribution is installed; fall back to Git Bash.
-  -- wsl.exe --list exits non-zero when no distributions are installed.
-  local wslOk, _, _ = wezterm.run_child_process { "wsl.exe", "--list", "--quiet" }
-  if wslOk then
+  -- Prefer WSL2 when a distribution is installed AND the dfrank user is configured.
+  -- Checking only wsl --list is insufficient: a freshly-installed distro with no user
+  -- setup will boot as root and exit immediately, crashing the WezTerm window.
+  local wslReady = false
+  local wslListOk, _, _ = wezterm.run_child_process { "wsl.exe", "--list", "--quiet" }
+  if wslListOk then
+    local homeOk, _, _ = wezterm.run_child_process { "wsl.exe", "--", "test", "-d", "/home/dfrank" }
+    wslReady = homeOk
+  end
+  if wslReady then
     config.default_prog = {
       "wsl.exe",
       "--cd",
@@ -104,6 +110,7 @@ elseif isWindows then
     }
   else
     -- bash -i sources ~/.bashrc (mise shims); exec replaces bash (no lingering shell)
+    -- Also used as fallback when WSL is installed but dfrank user is not yet configured.
     config.default_prog = {
       gitBin .. "/bash.exe",
       "-i",
