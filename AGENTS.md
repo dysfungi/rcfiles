@@ -4,6 +4,8 @@
 
 - When working in this repo, always consider whether new config/settings files belong under chezmoi management. If a dotfile is created or modified outside the chezmoi source tree, add it to the source tree before finishing the task.
 
+- After editing any managed dotfile in this repo, **always run `chezmoi apply <target-path>` immediately** — do not wait to be asked. The live files are stale until applied, making testing impossible.
+
 - When running `chezmoi apply` for specific files, pass **target paths** (e.g. `~/.config/nvim/init.lua`), not source-relative paths (e.g. `dot_config/exact_nvim/init.lua`). Chezmoi maps source names to target names; passing source paths returns a "not managed" error.
 
 ## Code Style & Quality
