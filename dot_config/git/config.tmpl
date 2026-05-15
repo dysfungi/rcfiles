@@ -82,7 +82,7 @@
     pager = less -FX
     whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
     {{ if .isWindows -}}
-    autocrlf = false
+    autocrlf = input
     eol = lf
     {{- end }}
 [apply]
