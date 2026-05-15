@@ -17,6 +17,8 @@
 
 ## Commit Semantics
 
+- **One logical change per commit** — each commit must touch only the files directly required for that single change. When a task spans multiple files with independent concerns (eg, fixing `aliases.xsh` and `prompt.xsh` are separate fixes), commit them separately. Resist the urge to bundle "all the Windows fixes" into one commit.
+
 - In this chezmoi repo, prefer conventional commit types to describe changes to the repo's managed desired state, not the downstream effect on the machine by default.
 - For package-manager inventory changes (eg, Brewfile additions, removals, taps, or version-management entries), prefer `chore(...)` unless the change fixes broken repo behavior or adds a new repo-managed capability.
 - Use `fix(...)` when correcting broken repo behavior (eg, bad template logic, broken install flow, invalid config, or a package declaration that fails to apply as intended).
