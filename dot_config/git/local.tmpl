@@ -4,9 +4,10 @@
 [credential]
 {{- if eq .chezmoi.os "darwin" }}
     helper = osxkeychain
+{{- else if and (eq .chezmoi.os "linux") (.isWSL | default false) }}
+    helper = /mnt/c/Program\\ Files/Git/mingw64/bin/git-credential-manager.exe
 {{- else if eq .chezmoi.os "linux" }}
     helper = git-credential-libsecret
 {{- else }}
-    # helper = store
-    helper = git-credential-manager
+    helper = manager
 {{- end }}

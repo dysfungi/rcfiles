@@ -3,10 +3,9 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-# shellcheck source=/dev/null
-source /etc/os-release
+distro="${1:?FATAL: distro ID not passed as argument (expected from chezmoi hook)}"
 
-case "${ID}" in
+case "${distro}" in
   arch)
     # 1Password CLI: add official Arch repo
     # https://support.1password.com/install-linux/#arch-linux
@@ -21,7 +20,7 @@ case "${ID}" in
     sudo pacman -Syu --noconfirm --needed git 1password-cli
     ;;
   *)
-    echo >&2 "FATAL: Unsupported Linux distribution: ${ID} (${PRETTY_NAME})"
+    echo >&2 "FATAL: Unsupported Linux distribution: ${distro}"
     echo >&2 "Only Arch Linux is supported. Add support in .bootstrap.linux.sh"
     exit 1
     ;;

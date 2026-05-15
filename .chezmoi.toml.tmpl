@@ -1,16 +1,31 @@
 [data]
 name = "Derek M Frank"
 
+{{ $username := .chezmoi.homeDir | base -}}
+{{ if not (hasSuffix $username .chezmoi.username) -}}
+  {{ fail (printf "username mismatch: homeDir base '%s' is not a suffix of chezmoi.username '%s'" $username .chezmoi.username) -}}
+{{ end -}}
+username = {{ $username | quote }}
+
 isBsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
 isDarwin = {{ eq .chezmoi.os "darwin" }}
 isLinux = {{ eq .chezmoi.os "linux" }}
 isMac = {{ eq .chezmoi.os "darwin" }}
 isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
 isWindows = {{ eq .chezmoi.os "windows" }}
+{{ if eq .chezmoi.os "linux" -}}
+linuxDistro = {{ .chezmoi.osRelease.id | quote }}
+isArchLinux = {{ eq .chezmoi.osRelease.id "arch" }}
+isWSL = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
+{{- else -}}
+linuxDistro = ""
+isArchLinux = false
+isWSL = false
+{{- end }}
 
-{{ $isMyMachine := eq .chezmoi.username "dmf" -}}
+{{ $isMyMachine := eq $username "dmf" -}}
 {{ $isWorkMachine := not $isMyMachine -}}
-{{ $isRiotMachine := eq .chezmoi.username "dfrank" "RIOTGAMES\\dfrank" "RIOTGAMES+dfrank" -}}
+{{ $isRiotMachine := eq $username "dfrank" -}}
 {{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
   {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
@@ -54,6 +69,7 @@ args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1"]
 command = ".local/share/chezmoi/.bootstrap.darwin.sh"
 {{- else if eq .chezmoi.os "linux" }}
 command = ".local/share/chezmoi/.bootstrap.linux.sh"
+args = [{{ .chezmoi.osRelease.id | quote }}]
 {{- end }}
 
 [onepassword]

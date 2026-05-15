@@ -19,18 +19,18 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-wsl -d archlinux -u root -- id {{ .chezmoi.username }} 2>$null
+wsl -d archlinux -u root -- id {{ .username }} 2>$null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Creating WSL user '{{ .chezmoi.username }}'..."
-    wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .chezmoi.username }}; passwd -l {{ .chezmoi.username }}; printf '[user]\ndefault={{ .chezmoi.username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
+    Write-Host "Creating WSL user '{{ .username }}'..."
+    wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "FATAL: WSL user creation failed."
         exit 1
     }
     wsl --terminate archlinux
-    Write-Host "WSL user '{{ .chezmoi.username }}' created. Distro restarted."
+    Write-Host "WSL user '{{ .username }}' created. Distro restarted."
 } else {
-    Write-Host "WSL user '{{ .chezmoi.username }}' already exists."
+    Write-Host "WSL user '{{ .username }}' already exists."
 }
 
 wsl --set-default archlinux
