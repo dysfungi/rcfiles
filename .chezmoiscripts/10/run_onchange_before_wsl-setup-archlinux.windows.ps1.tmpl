@@ -4,8 +4,9 @@
 $ErrorActionPreference = "Stop"
 Write-Host "INFO: Starting $PSCommandPath"
 
-# wsl --list outputs UTF-16LE; strip null bytes so -match works
+$ErrorActionPreference = "Continue"
 wsl -d archlinux -- echo ok 2>$null
+$ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Arch Linux WSL distro not available. Skipping."
     Write-Host "INFO: Ending $PSCommandPath"
@@ -19,7 +20,11 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
+# Check if user exists — stderr from `id` triggers NativeCommandError in PS 5.1
+# with ErrorActionPreference=Stop, so temporarily relax it
+$ErrorActionPreference = "Continue"
 wsl -d archlinux -u root -- id {{ .username }} 2>$null
+$ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Creating WSL user '{{ .username }}'..."
     wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"

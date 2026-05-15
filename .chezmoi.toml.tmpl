@@ -18,7 +18,7 @@ linuxDistro = {{ .chezmoi.osRelease.id | quote }}
 isArchLinux = {{ eq .chezmoi.osRelease.id "arch" }}
 isWSL = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
 {{- else -}}
-linuxDistro = ""
+linuxDistro = {{ .chezmoi.os | quote }}
 isArchLinux = false
 isWSL = false
 {{- end }}
