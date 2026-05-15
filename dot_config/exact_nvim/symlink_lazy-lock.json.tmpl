@@ -1,1 +1,1 @@
-{{ .chezmoi.sourceDir }}/.symlinked/config/nvim/lazy-lock.{{ .chezmoi.username }}.{{ .chezmoi.hostname }}.json
+{{ .chezmoi.sourceDir }}/.symlinked/config/nvim/lazy-lock.{{ .chezmoi.username | replace "\\" "_" | replace "/" "_" }}.{{ .chezmoi.hostname }}.json
