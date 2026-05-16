@@ -1,6 +1,4 @@
 tap "1password/tap"
-tap "ariga/tap"
-tap "clintmod/formulas"
 tap "hashicorp/tap"
 tap "homebrew/bundle"
 tap "homebrew/services"
@@ -64,6 +62,8 @@ brew "dict"
 brew "direnv"
 # Open-source framework for augmenting humans using AI
 brew "fabric-ai"
+# Simple, fast and user-friendly alternative to find
+brew "fd"
 # Infamous electronic fortune-cookie generator
 brew "fortune"
 # Command-line fuzzy finder written in Go
@@ -74,6 +74,8 @@ brew "gawk"
 brew "gdrive"
 # Interact with Google Gemini AI models from the command-line
 brew "gemini-cli"
+# GitHub command-line tool
+brew "gh"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Library for JPEG-2000 image manipulation
@@ -116,8 +118,6 @@ brew "imagemagick"
 brew "imlib2"
 # Convert JPG images to ASCII
 brew "jp2a"
-# Lightweight and flexible command-line JSON processor
-brew "jq"
 # Handy way to save and run project-specific commands
 brew "just"
 # Kubernetes CLI To Manage Your Clusters In Style!
@@ -170,8 +170,6 @@ brew "pandoc"
 brew "pkgconf"
 # Python package management tool
 brew "poetry"
-# Framework for managing multi-language pre-commit hooks
-brew "pre-commit"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Prettier daemon
@@ -278,8 +276,6 @@ cask "1password", args: { appdir: "/Applications" }
 cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
-# Terminal-based AI coding assistant
-cask "claude-code", args: { appdir: "/Applications" }
 # OpenAI's coding agent that runs in your terminal
 cask "codex", args: { appdir: "/Applications" }
 # Voice and text chat software
@@ -317,8 +313,6 @@ cask "notunes", args: { appdir: "/Applications" }
 cask "p4"
 # Visual client for Helix Core
 cask "p4v"
-# Remote desktop
-cask "parsec", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
 cask "signal", args: { appdir: "/Applications" }
 # Team communication and collaboration software
