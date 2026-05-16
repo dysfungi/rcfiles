@@ -1,6 +1,4 @@
 tap "1password/tap"
-tap "ariga/tap"
-tap "clintmod/formulas"
 tap "homebrew/bundle"
 tap "homebrew/services"
 tap "jesseduffield/lazydocker"
@@ -60,6 +58,8 @@ brew "dict"
 brew "direnv"
 # Open-source framework for augmenting humans using AI
 brew "fabric-ai"
+# Simple, fast and user-friendly alternative to find
+brew "fd"
 # Infamous electronic fortune-cookie generator
 brew "fortune"
 # Command-line fuzzy finder written in Go
@@ -72,6 +72,8 @@ brew "gdrive"
 brew "node"
 # Interact with Google Gemini AI models from the command-line
 brew "gemini-cli"
+# GitHub command-line tool
+brew "gh"
 # OpenType text shaping engine
 brew "harfbuzz"
 # Interpreter for PostScript and PDF
@@ -102,8 +104,6 @@ brew "httpie"
 brew "imagemagick"
 # Convert JPG images to ASCII
 brew "jp2a"
-# Lightweight and flexible command-line JSON processor
-brew "jq"
 # Handy way to save and run project-specific commands
 brew "just"
 # Kubernetes CLI To Manage Your Clusters In Style!
@@ -154,8 +154,6 @@ brew "opentofu"
 brew "pandoc"
 # Python package management tool
 brew "poetry"
-# Framework for managing multi-language pre-commit hooks
-brew "pre-commit"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Prettier daemon
@@ -214,6 +212,8 @@ brew "tmux"
 brew "todoist-cli"
 # Display directories as trees (with optional color/HTML output)
 brew "tree"
+# Parser generator tool
+brew "tree-sitter-cli"
 # Language for application scale JavaScript development
 brew "typescript"
 # Language Server Protocol implementation for TypeScript wrapping tsserver
@@ -281,6 +281,8 @@ cask "league-of-legends", args: { appdir: "/Applications" }
 cask "logseq", args: { appdir: "/Applications" }
 # Simple application that will prevent iTunes or Apple Music from launching
 cask "notunes"
+# Remote desktop
+cask "parsec", args: { appdir: "/Applications" }
 # VPN client focusing on security
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
