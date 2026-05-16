@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Sync pacman packages in Arch Linux (WSL or otherwise).
+# Reads from .chezmoidata/packages.yaml: installs declared packages, removes undeclared.
+# Idempotent — safe to re-run.
+
+set -e
+echo "INFO: Starting $0"
+
+# Check if we're in WSL or native Arch
+if ! command -v pacman >/dev/null 2>&1; then
+    echo "pacman not found. Skipping."
+    echo "INFO: Ending $0"
+    exit 0
+fi
+
+{{ $packages := list }}
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "pacman" }}
+    {{- $packages = append $packages (printf "%s" $pkg.pacman) }}
+  {{- end }}
+{{- end }}
+{{- if .isRiotMachine }}
+  {{- range $name, $pkg := .riot.packages }}
+    {{- if hasKey $pkg "pacman" }}
+      {{- $packages = append $packages (printf "%s" $pkg.pacman) }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+declared_packages="{{ join " " $packages }}"
+
+# Backup current package list before changes
+sudo pacman -Qqe > /tmp/pacman-before-sync.txt 2>/dev/null || true
+
+# Install declared packages
+if [ -n "$declared_packages" ]; then
+    echo "Installing declared pacman packages..."
+    sudo pacman -Syu --noconfirm --needed $declared_packages
+fi
+
+# Optional: remove explicitly installed packages not in declared list
+# (Commented out by default to avoid aggressive cleanup)
+# echo "Cleaning up undeclared explicitly-installed packages..."
+# current=$(sudo pacman -Qqe)
+# for pkg in $current; do
+#     if ! echo "$declared_packages" | grep -qw "$pkg"; then
+#         echo "Removing $pkg..."
+#         sudo pacman -R --noconfirm "$pkg" || true
+#     fi
+# done
+
+# Clean package cache
+echo "Cleaning pacman cache..."
+sudo pacman -Sc --noconfirm
+
+echo "pacman sync complete."
+echo "INFO: Ending $0"
