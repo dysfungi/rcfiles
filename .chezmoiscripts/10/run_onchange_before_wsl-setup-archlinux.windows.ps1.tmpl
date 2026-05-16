@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Installing core packages in Arch Linux WSL..."
-wsl -d archlinux -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi tmux unzip curl"
+wsl -d archlinux -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi openssh inetutils tmux unzip curl"
 
 Write-Host "Installing 1Password CLI in Arch Linux WSL..."
 $opInstallScript = @'
