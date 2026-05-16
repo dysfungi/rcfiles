@@ -15,13 +15,10 @@ riot = "git@gh.riotgames.com:gkisel/mise-plugin-riot.git"
 {{ else if and $.isLinux (has "linux" $skipList) }}{{ continue -}}
 {{ else if and $.isWindows (has "windows" $skipList) }}{{ continue -}}
 {{ end -}}
-{{ regexReplaceAll "@[^@]+$" $pkg.mise "" }} = {{ (regexReplaceAll ".*@" $pkg.mise "") | default "latest" | quote }}
+{{ regexReplaceAll "@[^@]+$" $pkg.mise "" | quote }} = {{ (regexReplaceAll ".*@" $pkg.mise "") | default "latest" | quote }}
 {{ end }}
 # https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
-# "riot:riot-certs" = "latest"
-# "riot:keyconjurer" = "latest"
-# "riot:p4" = "latest"
-# "riot:gandalf" = "latest"
-# "riot:ritopls" = "latest"
+# Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.
+# Commented-out riot plugin packages are documented in .chezmoidata/packages.yaml
 
 {{- end -}}

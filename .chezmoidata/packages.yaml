@@ -175,7 +175,7 @@ my:
     league-of-legends: { cask: league-of-legends }
     logseq:        { cask: logseq }
     notunes:       { cask: notunes }
-    parsec:        { winget: Parsec.Parsec }
+    parsec:        { cask: parsec, winget: Parsec.Parsec }
     signal:        { cask: signal }
     steam:         { cask: steam }
     todoist-app:   { cask: todoist-app }
@@ -259,6 +259,14 @@ riot:
     #####################
 
     gh:            { mise: gh@latest }
+
+    # https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
+    # Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.
+    # riot-certs:    { mise: "riot:riot-certs@latest" }
+    # gandalf:       { mise: "riot:gandalf@latest" }
+    # keyconjurer:   { mise: "riot:keyconjurer@latest" }
+    # p4-riot:       { mise: "riot:p4@latest" }
+    # ritopls:       { mise: "riot:ritopls@latest" }
 
     ##################
     # APP PACKAGES   #
