@@ -10,7 +10,8 @@ if ! wsl.exe -d archlinux -- command -v chezmoi >/dev/null 2>&1; then
 fi
 
 export OP_SERVICE_ACCOUNT_TOKEN={{ .opServiceAccountToken | quote }}
-export WSLENV="${WSLENV:+${WSLENV}:}OP_SERVICE_ACCOUNT_TOKEN"
+export CHEZMOI_ONEPASSWORD_MODE=service
+export WSLENV="${WSLENV:+${WSLENV}:}OP_SERVICE_ACCOUNT_TOKEN:CHEZMOI_ONEPASSWORD_MODE"
 
 if wsl.exe -d archlinux -- test -d ~/.local/share/chezmoi; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
