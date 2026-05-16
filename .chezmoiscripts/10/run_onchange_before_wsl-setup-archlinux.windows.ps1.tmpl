@@ -18,6 +18,7 @@ wsl -d archlinux -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel
 
 Write-Host "Installing 1Password CLI in Arch Linux WSL..."
 $opInstallScript = @'
+#!/usr/bin/env bash
 set -e
 command -v op >/dev/null 2>&1 && exit 0
 arch=amd64; case $(uname -m) in aarch64) arch=arm64;; esac
@@ -27,9 +28,13 @@ curl -sSfo /tmp/op.zip "$url"
 unzip -o /tmp/op.zip op -d /usr/local/bin
 chmod +x /usr/local/bin/op
 rm /tmp/op.zip
-echo "INFO: Installed op v${ver} (${arch})"
+echo "INFO: Installed op v${ver} ${arch}"
 '@
-wsl -d archlinux -u root -- bash -c $opInstallScript
+$tmpScript = [System.IO.Path]::GetTempFileName() + ".sh"
+$opInstallScript | Set-Content -Path $tmpScript -Encoding utf8 -NoNewline
+$wslPath = wsl -d archlinux -- wslpath ($tmpScript -replace '\\','/')
+wsl -d archlinux -u root -- bash $wslPath
+Remove-Item $tmpScript -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) {
     Write-Error "FATAL: pacman install failed in Arch Linux WSL."
     exit 1
