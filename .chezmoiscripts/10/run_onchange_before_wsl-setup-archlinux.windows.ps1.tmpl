@@ -31,7 +31,7 @@ rm /tmp/op.zip
 echo "INFO: Installed op v${ver} ${arch}"
 '@
 $tmpScript = [System.IO.Path]::GetTempFileName() + ".sh"
-$opInstallScript | Set-Content -Path $tmpScript -Encoding utf8 -NoNewline
+[System.IO.File]::WriteAllText($tmpScript, $opInstallScript, [System.Text.UTF8Encoding]::new($false))
 $wslPath = wsl -d archlinux -- wslpath ($tmpScript -replace '\\','/')
 wsl -d archlinux -u root -- bash $wslPath
 Remove-Item $tmpScript -ErrorAction SilentlyContinue
