@@ -14,16 +14,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Setting up 1Password CLI repo in Arch Linux WSL..."
-wsl -d archlinux -u root -- bash -c '
-  if ! pacman -Qi 1password-cli &>/dev/null; then
-    curl -sS https://downloads.1password.com/linux/keys/1password.asc | pacman-key --add -
-    pacman-key --lsign-key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
-    grep -q "^\[1password\]" /etc/pacman.conf || echo -e "[1password]\nSigLevel = TrustAll\nServer = https://downloads.1password.com/linux/arch/aarch64" >> /etc/pacman.conf
-  fi
-'
+wsl -d archlinux -u root -- bash -c "grep -q '^\[1password\]' /etc/pacman.conf || (curl -sS https://downloads.1password.com/linux/keys/1password.asc | pacman-key --add - && pacman-key --lsign-key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22 && printf '[1password]\nSigLevel = TrustAll\nServer = https://downloads.1password.com/linux/arch/aarch64\n' >> /etc/pacman.conf)"
 
 Write-Host "Installing core packages in Arch Linux WSL..."
-wsl -d archlinux -u root -- bash -c 'pacman -Syu --noconfirm --needed base-devel git chezmoi tmux 1password-cli'
+wsl -d archlinux -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi tmux 1password-cli"
 if ($LASTEXITCODE -ne 0) {
     Write-Error "FATAL: pacman install failed in Arch Linux WSL."
     exit 1
