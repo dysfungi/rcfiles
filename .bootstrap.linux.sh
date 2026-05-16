@@ -7,17 +7,18 @@ distro="${1:?FATAL: distro ID not passed as argument (expected from chezmoi hook
 
 case "${distro}" in
   arch)
-    # 1Password CLI: add official Arch repo
-    # https://support.1password.com/install-linux/#arch-linux
-    if ! pacman -Qi 1password-cli &>/dev/null; then
-      sudo bash -c '
-        curl -sS https://downloads.1password.com/linux/keys/1password.asc | pacman-key --add -
-        pacman-key --lsign-key 3FEF9748469ADBE15DA7CA80AC2D62742012EA22
-        echo -e "[1password]\nSigLevel = TrustAll\nServer = https://downloads.1password.com/linux/arch/aarch64" >> /etc/pacman.conf
-      '
-    fi
+    sudo pacman -Syu --noconfirm --needed git unzip curl
 
-    sudo pacman -Syu --noconfirm --needed git 1password-cli
+    if ! command -v op >/dev/null 2>&1; then
+      arch=amd64; case $(uname -m) in aarch64) arch=arm64;; esac
+      ver=$(curl -s https://app-updates.agilebits.com/check/1/0/CLI2/en/2.0.0/N | sed 's/.*"version":"\([0-9.]*\)".*/\1/')
+      url="https://cache.agilebits.com/dist/1P/op2/pkg/v${ver}/op_linux_${arch}_v${ver}.zip"
+      curl -sSfo /tmp/op.zip "${url}"
+      sudo unzip -o /tmp/op.zip op -d /usr/local/bin
+      sudo chmod +x /usr/local/bin/op
+      rm /tmp/op.zip
+      echo >&2 "INFO: Installed op v${ver} (${arch})"
+    fi
     ;;
   *)
     echo >&2 "FATAL: Unsupported Linux distribution: ${distro}"
