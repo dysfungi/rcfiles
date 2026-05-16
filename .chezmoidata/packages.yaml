@@ -186,13 +186,13 @@ my:
     # DEVELOPMENT TOOLS #
     #####################
 
-    claude-code:   { mise: "npm:@anthropic-ai/claude-code@latest" }
-    jq:            { mise: jq@latest }
-    node:          { mise: node@lts }
-    pre-commit:    { mise: pre-commit@latest, skip: [windows] }
-    python:        { mise: python@3.13 }
-    ruff-dev:      { mise: ruff@latest }
-    uv-dev:        { mise: uv@latest }
+    claude-code:   { mise: "npm:@anthropic-ai/claude-code" }
+    jq:            { mise: jq }
+    node:          { mise: node, version: lts }
+    pre-commit:    { mise: pre-commit, skip: [windows] }
+    python:        { mise: python, version: "3.13" }
+    ruff-dev:      { mise: ruff }
+    uv-dev:        { mise: uv }
 
     ##################
     # APP PACKAGES   #
@@ -258,7 +258,7 @@ riot:
     # DEVELOPMENT TOOLS #
     #####################
 
-    gh:            { mise: gh@latest }
+    gh:            { mise: gh }
 
     # https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
     # Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.

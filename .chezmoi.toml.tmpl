@@ -73,7 +73,11 @@ args = [{{ .chezmoi.osRelease.id | quote }}]
 {{- end }}
 
 [onepassword]
+{{ if env "OP_SERVICE_ACCOUNT_TOKEN" -}}
 mode = "service"
+{{- else -}}
+mode = "account"
+{{- end }}
 
 [interpreters.sh]
 {{- if eq .chezmoi.os "windows" }}

@@ -58,6 +58,8 @@ $defs:
       # Mise
       mise:
         type: string
+      version:
+        type: string
       skip:
         type: array
         items:

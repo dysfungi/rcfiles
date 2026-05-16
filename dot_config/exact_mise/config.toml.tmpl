@@ -20,7 +20,9 @@ experimental = true
   {{ else if and $.isLinux (has "linux" $skipList) }}{{ continue -}}
   {{ else if and $.isWindows (has "windows" $skipList) }}{{ continue -}}
   {{ end -}}
-{{ regexReplaceAll "@[^@]+$" $pkg.mise "" | quote }} = {{ (regexReplaceAll ".*@" $pkg.mise "") | default "latest" | quote }}
+{{ $version := "latest" -}}
+  {{ if hasKey $pkg "version" }}{{ $version = $pkg.version }}{{ end -}}
+{{ $pkg.mise | quote }} = {{ $version | quote }}
 {{ end }}
 
 [plugins]
