@@ -13,6 +13,11 @@ export OP_SERVICE_ACCOUNT_TOKEN={{ .opServiceAccountToken | quote }}
 export CHEZMOI_ONEPASSWORD_MODE=service
 export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:CHEZMOI_ONEPASSWORD_MODE"
 
+echo >&2 "DEBUG: WSLENV=${WSLENV}"
+echo >&2 "DEBUG: OP_SERVICE_ACCOUNT_TOKEN length=${#OP_SERVICE_ACCOUNT_TOKEN}"
+echo >&2 "DEBUG: CHEZMOI_ONEPASSWORD_MODE=${CHEZMOI_ONEPASSWORD_MODE}"
+wsl.exe -d archlinux -- bash -c 'echo >&2 "DEBUG(WSL): OP_TOKEN_LEN=${#OP_SERVICE_ACCOUNT_TOKEN} MODE=${CHEZMOI_ONEPASSWORD_MODE}"'
+
 if wsl.exe -d archlinux -- test -d ~/.local/share/chezmoi; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
   wsl.exe -d archlinux -- chezmoi apply
