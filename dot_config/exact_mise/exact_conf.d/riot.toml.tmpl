@@ -6,12 +6,19 @@
 riot = "git@gh.riotgames.com:gkisel/mise-plugin-riot.git"
 
 [tools]
-gh = "latest" # gh auth login --hostname gh.riotgames.com --git-protocol ssh --skip-ssh-key
-
+# Generated from .chezmoidata/packages.yaml (riot mise entries)
+{{ range $name, $pkg := .riot.packages -}}
+{{ if not (hasKey $pkg "mise") }}{{ continue }}{{ end -}}
+{{ $skipList := list -}}
+{{ if hasKey $pkg "skip" }}{{ $skipList = $pkg.skip }}{{ end -}}
+{{ if and $.isDarwin (has "darwin" $skipList) }}{{ continue -}}
+{{ else if and $.isLinux (has "linux" $skipList) }}{{ continue -}}
+{{ else if and $.isWindows (has "windows" $skipList) }}{{ continue -}}
+{{ end -}}
+{{ regexReplaceAll "@[^@]+$" $pkg.mise "" }} = {{ (regexReplaceAll ".*@" $pkg.mise "") | default "latest" | quote }}
+{{ end }}
 # https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
-# Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.
 # "riot:riot-certs" = "latest"
-
 # "riot:keyconjurer" = "latest"
 # "riot:p4" = "latest"
 # "riot:gandalf" = "latest"

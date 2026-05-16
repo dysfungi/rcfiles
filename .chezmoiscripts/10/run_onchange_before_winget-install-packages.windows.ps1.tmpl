@@ -10,24 +10,24 @@ if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 Write-Host "Installing Windows packages with winget..."
 
 $packages = @(
-    "Anthropic.ClaudeCode",
-    "arndawg.tmux-windows",
-    "BurntSushi.ripgrep.MSVC",
-    "Git.Git",
-    "GitHub.cli",
-    "jdx.mise",
-    "LLVM.LLVM", # for clangd / Unreal development
-    "Mamba.Micromamba",
-    "Neovim.Neovim",
-    "OpenAI.Codex",
-    "Parsec.Parsec",
-    "sharkdp.fd",
-    "wez.wezterm"
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "winget" }}
+    {{ $pkg.winget | quote }},
+  {{- end }}
+{{- end }}
+{{- if .isRiotMachine }}
+  {{- range $name, $pkg := .riot.packages }}
+    {{- if hasKey $pkg "winget" }}
+    {{ $pkg.winget | quote }},
+    {{- end }}
+  {{- end }}
+{{- end }}
+    ""
 )
+$packages = $packages | Where-Object { $_ -ne "" }
 
 foreach ($package in $packages) {
     Write-Host "Checking $package..."
-    # Using --accept-package-agreements and --accept-source-agreements to avoid interactive prompts
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }
 

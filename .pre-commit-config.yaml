@@ -52,6 +52,13 @@ repos:
     rev: v1.37.1
     hooks:
       - id: yamllint
+  - repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.33.0
+    hooks:
+      - id: check-jsonschema
+        name: validate packages.yaml
+        files: ^\.chezmoidata/packages\.yaml$
+        args: ["--schemafile", ".schemas/packages.schema.yaml"]
 
   ######
   # F# #

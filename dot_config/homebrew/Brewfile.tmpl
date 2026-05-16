@@ -1,259 +1,51 @@
 cask_args appdir: "/Applications"
 
-# Taps
-tap "ariga/tap"
-tap "clintmod/formulas"
+# Taps (auto-collected from packages with tap field)
+{{- $taps := dict }}
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "tap" }}{{ $_ := set $taps $pkg.tap true }}{{ end }}
+{{- end }}
+{{- if .isRiotMachine }}
+  {{- range $name, $pkg := .riot.packages }}
+    {{- if hasKey $pkg "tap" }}{{ $_ := set $taps $pkg.tap true }}{{ end }}
+  {{- end }}
+{{- end }}
 tap "homebrew/bundle"
 tap "homebrew/services"
-tap "1password/tap" # Workaround invalid homebrew/cask 1password-cli definition
+{{- range $tap, $_ := $taps }}
+tap {{ $tap | quote }}
+{{- end }}
 
-# Fonts
-cask "font-andale-mono"
-cask "font-fira-code"
-cask "font-inconsolata"
-cask "font-monofur-nerd-font"
-cask "font-profontx"
+# Formulas (from .chezmoidata/packages.yaml)
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "brew" }}
+brew {{ $pkg.brew | quote }}{{ with (index $pkg "brew_options") }}, {{ . }}{{ end }}
+  {{- end }}
+{{- end }}
 
-# Fun
-brew "ack"
-brew "archey4"
-brew "ascii"
-brew "cowsay"
-brew "fortune"
-brew "sl"
-
-# Automation
-# brew "watchman" # Unused and too slow to install/upgrade
-
-# CLI
-brew "bash"
-brew "cdargs"
-brew "cheat"
-brew "chezmoi"
-brew "colordiff"
-brew "coreutils"
-brew "direnv"
-brew "gawk" # https://asdf-vm.com/guide/getting-started.html#_4-install-a-plugin
-brew "gnu-sed"
-brew "grc"
-brew "gnu-tar"
-#brew "clintmod/formulas/macprefs" # https://github.com/clintmod/macprefs/issues
-brew "moreutils"
-brew "neovim"
-brew "neovim-remote"
-brew "tree-sitter-cli"
-#brew "parallel" # already part of moreutils
-brew "rust-parallel"
-brew "the_silver_searcher" # ag
-brew "tmux"
-brew "xz"
-brew "yadm"
-
-# Communication
-brew "signal-cli"
-
-# Linters
-brew "markdownlint-cli"
-brew "prettier"
-brew "prettierd"
-brew "proselint"
-brew "terraform-ls"
-brew "vint"
-
-# Productivity
-brew "todoist-cli"
-
-# TUI
-brew "jp2a"
-brew "libcaca"
-brew "spaceman-diff"
-brew "spark"
-brew "tree"
-
-# Search
-brew "fzf"
-brew "grep"
-brew "ripgrep"
-
-# Internet
-brew "curl"
-brew "dict"
-brew "gdrive"
-brew "httpie"
-brew "nmap"
-brew "openssh"
-brew "rsync"
-brew "squid"
-brew "telnet"
-brew "wget"
-brew "youtube-dl"
-
-# Security
-brew "gpg" # https://asdf-vm.com/guide/getting-started.html#_4-install-a-plugin
-
-# Programming
-brew "git"
-brew "lazydocker"
-brew "lazygit"
-brew "just"
-brew "logrotate"
-brew "make"
-brew "pre-commit"
-brew "source-highlight"
-brew "watchexec"
-
-# Infrastructure
-brew "cloudflare-cli4"
-brew "helm"
-brew "kubernetes-cli"
-brew "k9s"
-brew "opentofu"
-brew "s3cmd"
-brew "tflint"
-brew "tfupdate"
-brew "vultr"
-
-# Databases
-brew "dbmate"
-brew "sqlite"
-brew "sqlite3"
-
-# Languages
-brew "asdf"
-brew "mise"
-brew "uv"
-
-# CSV
-brew "csvq"
-
-# F# (.NET)
-cask "dotnet-sdk"
-
-# Go
-brew "go"
-brew "gopls"
-
-# Haskell
-#brew "haskell-stack"
-
-# JSON
-brew "jq"
-
-# Javascript/Typescript
-brew "typescript"
-brew "typescript-language-server"
-brew "yarn"
-
-# Lua
-brew "stylua"
-
-# Markdown
-brew "mdq"
-
-# OCaml
-brew "opam"
-
-# Python
-brew "coconut" # xonsh
-brew "gettext"
-brew "keyring" # Access the system keyring
-brew "libxmlsec1" # Build with asdf/pyenv
-brew "openssl"
-brew "mypy"
-brew "pandoc"
-brew "poetry"
-brew "python3"
-brew "readline"
-brew "ruff"
-brew "ruff-lsp"
-brew "zlib"
-
-# Rust
-brew "rust"
-brew "rustup"
-brew "rust-analyzer"
-
-# Shell
-brew "shellcheck"
-brew "shfmt"
-brew "tcl-tk"
-brew "xonsh"
-brew "zsh"
-brew "zsh-completions"
-
-# YAML
-brew "yq"
-
-# AI/LLMs
-cask "claude-code"
-cask "codex"
-brew "fabric-ai"
-brew "gemini-cli"
-brew "ollama", restart_service: :changed
-
-# Applications
-cask "1password"
-cask "1password/tap/1password-cli"
-cask "amethyst"
-cask "discord"
-cask "docker-desktop"
-cask "dropbox"
-cask "firefox" # brew install --cask --adopt firefox
-#cask "geektool"
-cask "git-credential-manager"
-#cask "gimp"
-#cask "handbrake"
-cask "hammerspoon"
-#cask "haskell-platform"
-#cask "inkscape"
-cask "karabiner-elements"
-#cask "kitty"
-cask "league-of-legends"
-#cask "little-snitch"
-cask "logseq"
-#cask "macfuse"
-#cask "macs-fan-control"
-#cask "mailmate"
-cask "notunes"
-cask "signal"
-cask "steam"
-cask "todoist-app"
-#cask "transmission"
-#cask "ubiquiti-unifi-controller"
-cask "wezterm"
-cask "vlc"
+# Casks (from .chezmoidata/packages.yaml)
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "cask" }}
+cask {{ $pkg.cask | quote }}
+  {{- end }}
+{{- end }}
 
 {{- if .isMyMachine }}
 
-#cask "freecad"
-#cask "protonmail-bridge"
-#cask "proton-drive"
-#cask "proton-mail"
-#cask "proton-pass"
 cask "protonvpn"
 
 {{- else if .isRiotMachine }}
 
 # Work - Riot Games
-tap "hashicorp/tap"
-brew "awscli"
-brew "golangci-lint"
-brew "graphqurl"
-brew "hashicorp/tap/terraform"
-brew "hashicorp/tap/vault"
-brew "openjdk"
-brew "groovy"
-brew "pulumi"
-brew "sops" # LOTAPI
-brew "terraform-docs"
-cask "google-chrome"
-cask "keeper-password-manager"
-cask "parsec" # windows-app replacement
-cask "p4"
-cask "p4v"
-cask "slack"
-cask "vscodium" # VS Code / visual-studio-code alternative
-cask "windows-app" # microsoft-remote-desktop replacement
-cask "zoom"
+{{- range $name, $pkg := .riot.packages }}
+  {{- if hasKey $pkg "brew" }}
+brew {{ $pkg.brew | quote }}{{ with (index $pkg "brew_options") }}, {{ . }}{{ end }}
+  {{- end }}
+{{- end }}
+{{- range $name, $pkg := .riot.packages }}
+  {{- if hasKey $pkg "cask" }}
+cask {{ $pkg.cask | quote }}
+  {{- end }}
+{{- end }}
 
 {{- end }}

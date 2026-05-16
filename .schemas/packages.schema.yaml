@@ -1,0 +1,71 @@
+# JSON Schema for .chezmoidata/packages.yaml
+# Validated via pre-commit hook: check-jsonschema
+$schema: https://json-schema.org/draft/2020-12/schema
+
+type: object
+additionalProperties: false
+required: [my]
+properties:
+  my:
+    $ref: "#/$defs/namespace"
+  riot:
+    $ref: "#/$defs/namespace"
+
+$defs:
+  namespace:
+    type: object
+    additionalProperties: false
+    required: [packages]
+    properties:
+      packages:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/package"
+
+  package:
+    type: object
+    additionalProperties: false
+    # Every package must have at least one package manager field
+    anyOf:
+      - required: [brew]
+      - required: [cask]
+      - required: [pacman]
+      - required: [winget]
+      - required: [mise]
+      - required: [pip]
+      - required: [npm]
+    properties:
+      # Homebrew
+      brew:
+        type: string
+      brew_options:
+        type: string
+      cask:
+        type: string
+      tap:
+        type: string
+
+      # Arch Linux
+      pacman:
+        type: string
+      aur:
+        type: boolean
+
+      # Windows
+      winget:
+        type: string
+
+      # Mise
+      mise:
+        type: string
+      skip:
+        type: array
+        items:
+          type: string
+          enum: [darwin, linux, windows]
+
+      # Language package managers
+      pip:
+        type: string
+      npm:
+        type: string
