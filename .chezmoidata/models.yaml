@@ -1,0 +1,37 @@
+---
+my:
+  defaultModelParameters: &defaultModelParameters
+    num_ctx: &defaultNumCtx 16384 # Force the context window to 16k tokens (leaves safe overhead for your 18GB RAM)
+    num_predict: &defaultNumPredict 2048 # Dictate output budget per individual turn
+    temperature: &defaultTemperature 0.2 # Lower temperature slightly for strict, deterministic code syntax generation
+  models:
+    "codestral:22b":
+      enabled: false
+      parameters: *defaultModelParameters
+
+    "deepseek-r1:14b":
+      enabled: false
+      parameters: *defaultModelParameters
+
+    "gemma4:e4b":
+      enabled: false
+      parameters: *defaultModelParameters
+
+    "phi4:14b":
+      enabled: false
+      parameters: *defaultModelParameters
+
+    "qwen2.5-coder:14b-instruct-q4_K_M":
+      enabled: false
+      parameters: *defaultModelParameters
+
+    "qwen3-coder-next:q4_K_M":
+      enabled: true
+      parameters: *defaultModelParameters
+
+    "qwen3.5:9b":
+      enabled: false
+      parameters:
+        num_ctx: 24576
+        num_predict: *defaultNumPredict
+        temperature: 0.1

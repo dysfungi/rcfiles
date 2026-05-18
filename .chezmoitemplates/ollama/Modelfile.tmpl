@@ -1,0 +1,7 @@
+# Starting from the optimized 14B coder model in Ollama's registry
+# FROM qwen2.5-coder:14b
+FROM {{ printf "%s:%s" .name .tag }}
+
+{{ range $paramName, $paramValue := .parameters -}}
+PARAMETER {{ $paramName }} {{ $paramValue }}
+{{ end -}}
