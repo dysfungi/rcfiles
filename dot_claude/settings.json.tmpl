@@ -1,17 +1,105 @@
-{
+{ {{- /* https://code.claude.com/docs/en/settings */}}
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {
-    {{ if .isRiotMachine -}}
-    "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
-    "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-vertex/anthropic-claude-opus-4-6",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-vertex/anthropic-claude-sonnet-4-6-default",
-    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
-    "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1"
+  "alwaysThinkingEnabled": true,
+  "attribution": {
+    {{- with $attribution := printf "Co-Authored-By: Claude Code CLI\nModel: opusplan\nModel-Provider: TrueFoundry\nReviewed-By: %s <%s>" .name .email }}
+    "commit": {{ quote $attribution }},
+    "pr": {{ quote $attribution }}
     {{- end }}
   },
+  "autoMode": {
+    "environment": [
+      "$defaults"
+    ],
+    "allow": [
+      "$defaults"
+    ],
+    "soft_deny": [
+      "$defaults"
+    ],
+    "hard_deny": [
+      "$defaults"
+    ]
+  },
+  "autoScrollEnabled": true,
+  "autoUpdatesChannel": "stable",
+  "awaySummaryEnabled": true,
+  "defaultShell": "bash",
+  "disableAutoMode": "disable",
+  "editorMode": "vim",
+  "effortLevel": "high",
+  "env": {
+    {{- if .isMyMachine }}
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_AUTH_TOKEN": "ollama",
+    "ANTHROPIC_BASE_URL": "http://localhost:11434",
+    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
+    "CLAUDE_CODE_ENABLE_TELEMETRY": "0", {{- /* TODO(dfrank): Enable telemetry */}}
+    "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0",
+    "ENABLE_TOOL_SEARCH": "true",
+    "OTEL_METRICS_EXPORTER": "otlp"
+    {{- else if .isRiotMachine }}
+    "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
+    "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
+    "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
+    "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1",
+    "ENABLE_TOOL_SEARCH": "true"
+    {{- end }}
+  },
+  "hooks": {
+    "SessionStart": [],
+    "Setup": [],
+    "UserPromptSubmit": [],
+    "UserPromptExpansion": [],
+    "PreToolUse": [],
+    "PermissionRequest": [],
+    "PermissionDenied": [],
+    "PostToolUse": [],
+    "PostToolUseFailure": [],
+    "PostToolBatch": [],
+    "Notification": [],
+    "SubagentStart": [],
+    "SubagentStop": [],
+    "TaskCreated": [],
+    "TaskCompleted": [],
+    "Stop": [],
+    "StopFailure": [],
+    "TeammateIdle": [],
+    "InstructionsLoaded": [],
+    "ConfigChange": [],
+    "CwdChanged": [],
+    "FileChanged": [],
+    "WorktreeCreate": [],
+    "WorktreeRemove": [],
+    "PreCompact": [],
+    "PostCompact": [],
+    "Elicitation": [],
+    "ElicitationResult": [],
+    "SessionEnd": []
+  },
+  "includeGitInstruction": true,
+  "language": "english",
+  {{- if .isMyMachine }}
+  "model": "default",
+  "modelOverrides": {
+    "opus": "claude-vertex/anthropic-claude-opus-4-6",
+    "opusplan": "claude-vertex/anthropic-claude-opus-4-6",
+    "sonnet": "claude-vertex/anthropic-claude-sonnet-4-6-default",
+    "haiku": "claude-vertex/anthropic-claude-haiku-4-5-20251001"
+  },
+  {{- else if .isRiotMachine }}
+  "model": "opusplan",
+  "modelOverrides": {
+    "opus": "claude-vertex/anthropic-claude-opus-4-6",
+    "opusplan": "claude-vertex/anthropic-claude-opus-4-6",
+    "sonnet": "claude-vertex/anthropic-claude-sonnet-4-6-default",
+    "haiku": "claude-vertex/anthropic-claude-haiku-4-5-20251001"
+  },
+  {{- end }}
+  "outputStyle": "Explanatory",
   "permissions": {
+    "defaultMode": "plan",
     "allow": [
       "Bash(brew *)",
       "Bash(chezmoi *)",
@@ -41,9 +129,18 @@
       "Bash(git push --force *)"
     ]
   },
+  "preferredNotificationChannel": "terminal_bell",
+  "respectGitIgnore": true,
+  "showTurnDuration": true,
+  "skillOverrides": {},
+  "spinnerTipsEnabled": true,
+  "spinnerTipsOverrides": {},
   "statusLine": {
     "command": "python3 ~/.claude/statusline.py",
     "type": "command"
   },
-  "theme": "dark-daltonized"
+  "syntaxHighlightingDisabled": false,
+  "theme": "dark-daltonized",
+  "useAutoModeDuringPlan": false,
+  "viewMode": "default"
 }
