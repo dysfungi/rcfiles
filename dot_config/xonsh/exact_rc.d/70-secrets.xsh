@@ -10,7 +10,8 @@ def __rc_interactive_secrets():
     $XONTRIB_1PASSWORD_ENABLED = False
     try:
         # if not !(xontrib load 1password):
-        from xontrib_1password import OnePass
+        # https://github.com/drmikecrowe/xontrib-1password: OnePass not re-exported from __init__ in v0.3.2
+        from xontrib_1password.main import OnePass
     except ImportError:
         logger.error("Failed to load xontrib 1password - secrets will not be loaded from 1Password")
         return
