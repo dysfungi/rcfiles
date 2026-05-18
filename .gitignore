@@ -8,6 +8,7 @@
 
 # Claude
 **/.claude/settings.local.json
+**/.claude/worktrees/
 
 ##########################################################
 # github.com/github/gitignore/blob/main/Python.gitignore #

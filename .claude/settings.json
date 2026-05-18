@@ -1,0 +1,82 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/migrate-permissions.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi config user.name)",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi config user.email)",
+      "Bash(nvim --version)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter log --oneline -5)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter log --oneline --since=\"2026-05-01\")",
+      "Bash(nvim --headless -c \"checkhealth nvim-treesitter\" -c \"q\")",
+      "Bash(kill %1)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(chezmoi apply *)",
+      "Bash(nvim *)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter branch --show-current)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter log --oneline -3)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter symbolic-ref HEAD)",
+      "Bash(git -C ~/.local/share/nvim/lazy/nvim-treesitter status --short -b)",
+      "Bash(mise list *)",
+      "Bash(brew list *)",
+      "Read(//opt/homebrew/**)",
+      "Read(//opt/homebrew/Cellar/tree-sitter/0.26.8/**)",
+      "Bash(brew search *)",
+      "Bash(brew install *)",
+      "Bash(tree-sitter --version)",
+      "Bash(grep -A2 -B2 \"neovim\\|lua\\|git$\")",
+      "Bash(pkill -f \"tofu-ls\\|tofu_ls\\|terraform-ls\\|terraformls\")",
+      "Bash(tmux source *)",
+      "Read(//Users/dfrank/.config/nvim/lua/plugins/tools/**)",
+      "Read(//Users/dfrank/.config/nvim/after/ftplugin/**)",
+      "Read(//Users/dfrank/.local/share/nvim/lazy/nvim-treesitter/plugin/**)",
+      "Read(//Users/dfrank/.local/share/nvim/lazy/nvim-treesitter/runtime/queries/terraform/**)",
+      "Read(//Users/dfrank/.local/share/nvim/lazy/nvim-treesitter/runtime/queries/hcl/**)",
+      "Bash(xargs ls -la)",
+      "Bash(python3 -c 'import json; d=json.load\\(open\\(\"__TRACKED_VAR__/.local/share/nvim/mason/packages/terraform-ls/mason-receipt.json\"\\)\\); print\\(json.dumps\\(d, indent=2\\)\\)')",
+      "Bash(python3 -c 'import json; d=json.load\\(open\\(\"__TRACKED_VAR__/.local/share/nvim/mason/packages/tofu-ls/mason-receipt.json\"\\)\\); print\\(json.dumps\\(d, indent=2\\)\\)')",
+      "Bash(echo \"exit: $?\")",
+      "Bash(grep -v \"^$\")",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix\\(nvim\\): Block terraform LSPs causing HCL buffer freeze *)",
+      "WebSearch",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi add .chezmoitemplates/agents/AGENTS.md.tmpl)",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi diff --cached --stat)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(chezmoi diff *)",
+      "Bash(xonsh -c 'echo @\\(\" \".join\\(gproc.args for gproc in $\\(echo .mise.toml\\).procs\\)\\)')",
+      "Bash(xonsh -c 'import subprocess; r = subprocess.run\\([\"echo\", \".mise.toml\"], capture_output=True\\); print\\(r.stdout.decode\\(\\)\\)')",
+      "Bash(chezmoi status *)",
+      "Bash(python3 *)",
+      "Bash(pip3 show *)",
+      "Bash(xonsh -c 'from xontrib import coreutils; import inspect; print\\(inspect.getfile\\(coreutils\\)\\)')",
+      "Bash(pip show *)",
+      "Bash(xonsh -c 'xontrib load coconut; import xonsh; help\\(xonsh.xontribs\\)')",
+      "Bash(xonsh -c 'echo .mise.toml')",
+      "Bash(xonsh -c 'print_args .mise.toml')",
+      "Bash(xonsh -c 'python3 -c \"import sys; print\\(sys.argv[1:]\\)\" .mise.toml')",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi show 45d1a40 --stat)",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi show 45d1a40)",
+      "Bash(tmux source-file *)",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi status)",
+      "Bash(git -C /Users/dfrank/.local/share/chezmoi diff)",
+      "Bash(tmux -V)",
+      "Bash(pre-commit run *)",
+      "Bash(bash *)",
+      "Bash(wsl --list --online)",
+      "Bash(ls \"$\\(brew --prefix\\)/bin/xonsh\")",
+      "Bash(shellcheck --shell=bash -)"
+    ]
+  }
+}
