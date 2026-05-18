@@ -13,5 +13,5 @@ python                         3.13.13  ~/.config/mise/config.toml       3.13
 python                         3.14.3
 ruff                           0.15.13  ~/.config/mise/config.toml       latest
 tmux                           3.6a
-uv                             0.11.14  ~/.config/mise/config.toml       latest
+uv                             0.11.15  ~/.config/mise/config.toml       latest
 yarn                           1.22.22
