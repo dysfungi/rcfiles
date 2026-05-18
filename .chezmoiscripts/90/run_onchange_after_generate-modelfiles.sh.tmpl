@@ -1,35 +1,59 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Target directory for your Modelfiles
+echo >&2 "INFO: Starting $0"
+
 TARGET_DIR="{{ $.chezmoi.homeDir }}/.local/share/ollama-agents"
-mkdir -p "$TARGET_DIR"
+userName="$(whoami)"
+hostName="$(hostname)"
+bakSuffix="${userName}.${hostName}"
+bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
+bakFile="${bakDir}/ollama-models.${bakSuffix}"
+export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+mkdir -p "$TARGET_DIR" "${bakDir}"
+
+backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  ollama list | sed 's/[[:space:]]*$//' >"${bakFile}"
+  git add "${bakFile}"
+  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+    git commit --message "chore(backups): List ollama models ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+backup before install
 
 {{- if $.isMyMachine }}
 
 {{- range $modelNameWithTag, $model := .my.models }}
-{{- if not (default false .enabled) }}{{ continue }}{{- end }}
-
 {{- $_ := set $model "nameWithTag" $modelNameWithTag }}
 {{- $_ := set $model "safeName" ($modelNameWithTag | replace ":" "__") }}
 {{- $_ := set $model "nameParts" (splitn ":" 2 $modelNameWithTag) }}
 {{- $_ := set $model "name" $model.nameParts._0 }}
 {{- $_ := set $model "tag" (default (default "latest" (get $model "tag")) $model.nameParts._1) }}
+{{- if default false .enabled }}
 
-# ---------------------------------------------------------
-# Generating Modelfile for: {{ $model.nameWithTag }}
-# ---------------------------------------------------------
 FILE_PATH="$TARGET_DIR/Modelfile-{{ $model.safeName }}"
 
 cat <<-EOF >"$FILE_PATH"
 {{ includeTemplate ".chezmoitemplates/ollama/Modelfile.tmpl" $model -}}
 EOF
 
+ollama pull "{{ $model.nameWithTag }}"
+ollama create "local__{{ $model.safeName }}" -f "$FILE_PATH"
 echo "Generated: $FILE_PATH"
 
-# Optional: You can also tell Ollama to build it immediately
-ollama create "local__{{ $model.safeName }}" -f "$FILE_PATH"
-
+{{- else }}
+ollama rm "local__{{ $model.safeName }}" 2>/dev/null || true
+{{- end }}
 {{- end }}
 
 {{- end }}
+
+backup after install
+
+echo >&2 "INFO: Ending $0"
