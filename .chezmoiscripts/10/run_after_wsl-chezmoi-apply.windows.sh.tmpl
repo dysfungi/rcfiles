@@ -10,19 +10,19 @@ if ! wsl.exe -d {{ .wslDistro }} -- command -v chezmoi >/dev/null 2>&1; then
 fi
 
 export OP_SERVICE_ACCOUNT_TOKEN={{ .opServiceAccountToken | quote }}
-export GITHUB_TOKEN={{ .githubToken | quote }}
-export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:GITHUB_TOKEN"
+export CHEZMOI_GITHUB_ACCESS_TOKEN={{ .githubToken | quote }}
+export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:CHEZMOI_GITHUB_ACCESS_TOKEN"
 
 if wsl.exe -d {{ .wslDistro }} -- bash -c 'test -d ~/.local/share/chezmoi'; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
   wsl.exe -d {{ .wslDistro }} -- bash -c '
     git -C ~/.local/share/chezmoi -c credential.helper="" pull --ff-only \
-      "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git" main
+      "https://x-token:$CHEZMOI_GITHUB_ACCESS_TOKEN@github.com/dysfungi/rcfiles.git" main
     mkdir -p "$HOME/.config/chezmoi"
     printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"
     chmod 600 "$HOME/.config/chezmoi/chezmoi.toml"
     chezmoi init --apply \
-      "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git"
+      "https://x-token:$CHEZMOI_GITHUB_ACCESS_TOKEN@github.com/dysfungi/rcfiles.git"
   '
 else
   echo >&2 "INFO: Initializing chezmoi in WSL..."
@@ -33,7 +33,7 @@ else
     printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"
     chmod 600 "$HOME/.config/chezmoi/chezmoi.toml"
     chezmoi init --apply \
-      "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git"
+      "https://x-token:$CHEZMOI_GITHUB_ACCESS_TOKEN@github.com/dysfungi/rcfiles.git"
   '
 fi
 
