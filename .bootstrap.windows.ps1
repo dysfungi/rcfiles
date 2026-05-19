@@ -41,9 +41,9 @@ secedit /configure /db $dbFile /cfg $tempFile /areas USER_RIGHTS | Out-Null
 # Cleanup
 Remove-Item $tempFile, $dbFile -ErrorAction SilentlyContinue
 
-# 3. Install 1Password, Git, and Python (Early dependencies)
-Write-Host "Installing 1Password, Git, and Python..."
-$packages = @("AgileBits.1Password", "AgileBits.1Password.CLI", "Git.Git", "Python.Python.3.13")
+# 3. Install 1Password and Git (Early dependencies)
+Write-Host "Installing 1Password and Git..."
+$packages = @("AgileBits.1Password", "AgileBits.1Password.CLI", "Git.Git")
 foreach ($package in $packages) {
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }
