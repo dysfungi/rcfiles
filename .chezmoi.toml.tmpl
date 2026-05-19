@@ -2,6 +2,7 @@
 name = "Derek M Frank"
 
 {{ $username := .chezmoi.homeDir | base -}}
+{{ $wslDistro := "archlinux" -}}
 {{ if not (hasSuffix $username .chezmoi.username) -}}
   {{ fail (printf "username mismatch: homeDir base '%s' is not a suffix of chezmoi.username '%s'" $username .chezmoi.username) -}}
 {{ end -}}
@@ -22,6 +23,7 @@ linuxDistro = {{ .chezmoi.os | quote }}
 isArchLinux = false
 isWSL = false
 {{- end }}
+wslDistro = {{ $wslDistro | quote }}
 
 {{ $isMyMachine := eq $username "dmf" -}}
 {{ $isWorkMachine := not $isMyMachine -}}
@@ -66,7 +68,7 @@ exclude = ["scripts"]
 [hooks.read-source-state.pre]
 {{- if eq .chezmoi.os "windows" }}
 command = "powershell"
-args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1"]
+args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wslDistro | quote }}]
 {{- else if eq .chezmoi.os "darwin" }}
 command = ".local/share/chezmoi/.bootstrap.darwin.sh"
 {{- else if eq .chezmoi.os "linux" }}

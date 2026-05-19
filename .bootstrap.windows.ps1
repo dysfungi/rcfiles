@@ -48,15 +48,18 @@ foreach ($package in $packages) {
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }
 
-# 4. Install WSL with Arch Linux (no interactive launch; user setup handled by chezmoi)
-Write-Host "Checking WSL distributions..."
-$distros = wsl --list --quiet 2>$null
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($distros)) {
-    Write-Host "Installing Arch Linux..."
-    wsl --install --distribution archlinux --no-launch
-    wsl --set-default archlinux
+# 4. Install WSL with desired Linux distribution (no interactive launch; user setup handled by chezmoi)
+$wslDistro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
+Write-Host "Checking WSL $wslDistro distribution..."
+$ErrorActionPreference = "Continue"
+wsl -d $wslDistro -- true 2>$null
+$ErrorActionPreference = "Stop"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Installing $wslDistro..."
+    wsl --install --distribution $wslDistro --no-launch
+    wsl --set-default $wslDistro
     Write-Host "Done. Run 'chezmoi apply' to complete WSL user setup."
 } else {
-    Write-Host "WSL already has distributions installed. Skipping."
+    Write-Host "$wslDistro already installed. Skipping."
 }
 Write-Host "INFO: Ending $PSCommandPath"

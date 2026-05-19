@@ -108,8 +108,8 @@ elseif isWindows then
 
   config.launch_menu = {
     {
-      label = "WSL2 (Arch Linux)",
-      args = { "wsl.exe", "-d", "archlinux", "--cd", "~" },
+      label = "WSL2 ({{ .wslDistro }})",
+      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~" },
     },
     {
       label = "Git Bash",

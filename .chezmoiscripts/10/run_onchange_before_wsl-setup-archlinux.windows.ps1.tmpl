@@ -5,7 +5,7 @@ $ErrorActionPreference = "Stop"
 Write-Host "INFO: Starting $PSCommandPath"
 
 $ErrorActionPreference = "Continue"
-wsl -d archlinux -- echo ok 2>$null
+wsl -d {{ .wslDistro }} -- echo ok 2>$null
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Arch Linux WSL distro not available. Skipping."
@@ -14,7 +14,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "Installing core packages in Arch Linux WSL..."
-wsl -d archlinux -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi openssh inetutils tmux unzip curl"
+wsl -d {{ .wslDistro }} -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi openssh inetutils tmux unzip curl"
 
 Write-Host "Installing 1Password CLI in Arch Linux WSL..."
 $opInstallScript = @'
@@ -32,8 +32,8 @@ echo "INFO: Installed op v${ver} ${arch}"
 '@
 $tmpScript = [System.IO.Path]::GetTempFileName() + ".sh"
 [System.IO.File]::WriteAllText($tmpScript, $opInstallScript.Replace("`r`n", "`n"), [System.Text.UTF8Encoding]::new($false))
-$wslPath = wsl -d archlinux -- wslpath ($tmpScript -replace '\\','/')
-wsl -d archlinux -u root -- bash $wslPath
+$wslPath = wsl -d {{ .wslDistro }} -- wslpath ($tmpScript -replace '\\','/')
+wsl -d {{ .wslDistro }} -u root -- bash $wslPath
 Remove-Item $tmpScript -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) {
     Write-Error "FATAL: pacman install failed in Arch Linux WSL."
@@ -43,21 +43,21 @@ if ($LASTEXITCODE -ne 0) {
 # Check if user exists — stderr from `id` triggers NativeCommandError in PS 5.1
 # with ErrorActionPreference=Stop, so temporarily relax it
 $ErrorActionPreference = "Continue"
-wsl -d archlinux -u root -- id {{ .username }} 2>$null
+wsl -d {{ .wslDistro }} -u root -- id {{ .username }} 2>$null
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Creating WSL user '{{ .username }}'..."
-    wsl -d archlinux -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
+    wsl -d {{ .wslDistro }} -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "FATAL: WSL user creation failed."
         exit 1
     }
-    wsl --terminate archlinux
+    wsl --terminate {{ .wslDistro }}
     Write-Host "WSL user '{{ .username }}' created. Distro restarted."
 } else {
     Write-Host "WSL user '{{ .username }}' already exists."
 }
 
-wsl --set-default archlinux
+wsl --set-default {{ .wslDistro }}
 Write-Host "Arch Linux is the default WSL distro."
 Write-Host "INFO: Ending $PSCommandPath"
