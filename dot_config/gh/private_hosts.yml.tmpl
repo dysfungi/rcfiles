@@ -1,10 +1,18 @@
 github.com:
-  oauth_token: {{ .githubToken }}
-  git_protocol: https
-  user: {{ .githubUsername }}
+    git_protocol: https
+    oauth_token: {{ .githubToken }}
+    user: {{ .githubUsername }}
+    users:
+        {{ .githubUsername }}:
+            git_protocol: https
+            oauth_token: {{ .githubToken }}
 {{- if .isRiotMachine }}
 gh.riotgames.com:
-  oauth_token: {{ .riotGithubToken }}
-  git_protocol: https
-  user: {{ .username }}
+    git_protocol: https
+    oauth_token: {{ .riotGithubToken }}
+    user: {{ .username }}
+    users:
+        {{ .username }}:
+            git_protocol: https
+            oauth_token: {{ .riotGithubToken }}
 {{- end }}
