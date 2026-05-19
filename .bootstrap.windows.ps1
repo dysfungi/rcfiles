@@ -58,7 +58,7 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "Installing $wslDistro..."
     wsl --install --distribution $wslDistro --no-launch
     wsl --set-default $wslDistro
-    Write-Host "Done. Run 'chezmoi apply' to complete WSL user setup."
+    Write-Host "Done. chezmoi will complete WSL user setup in a later script."
 } else {
     Write-Host "$wslDistro already installed. Skipping."
 }

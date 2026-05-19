@@ -5,7 +5,7 @@ echo >&2 "INFO: Starting $0"
 
 if ! command -v logrotate >/dev/null 2>&1; then
   echo >&2 "WARNING: logrotate is not installed; skipping log rotation."
-  echo >&2 "INFO: Install with Homebrew: brew install logrotate"
+  echo >&2 "INFO: Install with your package manager (e.g. pacman -S logrotate or brew install logrotate)"
   echo >&2 "INFO: Ending $0"
   exit 0
 fi
