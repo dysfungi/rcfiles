@@ -1,2 +1,5 @@
+Host github.com
+    StrictHostKeyChecking accept-new
+
 Host gh.riotgames.com
     StrictHostKeyChecking accept-new
