@@ -14,10 +14,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $ErrorActionPreference = "Continue"
-wsl -d {{ .wslDistro }} -u root -- test -f /etc/arch-release 2>$null
+wsl -d {{ .wslDistro }} -u root -- bash -c "grep -q '^ID=arch$' /etc/os-release" 2>$null
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "WSL distro '{{ .wslDistro }}' is not Arch Linux. Skipping Arch setup."
+    Write-Host "WSL distro '{{ .wslDistro }}' is not Arch Linux (ID!=arch in /etc/os-release). Skipping Arch setup."
     Write-Host "INFO: Ending $PSCommandPath"
     exit 0
 }
