@@ -34,6 +34,8 @@ isMyMachine = {{ $isMyMachine }}
 isWorkMachine = {{ $isWorkMachine }}
 isRiotMachine = {{ $isRiotMachine }}
 
+{{ $myGithubToken := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
+githubToken = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 riotGithubToken = {{ onepasswordRead "op://Riot/GitHub - Personal Access Token/password" | quote }}
 {{- end }}
@@ -81,7 +83,7 @@ command = "C:\\Program Files\\Git\\bin\\bash.exe"
 {{- end }}
 
 [github]
-token = {{ onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" | quote }}
+token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
-MISE_GITHUB_TOKEN = {{ onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" | quote }}
+MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
