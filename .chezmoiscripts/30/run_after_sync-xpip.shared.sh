@@ -34,7 +34,7 @@ backup() {
 
   ${XONSH_EXECUTABLE} --no-rc -c "import sys; \$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
   git add "${bakFile}"
-  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+  if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }

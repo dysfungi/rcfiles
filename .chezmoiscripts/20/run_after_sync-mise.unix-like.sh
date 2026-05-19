@@ -25,7 +25,7 @@ backup() {
 
   mise ls >"${bakFile}"
   git add "${bakFile}"
-  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+  if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }

@@ -29,7 +29,7 @@ backup() {
 
   sudo pacman -Qqe | sort >"${bakFile}"
   git add "${bakFile}"
-  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+  if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): List pacman packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }

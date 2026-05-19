@@ -27,7 +27,7 @@ backup() {
   fi
   brew bundle dump --describe --file="${bakFile}"
   git add "${bakFile}"
-  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+  if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Dump Brewfile ${clarifier} install for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }
