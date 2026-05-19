@@ -135,7 +135,7 @@ my:
     tmux:          { brew: tmux, pacman: tmux, winget: arndawg.tmux-windows, bootstrap: true }
     todoist-cli:   { brew: todoist-cli }
     tree:          { brew: tree, pacman: tree }
-    tree-sitter-cli: { brew: tree-sitter-cli }
+    tree-sitter-cli: { brew: tree-sitter-cli, pacman: tree-sitter-cli }
     typescript:    { brew: typescript }
     typescript-language-server: { brew: typescript-language-server }
     uv:            { brew: uv, pacman: uv }
@@ -143,10 +143,10 @@ my:
     vultr:         { brew: vultr }
     watchexec:     { brew: watchexec, pacman: watchexec }
     wget:          { brew: wget, pacman: wget }
-    xonsh:         { brew: xonsh }
+    xonsh:         { brew: xonsh, pacman: xonsh }
     xz:            { brew: xz, pacman: xz }
     yadm:          { brew: yadm }
-    yarn:          { brew: yarn }
+    yarn:          { brew: yarn, pacman: yarn }
     youtube-dl:    { brew: youtube-dl }
     yq:            { brew: yq }
     zlib:          { brew: zlib }
