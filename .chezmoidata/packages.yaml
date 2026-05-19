@@ -110,7 +110,7 @@ my:
     rsync:         { brew: rsync, pacman: rsync }
     ruff:          { brew: ruff, pacman: ruff }
     ruff-lsp:      { brew: ruff-lsp }
-    rust:          { brew: rust, pacman: rust }
+    rust:          { brew: rust }                # pacman omitted: conflicts with rustup (both provide cargo)
     rust-analyzer: { brew: rust-analyzer, pacman: rust-analyzer }
     rust-parallel: { brew: rust-parallel }
     rustup:        { brew: rustup, pacman: rustup }
