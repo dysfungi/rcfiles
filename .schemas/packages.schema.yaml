@@ -55,6 +55,11 @@ $defs:
       winget:
         type: string
 
+      # Documentation
+      bootstrap:
+        type: boolean
+        description: "Installed by a .bootstrap.* script before chezmoi runs; annotation only"
+
       # Mise
       mise:
         type: string

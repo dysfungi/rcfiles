@@ -18,6 +18,7 @@
 #   pacman       — Arch Linux package name
 #   aur          — true if pacman name requires AUR helper (yay/paru)
 #   winget       — winget package ID
+#   bootstrap    — true if installed by .bootstrap.windows.ps1 before chezmoi runs (documentation only)
 #   mise         — mise tool spec: "tool@version" (eg, "jq@latest", "python@3.13")
 #   skip         — platforms to skip for mise: [darwin, linux, windows]
 #   pip          — pip/UV package name
@@ -34,7 +35,7 @@ my:
     # CORE CLI & TOOLS #
     ####################
 
-    1password-cli: { cask: "1password/tap/1password-cli", tap: "1password/tap", pacman: 1password-cli, winget: AgileBits.1Password.CLI }
+    1password-cli: { cask: "1password/tap/1password-cli", tap: "1password/tap", pacman: 1password-cli, winget: AgileBits.1Password.CLI, bootstrap: true }
     ack:           { brew: ack }
     archey4:       { brew: archey4 }
     ascii:         { brew: ascii }
@@ -42,14 +43,14 @@ my:
     bash:          { brew: bash, pacman: bash }
     cdargs:        { brew: cdargs }
     cheat:         { brew: cheat }
-    chezmoi:       { brew: chezmoi, pacman: chezmoi, winget: twpayne.chezmoi }
+    chezmoi:       { brew: chezmoi, pacman: chezmoi, winget: twpayne.chezmoi, bootstrap: true }
     cloudflare-cli4: { brew: cloudflare-cli4 }
     coconut:       { brew: coconut }
     colordiff:     { brew: colordiff, pacman: colordiff }
     coreutils:     { brew: coreutils }
     cowsay:        { brew: cowsay }
     csvq:          { brew: csvq }
-    curl:          { brew: curl, pacman: curl }
+    curl:          { brew: curl, pacman: curl, bootstrap: true }
     dbmate:        { brew: dbmate }
     dict:          { brew: dict }
     direnv:        { brew: direnv, pacman: direnv }
@@ -61,7 +62,7 @@ my:
     gdrive:        { brew: gdrive }
     gemini-cli:    { brew: gemini-cli }
     gettext:       { brew: gettext }
-    git:           { brew: git, pacman: git, winget: Git.Git }
+    git:           { brew: git, pacman: git, winget: Git.Git, bootstrap: true }
     github-cli:    { brew: gh, pacman: github-cli, winget: GitHub.cli }
     gnu-sed:       { brew: gnu-sed }
     gnu-tar:       { brew: gnu-tar }
@@ -95,7 +96,7 @@ my:
     nmap:          { brew: nmap, pacman: nmap }
     ollama:        { brew: ollama, brew_options: "restart_service: :changed" }
     opam:          { brew: opam }
-    openssh:       { brew: openssh, pacman: openssh }
+    openssh:       { brew: openssh, pacman: openssh, bootstrap: true }
     openssl:       { brew: openssl, pacman: openssl }
     opentofu:      { brew: opentofu, pacman: opentofu }
     pandoc:        { brew: pandoc }
@@ -131,7 +132,7 @@ my:
     tflint:        { brew: tflint }
     tfupdate:      { brew: tfupdate }
     the_silver_searcher: { brew: the_silver_searcher }
-    tmux:          { brew: tmux, pacman: tmux, winget: arndawg.tmux-windows }
+    tmux:          { brew: tmux, pacman: tmux, winget: arndawg.tmux-windows, bootstrap: true }
     todoist-cli:   { brew: todoist-cli }
     tree:          { brew: tree, pacman: tree }
     tree-sitter-cli: { brew: tree-sitter-cli }
@@ -156,7 +157,7 @@ my:
     # GUI APPLICATIONS   #
     ######################
 
-    1password:     { cask: "1password", winget: AgileBits.1Password }
+    1password:     { cask: "1password", winget: AgileBits.1Password, bootstrap: true }
     amethyst:      { cask: amethyst }
     codex:         { cask: codex, winget: OpenAI.Codex }
     discord:       { cask: discord }
