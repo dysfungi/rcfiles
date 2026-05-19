@@ -18,19 +18,22 @@ if wsl.exe -d {{ .wslDistro }} -- bash -c 'test -d ~/.local/share/chezmoi'; then
   wsl.exe -d {{ .wslDistro }} -- bash -c '
     git -C ~/.local/share/chezmoi -c credential.helper="" pull --ff-only \
       "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git" main
-    printf "[onepassword]\nmode = \"service\"\n" > /tmp/chezmoi-bootstrap.toml
-    chezmoi init --apply -c /tmp/chezmoi-bootstrap.toml \
+    mkdir -p "$HOME/.config/chezmoi"
+    printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"
+    chmod 600 "$HOME/.config/chezmoi/chezmoi.toml"
+    chezmoi init --apply \
       "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git"
-    rm -f /tmp/chezmoi-bootstrap.toml
   '
 else
   echo >&2 "INFO: Initializing chezmoi in WSL..."
-  # chezmoi init needs onepassword.mode=service before the config template renders
+  # chezmoi init needs onepassword.mode=service before the config template renders;
+  # write bootstrap to the standard config path so chezmoi init persists the generated config there
   wsl.exe -d {{ .wslDistro }} -- bash -c '
-    printf "[onepassword]\nmode = \"service\"\n" > /tmp/chezmoi-bootstrap.toml
-    chezmoi init --apply -c /tmp/chezmoi-bootstrap.toml \
+    mkdir -p "$HOME/.config/chezmoi"
+    printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"
+    chmod 600 "$HOME/.config/chezmoi/chezmoi.toml"
+    chezmoi init --apply \
       "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git"
-    rm -f /tmp/chezmoi-bootstrap.toml
   '
 fi
 
