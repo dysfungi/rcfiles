@@ -1,1 +1,3 @@
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
+(B) 2026-05-19 Investigate GITHUB_TOKEN not being read from [github] config for gitHubLatestReleaseAssetURL externals — must set env var manually for now +chezmoi @bug
+(B) 2026-05-19 Two-repo situation (Windows /mnt/c/ source + WSL ~/  source) causes rebase friction; evaluate making WSL source canonical for this machine +chezmoi @architecture
