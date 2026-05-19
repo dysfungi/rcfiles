@@ -29,6 +29,7 @@ wslDistro = {{ $wslDistro | quote }}
 {{ $isMyMachine := eq $username "dmf" -}}
 {{ $isWorkMachine := not $isMyMachine -}}
 {{ $isRiotMachine := eq $username "dfrank" -}}
+{{ $isWindows := eq .chezmoi.os "windows" -}}
 {{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
   {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
@@ -93,7 +94,8 @@ command = "C:\\Program Files\\Git\\bin\\bash.exe"
 token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
-PATH = "{{ joinPath .chezmoi.homeDir ".local/share/mise/shims" }}:{{ joinPath .chezmoi.homeDir ".local/bin" }}:{{ env "PATH" }}"
+{{- $paths := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") (env "PATH") }}
+PATH = "{{ $paths | join ($isWindows | ternary ";" ":") | replace "\\" "/" }}"
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
