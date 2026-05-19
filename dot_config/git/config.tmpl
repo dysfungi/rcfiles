@@ -123,7 +123,7 @@
 	defaultBranch = main
 [credential "https://dev.azure.com"]
 	useHttpPath = true
-{{- if not .isWindows }}
+{{- if and (not .isWindows) (not (.isWSL | default false)) }}
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 {{- end }}
