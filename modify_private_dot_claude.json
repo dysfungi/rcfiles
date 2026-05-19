@@ -18,7 +18,8 @@
 {{- end -}}
 {{- range $index, $project := $projectsIn -}}
   {{- $projectKey := ($project.isHomeRelative | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
-  {{- $projectsOut = set $projectsOut $projectKey (dig $projectKey (dict) $projectsOut) -}}
+  {{- $projectConfig := dig $projectKey (dict) $projectsOut | setValueAtPath "hasTrustDialogAccepted" true -}}
+  {{- $projectsOut = set $projectsOut $projectKey $projectConfig -}}
 {{- end -}}
 {{- $config = set $config "projects" $projectsOut -}}
 
