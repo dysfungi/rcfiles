@@ -14,6 +14,12 @@ export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
 mkdir -p "$TARGET_DIR" "${bakDir}"
 
+if ! command -v ollama >/dev/null 2>&1; then
+  echo >&2 "WARNING: ollama not installed; skipping model generation"
+  echo >&2 "INFO: Ending $0"
+  exit 0
+fi
+
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
