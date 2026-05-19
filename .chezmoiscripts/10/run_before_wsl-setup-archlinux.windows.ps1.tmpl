@@ -1,5 +1,5 @@
 # Provision Arch Linux WSL distro: create user, install core packages, set as default.
-# Idempotent — safe to re-run when script content changes (run_onchange).
+# Idempotent — runs on every chezmoi apply (run_before); guards exit early when already set up.
 
 $ErrorActionPreference = "Stop"
 Write-Host "INFO: Starting $PSCommandPath"
@@ -12,6 +12,18 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "INFO: Ending $PSCommandPath"
     exit 0
 }
+
+$ErrorActionPreference = "Continue"
+wsl -d {{ .wslDistro }} -u root -- test -f /etc/arch-release 2>$null
+$ErrorActionPreference = "Stop"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "WSL distro '{{ .wslDistro }}' is not Arch Linux. Skipping Arch setup."
+    Write-Host "INFO: Ending $PSCommandPath"
+    exit 0
+}
+
+Write-Host "Initializing pacman keyring in Arch Linux WSL..."
+wsl -d {{ .wslDistro }} -u root -- bash -c "pacman-key --init && pacman-key --populate archlinux"
 
 Write-Host "Installing core packages in Arch Linux WSL..."
 wsl -d {{ .wslDistro }} -u root -- bash -c "pacman -Syu --noconfirm --needed base-devel git chezmoi openssh inetutils tmux unzip curl"
@@ -36,7 +48,7 @@ $wslPath = wsl -d {{ .wslDistro }} -- wslpath ($tmpScript -replace '\\','/')
 wsl -d {{ .wslDistro }} -u root -- bash $wslPath
 Remove-Item $tmpScript -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "FATAL: pacman install failed in Arch Linux WSL."
+    Write-Error "FATAL: 1Password CLI install failed in Arch Linux WSL."
     exit 1
 }
 
