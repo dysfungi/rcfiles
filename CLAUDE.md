@@ -64,8 +64,9 @@ Scripts under `.chezmoiscripts/` are staged by numeric subdirectory:
 | Stage | Purpose                                                   |
 | ----- | --------------------------------------------------------- |
 | `00/` | Sudoers setup                                             |
-| `10/` | Package managers (Homebrew, winget)                       |
-| `20/` | Tool managers (mise, xpip/UV, opam, pre-commit, xonsh)    |
+| `10/` | Core/system deps: package manager and tool manager installers + syncs |
+| `20/` | Dev deps: language runtimes and toolchains (mise install, setup-opam) |
+| `30/` | App-level deps: Python packages via xpip/UV              |
 | `40/` | Self-managed symlinked file sync (pre-apply)              |
 | `65/` | Log rotation                                              |
 | `70/` | Editor plugin sync (Neovim/Mason)                         |

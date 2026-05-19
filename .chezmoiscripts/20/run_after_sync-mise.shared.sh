@@ -3,6 +3,14 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
+export PATH="${HOME}/.local/bin:${PATH}"
+
+if ! command -v mise >/dev/null 2>&1; then
+  echo >&2 "WARN: mise not found; skipping. Re-run 'chezmoi apply' after mise is installed."
+  echo >&2 "INFO: Ending $0"
+  exit 0
+fi
+
 userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
