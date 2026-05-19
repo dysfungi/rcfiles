@@ -26,7 +26,9 @@
 
 - Package definitions live in `.chezmoidata/packages.yaml` — do not hardcode package lists in scripts (except bootstrap-critical deps in `.bootstrap.*.sh`/`.bootstrap.*.ps1`).
 - Package entry schema and ordering convention is documented in the `.chezmoidata/packages.yaml` header comment.
-- Package sync scripts must: backup before and after to `.backups/<tool>.<user>@<host>.log`, git-commit each snapshot, remove packages not in the declared list (declarative sync). The git diff history in `.backups/` is the audit trail.
+- Package sync scripts must: backup before and after to `.backups/<tool>.<user>.<host>` (no `.log` extension; period-separated; `whoami` and `hostname` as-is), git-commit each snapshot. The git diff history in `.backups/` is the audit trail.
+- Declarative removal (uninstalling packages not in the declared list) is not universally implemented — confirm per-script before assuming it applies.
+- In chezmoi Go templates, use `index $pkg "key"` (not `$pkg.key`) to safely access optional fields in `.chezmoidata` maps. Dot-notation panics with `map has no entry for key` when the key is absent; `index` returns nil (falsy) for missing keys.
 
 ## Commit Semantics
 
