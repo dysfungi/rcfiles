@@ -17,6 +17,7 @@ k9s
 kubectl
 lazydocker
 lazygit
+less
 logrotate
 mise
 moreutils
