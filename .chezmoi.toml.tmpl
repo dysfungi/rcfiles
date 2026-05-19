@@ -93,6 +93,7 @@ command = "C:\\Program Files\\Git\\bin\\bash.exe"
 token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
+PATH = "{{ joinPath .chezmoi.homeDir ".local/share/mise/shims" }}:{{ joinPath .chezmoi.homeDir ".local/bin" }}:{{ env "PATH" }}"
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
