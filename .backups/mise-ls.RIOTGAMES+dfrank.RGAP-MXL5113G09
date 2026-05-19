@@ -1,7 +1,7 @@
 jq                             1.8.1    C:\Users\dfrank\.config\mise\config.toml  latest
 node                           24.14.1
 node                           24.15.0  C:\Users\dfrank\.config\mise\config.toml  lts
-npm:@anthropic-ai/claude-code  2.1.143  C:\Users\dfrank\.config\mise\config.toml  latest
+npm:@anthropic-ai/claude-code  2.1.144  C:\Users\dfrank\.config\mise\config.toml  latest
 ollama                         0.20.7
 ollama                         0.21.2
 ollama                         0.23.4
@@ -10,4 +10,4 @@ python                         3.13.13  C:\Users\dfrank\.config\mise\config.toml
 ruff                           0.15.13  C:\Users\dfrank\.config\mise\config.toml  latest
 uv                             0.11.6
 uv                             0.11.7
-uv                             0.11.14  C:\Users\dfrank\.config\mise\config.toml  latest
+uv                             0.11.15  C:\Users\dfrank\.config\mise\config.toml  latest
