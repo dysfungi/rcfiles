@@ -15,7 +15,12 @@ export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:GITHUB_TOKEN"
 
 if wsl.exe -d archlinux -- bash -c 'test -d ~/.local/share/chezmoi'; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
-  wsl.exe -d archlinux -- chezmoi update
+  wsl.exe -d archlinux -- bash -c '
+    git -C ~/.local/share/chezmoi remote set-url origin https://github.com/dysfungi/rcfiles.git
+    git -C ~/.local/share/chezmoi pull --ff-only \
+      "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git" main
+    chezmoi apply
+  '
 else
   echo >&2 "INFO: Initializing chezmoi in WSL..."
   # chezmoi init needs onepassword.mode=service before the config template renders
