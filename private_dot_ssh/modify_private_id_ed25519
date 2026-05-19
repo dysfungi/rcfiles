@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Chezmoi modify_ script: manages ~/.ssh/id_ed25519.
+# Receives current file content on stdin (empty if file doesn't exist).
+# Generates a new ed25519 key on first run; passes existing key through unchanged on subsequent runs.
+set -euo pipefail
+
+CURRENT="$(cat)"
+PUB_KEY="${HOME}/.ssh/id_ed25519.pub"
+
+if [[ -n "${CURRENT}" ]]; then
+  printf '%s\n' "${CURRENT}"
+  if [[ ! -f "${PUB_KEY}" ]]; then
+    TMPFILE="$(mktemp)"
+    trap 'rm -f "${TMPFILE}"' EXIT
+    printf '%s\n' "${CURRENT}" > "${TMPFILE}"
+    ssh-keygen -y -f "${TMPFILE}" > "${PUB_KEY}"
+    chmod 644 "${PUB_KEY}"
+  fi
+else
+  TMPDIR="$(mktemp -d)"
+  trap 'rm -rf "${TMPDIR}"' EXIT
+  ssh-keygen -t ed25519 -C "$(uname -s):$(hostname)" -N "" -f "${TMPDIR}/id_ed25519" >/dev/null
+  cat "${TMPDIR}/id_ed25519"
+  cp "${TMPDIR}/id_ed25519.pub" "${PUB_KEY}"
+  chmod 644 "${PUB_KEY}"
+fi
