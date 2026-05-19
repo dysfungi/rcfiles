@@ -11,6 +11,7 @@ experimental = true
 trusted_config_paths = [
   "/mnt/c/Users/{{ .chezmoi.username }}/.config/mise",
   "/mnt/c/Users/{{ .chezmoi.username }}/.local/share/chezmoi/.mise.toml",
+  {{ joinPath .chezmoi.homeDir ".local/share/chezmoi/.mise.toml" | quote }},
 ]
 {{- end }}
 
