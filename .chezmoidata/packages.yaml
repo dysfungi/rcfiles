@@ -143,7 +143,7 @@ my:
     vultr:         { brew: vultr }
     watchexec:     { brew: watchexec, pacman: watchexec }
     wget:          { brew: wget, pacman: wget }
-    xonsh:         { brew: xonsh, mise: "pip:xonsh" }
+    xonsh:         { brew: xonsh, mise: "pipx:xonsh" }
     xz:            { brew: xz, pacman: xz }
     yadm:          { brew: yadm }
     yarn:          { brew: yarn, pacman: yarn }

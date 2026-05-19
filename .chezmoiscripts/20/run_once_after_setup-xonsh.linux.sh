@@ -19,7 +19,8 @@ if ! grep -qF "$XONSH_EXECUTABLE" /etc/shells; then
   echo "$XONSH_EXECUTABLE" | sudo tee -a /etc/shells
 fi
 if [ "$XONSH_EXECUTABLE" != "${SHELL:-}" ]; then
-  chsh -s "$XONSH_EXECUTABLE"
+  # chsh requires PAM auth which is not wired in WSL; usermod is sudo-friendly
+  sudo usermod -s "$XONSH_EXECUTABLE" "$USER"
 fi
 
 echo >&2 "INFO: Ending $0"
