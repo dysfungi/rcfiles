@@ -189,7 +189,8 @@ my:
 
     claude-code:   { mise: "npm:@anthropic-ai/claude-code" }
     jq:            { mise: jq }
-    node:          { mise: node, version: lts }
+    node:          { mise: node, pacman: nodejs, version: lts }
+    npm:           { pacman: npm }
     pre-commit:    { mise: pre-commit, skip: [windows] }
     python:        { mise: python, version: "3.13" }
     ruff-dev:      { mise: ruff }
