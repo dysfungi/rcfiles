@@ -30,218 +30,237 @@
 
 my:
   packages:
-
     ####################
     # CORE CLI & TOOLS #
     ####################
 
-    1password-cli: { cask: "1password/tap/1password-cli", tap: "1password/tap", pacman: 1password-cli, aur: true, winget: AgileBits.1Password.CLI, bootstrap: true }
-    ack:           { brew: ack }
-    archey4:       { brew: archey4 }
-    ascii:         { brew: ascii }
-    asdf:          { brew: asdf }
-    bash:          { brew: bash, pacman: bash }
-    cdargs:        { brew: cdargs }
-    cheat:         { brew: cheat }
-    chezmoi:       { brew: chezmoi, pacman: chezmoi, winget: twpayne.chezmoi, bootstrap: true }
+    1password-cli:
+      {
+        cask: "1password/tap/1password-cli",
+        tap: "1password/tap",
+        pacman: 1password-cli,
+        aur: true,
+        winget: AgileBits.1Password.CLI,
+        bootstrap: true,
+      }
+    ack: { brew: ack }
+    archey4: { brew: archey4 }
+    ascii: { brew: ascii }
+    asdf: { brew: asdf }
+    bash: { brew: bash, pacman: bash }
+    cdargs: { brew: cdargs }
+    cheat: { brew: cheat }
+    chezmoi:
+      {
+        brew: chezmoi,
+        pacman: chezmoi,
+        winget: twpayne.chezmoi,
+        bootstrap: true,
+      }
     cloudflare-cli4: { brew: cloudflare-cli4 }
-    coconut:       { brew: coconut }
-    colordiff:     { brew: colordiff, pacman: colordiff }
-    coreutils:     { brew: coreutils }
-    cowsay:        { brew: cowsay }
-    csvq:          { brew: csvq }
-    curl:          { brew: curl, pacman: curl, bootstrap: true }
-    dbmate:        { brew: dbmate }
-    dict:          { brew: dict }
-    direnv:        { brew: direnv, pacman: direnv }
-    fabric-ai:     { brew: fabric-ai }
-    fd:            { brew: fd, pacman: fd, winget: sharkdp.fd }
-    fortune:       { brew: fortune }
-    fzf:           { brew: fzf, pacman: fzf }
-    gawk:          { brew: gawk }
-    gdrive:        { brew: gdrive }
-    gemini-cli:    { brew: gemini-cli }
-    gettext:       { brew: gettext }
-    git:           { brew: git, pacman: git, winget: Git.Git, bootstrap: true }
-    github-cli:    { brew: gh, pacman: github-cli, winget: GitHub.cli }
-    gnu-sed:       { brew: gnu-sed }
-    gnu-tar:       { brew: gnu-tar }
-    go:            { brew: go, pacman: go }
-    gopls:         { brew: gopls, pacman: gopls }
-    gpg:           { brew: gpg, pacman: gnupg }
-    grc:           { brew: grc }
-    grep:          { brew: grep }
-    helm:          { brew: helm, pacman: helm }
-    httpie:        { brew: httpie, pacman: httpie }
-    jp2a:          { brew: jp2a }
-    just:          { brew: just, pacman: just }
-    k9s:           { brew: k9s, pacman: k9s }
-    keyring:       { brew: keyring }
+    coconut: { brew: coconut }
+    colordiff: { brew: colordiff, pacman: colordiff }
+    coreutils: { brew: coreutils }
+    cowsay: { brew: cowsay }
+    csvq: { brew: csvq }
+    curl: { brew: curl, pacman: curl, bootstrap: true }
+    dbmate: { brew: dbmate }
+    dict: { brew: dict }
+    direnv: { brew: direnv, pacman: direnv }
+    fabric-ai: { brew: fabric-ai }
+    fd: { brew: fd, pacman: fd, winget: sharkdp.fd }
+    fortune: { brew: fortune }
+    fzf: { brew: fzf, pacman: fzf }
+    gawk: { brew: gawk }
+    gdrive: { brew: gdrive }
+    gemini-cli: { brew: gemini-cli }
+    gettext: { brew: gettext }
+    git: { brew: git, pacman: git, winget: Git.Git, bootstrap: true }
+    github-cli: { brew: gh, pacman: github-cli, winget: GitHub.cli }
+    gnu-sed: { brew: gnu-sed }
+    gnu-tar: { brew: gnu-tar }
+    go: { brew: go, pacman: go }
+    gopls: { brew: gopls, pacman: gopls }
+    gpg: { brew: gpg, pacman: gnupg }
+    grc: { brew: grc }
+    grep: { brew: grep }
+    helm: { brew: helm, pacman: helm }
+    httpie: { brew: httpie, pacman: httpie }
+    jp2a: { brew: jp2a }
+    just: { brew: just, pacman: just }
+    k9s: { brew: k9s, pacman: k9s }
+    keyring: { brew: keyring }
     kubernetes-cli: { brew: kubernetes-cli, pacman: kubectl }
-    lazydocker:    { brew: lazydocker, pacman: lazydocker }
-    lazygit:       { brew: lazygit, pacman: lazygit }
-    libcaca:       { brew: libcaca }
-    libxmlsec1:    { brew: libxmlsec1 }
-    llvm:          { winget: LLVM.LLVM }
-    logrotate:     { brew: logrotate, pacman: logrotate }
-    make:          { brew: make, pacman: make }
+    lazydocker: { brew: lazydocker, pacman: lazydocker }
+    lazygit: { brew: lazygit, pacman: lazygit }
+    libcaca: { brew: libcaca }
+    libxmlsec1: { brew: libxmlsec1 }
+    llvm: { winget: LLVM.LLVM }
+    logrotate: { brew: logrotate, pacman: logrotate }
+    make: { brew: make, pacman: make }
     markdownlint-cli: { brew: markdownlint-cli }
-    mdq:           { brew: mdq }
-    micromamba:     { winget: Mamba.Micromamba }
-    mise:          { brew: mise, pacman: mise, winget: jdx.mise }
-    moreutils:     { brew: moreutils, pacman: moreutils }
-    mypy:          { brew: mypy, pacman: mypy }
-    neovim:        { brew: neovim, pacman: neovim, winget: Neovim.Neovim }
+    mdq: { brew: mdq }
+    micromamba: { winget: Mamba.Micromamba }
+    mise: { brew: mise, pacman: mise, winget: jdx.mise }
+    moreutils: { brew: moreutils, pacman: moreutils }
+    mypy: { brew: mypy, pacman: mypy }
+    neovim: { brew: neovim, pacman: neovim, winget: Neovim.Neovim }
     neovim-remote: { brew: neovim-remote }
-    nmap:          { brew: nmap, pacman: nmap }
-    ollama:        { brew: ollama, brew_options: "restart_service: :changed" }
-    opam:          { brew: opam }
-    openssh:       { brew: openssh, pacman: openssh, bootstrap: true }
-    openssl:       { brew: openssl, pacman: openssl }
-    opentofu:      { brew: opentofu, pacman: opentofu }
-    pandoc:        { brew: pandoc }
-    poetry:        { brew: poetry }
-    prettier:      { brew: prettier }
-    prettierd:     { brew: prettierd }
-    proselint:     { brew: proselint }
-    python3:       { brew: python3, pacman: python }
-    readline:      { brew: readline }
-    ripgrep:       { brew: ripgrep, pacman: ripgrep, winget: BurntSushi.ripgrep.MSVC }
-    rsync:         { brew: rsync, pacman: rsync }
-    ruff:          { brew: ruff, pacman: ruff }
-    ruff-lsp:      { brew: ruff-lsp }
-    rust:          { brew: rust }                # pacman omitted: conflicts with rustup (both provide cargo)
+    nmap: { brew: nmap, pacman: nmap }
+    ollama: { brew: ollama, brew_options: "restart_service: :changed" }
+    opam: { brew: opam }
+    openssh: { brew: openssh, pacman: openssh, bootstrap: true }
+    openssl: { brew: openssl, pacman: openssl }
+    opentofu: { brew: opentofu, pacman: opentofu }
+    pandoc: { brew: pandoc }
+    poetry: { brew: poetry }
+    prettier: { brew: prettier }
+    prettierd: { brew: prettierd }
+    proselint: { brew: proselint }
+    python3: { brew: python3, pacman: python }
+    readline: { brew: readline }
+    ripgrep: { brew: ripgrep, pacman: ripgrep, winget: BurntSushi.ripgrep.MSVC }
+    rsync: { brew: rsync, pacman: rsync }
+    ruff: { brew: ruff, pacman: ruff }
+    ruff-lsp: { brew: ruff-lsp }
+    rust: { brew: rust } # pacman omitted: conflicts with rustup (both provide cargo)
     rust-analyzer: { brew: rust-analyzer, pacman: rust-analyzer }
     rust-parallel: { brew: rust-parallel }
-    rustup:        { brew: rustup, pacman: rustup }
-    s3cmd:         { brew: s3cmd }
-    shellcheck:    { brew: shellcheck, pacman: shellcheck }
-    shfmt:         { brew: shfmt, pacman: shfmt }
-    signal-cli:    { brew: signal-cli }
-    sl:            { brew: sl }
+    rustup: { brew: rustup, pacman: rustup }
+    s3cmd: { brew: s3cmd }
+    shellcheck: { brew: shellcheck, pacman: shellcheck }
+    shfmt: { brew: shfmt, pacman: shfmt }
+    signal-cli: { brew: signal-cli }
+    sl: { brew: sl }
     source-highlight: { brew: source-highlight }
     spaceman-diff: { brew: spaceman-diff }
-    spark:         { brew: spark }
-    squid:         { brew: squid }
-    sqlite:        { brew: sqlite, pacman: sqlite }
-    sqlite3:       { brew: sqlite3 }
-    stylua:        { brew: stylua, pacman: stylua }
-    tcl-tk:        { brew: tcl-tk }
-    telnet:        { brew: telnet }
-    terraform-ls:  { brew: terraform-ls }
-    tflint:        { brew: tflint }
-    tfupdate:      { brew: tfupdate }
+    spark: { brew: spark }
+    squid: { brew: squid }
+    sqlite: { brew: sqlite, pacman: sqlite }
+    sqlite3: { brew: sqlite3 }
+    stylua: { brew: stylua, pacman: stylua }
+    tcl-tk: { brew: tcl-tk }
+    telnet: { brew: telnet }
+    terraform-ls: { brew: terraform-ls }
+    tflint: { brew: tflint }
+    tfupdate: { brew: tfupdate }
     the_silver_searcher: { brew: the_silver_searcher }
-    tmux:          { brew: tmux, pacman: tmux, winget: arndawg.tmux-windows, bootstrap: true }
-    todoist-cli:   { brew: todoist-cli }
-    tree:          { brew: tree, pacman: tree }
+    tmux:
+      {
+        brew: tmux,
+        pacman: tmux,
+        winget: arndawg.tmux-windows,
+        bootstrap: true,
+      }
+    todoist-cli: { brew: todoist-cli }
+    tree: { brew: tree, pacman: tree }
     tree-sitter-cli: { brew: tree-sitter-cli, pacman: tree-sitter-cli }
-    typescript:    { brew: typescript }
+    typescript: { brew: typescript }
     typescript-language-server: { brew: typescript-language-server }
-    uv:            { brew: uv, pacman: uv }
-    vint:          { brew: vint }
-    vultr:         { brew: vultr }
-    watchexec:     { brew: watchexec, pacman: watchexec }
-    wget:          { brew: wget, pacman: wget }
-    xonsh:         { brew: xonsh, mise: "pipx:xonsh" }
-    xz:            { brew: xz, pacman: xz }
-    yadm:          { brew: yadm }
-    yarn:          { brew: yarn, pacman: yarn }
-    youtube-dl:    { brew: youtube-dl }
-    yq:            { brew: yq }
-    zlib:          { brew: zlib }
-    zsh:           { brew: zsh, pacman: zsh }
+    uv: { brew: uv, pacman: uv }
+    vint: { brew: vint }
+    vultr: { brew: vultr }
+    watchexec: { brew: watchexec, pacman: watchexec }
+    wget: { brew: wget, pacman: wget }
+    xonsh: { brew: xonsh, mise: "pipx:xonsh" }
+    xz: { brew: xz, pacman: xz }
+    yadm: { brew: yadm }
+    yarn: { brew: yarn, pacman: yarn }
+    youtube-dl: { brew: youtube-dl }
+    yq: { brew: yq }
+    zlib: { brew: zlib }
+    zsh: { brew: zsh, pacman: zsh }
     zsh-completions: { brew: zsh-completions }
 
     ######################
     # GUI APPLICATIONS   #
     ######################
 
-    1password:     { cask: "1password", winget: AgileBits.1Password, bootstrap: true }
-    amethyst:      { cask: amethyst }
-    codex:         { cask: codex, winget: OpenAI.Codex }
-    discord:       { cask: discord }
+    1password:
+      { cask: "1password", winget: AgileBits.1Password, bootstrap: true }
+    amethyst: { cask: amethyst }
+    codex: { cask: codex, winget: OpenAI.Codex }
+    discord: { cask: discord }
     docker-desktop: { cask: docker-desktop }
-    dotnet-sdk:    { cask: dotnet-sdk }
-    dropbox:       { cask: dropbox }
-    firefox:       { cask: firefox }
+    dotnet-sdk: { cask: dotnet-sdk }
+    dropbox: { cask: dropbox }
+    firefox: { cask: firefox }
     font-andale-mono: { cask: font-andale-mono }
     font-fira-code: { cask: font-fira-code }
     font-inconsolata: { cask: font-inconsolata }
     font-monofur-nerd-font: { cask: font-monofur-nerd-font }
     font-profontx: { cask: font-profontx }
     git-credential-manager: { cask: git-credential-manager }
-    hammerspoon:   { cask: hammerspoon }
+    hammerspoon: { cask: hammerspoon }
     karabiner-elements: { cask: karabiner-elements }
     league-of-legends: { cask: league-of-legends }
-    logseq:        { cask: logseq }
-    notunes:       { cask: notunes }
-    parsec:        { cask: parsec, winget: Parsec.Parsec }
-    signal:        { cask: signal }
-    steam:         { cask: steam }
-    todoist-app:   { cask: todoist-app }
-    vlc:           { cask: vlc }
-    wezterm:       { cask: wezterm, winget: wez.wezterm }
+    logseq: { cask: logseq }
+    notunes: { cask: notunes }
+    parsec: { cask: parsec, winget: Parsec.Parsec }
+    signal: { cask: signal }
+    steam: { cask: steam }
+    todoist-app: { cask: todoist-app }
+    vlc: { cask: vlc }
+    wezterm: { cask: wezterm, winget: wez.wezterm }
 
     #####################
     # DEVELOPMENT TOOLS #
     #####################
 
-    claude-code:   { mise: "npm:@anthropic-ai/claude-code" }
-    jq:            { mise: jq }
-    node:          { mise: node, pacman: nodejs, version: lts }
-    npm:           { pacman: npm }
-    pre-commit:    { mise: pre-commit, skip: [windows] }
-    python:        { mise: python, version: "3.13" }
-    ruff-dev:      { mise: ruff }
-    uv-dev:        { mise: uv }
+    claude-code: { mise: "npm:@anthropic-ai/claude-code" }
+    jq: { mise: jq }
+    node: { mise: node, pacman: nodejs, version: lts }
+    npm: { pacman: npm }
+    pre-commit: { mise: pre-commit, skip: [windows] }
+    python: { mise: python, version: "3.13" }
+    ruff-dev: { mise: ruff }
+    uv-dev: { mise: uv }
 
     ##################
     # APP PACKAGES   #
     ##################
 
-    bandit:        { pip: bandit }
-    bottle:        { pip: bottle }
-    cachetools:    { pip: cachetools }
-    click:         { pip: click }
-    coconut-pip:   { pip: coconut }
-    doit:          { pip: doit }
-    fastapi:       { pip: fastapi }
-    httpx:         { pip: httpx }
-    ipython:       { pip: ipython }
-    mypy-pip:      { pip: mypy }
+    bandit: { pip: bandit }
+    bottle: { pip: bottle }
+    cachetools: { pip: cachetools }
+    click: { pip: click }
+    coconut-pip: { pip: coconut }
+    doit: { pip: doit }
+    fastapi: { pip: fastapi }
+    httpx: { pip: httpx }
+    ipython: { pip: ipython }
+    mypy-pip: { pip: mypy }
     neovim-remote-pip: { pip: neovim-remote }
-    pdbpp:         { pip: pdbpp }
-    pinboard:      { pip: pinboard }
-    pydantic:      { pip: pydantic }
+    pdbpp: { pip: pdbpp }
+    pinboard: { pip: pinboard }
+    pydantic: { pip: pydantic }
     pydantic-settings: { pip: pydantic-settings }
-    pynvim:        { pip: pynvim }
-    pytest:        { pip: pytest }
-    requests:      { pip: requests }
-    tenacity:      { pip: tenacity }
+    pynvim: { pip: pynvim }
+    pytest: { pip: pytest }
+    requests: { pip: requests }
+    tenacity: { pip: tenacity }
     xontrib-1password: { pip: xontrib-1password }
     xontrib-dracula: { pip: xontrib-dracula }
     xontrib-homebrew: { pip: xontrib-homebrew }
-    xontrib-sh:    { pip: xontrib-sh }
+    xontrib-sh: { pip: xontrib-sh }
     xontrib-term-integrations: { pip: xontrib-term-integrations }
 
 riot:
   packages:
-
     ####################
     # CORE CLI & TOOLS #
     ####################
 
-    awscli:        { brew: awscli }
+    awscli: { brew: awscli }
     golangci-lint: { brew: golangci-lint }
-    graphqurl:     { brew: graphqurl }
-    groovy:        { brew: groovy }
-    openjdk:       { brew: openjdk }
-    pulumi:        { brew: pulumi }
-    sops:          { brew: sops }
-    terraform:     { brew: "hashicorp/tap/terraform", tap: "hashicorp/tap" }
+    graphqurl: { brew: graphqurl }
+    groovy: { brew: groovy }
+    openjdk: { brew: openjdk }
+    pulumi: { brew: pulumi }
+    sops: { brew: sops }
+    terraform: { brew: "hashicorp/tap/terraform", tap: "hashicorp/tap" }
     terraform-docs: { brew: terraform-docs }
-    vault:         { brew: "hashicorp/tap/vault", tap: "hashicorp/tap" }
+    vault: { brew: "hashicorp/tap/vault", tap: "hashicorp/tap" }
 
     ######################
     # GUI APPLICATIONS   #
@@ -249,18 +268,18 @@ riot:
 
     google-chrome: { cask: google-chrome }
     keeper-password-manager: { cask: keeper-password-manager }
-    p4:            { cask: p4 }
-    p4v:           { cask: p4v }
-    slack:         { cask: slack }
-    vscodium:      { cask: vscodium }
-    windows-app:   { cask: windows-app }
-    zoom:          { cask: zoom }
+    p4: { cask: p4 }
+    p4v: { cask: p4v }
+    slack: { cask: slack }
+    vscodium: { cask: vscodium }
+    windows-app: { cask: windows-app }
+    zoom: { cask: zoom }
 
     #####################
     # DEVELOPMENT TOOLS #
     #####################
 
-    gh:            { mise: gh }
+    gh: { mise: gh }
 
     # https://gh.riotgames.com/gkisel/mise-plugin-riot/tree/main?tab=readme-ov-file#linux-ssl-certificate-setup
     # Riot's internal services (eg, keyconjurer) use a CA that is not in the default Linux trust store.
@@ -274,4 +293,4 @@ riot:
     # APP PACKAGES   #
     ##################
 
-    datadog:       { pip: datadog }
+    datadog: { pip: datadog }
