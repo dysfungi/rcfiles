@@ -41,6 +41,26 @@
 - If a repo-managed behavior is intentionally removed in a materially disruptive way and you want semantic emphasis, prefer `chore(...)!` with a `BREAKING CHANGE:` note rather than reclassifying it as `feat`.
 - Let the scope name the subsystem being managed (eg, `homebrew`, `git`, `zsh`) while the type continues to describe the repo-maintenance intent.
 
+## todo.txt
+
+Maintain `todo.txt` and `done.txt` at the repo root in [todo.txt format](https://github.com/todotxt/todo.txt-cli/wiki/User-Documentation).
+Both files are ignored by chezmoi (never deployed). Keep them in sync with active agent plans and task lists.
+
+**Prioritization** — use todo.txt priority markers:
+
+| Priority | Meaning | Examples |
+|----------|---------|---------|
+| `(A)` | Blocking — broken repo behavior | chezmoi apply failures, broken templates |
+| `(B)` | Important — gaps or deferred fixes | missing platform support, known workarounds |
+| `(C)` | Maintenance — refactors, cleanup, tech debt | scattered PATH exports, dead code |
+| _(none)_ | Nice-to-have — exploratory, low urgency | new tooling ideas |
+
+**Sync rules:**
+
+- When adding a task to the session task tracker (eg, TaskCreate), add a corresponding `todo.txt` entry if the work is durable/deferred (not completed this session).
+- When completing a deferred item from `todo.txt` during a session, move it to `done.txt` with an `x YYYY-MM-DD` prefix (the todo.txt CLI archive convention). Do not delete completed tasks.
+- When a new plan is written, check `todo.txt` for related existing entries and reference or close them.
+
 ## Also See
 
 - [CLAUDE.md](./CLAUDE.md) — bootstrapping instructions for new machines.

@@ -1,0 +1,1 @@
+2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
