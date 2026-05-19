@@ -1,5 +1,6 @@
 [data]
 name = "Derek M Frank"
+githubUsername = "dysfungi"
 
 {{ $username := .chezmoi.homeDir | base -}}
 {{ $wslDistro := "archlinux" -}}
@@ -37,9 +38,13 @@ isWorkMachine = {{ $isWorkMachine }}
 isRiotMachine = {{ $isRiotMachine }}
 
 {{ $myGithubToken := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
+{{ $riotGithubToken := "" }}
+{{- if $isRiotMachine }}
+{{ $riotGithubToken = onepasswordRead "op://Riot/GitHub - Personal Access Token/password" }}
+{{- end }}
 githubToken = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
-riotGithubToken = {{ onepasswordRead "op://Riot/GitHub - Personal Access Token/password" | quote }}
+riotGithubToken = {{ $riotGithubToken | quote }}
 {{- end }}
 
 {{ $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
@@ -89,3 +94,6 @@ token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
+{{- if $isRiotMachine }}
+MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
+{{- end }}
