@@ -10,7 +10,7 @@ if ! wsl.exe -d archlinux -- command -v chezmoi >/dev/null 2>&1; then
 fi
 
 export OP_SERVICE_ACCOUNT_TOKEN={{ .opServiceAccountToken | quote }}
-export GITHUB_TOKEN={{ .riotGithubToken | quote }}
+export GITHUB_TOKEN={{ .githubToken | quote }}
 export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:GITHUB_TOKEN"
 
 if wsl.exe -d archlinux -- test -d ~/.local/share/chezmoi; then
