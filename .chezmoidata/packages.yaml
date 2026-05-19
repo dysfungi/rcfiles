@@ -35,7 +35,7 @@ my:
     # CORE CLI & TOOLS #
     ####################
 
-    1password-cli: { cask: "1password/tap/1password-cli", tap: "1password/tap", pacman: 1password-cli, winget: AgileBits.1Password.CLI, bootstrap: true }
+    1password-cli: { cask: "1password/tap/1password-cli", tap: "1password/tap", pacman: 1password-cli, aur: true, winget: AgileBits.1Password.CLI, bootstrap: true }
     ack:           { brew: ack }
     archey4:       { brew: archey4 }
     ascii:         { brew: ascii }

@@ -16,7 +16,7 @@ export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:GITHUB_TOKEN"
 if wsl.exe -d archlinux -- bash -c 'test -d ~/.local/share/chezmoi'; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
   wsl.exe -d archlinux -- bash -c '
-    git -C ~/.local/share/chezmoi pull --ff-only \
+    git -C ~/.local/share/chezmoi -c credential.helper="" pull --ff-only \
       "https://x-token:$GITHUB_TOKEN@github.com/dysfungi/rcfiles.git" main
     printf "[onepassword]\nmode = \"service\"\n" > /tmp/chezmoi-bootstrap.toml
     chezmoi init --apply -c /tmp/chezmoi-bootstrap.toml \
