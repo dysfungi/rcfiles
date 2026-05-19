@@ -8,7 +8,10 @@ min_version = "2024.9.5"
 
 experimental = true
 {{- if and .isLinux (.isWSL | default false) }}
-trusted_config_paths = ["/mnt/c/Users/{{ .chezmoi.username }}/.config/mise"]
+trusted_config_paths = [
+  "/mnt/c/Users/{{ .chezmoi.username }}/.config/mise",
+  "/mnt/c/Users/{{ .chezmoi.username }}/.local/share/chezmoi/.mise.toml",
+]
 {{- end }}
 
 [tools]
