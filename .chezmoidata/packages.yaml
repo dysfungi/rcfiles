@@ -93,6 +93,7 @@ my:
     kubernetes-cli: { brew: kubernetes-cli, pacman: kubectl }
     lazydocker: { brew: lazydocker, pacman: lazydocker }
     lazygit: { brew: lazygit, pacman: lazygit }
+    less: { brew: less, pacman: less }
     libcaca: { brew: libcaca }
     libxmlsec1: { brew: libxmlsec1 }
     llvm: { winget: LLVM.LLVM }
