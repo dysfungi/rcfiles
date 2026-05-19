@@ -1,0 +1,10 @@
+github.com:
+  oauth_token: {{ .githubToken }}
+  git_protocol: https
+  user: {{ .githubUsername }}
+{{- if .isRiotMachine }}
+gh.riotgames.com:
+  oauth_token: {{ .riotGithubToken }}
+  git_protocol: https
+  user: {{ .username }}
+{{- end }}
