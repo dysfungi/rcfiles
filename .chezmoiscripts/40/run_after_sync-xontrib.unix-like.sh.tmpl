@@ -4,7 +4,7 @@ set -euo pipefail
 echo >&2 "INFO: Starting $0"
 
 if ! command -v xonsh >/dev/null && ! [ -f "$HOME/.local/xonsh-env/bin/xonsh" ]; then
-  echo >&2 "WARNING: Could not find xonsh for xpip"
+  echo >&2 "WARNING: Could not find xonsh for xontrib sync"
   exit 0
 fi
 
@@ -12,8 +12,7 @@ userName="$(whoami)"
 hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
-bakFile="${bakDir}/xpip-freeze.${bakSuffix}"
-reqFile="${HOME}/.default-python-packages"
+bakFile="${bakDir}/xontrib-freeze.${bakSuffix}"
 export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
 export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
@@ -42,15 +41,27 @@ backup() {
   ${XONSH_EXECUTABLE} --no-rc -c "import sys; \$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
-    git commit --message "chore(backups): Freeze xpip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+    git commit --message "chore(backups): Freeze xontrib packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }
 
 mkdir -p "${bakDir}"
 
+xontribs=(
+{{ range $name, $pkg := .my.packages -}}
+{{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
+  {{ $pkg.xontrib }}
+{{ end -}}
+{{ if .isRiotMachine -}}
+{{ range $name, $pkg := .riot.packages -}}
+{{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
+  {{ $pkg.xontrib }}
+{{ end -}}
+{{ end -}}
+)
+
 backup before install
-# https://xon.sh/customization.html#set-xonsh-as-my-default-shell
-${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
+${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --upgrade ${xontribs[@]}"
 backup after install
 
 echo >&2 "INFO: Ending $0"
