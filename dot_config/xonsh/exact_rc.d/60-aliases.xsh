@@ -173,6 +173,11 @@ def __rc_interactive_aliases_chezmoi(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_ai(aliases):
+    import shutil
+
+    if not shutil.which("fabric-ai"):
+        return
+
     aliases["ai"] = aliases["fabric"] = "fabric-ai"
 
     for pattern in $(fabric-ai --listpatterns).splitlines():

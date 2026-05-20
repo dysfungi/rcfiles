@@ -60,10 +60,10 @@ def __rc_paths_common():
 
 @rc(login=True)
 def __rc_paths_homebrew():
-    if !(xontrib load homebrew):  # https://github.com/eugenesvk/xontrib-homebrew
+    homebrew_prefix = p"/opt/homebrew"
+    if not (homebrew_prefix / "bin" / "brew").exists():
         return
 
-    homebrew_prefix = p"/opt/homebrew"
     _unique_path_prepend(homebrew_prefix / "sbin")
     _unique_path_prepend(homebrew_prefix / "bin")
     _unique_path_prepend(homebrew_prefix / "share" / "man", manpath=True)

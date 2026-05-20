@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # Register xonsh in /etc/shells and set as the default login shell.
-# Mirrors run_once_after_setup-xonsh.darwin.sh for Linux (mise pip:xonsh path).
+# Mirrors run_onchange_after_setup-xonsh.darwin.sh for Linux (mise pip:xonsh path).
 set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-if command -v xonsh >/dev/null 2>&1; then
+# Prefer the stable mise shim over the raw install path, which changes on every
+# Python version upgrade and leaves /etc/passwd pointing at a nonexistent binary.
+MISE_SHIM="$HOME/.local/share/mise/shims/xonsh"
+if [ -x "$MISE_SHIM" ]; then
+  XONSH_EXECUTABLE="$MISE_SHIM"
+elif command -v xonsh >/dev/null 2>&1; then
   XONSH_EXECUTABLE="$(which xonsh)"
 else
   echo >&2 "ERROR: xonsh not found in PATH. PATH=$PATH"

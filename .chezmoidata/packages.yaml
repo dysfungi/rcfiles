@@ -243,7 +243,6 @@ my:
     tenacity: { pip: tenacity }
     xontrib-1password: { pip: xontrib-1password }
     xontrib-dracula: { pip: xontrib-dracula }
-    xontrib-homebrew: { pip: xontrib-homebrew }
     xontrib-sh: { pip: xontrib-sh }
     xontrib-term-integrations: { pip: xontrib-term-integrations }
 
