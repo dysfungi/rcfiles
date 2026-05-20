@@ -97,7 +97,7 @@ args = [
 exclude = ["scripts"]
 
 [interpreters.sh]
-{{- if eq .chezmoi.os "windows" }}
+{{- if $isWindows }}
 command = "C:\\Program Files\\Git\\bin\\bash.exe"
 {{- end }}
 
