@@ -24,7 +24,7 @@ $packages = @(
 {{- end }}
     ""
 )
-$packages = $packages | Where-Object { $_ -ne "" }
+$packages = $packages | Where-Object { $_ -ne "" -and $_ -ne "twpayne.chezmoi" }
 
 foreach ($package in $packages) {
     Write-Host "Checking $package..."

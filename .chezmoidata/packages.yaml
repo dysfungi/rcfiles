@@ -164,7 +164,7 @@ my:
     vultr: { brew: vultr }
     watchexec: { brew: watchexec, pacman: watchexec }
     wget: { brew: wget, pacman: wget }
-    xonsh: { mamba: "xonsh[full]", python: "3.14" }
+    xonsh: { mamba: "xonsh[full]==0.22.8", python: "3.14" }
     xz: { brew: xz, pacman: xz }
     yadm: { brew: yadm }
     yarn: { brew: yarn, pacman: yarn }

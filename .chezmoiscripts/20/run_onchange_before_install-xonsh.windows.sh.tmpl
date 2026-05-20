@@ -11,9 +11,11 @@ export XONSH_VER='{{ (index .my.packages "xonsh").mamba }}'
 # We patch the script on-the-fly to handle Windows paths:
 # 1. python.exe is in the target dir root, not bin/
 # 2. xonsh.exe is in Scripts/, not bin/
+# 3. ln -sf so re-runs (eg, version upgrades) don't fail on existing symlinks
 curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh |
   sed 's|/bin/python|/python|g' |
   sed 's|/bin/xonsh|/Scripts/xonsh|g' |
+  sed 's|ln -s |ln -sf |g' |
   bash
 
 echo >&2 "INFO: Ending $0"
