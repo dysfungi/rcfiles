@@ -1,64 +1,36 @@
-[data]
-name = "Derek M Frank"
-githubUsername = "dysfungi"
-
 {{ $username := .chezmoi.homeDir | base -}}
-{{ $wslDistro := "archlinux" -}}
-{{ $defaultShell := "xonsh" -}}
-{{ $isMac := eq .chezmoi.os "darwin" -}}
-{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") -}}
-{{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
-{{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
-{{- $platformPaths := $isMac | ternary $pathsDarwin (list) -}}
-{{- $pathAdditions := concat $pathsHome $platformPaths -}}
-{{- $managedPaths  := concat $pathAdditions $pathsSystem | mustUniq -}}
 {{ if not (hasSuffix $username .chezmoi.username) -}}
   {{ fail (printf "username mismatch: homeDir base '%s' is not a suffix of chezmoi.username '%s'" $username .chezmoi.username) -}}
 {{ end -}}
-username = {{ $username | quote }}
-
-isBsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
-isDarwin = {{ eq .chezmoi.os "darwin" }}
-isLinux = {{ eq .chezmoi.os "linux" }}
-isMac = {{ eq .chezmoi.os "darwin" }}
-isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
-isWindows = {{ eq .chezmoi.os "windows" }}
-{{ if eq .chezmoi.os "linux" -}}
-linuxDistro = {{ .chezmoi.osRelease.id | quote }}
-isArchLinux = {{ eq .chezmoi.osRelease.id "arch" }}
-isWSL = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
-{{- else -}}
-linuxDistro = {{ .chezmoi.os | quote }}
-isArchLinux = false
-isWSL = false
-{{- end }}
-wslDistro = {{ $wslDistro | quote }}
-defaultShell = {{ $defaultShell | quote }}
-pathStr = "{{ $managedPaths | join ":" }}"
 
 {{ $isMyMachine := eq $username "dmf" -}}
-{{ $isWorkMachine := not $isMyMachine -}}
 {{ $isRiotMachine := eq $username "dfrank" -}}
-{{ $isWindows := eq .chezmoi.os "windows" -}}
-{{- $sep      := $isWindows | ternary ";" ":" -}}
-{{- $pathsEnv := env "PATH" | splitList $sep -}}
-{{- $allPaths := without (concat $pathAdditions $pathsEnv $pathsSystem) "" | mustUniq -}}
+{{ $isWorkMachine := not $isMyMachine -}}
 {{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
   {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
-email = {{ $isRiotMachine | ternary "dfrank@riotgames.com" "derek@frank.sh" | quote }}
-isMyMachine = {{ $isMyMachine }}
-isWorkMachine = {{ $isWorkMachine }}
-isRiotMachine = {{ $isRiotMachine }}
+
+{{ $defaultShell := "xonsh" -}}
+{{ $wslDistro := "archlinux" -}}
+
+{{ $isDarwin := eq .chezmoi.os "darwin" -}}
+{{ $isLinux := eq .chezmoi.os "linux" -}}
+{{ $isWindows := eq .chezmoi.os "windows" -}}
+
+{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") -}}
+{{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
+{{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
+{{- $platformPaths := $isDarwin | ternary $pathsDarwin (list) -}}
+{{- $pathAdditions := concat $pathsHome $platformPaths -}}
+{{- $managedPaths  := concat $pathAdditions $pathsSystem | mustUniq -}}
+{{- $sep      := $isWindows | ternary ";" ":" -}}
+{{- $pathsEnv := env "PATH" | splitList $sep -}}
+{{- $allPaths := without (concat $pathAdditions $pathsEnv $pathsSystem) "" | mustUniq -}}
 
 {{ $myGithubToken := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
 {{ $riotGithubToken := "" }}
 {{- if $isRiotMachine }}
 {{ $riotGithubToken = onepasswordRead "op://Riot/GitHub - Personal Access Token/password" }}
-{{- end }}
-githubToken = {{ $myGithubToken | quote }}
-{{- if $isRiotMachine }}
-riotGithubToken = {{ $riotGithubToken | quote }}
 {{- end }}
 
 {{ $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
@@ -70,6 +42,45 @@ riotGithubToken = {{ $riotGithubToken | quote }}
     {{ $opToken = promptString "1Password service account token" -}}
   {{ end -}}
 {{ end -}}
+
+[data]
+name = "Derek M Frank"
+githubUsername = "dysfungi"
+
+email = {{ $isRiotMachine | ternary "dfrank@riotgames.com" "derek@frank.sh" | quote }}
+isMyMachine = {{ $isMyMachine }}
+isWorkMachine = {{ $isWorkMachine }}
+isRiotMachine = {{ $isRiotMachine }}
+
+defaultShell = {{ $defaultShell | quote }}
+wslDistro = {{ $wslDistro | quote }}
+
+username = {{ $username | quote }}
+
+isBsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
+isDarwin = {{ $isDarwin }}
+isLinux = {{ $isLinux }}
+isMac = {{ $isDarwin }}
+isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
+isWindows = {{ $isWindows }}
+
+{{ if $isLinux -}}
+linuxDistro = {{ .chezmoi.osRelease.id | quote }}
+isArchLinux = {{ eq .chezmoi.osRelease.id "arch" }}
+isWSL = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
+{{- else -}}
+linuxDistro = {{ .chezmoi.os | quote }}
+isArchLinux = false
+isWSL = false
+{{- end }}
+
+pathStr = "{{ $managedPaths | join ":" }}"
+
+githubToken = {{ $myGithubToken | quote }}
+{{- if $isRiotMachine }}
+riotGithubToken = {{ $riotGithubToken | quote }}
+{{- end }}
+
 opServiceAccountToken = {{ $opToken | quote }}
 
 [cd]
@@ -84,27 +95,24 @@ args = [
 [diff]
 exclude = ["scripts"]
 
-[hooks.read-source-state.pre]
-{{- if eq .chezmoi.os "windows" }}
-command = "powershell"
-args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wslDistro | quote }}]
-{{- else if eq .chezmoi.os "darwin" }}
-command = ".local/share/chezmoi/.bootstrap.darwin.sh"
-{{- else if eq .chezmoi.os "linux" }}
-command = ".local/share/chezmoi/.bootstrap.linux.sh"
-args = [{{ .chezmoi.osRelease.id | quote }}]
-{{- end }}
-
-[onepassword]
-mode = "service"
-
 [interpreters.sh]
 {{- if eq .chezmoi.os "windows" }}
 command = "C:\\Program Files\\Git\\bin\\bash.exe"
 {{- end }}
 
-[github]
-token = {{ $myGithubToken | quote }}
+[hooks.read-source-state.pre]
+{{- if $isDarwin }}
+command = ".local/share/chezmoi/.bootstrap.darwin.sh"
+{{- else if $isLinux }}
+command = ".local/share/chezmoi/.bootstrap.linux.sh"
+args = [{{ .chezmoi.osRelease.id | quote }}]
+{{- else if $isWindows }}
+command = "powershell"
+args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wslDistro | quote }}]
+{{- end }}
+
+[onepassword]
+mode = "service"
 
 [scriptEnv]
 PATH = "{{ $allPaths | join $sep | replace "\\" "/" }}"

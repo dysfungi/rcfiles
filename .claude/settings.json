@@ -98,6 +98,7 @@
       "Read(//opt/homebrew/**)",
       "Read(//opt/homebrew/Cellar/tree-sitter/0.26.8/**)",
       "WebFetch(domain:archlinux.org)",
+      "WebFetch(domain:chezmoi.io)",
       "WebFetch(domain:gist.github.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:mise.jdx.dev)",
