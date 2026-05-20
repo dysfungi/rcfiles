@@ -99,6 +99,7 @@ my:
     llvm: { winget: LLVM.LLVM }
     logrotate: { brew: logrotate, pacman: logrotate }
     make: { brew: make, pacman: make }
+    man-db: { pacman: man-db }
     markdownlint-cli: { brew: markdownlint-cli }
     mdq: { brew: mdq }
     micromamba: { winget: Mamba.Micromamba }

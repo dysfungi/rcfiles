@@ -1,11 +1,20 @@
 # Bootstrap script for Windows. Requires Administrator for Developer Mode and WSL.
-# Exits gracefully when not elevated — chezmoi operations should not be blocked.
+# Exits silently when not elevated or when all bootstrap deps are already present.
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+if (-not $isAdmin) { exit 0 }
+
+$wslDistro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
+
+# Fast-path: skip if 1Password CLI, Git, and WSL distro are already installed
+$opOk  = (Get-Command op  -ErrorAction SilentlyContinue) -ne $null
+$gitOk = (Get-Command git -ErrorAction SilentlyContinue) -ne $null
+$ErrorActionPreference = "Continue"
+wsl -d $wslDistro -- true 2>$null | Out-Null
+$wslOk = $LASTEXITCODE -eq 0
+$ErrorActionPreference = "Stop"
+if ($opOk -and $gitOk -and $wslOk) { exit 0 }
+
 Write-Host "INFO: Starting $PSCommandPath"
-if (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
-    Write-Host "INFO: Not running as Administrator. Skipping bootstrap (run as Admin to provision)." -ForegroundColor Yellow
-    Write-Host "INFO: Ending $PSCommandPath"
-    exit 0
-}
 
 # 1. Enable Developer Mode (Registry)
 Write-Host "Enabling Developer Mode..."
@@ -49,7 +58,6 @@ foreach ($package in $packages) {
 }
 
 # 4. Install WSL with desired Linux distribution (no interactive launch; user setup handled by chezmoi)
-$wslDistro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
 Write-Host "Checking WSL $wslDistro distribution..."
 $ErrorActionPreference = "Continue"
 wsl -d $wslDistro -- true 2>$null

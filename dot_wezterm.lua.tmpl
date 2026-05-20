@@ -94,7 +94,7 @@ elseif isWindows then
   config.default_prog = {
     gitBin .. "/bash.exe",
     "-c",
-    "wsl.exe --cd ~ -- bash -c 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec bash -l; fi' || exec tmux new-session -A -s main",
+    "wsl.exe --cd ~ -- bash -lc 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec {{ .defaultShell }} -l; fi' || exec tmux new-session -A -s main",
   }
 
   config.set_environment_variables = {
@@ -108,8 +108,16 @@ elseif isWindows then
 
   config.launch_menu = {
     {
-      label = "WSL2 ({{ .wslDistro }})",
+      label = "WSL2 ({{ .wslDistro }}, {{ .defaultShell }})",
       args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~" },
+    },
+    {
+      label = "WSL2 ({{ .wslDistro }}, xonsh)",
+      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~", "--", "xonsh", "--login" },
+    },
+    {
+      label = "WSL2 ({{ .wslDistro }}, bash)",
+      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~", "--", "bash", "--login" },
     },
     {
       label = "Git Bash",

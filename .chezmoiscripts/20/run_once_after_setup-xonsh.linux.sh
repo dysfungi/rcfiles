@@ -7,12 +7,9 @@ echo >&2 "INFO: Starting $0"
 
 if command -v xonsh >/dev/null 2>&1; then
   XONSH_EXECUTABLE="$(which xonsh)"
-elif command -v mise >/dev/null 2>&1 && mise which xonsh >/dev/null 2>&1; then
-  XONSH_EXECUTABLE="$(mise which xonsh)"
 else
-  echo >&2 "WARNING: xonsh not found; skipping shell setup."
-  echo >&2 "INFO: Ending $0"
-  exit 0
+  echo >&2 "ERROR: xonsh not found in PATH. PATH=$PATH"
+  exit 1
 fi
 
 if ! grep -qF "$XONSH_EXECUTABLE" /etc/shells; then

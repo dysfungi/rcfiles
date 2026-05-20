@@ -4,6 +4,14 @@ githubUsername = "dysfungi"
 
 {{ $username := .chezmoi.homeDir | base -}}
 {{ $wslDistro := "archlinux" -}}
+{{ $defaultShell := "xonsh" -}}
+{{ $isMac := eq .chezmoi.os "darwin" -}}
+{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") -}}
+{{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
+{{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
+{{- $platformPaths := $isMac | ternary $pathsDarwin (list) -}}
+{{- $pathAdditions := concat $pathsHome $platformPaths -}}
+{{- $managedPaths  := concat $pathAdditions $pathsSystem | mustUniq -}}
 {{ if not (hasSuffix $username .chezmoi.username) -}}
   {{ fail (printf "username mismatch: homeDir base '%s' is not a suffix of chezmoi.username '%s'" $username .chezmoi.username) -}}
 {{ end -}}
@@ -25,11 +33,16 @@ isArchLinux = false
 isWSL = false
 {{- end }}
 wslDistro = {{ $wslDistro | quote }}
+defaultShell = {{ $defaultShell | quote }}
+pathStr = "{{ $managedPaths | join ":" }}"
 
 {{ $isMyMachine := eq $username "dmf" -}}
 {{ $isWorkMachine := not $isMyMachine -}}
 {{ $isRiotMachine := eq $username "dfrank" -}}
 {{ $isWindows := eq .chezmoi.os "windows" -}}
+{{- $sep      := $isWindows | ternary ";" ":" -}}
+{{- $pathsEnv := env "PATH" | splitList $sep -}}
+{{- $allPaths := without (concat $pathAdditions $pathsEnv $pathsSystem) "" | mustUniq -}}
 {{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
   {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
@@ -94,12 +107,7 @@ command = "C:\\Program Files\\Git\\bin\\bash.exe"
 token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
-{{- $isMac := eq .chezmoi.os "darwin" }}
-{{- $sep := $isWindows | ternary ";" ":" }}
-{{- $paths := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") ($isMac | ternary "/opt/homebrew/bin" "") }}
-{{- $paths = concat $paths (env "PATH" | splitList $sep) }}
-{{- $paths = concat $paths (list "/usr/local/bin" "/usr/bin" "/usr/sbin" "/bin" "/sbin") }}
-PATH = "{{ $paths | mustWithout "" | mustUniq | join $sep | replace "\\" "/" }}"
+PATH = "{{ $allPaths | join $sep | replace "\\" "/" }}"
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
