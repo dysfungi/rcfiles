@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Register xonsh in /etc/shells and set as the default login shell.
-# Mirrors run_onchange_after_setup-xonsh.darwin.sh for Linux (mise pip:xonsh path).
+# Mirrors run_onchange_after_setup-xonsh.darwin.sh for Linux (pacman xonsh at /usr/bin/xonsh).
 set -euo pipefail
 
 echo >&2 "INFO: Starting $0"

@@ -20,8 +20,9 @@ export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 HOMEBREW_XONSH="/opt/homebrew/bin/xonsh"
 USR_BIN_XONSH="/usr/bin/xonsh"
 
-if [[ "$SHELL" = */xonsh ]]; then
-  XONSH_EXECUTABLE="$SHELL"
+LOGIN_SHELL=$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)
+if [[ "$LOGIN_SHELL" = */xonsh ]] && [ -f "$LOGIN_SHELL" ]; then
+  XONSH_EXECUTABLE="$LOGIN_SHELL"
 elif [ -f "$HOMEBREW_XONSH" ]; then
   XONSH_EXECUTABLE="$HOMEBREW_XONSH"
 elif [ -f "$USR_BIN_XONSH" ]; then
