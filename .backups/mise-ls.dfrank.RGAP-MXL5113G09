@@ -7,7 +7,7 @@ pipx:doit                      0.37.0   ~/.config/mise/config.toml       latest
 pipx:ipython                   9.13.0   ~/.config/mise/config.toml       latest
 pipx:mypy                      2.1.0    ~/.config/mise/config.toml       latest
 pipx:neovim-remote             2.5.1    ~/.config/mise/config.toml       latest
-pipx:xonsh                     0.23.7   ~/.config/mise/config.toml       latest
+pipx:xonsh                     0.23.7
 pre-commit                     4.6.0    ~/.config/mise/config.toml       latest
 python                         3.13.13  ~/.config/mise/config.toml       3.13
 ruff                           0.15.13  ~/.config/mise/config.toml       latest
