@@ -257,11 +257,7 @@ def __rc_interactive_aliases_fun(aliases):
 
 @rc(interactive=True)
 def __rc_interactive_aliases_miscellaneous(aliases):
-    try:
-        import requests
-    except ImportError:
-        logger.error("requests library not found - skipping miscellaneous aliases")
-        return
+    import requests
 
     @aliases.register
     @aliases.return_command

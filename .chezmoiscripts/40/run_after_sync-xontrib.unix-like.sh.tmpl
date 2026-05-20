@@ -3,8 +3,9 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-if ! command -v xonsh >/dev/null && ! [ -f "$HOME/.local/xonsh-env/bin/xonsh" ]; then
-  echo >&2 "WARNING: Could not find xonsh for xontrib sync"
+MAMBA_PYTHON="$HOME/.local/xonsh-env/bin/python"
+if [ ! -f "$MAMBA_PYTHON" ]; then
+  echo >&2 "WARNING: Mamba xonsh Python not found at $MAMBA_PYTHON; skipping xontrib sync"
   exit 0
 fi
 
@@ -16,29 +17,11 @@ bakFile="${bakDir}/xontrib-freeze.${bakSuffix}"
 export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
 export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
-MAMBA_XONSH="$HOME/.local/xonsh-env/bin/xonsh"
-HOMEBREW_XONSH="/opt/homebrew/bin/xonsh"
-USR_BIN_XONSH="/usr/bin/xonsh"
-
-LOGIN_SHELL=$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)
-if [ -f "$MAMBA_XONSH" ]; then
-  XONSH_EXECUTABLE="$MAMBA_XONSH"
-elif [[ "$LOGIN_SHELL" = */xonsh ]] && [ -f "$LOGIN_SHELL" ]; then
-  XONSH_EXECUTABLE="$LOGIN_SHELL"
-elif [ -f "$HOMEBREW_XONSH" ]; then
-  XONSH_EXECUTABLE="$HOMEBREW_XONSH"
-elif [ -f "$USR_BIN_XONSH" ]; then
-  XONSH_EXECUTABLE="$USR_BIN_XONSH"
-else
-  echo >&2 "ERROR: xonsh not configured or installed at $HOMEBREW_XONSH or $USR_BIN_XONSH"
-  exit 1
-fi
-
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  ${XONSH_EXECUTABLE} --no-rc -c "import sys; \$UV_PYTHON=@(sys.executable) uv pip freeze > '${bakFile}'"
+  UV_PYTHON="${MAMBA_PYTHON}" uv pip freeze >"${bakFile}"
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Freeze xontrib packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
@@ -61,7 +44,7 @@ xontribs=(
 )
 
 backup before install
-${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --upgrade ${xontribs[@]}"
+UV_PYTHON="${MAMBA_PYTHON}" uv pip install --upgrade "${xontribs[@]}"
 backup after install
 
 echo >&2 "INFO: Ending $0"
