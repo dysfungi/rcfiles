@@ -36,6 +36,20 @@ $defs:
       - required: [npm]
       - required: [mamba]
       - required: [xontrib]
+    # Modifier keys require their parent package manager
+    dependentRequired:
+      aur: [pacman]
+      brew_options: [brew]
+      python: [mamba]
+      version: [mise]
+      skip: [mise]
+    # tap requires brew or cask; dependentRequired only supports AND so use if/then
+    if:
+      required: [tap]
+    then:
+      anyOf:
+        - required: [brew]
+        - required: [cask]
     properties:
       # Homebrew
       brew:
