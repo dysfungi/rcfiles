@@ -94,8 +94,12 @@ command = "C:\\Program Files\\Git\\bin\\bash.exe"
 token = {{ $myGithubToken | quote }}
 
 [scriptEnv]
-{{- $paths := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") (env "PATH") }}
-PATH = "{{ $paths | join ($isWindows | ternary ";" ":") | replace "\\" "/" }}"
+{{- $isMac := eq .chezmoi.os "darwin" }}
+{{- $sep := $isWindows | ternary ";" ":" }}
+{{- $paths := list (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/bin") ($isMac | ternary "/opt/homebrew/bin" "") }}
+{{- $paths = concat $paths (env "PATH" | splitList $sep) }}
+{{- $paths = concat $paths (list "/usr/local/bin" "/usr/bin" "/usr/sbin" "/bin" "/sbin") }}
+PATH = "{{ $paths | mustWithout "" | mustUniq | join $sep | replace "\\" "/" }}"
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
