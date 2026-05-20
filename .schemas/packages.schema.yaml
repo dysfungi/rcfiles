@@ -34,6 +34,8 @@ $defs:
       - required: [mise]
       - required: [pip]
       - required: [npm]
+      - required: [mamba]
+      - required: [xontrib]
     properties:
       # Homebrew
       brew:
@@ -75,4 +77,12 @@ $defs:
       pip:
         type: string
       npm:
+        type: string
+      xontrib:
+        type: string
+
+      # Mamba (isolated conda env, eg for xonsh)
+      mamba:
+        type: string
+      python:
         type: string

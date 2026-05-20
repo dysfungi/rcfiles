@@ -1,14 +1,22 @@
 # https://mise.jdx.dev/lang/python.html#default-python-packages
-# Generated from .chezmoidata/packages.yaml (pip entries)
+# Generated from .chezmoidata/packages.yaml (pip and xontrib entries)
 {{ range $name, $pkg := .my.packages -}}
 {{ if hasKey $pkg "pip" -}}
 {{ $pkg.pip }}
 {{ end -}}
+{{ end -}}
+{{ range $name, $pkg := .my.packages -}}
+{{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
+{{ $pkg.xontrib }}
 {{ end -}}
 {{ if .isRiotMachine -}}
 {{ range $name, $pkg := .riot.packages -}}
 {{ if hasKey $pkg "pip" -}}
 {{ $pkg.pip }}
 {{ end -}}
+{{ end -}}
+{{ range $name, $pkg := .riot.packages -}}
+{{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
+{{ $pkg.xontrib }}
 {{ end -}}
 {{ end -}}

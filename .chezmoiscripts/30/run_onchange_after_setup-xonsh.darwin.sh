@@ -3,12 +3,7 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-if ! command -v brew; then
-  echo >&2 "ERROR: Cannot install xonsh without brew in path"
-  exit 1
-fi
-
-XONSH_EXECUTABLE="$(brew --prefix)/bin/xonsh"
+XONSH_EXECUTABLE="$HOME/.local/xonsh-env/bin/xonsh"
 
 # https://xon.sh/customization.html#set-xonsh-as-my-default-shell
 if [ ! -f "$XONSH_EXECUTABLE" ]; then

@@ -164,7 +164,7 @@ my:
     vultr: { brew: vultr }
     watchexec: { brew: watchexec, pacman: watchexec }
     wget: { brew: wget, pacman: wget }
-    xonsh: { brew: xonsh, pacman: xonsh, mise: "pipx:xonsh" }
+    xonsh: { mamba: "xonsh[full]", python: "3.14" }
     xz: { brew: xz, pacman: xz }
     yadm: { brew: yadm }
     yarn: { brew: yarn, pacman: yarn }
@@ -239,10 +239,10 @@ my:
     pytest: { pip: pytest }
     requests: { pip: requests }
     tenacity: { pip: tenacity }
-    xontrib-1password: { pip: xontrib-1password }
-    xontrib-dracula: { pip: xontrib-dracula }
-    xontrib-sh: { pip: xontrib-sh }
-    xontrib-term-integrations: { pip: xontrib-term-integrations }
+    xontrib-1password: { xontrib: xontrib-1password }
+    xontrib-dracula: { xontrib: xontrib-dracula }
+    xontrib-sh: { xontrib: xontrib-sh }
+    xontrib-term-integrations: { xontrib: xontrib-term-integrations }
 
 riot:
   packages:

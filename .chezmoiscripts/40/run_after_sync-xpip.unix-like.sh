@@ -3,7 +3,7 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-if ! command -v xonsh >/dev/null; then
+if ! command -v xonsh >/dev/null && ! [ -f "$HOME/.local/xonsh-env/bin/xonsh" ]; then
   echo >&2 "WARNING: Could not find xonsh for xpip"
   exit 0
 fi
@@ -17,11 +17,14 @@ reqFile="${HOME}/.default-python-packages"
 export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
 export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
+MAMBA_XONSH="$HOME/.local/xonsh-env/bin/xonsh"
 HOMEBREW_XONSH="/opt/homebrew/bin/xonsh"
 USR_BIN_XONSH="/usr/bin/xonsh"
 
 LOGIN_SHELL=$(getent passwd "$USER" 2>/dev/null | cut -d: -f7)
-if [[ "$LOGIN_SHELL" = */xonsh ]] && [ -f "$LOGIN_SHELL" ]; then
+if [ -f "$MAMBA_XONSH" ]; then
+  XONSH_EXECUTABLE="$MAMBA_XONSH"
+elif [[ "$LOGIN_SHELL" = */xonsh ]] && [ -f "$LOGIN_SHELL" ]; then
   XONSH_EXECUTABLE="$LOGIN_SHELL"
 elif [ -f "$HOMEBREW_XONSH" ]; then
   XONSH_EXECUTABLE="$HOMEBREW_XONSH"
@@ -47,7 +50,7 @@ mkdir -p "${bakDir}"
 
 backup before install
 # https://xon.sh/customization.html#set-xonsh-as-my-default-shell
-${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --break-system-packages"
+${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade"
 backup after install
 
 echo >&2 "INFO: Ending $0"
