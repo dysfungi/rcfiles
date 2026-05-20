@@ -13,8 +13,8 @@ KEY_TITLE="$(uname -s):$(whoami)@$(hostname)"
 if GH_TOKEN="${MISE_GITHUB_TOKEN}" gh ssh-key list | grep -qF "${KEY_BODY}"; then
   echo >&2 "INFO: SSH public key already registered on GitHub; skipping."
 else
-  EXISTING_ID="$(GH_TOKEN="${MISE_GITHUB_TOKEN}" gh ssh-key list --json id,title |
-    jq -r --arg t "${KEY_TITLE}" '.[] | select(.title == $t) | .id')"
+  EXISTING_ID="$(GH_TOKEN="${MISE_GITHUB_TOKEN}" gh api /user/keys \
+    --jq ".[] | select(.title == \"${KEY_TITLE}\") | .id")"
   if [ -n "${EXISTING_ID}" ]; then
     GH_TOKEN="${MISE_GITHUB_TOKEN}" gh ssh-key delete "${EXISTING_ID}" --yes
     echo >&2 "INFO: Deleted stale SSH key '${KEY_TITLE}' (id: ${EXISTING_ID})."
