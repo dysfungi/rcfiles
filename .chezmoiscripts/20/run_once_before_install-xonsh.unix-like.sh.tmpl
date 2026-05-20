@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo >&2 "INFO: Starting $0"
+
+MAMBA_XONSH="$HOME/.local/xonsh-env/bin/xonsh"
+if [ -f "$MAMBA_XONSH" ]; then
+  echo >&2 "INFO: xonsh already installed at $MAMBA_XONSH; skipping."
+  exit 0
+fi
+
+export PYTHON_VER={{ (index .my.packages "xonsh").python }}
+export TARGET_DIR="$HOME/.local/xonsh-env"
+export XONSH_VER='{{ (index .my.packages "xonsh").mamba }}'
+
+# https://xon.sh/install_mamba.html
+curl -fsSL https://xon.sh/install/mamba-install-xonsh.sh | bash
+
+echo >&2 "INFO: Ending $0"
