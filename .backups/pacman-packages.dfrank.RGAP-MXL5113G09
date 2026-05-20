@@ -44,5 +44,6 @@ unzip
 uv
 watchexec
 wget
+xonsh
 yarn
 zsh
