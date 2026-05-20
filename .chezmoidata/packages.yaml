@@ -105,9 +105,9 @@ my:
     micromamba: { winget: Mamba.Micromamba }
     mise: { brew: mise, pacman: mise, winget: jdx.mise }
     moreutils: { brew: moreutils, pacman: moreutils }
-    mypy: { brew: mypy, pacman: mypy }
+    mypy: { mise: "pipx:mypy" }
     neovim: { brew: neovim, pacman: neovim, winget: Neovim.Neovim }
-    neovim-remote: { brew: neovim-remote }
+    neovim-remote: { brew: neovim-remote, mise: "pipx:neovim-remote" }
     nmap: { brew: nmap, pacman: nmap }
     ollama: { brew: ollama, brew_options: "restart_service: :changed" }
     opam: { brew: opam }
@@ -222,17 +222,15 @@ my:
     # APP PACKAGES   #
     ##################
 
-    bandit: { pip: bandit }
+    bandit: { mise: "pipx:bandit" }
     bottle: { pip: bottle }
     cachetools: { pip: cachetools }
     click: { pip: click }
     coconut-pip: { pip: coconut }
-    doit: { pip: doit }
+    doit: { mise: "pipx:doit" }
     fastapi: { pip: fastapi }
     httpx: { pip: httpx }
-    ipython: { pip: ipython }
-    mypy-pip: { pip: mypy }
-    neovim-remote-pip: { pip: neovim-remote }
+    ipython: { mise: "pipx:ipython" }
     pdbpp: { pip: pdbpp }
     pinboard: { pip: pinboard }
     pydantic: { pip: pydantic }
