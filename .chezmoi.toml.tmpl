@@ -20,12 +20,12 @@
 {{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/bin") (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/xonsh-env/xbin") -}}
 {{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
 {{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
-{{- $platformPaths := $isDarwin | ternary $pathsDarwin (list) -}}
-{{- $pathAdditions := concat $pathsHome $platformPaths -}}
+{{- $pathsPlatform := $isDarwin | ternary $pathsDarwin (list) -}}
+{{- $pathAdditions := concat $pathsHome $pathsPlatform -}}
 {{- $managedPaths  := concat $pathAdditions $pathsSystem | mustUniq -}}
-{{- $sep      := $isWindows | ternary ";" ":" -}}
-{{- $pathsEnv := env "PATH" | splitList $sep -}}
-{{- $allPaths := without (concat $pathAdditions $pathsEnv $pathsSystem) "" | mustUniq -}}
+{{- $pathsEnv := env "PATH" | splitList .chezmoi.pathListSeparator -}}
+{{- /* TODO(dfrank): Include $pathsEnv in $allPaths? Possibly really bad for WSL in Windows. */}}
+{{- $allPaths := without (concat $pathAdditions $pathsSystem) "" | mustUniq -}}
 
 {{ $myGithubToken := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
 {{ $riotGithubToken := "" }}
@@ -74,7 +74,8 @@ isArchLinux = false
 isWSL = false
 {{- end }}
 
-pathStr = "{{ $managedPaths | join ":" | replace "\\" "/" }}"
+pathList = {{ $managedPaths | toToml }}
+pathStr = {{ $managedPaths | join .chezmoi.pathListSeparator | replace "\\" "/" | quote }}
 
 githubToken = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
@@ -115,7 +116,7 @@ args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wslDist
 mode = "service"
 
 [scriptEnv]
-PATH = "{{ $allPaths | join $sep | replace "\\" "/" }}"
+PATH = "{{ $allPaths | join .chezmoi.pathListSeparator | replace "\\" "/" }}"
 MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
 {{- if $isRiotMachine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
