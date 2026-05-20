@@ -5,24 +5,15 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-# Prefer the stable mise shim over the raw install path, which changes on every
-# Python version upgrade and leaves /etc/passwd pointing at a nonexistent binary.
-MISE_SHIM="$HOME/.local/share/mise/shims/xonsh"
-if [ -x "$MISE_SHIM" ]; then
-  XONSH_EXECUTABLE="$MISE_SHIM"
-elif command -v xonsh >/dev/null 2>&1; then
-  XONSH_EXECUTABLE="$(which xonsh)"
-else
-  echo >&2 "ERROR: xonsh not found in PATH. PATH=$PATH"
-  exit 1
-fi
+XONSH_EXECUTABLE="/usr/bin/xonsh"
 
-if ! grep -qF "$XONSH_EXECUTABLE" /etc/shells; then
-  echo "$XONSH_EXECUTABLE" | sudo tee -a /etc/shells
-fi
-if [ "$XONSH_EXECUTABLE" != "${SHELL:-}" ]; then
+if [ ! -f "$XONSH_EXECUTABLE" ]; then
+  echo >&2 "ERROR: $XONSH_EXECUTABLE does not exist"
+  exit 1
+elif [ "$XONSH_EXECUTABLE" != "${SHELL:-}" ]; then
   # chsh requires PAM auth which is not wired in WSL; usermod is sudo-friendly
   sudo usermod -s "$XONSH_EXECUTABLE" "$USER"
+  echo >&2 "INFO: Set $XONSH_EXECUTABLE as default shell for $USER!"
 fi
 
 echo >&2 "INFO: Ending $0"
