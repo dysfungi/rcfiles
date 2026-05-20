@@ -1,8 +1,11 @@
+# shellcheck shell=bash
 # Brew install path depends on architecture: https://stackoverflow.com/a/71186857
 if [ -d "/opt/homebrew/bin" ]; then
 	brewPath="/opt/homebrew/bin"
-else
+elif [ -x "/usr/local/bin/brew" ]; then
 	brewPath="/usr/local/bin"
+else
+	return 0
 fi
 
 eval "$($brewPath/brew shellenv)"
