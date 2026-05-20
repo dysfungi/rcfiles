@@ -72,5 +72,5 @@ def __rc_paths_homebrew():
 @rc(login=True)
 def __rc_paths_mise():
     local_prefix = p"~/.local"
-    _unique_path_append(local_prefix / "bin")
+    _unique_path_prepend(local_prefix / "bin")
     _unique_path_append(local_prefix / "share" / "man", manpath=True)
