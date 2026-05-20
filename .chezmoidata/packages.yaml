@@ -118,7 +118,6 @@ my:
     poetry: { brew: poetry }
     prettier: { brew: prettier }
     prettierd: { brew: prettierd }
-    prompt-toolkit: { pacman: python-prompt-toolkit }
     proselint: { brew: proselint }
     python3: { brew: python3, pacman: python }
     readline: { brew: readline }
