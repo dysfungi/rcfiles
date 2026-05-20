@@ -47,7 +47,7 @@ mkdir -p "${bakDir}"
 
 backup before install
 # https://xon.sh/customization.html#set-xonsh-as-my-default-shell
-${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --upgrade --break-system-packages"
+${XONSH_EXECUTABLE} --no-rc -c "\$UV_PYTHON=@(__import__('sys').executable) uv pip install --requirement=${reqFile} --break-system-packages"
 backup after install
 
 echo >&2 "INFO: Ending $0"
