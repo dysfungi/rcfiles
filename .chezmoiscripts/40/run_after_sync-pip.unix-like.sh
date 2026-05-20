@@ -26,7 +26,7 @@ backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  mise exec python -- uv pip freeze >"${bakFile}"
+  mise exec python -- uv pip freeze --system >"${bakFile}"
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Freeze pip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
@@ -38,7 +38,7 @@ mkdir -p "${bakDir}"
 backup before install
 mise ls python --installed | awk '{print $2}' | while read -r ver; do
   echo >&2 "INFO: Installing pip packages for python@${ver}"
-  mise exec "python@${ver}" -- uv pip install --requirement="${reqFile}" --upgrade
+  mise exec "python@${ver}" -- uv pip install --system --requirement="${reqFile}" --upgrade
 done
 backup after install
 
