@@ -7,3 +7,4 @@ pyperclip==1.11.0
 ujson==5.12.1
 wcwidth==0.7.0
 xonsh==0.23.7
+xontrib-1password==0.3.2
