@@ -123,7 +123,7 @@ my:
     readline: { brew: readline }
     ripgrep: { brew: ripgrep, pacman: ripgrep, winget: BurntSushi.ripgrep.MSVC }
     rsync: { brew: rsync, pacman: rsync }
-    ruff: { brew: ruff, pacman: ruff }
+    ruff: { brew: ruff, pacman: ruff, mise: ruff }
     ruff-lsp: { brew: ruff-lsp }
     rust: { brew: rust } # pacman omitted: conflicts with rustup (both provide cargo)
     rust-analyzer: { brew: rust-analyzer, pacman: rust-analyzer }
@@ -159,7 +159,7 @@ my:
     tree-sitter-cli: { brew: tree-sitter-cli, pacman: tree-sitter-cli }
     typescript: { brew: typescript }
     typescript-language-server: { brew: typescript-language-server }
-    uv: { brew: uv, pacman: uv }
+    uv: { brew: uv, pacman: uv, mise: uv }
     vint: { brew: vint }
     vultr: { brew: vultr }
     watchexec: { brew: watchexec, pacman: watchexec }
@@ -198,7 +198,6 @@ my:
     league-of-legends: { cask: league-of-legends }
     logseq: { cask: logseq }
     notunes: { cask: notunes }
-    parsec: { cask: parsec, winget: Parsec.Parsec }
     signal: { cask: signal }
     steam: { cask: steam }
     todoist-app: { cask: todoist-app }
@@ -215,8 +214,6 @@ my:
     npm: { pacman: npm }
     pre-commit: { mise: pre-commit, skip: [windows] }
     python: { mise: python, version: "3.13" }
-    ruff-dev: { mise: ruff }
-    uv-dev: { mise: uv }
 
     ##################
     # APP PACKAGES   #
@@ -226,7 +223,6 @@ my:
     bottle: { pip: bottle }
     cachetools: { pip: cachetools }
     click: { pip: click }
-    coconut-pip: { pip: coconut }
     doit: { mise: "pipx:doit" }
     fastapi: { pip: fastapi }
     httpx: { pip: httpx }
@@ -237,9 +233,10 @@ my:
     pydantic-settings: { pip: pydantic-settings }
     pynvim: { pip: pynvim }
     pytest: { pip: pytest }
-    requests: { pip: requests }
+    requests: { pip: requests, xontrib: requests }
     tenacity: { pip: tenacity }
     xontrib-1password: { xontrib: xontrib-1password }
+    xontrib-coconut: { xontrib: coconut }
     xontrib-dracula: { xontrib: xontrib-dracula }
     xontrib-sh: { xontrib: xontrib-sh }
     xontrib-term-integrations: { xontrib: xontrib-term-integrations }
@@ -269,6 +266,7 @@ riot:
     keeper-password-manager: { cask: keeper-password-manager }
     p4: { cask: p4 }
     p4v: { cask: p4v }
+    parsec: { cask: parsec, winget: Parsec.Parsec }
     slack: { cask: slack }
     vscodium: { cask: vscodium }
     windows-app: { cask: windows-app }
