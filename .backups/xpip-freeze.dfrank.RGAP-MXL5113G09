@@ -71,6 +71,5 @@ wcwidth==0.7.0
 xonsh==0.23.7
 xontrib-1password==0.3.2
 xontrib-dracula==0.1.1
-xontrib-homebrew==0.2.1
 xontrib-sh==0.3.2
 xontrib-term-integrations==0.2.3
