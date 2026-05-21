@@ -14,6 +14,15 @@ PROJECT_NAME = "{{ config_root | basename }}"
 [tools]
 python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 "pipx:pre-commit" = "latest"
+# chezmoi template validation (validate-chezmoi-templates pre-commit hook)
+hadolint               = "latest"
+jq                     = "latest"
+lua                    = "latest"
+"npm:markdownlint-cli" = "latest"
+"pipx:yamllint"        = "latest"
+shellcheck             = "latest"
+shfmt                  = "latest"
+taplo                  = "latest"
 
 
 [tasks]

@@ -82,6 +82,22 @@ repos:
         types: [file]
         files: \.(fs|fsx)$
 
+      - id: validate-chezmoi-templates
+        name: validate chezmoi templates (render + syntax check)
+        language: script
+        entry: .hooks/validate-chezmoi-templates.py
+        files: |-
+          (?x)(
+            \.tmpl$
+            |^\.chezmoitemplates/
+          )
+        pass_filenames: true
+        exclude: |-
+          (?x)^(
+            exact_private_dot_secrets/
+            |(.*/)?symlink_
+          )$
+
   #######
   # LUA #
   #######
