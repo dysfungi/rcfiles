@@ -44,4 +44,6 @@ uv
 watchexec
 wget
 yarn
+yay
+yay-debug
 zsh
