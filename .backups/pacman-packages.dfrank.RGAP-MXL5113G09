@@ -1,3 +1,4 @@
+1password-cli
 base
 base-devel
 chezmoi
@@ -28,6 +29,7 @@ nodejs
 npm
 openssh
 opentofu
+p4
 ripgrep
 rsync
 ruff
