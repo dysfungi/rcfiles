@@ -1,0 +1,33 @@
+# JSON Schema for .chezmoidata/projects.yaml
+# Validated via pre-commit hook: check-jsonschema
+$schema: https://json-schema.org/draft/2020-12/schema
+
+type: object
+additionalProperties: false
+required: [my]
+properties:
+  my:
+    $ref: "#/$defs/namespace"
+  riot:
+    $ref: "#/$defs/namespace"
+
+$defs:
+  namespace:
+    type: object
+    additionalProperties: false
+    required: [projects]
+    properties:
+      projects:
+        type: array
+        items:
+          $ref: "#/$defs/project"
+
+  project:
+    type: object
+    additionalProperties: false
+    required: [path]
+    properties:
+      path:
+        type: string
+      isHomeRelative:
+        type: boolean

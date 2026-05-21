@@ -53,9 +53,21 @@ repos:
     rev: 0.33.0
     hooks:
       - id: check-jsonschema
+        name: validate mcp-servers.yaml
+        files: ^\.chezmoidata/mcp-servers\.yaml$
+        args: ["--schemafile", ".schemas/mcp-servers.schema.yaml"]
+      - id: check-jsonschema
+        name: validate models.yaml
+        files: ^\.chezmoidata/models\.yaml$
+        args: ["--schemafile", ".schemas/models.schema.yaml"]
+      - id: check-jsonschema
         name: validate packages.yaml
         files: ^\.chezmoidata/packages\.yaml$
         args: ["--schemafile", ".schemas/packages.schema.yaml"]
+      - id: check-jsonschema
+        name: validate projects.yaml
+        files: ^\.chezmoidata/projects\.yaml$
+        args: ["--schemafile", ".schemas/projects.schema.yaml"]
 
   ######
   # F# #

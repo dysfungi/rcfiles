@@ -1,0 +1,35 @@
+# JSON Schema for .chezmoidata/mcp-servers.yaml
+# Validated via pre-commit hook: check-jsonschema
+$schema: https://json-schema.org/draft/2020-12/schema
+
+type: object
+additionalProperties: false
+required: [my]
+properties:
+  my:
+    $ref: "#/$defs/namespace"
+  riot:
+    $ref: "#/$defs/namespace"
+
+$defs:
+  namespace:
+    type: object
+    additionalProperties: false
+    required: [mcpServers]
+    properties:
+      mcpServers:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/mcpServer"
+
+  mcpServer:
+    type: object
+    additionalProperties: false
+    required: [serverUrl, docUrl]
+    properties:
+      serverUrl:
+        type: string
+        format: uri
+      docUrl:
+        type: string
+        format: uri
