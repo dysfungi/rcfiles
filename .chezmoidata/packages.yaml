@@ -154,6 +154,7 @@ my:
         bootstrap: true,
       }
     todoist-cli: { brew: todoist-cli }
+    todo-txt: { brew: todo-txt, aur: todotxt }
     tree: { brew: tree, pacman: tree }
     tree-sitter-cli: { brew: tree-sitter-cli, pacman: tree-sitter-cli }
     typescript: { brew: typescript }
