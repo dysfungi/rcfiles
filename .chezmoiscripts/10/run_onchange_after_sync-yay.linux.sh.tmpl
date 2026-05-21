@@ -59,7 +59,7 @@ backup before install
 
 echo >&2 "INFO: Installing declared AUR packages via yay..."
 # shellcheck disable=SC2086
-yay -Syu --noconfirm --needed --pgpfetch $declared_packages
+yay -Syu --noconfirm --needed --mflags "--skippgpcheck" $declared_packages
 
 backup after install
 
