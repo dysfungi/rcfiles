@@ -15,8 +15,8 @@
 #   brew_options — extra Brewfile options (eg, "restart_service: :changed")
 #   cask         — Homebrew cask name (macOS GUI install)
 #   tap          — Homebrew tap required for this package
-#   pacman       — Arch Linux package name
-#   aur          — true if pacman name requires AUR helper (yay/paru)
+#   pacman       — Arch Linux package name (official repos)
+#   aur          — AUR package name; installed via yay (independent of pacman:)
 #   winget       — winget package ID
 #   bootstrap    — true if installed by .bootstrap.windows.ps1 before chezmoi runs (documentation only)
 #   mise         — mise tool spec: "tool@version" (eg, "jq@latest", "python@3.13")
@@ -38,8 +38,7 @@ my:
       {
         cask: "1password/tap/1password-cli",
         tap: "1password/tap",
-        pacman: 1password-cli,
-        aur: true,
+        aur: 1password-cli,
         winget: AgileBits.1Password.CLI,
         bootstrap: true,
       }
@@ -264,7 +263,7 @@ riot:
 
     google-chrome: { cask: google-chrome }
     keeper-password-manager: { cask: keeper-password-manager }
-    p4: { cask: p4 }
+    p4: { cask: p4, aur: p4 }
     p4v: { cask: p4v }
     parsec: { cask: parsec, winget: Parsec.Parsec }
     slack: { cask: slack }

@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Sync AUR packages via yay on Arch Linux.
+# Reads aur: fields from .chezmoidata/packages.yaml.
+# Idempotent — yay -S --needed skips already-installed packages.
+
+set -euo pipefail
+
+echo >&2 "INFO: Starting $0"
+
+if ! command -v yay >/dev/null 2>&1; then
+    echo >&2 "WARNING: yay not found; skipping AUR sync."
+    echo >&2 "INFO: Ending $0"
+    exit 0
+fi
+
+userName="$(whoami)"
+hostName="$(hostname)"
+bakSuffix="${userName}.${hostName}"
+bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
+bakFile="${bakDir}/yay-packages.${bakSuffix}"
+export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+mkdir -p "${bakDir}"
+
+backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  pacman -Qqm | sort >"${bakFile}"
+  git add "${bakFile}"
+  if ! git diff --cached --quiet -- "${bakDir}"; then
+    git commit --message "chore(backups): List yay/AUR packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+{{ $aurPkgs := list }}
+{{- range $name, $pkg := .my.packages }}
+  {{- if hasKey $pkg "aur" }}
+    {{- $aurPkgs = append $aurPkgs $pkg.aur }}
+  {{- end }}
+{{- end }}
+{{- if .isRiotMachine }}
+  {{- range $name, $pkg := .riot.packages }}
+    {{- if hasKey $pkg "aur" }}
+      {{- $aurPkgs = append $aurPkgs $pkg.aur }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+declared_packages="{{ join " " $aurPkgs }}"
+
+if [ -z "$declared_packages" ]; then
+    echo >&2 "INFO: No AUR packages declared; skipping."
+    echo >&2 "INFO: Ending $0"
+    exit 0
+fi
+
+backup before install
+
+echo >&2 "INFO: Installing declared AUR packages via yay..."
+# shellcheck disable=SC2086
+yay -Syu --noconfirm --needed $declared_packages
+
+backup after install
+
+echo >&2 "INFO: yay AUR sync complete."
+echo >&2 "INFO: Ending $0"

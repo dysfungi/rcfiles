@@ -30,6 +30,7 @@ $defs:
       - required: [brew]
       - required: [cask]
       - required: [pacman]
+      - required: [aur]
       - required: [winget]
       - required: [mise]
       - required: [pip]
@@ -38,7 +39,6 @@ $defs:
       - required: [xontrib]
     # Modifier keys require their parent package manager
     dependentRequired:
-      aur: [pacman]
       brew_options: [brew]
       python: [mamba]
       version: [mise]
@@ -65,7 +65,8 @@ $defs:
       pacman:
         type: string
       aur:
-        type: boolean
+        type: string
+        description: "AUR package name; installed via yay (independent of pacman:)"
 
       # Windows
       winget:

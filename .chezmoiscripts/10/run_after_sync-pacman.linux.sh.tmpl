@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Sync pacman packages in Arch Linux (WSL or otherwise).
-# Reads from .chezmoidata/packages.yaml: installs declared packages, skips AUR packages with a warning.
+# Reads pacman: fields from .chezmoidata/packages.yaml. AUR packages (aur: field) are handled by sync-yay.
 # Idempotent — safe to re-run.
 
 set -euo pipefail
@@ -36,28 +36,14 @@ backup() {
 
 {{ $packages := list }}
 {{- range $name, $pkg := .my.packages }}
-  {{- if and (hasKey $pkg "pacman") (not (index $pkg "aur")) }}
+  {{- if hasKey $pkg "pacman" }}
     {{- $packages = append $packages (printf "%s" $pkg.pacman) }}
   {{- end }}
 {{- end }}
 {{- if .isRiotMachine }}
   {{- range $name, $pkg := .riot.packages }}
-    {{- if and (hasKey $pkg "pacman") (not (index $pkg "aur")) }}
+    {{- if hasKey $pkg "pacman" }}
       {{- $packages = append $packages (printf "%s" $pkg.pacman) }}
-    {{- end }}
-  {{- end }}
-{{- end }}
-
-{{ $aurPkgs := list }}
-{{- range $name, $pkg := .my.packages }}
-  {{- if and (hasKey $pkg "pacman") (index $pkg "aur") }}
-    {{- $aurPkgs = append $aurPkgs $pkg.pacman }}
-  {{- end }}
-{{- end }}
-{{- if .isRiotMachine }}
-  {{- range $name, $pkg := .riot.packages }}
-    {{- if and (hasKey $pkg "pacman") (index $pkg "aur") }}
-      {{- $aurPkgs = append $aurPkgs $pkg.pacman }}
     {{- end }}
   {{- end }}
 {{- end }}
@@ -71,10 +57,6 @@ if [ -n "$declared_packages" ]; then
     # shellcheck disable=SC2086
     sudo pacman -Syu --noconfirm --needed $declared_packages
 fi
-
-{{- if $aurPkgs }}
-echo >&2 "WARNING: AUR packages skipped (install manually with yay/paru): {{ join " " $aurPkgs }}"
-{{- end }}
 
 backup after install
 
