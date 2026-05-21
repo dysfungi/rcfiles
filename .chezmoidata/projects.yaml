@@ -2,5 +2,9 @@ my:
   projects:
     - path: ".local/share/chezmoi"
       isHomeRelative: true
+    - path: "Code"
+      isHomeRelative: true
 riot:
-  projects: []
+  projects:
+    - path: "/mnt/t/p4/flyingfox/dev-main"
+    - path: "/mnt/t/p4/lion/dev-main"

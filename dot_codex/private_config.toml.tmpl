@@ -91,7 +91,7 @@ trust_level = "trusted"
 {{- end -}}
 {{- range $index, $project := $projectsIn }}
 
-{{ $projectKey := ($project.isHomeRelative | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
+{{ $projectKey := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
 [projects.{{ $projectKey | quote }}]
 trust_level = "trusted"
 

@@ -17,7 +17,7 @@
   {{- $projectsIn = concat $projectsIn .riot.projects -}}
 {{- end -}}
 {{- range $index, $project := $projectsIn -}}
-  {{- $projectKey := ($project.isHomeRelative | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
+  {{- $projectKey := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
   {{- $projectConfig := dig $projectKey (dict) $projectsOut | setValueAtPath "hasTrustDialogAccepted" true -}}
   {{- $projectsOut = set $projectsOut $projectKey $projectConfig -}}
 {{- end -}}
