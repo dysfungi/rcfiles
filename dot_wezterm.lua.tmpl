@@ -8,6 +8,24 @@ local isUnixLike = isDarwin or isLinux
 
 local modifierKey = "CTRL"
 
+-- Source - https://stackoverflow.com/a/7615129
+-- Posted by user973713, modified by community. See post 'Timeline' for change history
+-- Retrieved 2026-05-20, License - CC BY-SA 4.0
+local function split(inputstr, sep)
+  if sep == nil then
+    sep = "%s"
+  end
+  local t = {}
+  for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+    table.insert(t, str)
+  end
+  return t
+end
+
+local function dirExists(path)
+  return #wezterm.glob(path) > 0
+end
+
 local function fileExists(path)
   local f = io.open(path, "r")
   if f then
@@ -17,10 +35,21 @@ local function fileExists(path)
   return false
 end
 
-local function firstExisting(paths)
+local function filterExistingDirs(dirs)
+  local result = {}
+  for _, dir in ipairs(dirs) do
+    if dirExists(dir) then
+      result[#result + 1] = dir
+    end
+  end
+  return result
+end
+
+local function firstFoundPathFor(name, paths)
   for _, path in ipairs(paths) do
-    if fileExists(path) then
-      return path
+    local filepath = string.format("%s/%s", path, name)
+    if fileExists(filepath) then
+      return filepath
     end
   end
   return nil
@@ -47,40 +76,55 @@ local function hasAnyFonts(dir)
 end
 
 if isUnixLike then
+  local bin = "/bin"
+  local sbin = "/sbin"
   local usrBin = "/usr/bin"
+  local usrSbin = "/usr/sbin"
   local usrLocalBin = "/usr/local/bin"
+  local usrLocalSbin = "/usr/local/sbin"
   local homebrewBin = "/opt/homebrew/bin"
+  local homeLocal = wezterm.home_dir .. "/.local"
+  local miseShims = homeLocal .. "/share/mise/shims"
+  local homeLocalBin = homeLocal .. "/bin"
+  local xBin = homeLocal .. "/xonsh-env/xbin"
 
-  local myPaths = {
+  local parentPaths = filterExistingDirs(split(os.getenv("PATH") or "", ":"))
+  local myPaths = filterExistingDirs {
+    xBin,
+    homeLocalBin,
+    miseShims,
     usrLocalBin,
+    usrLocalSbin,
+    homebrewBin,
     usrBin,
-    os.getenv "PATH",
+    usrSbin,
+    bin,
+    sbin,
   }
+  for _, parentPath in ipairs(parentPaths) do table.insert(myPaths, parentPath) end
+
+  local tmux = firstFoundPathFor("tmux", myPaths)
+  local shell = firstFoundPathFor("xonsh", myPaths)
+    or firstFoundPathFor("zsh", myPaths)
+    or firstFoundPathFor("bash", myPaths)
 
   if isDarwin then
     modifierKey = "CMD"
 
-    table.insert(myPaths, 1, homebrewBin)
-    local tmux = homebrewBin .. "/tmux"
-    local xonsh = homebrewBin .. "/xonsh"
-    config.default_prog = fileExists(tmux) and { tmux, "new-session", "-A", "-s", "main" }
-      or { xonsh }
+    config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } or { shell }
     -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
     config.set_environment_variables = {
       PATH = table.concat(myPaths, ":"),
-      SHELL = xonsh,
+      SHELL = shell,
     }
   else -- Linux
     modifierKey = "SUPER"
 
-    local tmux = firstExisting { "/usr/local/bin/tmux", "/usr/bin/tmux" }
-    local xonsh = firstExisting { "/usr/local/bin/xonsh", wezterm.home_dir .. "/.local/bin/xonsh" }
-      or "xonsh"
-    config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } or { xonsh }
+    config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } or { shell }
     -- https://wezterm.org/faq.html#im-on-macos-and-wezterm-cannot-find-things-in-my-path
     config.set_environment_variables = {
       PATH = table.concat(myPaths, ":"),
-      SHELL = xonsh,
+      SHELL = shell,
     }
   end
 elseif isWindows then

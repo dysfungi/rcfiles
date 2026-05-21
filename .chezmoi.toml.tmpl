@@ -17,7 +17,7 @@
 {{ $isLinux := eq .chezmoi.os "linux" -}}
 {{ $isWindows := eq .chezmoi.os "windows" -}}
 
-{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/bin") (joinPath .chezmoi.homeDir ".local/share/mise/shims") (joinPath .chezmoi.homeDir ".local/xonsh-env/xbin") -}}
+{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/xonsh-env/xbin") (joinPath .chezmoi.homeDir ".local/bin") (joinPath .chezmoi.homeDir ".local/share/mise/shims") -}}
 {{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
 {{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
 {{- $pathsPlatform := $isDarwin | ternary $pathsDarwin (list) -}}
