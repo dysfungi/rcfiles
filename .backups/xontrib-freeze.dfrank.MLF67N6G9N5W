@@ -1,0 +1,8 @@
+gnureadline==8.3.3
+pip @ file:///home/conda/feedstock_root/build_artifacts/pip_1777923994118/work
+prompt-toolkit==3.0.52
+pygments==2.20.0
+pyperclip==1.11.0
+ujson==5.12.1
+wcwidth==0.7.0
+xonsh==0.22.8
