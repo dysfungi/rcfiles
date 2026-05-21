@@ -43,19 +43,8 @@ def __rc_interactive():
     $XONSH_COPY_ON_DELETE = True
 
     # https://xon.sh/envvars.html#xonsh-use-system-clipboard
-    $XONSH_USE_SYSTEM_CLIPBOARD = True
-
-    # @events.on_pre_prompt
-    def debug(**kwargs):
-        print("on_pre_prompt:", kwargs)
-        import pdb; pdb.set_trace()
-        pass
-
-    # @events.on_post_prompt
-    def debug(**kwargs):
-        print("on_post_prompt:", kwargs)
-        import pdb; pdb.set_trace()
-        pass
+    _is_wsl = @.imp.xonsh.platform.ON_LINUX and 'microsoft' in open('/proc/version').read().lower()
+    $XONSH_USE_SYSTEM_CLIPBOARD = not _is_wsl
 
     @events.on_ptk_create
     def custom_keybindings(
