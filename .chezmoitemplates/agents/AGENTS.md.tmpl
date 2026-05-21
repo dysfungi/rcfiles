@@ -41,16 +41,16 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Comments as code unless explaining a decision or including references
 - No dead code
 - When no clear, applicable convention or principle exists, prefer:
-    - [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
-    - [SOLID](https://en.wikipedia.org/wiki/SOLID), especially [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
-    - [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
-    - [UNIX Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
-    - [The Pragmatic Programmer](https://en.wikipedia.org/wiki/The_Pragmatic_Programmer), especially tracer bullets and fixing broken windows
-    - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming), especially the pragmatism of OCaml and F#
-    - [The Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python): explicit, simple, flat, sparse, readable, practical, loud on errors, unambiguous, and easy to explain
-    - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
-    - snake_case > camelCase
-    - Spaces > Tabs
+  - [YAGNI](https://en.wikipedia.org/wiki/You_aren%27t_gonna_need_it)
+  - [SOLID](https://en.wikipedia.org/wiki/SOLID), especially [Single Responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
+  - [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
+  - [UNIX Philosophy](https://en.wikipedia.org/wiki/Unix_philosophy)
+  - [The Pragmatic Programmer](https://en.wikipedia.org/wiki/The_Pragmatic_Programmer), especially tracer bullets and fixing broken windows
+  - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming), especially the pragmatism of OCaml and F#
+  - [The Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python): explicit, simple, flat, sparse, readable, practical, loud on errors, unambiguous, and easy to explain
+  - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
+  - snake_case > camelCase
+  - Spaces > Tabs
 
 ## Debugging
 
@@ -67,7 +67,8 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
 - Auto-proceed on read-only git operations (`status`, `diff`, `log`, `show`, `branch`, `pull`, `push`, `push --force-with-lease`, etc.) without asking.
 - Push immediately after every commit in the same turn — do not wait to be asked.
-- Pause and surface intent before any write or history-altering operation (`commit`, `push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
+- Outside plan mode (implementation / "accept edits" mode): auto-commit completed work without asking. The user's workflow is: plan mode for design/decision alignment, then implementation mode where commits should flow automatically. Do not pause to ask "should I commit?" after making changes.
+- Always pause before destructive or hard-to-reverse operations (`push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
 
 ## (Code) Reviews
 
@@ -100,12 +101,12 @@ Reviewer output:
 - Apply that per-item summary rule to Git commit bodies, Jira comments, PR updates/descriptions, incident notes, change records, and similar durable records.
 - If changing a Jira ticket's saved fields in a meaningful way (eg, title, description, acceptance criteria, scope, or status), add a Jira comment that records each material ticket change together with its rationale.
 - Include compact audit metadata in that body with, at minimum:
-    - `Co-Authored-By` (eg, `OpenAI Codex (v0.128.0)`, `Gemini CLI v0.40.1`)
-    - `Model` (eg, `gpt-5.4`, `gemini-2.5-pro`)
-    - `Model-Provider` (eg, `OpenAI`, `Google`, `TrueFoundry`)
-    - `Session-ID` (the tool/session/conversation identifier needed to recover the run later)
-    - `Username` (eg, `dfrank`)
-    - `Hostname` (eg, `MLF67N6G9N5W`)
+  - `Co-Authored-By` (eg, `OpenAI Codex (v0.128.0)`, `Gemini CLI v0.40.1`)
+  - `Model` (eg, `gpt-5.4`, `gemini-2.5-pro`)
+  - `Model-Provider` (eg, `OpenAI`, `Google`, `TrueFoundry`)
+  - `Session-ID` (the tool/session/conversation identifier needed to recover the run later)
+  - `Username` (eg, `dfrank`)
+  - `Hostname` (eg, `MLF67N6G9N5W`)
 - Record the source for each audit attribute inline, not as one shared field, using a short source label (eg, `Co-Authored-By: OpenAI Codex (v0.128.0) (source: session)`, `Model: gpt-5.4 (source: session)`, `Model-Provider: TrueFoundry (source: session)`, `Session-ID: 019df4d2-497a-7da2-9ad1-93acc1da0870 (source: session)`, `Username: dfrank (source: session)`, `Hostname: MLF67N6G9N5W (source: session)`, `Model-Provider: TrueFoundry (source: config.toml)`).
 - Keep source labels terse. Prefer `session` for values derived from the current live session/runtime context and a config filename like `~/.codex/config.toml` for values derived from applied config. Do not use verbose labels like `current session runtime metadata`, `current session status title`, or `fallback` unless explicitly requested.
 - For `Co-Authored-By`, prefer the exact tool/agent name and version from the current live session/runtime context. If the current session shows that value in a status/title area, use that exact value.
