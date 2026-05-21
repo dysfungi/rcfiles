@@ -130,6 +130,8 @@ brew "kubernetes-cli"
 brew "lazydocker"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Pager program similar to more
+brew "less"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # XML security library
@@ -146,8 +148,6 @@ brew "mdq"
 brew "mise"
 # Collection of tools that nobody wrote when UNIX was young
 brew "moreutils"
-# Experimental optional static type checker for Python
-brew "mypy"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Control nvim processes using `nvr` command-line tool
@@ -250,8 +250,6 @@ brew "vultr"
 brew "watchexec"
 # Internet file retriever
 brew "wget"
-# Python-powered, cross-platform, Unix-gazing shell language and command prompt
-brew "xonsh"
 # Yet Another Dotfiles Manager
 brew "yadm"
 # JavaScript package manager
