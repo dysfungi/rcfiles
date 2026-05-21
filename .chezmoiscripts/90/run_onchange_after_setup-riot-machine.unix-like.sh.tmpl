@@ -6,57 +6,89 @@ set -euo pipefail
 echo >&2 "INFO: Starting $0"
 
 case "$(uname -s)" in
-  Darwin) ;;
-  Linux)
-    echo "Linux/WSL Riot setup not yet implemented; skipping."
-    exit 0
-    ;;
-  *)
-    echo "Unhandled OS $(uname -s); skipping Riot setup."
-    exit 1
-    ;;
+Darwin)
+	P4_DIR="/Users/Shared/p4"
+	DEPOT_DIR="${P4_DIR}/depot"
+	LOL_DIR="${DEPOT_DIR}/LoL"
+	DEVROOT_DIR="${LOL_DIR}/__MAIN__/DevRoot"
+	DEVROOT_TOOLS_EXT_DIR="${DEVROOT_DIR}/Tools/Ext"
+	CLIENT_DIR="${DEVROOT_DIR}/Client"
+	CLIENT_TOOLS_DIR="${CLIENT_DIR}/tools"
+
+	CT_BIN="${CLIENT_TOOLS_DIR}/client-tools/bin"
+	PLUGINATOR_BIN="${CLIENT_TOOLS_DIR}/pluginator/bin"
+	NODE_BIN="${DEVROOT_TOOLS_EXT_DIR}/Node/22.2.0/mac/bin"
+	YARN_BIN="${DEVROOT_TOOLS_EXT_DIR}/Yarn"
+
+	mkdir -p "${LOL_DIR}"
+
+	cat >"${DEPOT_DIR}/.p4ignore" <<-EOF
+		LoL/*/DevRoot/Client/.p4config
+		LoL/*/DevRoot/Client/.vscode/*
+		LoL/*/DevRoot/Client/fe/*/dist
+		LoL/*/DevRoot/Client/fe/pluginator.config.js
+		LoL/*/DevRoot/Client/node_modules/*
+		LoL/*/DevRoot/Logs
+		LoL/*/DevRoot/TMP
+		LoL/*/code/RiotClient/DevTools/VSCodeWorkspace/.p4config
+		LoL/*/tmp
+		LoL/.mise.toml
+		LoL/mise.toml
+	EOF
+
+	cat >"${LOL_DIR}/.mise.toml" <<-EOF
+		[env]
+		_.path = [
+		    "${PLUGINATOR_BIN}",
+		    "${CT_BIN}",
+		    "${NODE_BIN}",
+		    "${YARN_BIN}",
+		]
+	EOF
+
+	mise --cd="${LOL_DIR}" use node@22.2.0 yarn@1.22.22
+	;;
+Linux)
+	P4_ROOT="/mnt/t/p4"
+	P4USER={{ .chezmoi.username | quote }}
+	mkdir -p "${P4_ROOT}"
+
+	cat >"${P4_ROOT}/.p4ignore" <<-'EOF'
+		.p4config
+		.vscode/
+		node_modules/
+		dist/
+		tmp/
+	EOF
+
+	# Accept SSL fingerprint if server uses SSL (no-op on plaintext port 1666)
+	p4 trust -f -y 2>/dev/null || true
+
+	# Attempt P4 login via 1Password SSO password (resolved at chezmoi apply time).
+	# Falls back to manual instruction if Riot uses browser-based SSO instead of LDAP.
+	if ! p4 login -s &>/dev/null; then
+		echo >&2 "INFO: Not logged in to P4. Attempting login via 1Password..."
+		if echo {{ onepasswordRead "op://Riot/SSO/password" | quote }} | p4 login 2>/dev/null; then
+			echo >&2 "INFO: P4 login succeeded."
+		else
+			echo >&2 "WARN: Automated P4 login failed (may require browser SSO)."
+			echo >&2 "WARN: Run manually: p4 login"
+		fi
+	else
+		echo >&2 "INFO: Already logged in to P4."
+	fi
+
+	# Report existing client workspaces on the server.
+	# Windows P4V workspaces (e.g. dfrank_RGAP-MXL5113G09_flyingfox_dev-main) are
+	# accessible from WSL via P4CONFIG=.p4config auto-discovery in workspace roots.
+	echo >&2 "INFO: Existing P4 client workspaces for ${P4USER}:"
+	p4 clients -u "${P4USER}" 2>/dev/null | awk '{print "  " $2, "root=" $4}' >&2 || true
+	;;
+*)
+	echo "Unhandled OS $(uname -s); skipping Riot setup."
+	exit 1
+	;;
 esac
 
-P4_DIR="/Users/Shared/p4"
-DEPOT_DIR="${P4_DIR}/depot"
-LOL_DIR="${DEPOT_DIR}/LoL"
-DEVROOT_DIR="${LOL_DIR}/__MAIN__/DevRoot"
-DEVROOT_TOOLS_EXT_DIR="${DEVROOT_DIR}/Tools/Ext"
-CLIENT_DIR="${DEVROOT_DIR}/Client"
-CLIENT_TOOLS_DIR="${CLIENT_DIR}/tools"
-
-CT_BIN="${CLIENT_TOOLS_DIR}/client-tools/bin"
-PLUGINATOR_BIN="${CLIENT_TOOLS_DIR}/pluginator/bin"
-NODE_BIN="${DEVROOT_TOOLS_EXT_DIR}/Node/22.2.0/mac/bin"
-YARN_BIN="${DEVROOT_TOOLS_EXT_DIR}/Yarn"
-
-mkdir -p "${LOL_DIR}"
-
-cat >"${DEPOT_DIR}/.p4ignore" <<-EOF
-LoL/*/DevRoot/Client/.p4config
-LoL/*/DevRoot/Client/.vscode/*
-LoL/*/DevRoot/Client/fe/*/dist
-LoL/*/DevRoot/Client/fe/pluginator.config.js
-LoL/*/DevRoot/Client/node_modules/*
-LoL/*/DevRoot/Logs
-LoL/*/DevRoot/TMP
-LoL/*/code/RiotClient/DevTools/VSCodeWorkspace/.p4config
-LoL/*/tmp
-LoL/.mise.toml
-LoL/mise.toml
-EOF
-
-cat >"${LOL_DIR}/.mise.toml" <<-EOF
-[env]
-_.path = [
-    "${PLUGINATOR_BIN}",
-    "${CT_BIN}",
-    "${NODE_BIN}",
-    "${YARN_BIN}",
-]
-EOF
-
-mise --cd="${LOL_DIR}" use node@22.2.0 yarn@1.22.22
-
 echo >&2 "INFO: Ending $0"
-{{- end -}}
+{{ end -}}
