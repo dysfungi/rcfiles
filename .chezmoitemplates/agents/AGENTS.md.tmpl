@@ -49,6 +49,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
   - [Functional Programming](https://en.wikipedia.org/wiki/Functional_programming), especially the pragmatism of OCaml and F#
   - [The Zen of Python](https://docs.python.org/3/glossary.html#term-Zen-of-Python): explicit, simple, flat, sparse, readable, practical, loud on errors, unambiguous, and easy to explain
   - Avoid [Hungarian Notation](https://en.wikipedia.org/wiki/Hungarian_notation)
+  - Prefer self-documenting names over terse abbreviations (e.g., `p4changelist` over `cl`); stop before restating the type or implementation in the name
   - snake_case > camelCase
   - Spaces > Tabs
 
@@ -64,11 +65,40 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 
 ## Version Control
 
+**git:**
+
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
 - Auto-proceed on read-only git operations (`status`, `diff`, `log`, `show`, `branch`, `pull`, `push`, `push --force-with-lease`, etc.) without asking.
 - Push immediately after every commit in the same turn — do not wait to be asked.
 - Outside plan mode (implementation / "accept edits" mode): auto-commit completed work without asking. The user's workflow is: plan mode for design/decision alignment, then implementation mode where commits should flow automatically. Do not pause to ask "should I commit?" after making changes. Exception: if implementation uncovers a fundamental design issue or requires a new significant design/decision, pause and return to plan mode for alignment before continuing.
 - Always pause before destructive or hard-to-reverse operations (`push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
+- **Multi-instance worktrees**: Multiple agent instances may run concurrently on the same machine against the same working directory and branch, creating undetectable file-edit races (last write wins). Use `todo` commands for all `todo.txt`/`done.txt` operations; fall back to direct file read/edit only when the CLI is not installed. When starting a non-trivial task:
+  1. `git pull`, then check for existing `@worktree` claims (`todo list @worktree`).
+  2. Create the worktree: `git worktree add .worktrees/<task-slug> -b task/<task-slug>`
+  3. Record a `todo.txt` entry with:
+     - `@worktree:.worktrees/<task-slug>`
+     - `session:<id>` — conversation ID, or `$(date -u +%Y%m%dT%H%M%SZ)` as fallback
+     - `agent:<tool>` — e.g. `agent:claude`, `agent:gemini`
+     - `model:<full-model-id>` — e.g. `model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+
+  Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.worktrees/multi-instance-git session:20260521T143022Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+
+  On completion: merge to main, `git worktree remove .worktrees/<task-slug>`, and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+- **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
+{{- if .isRiotMachine }}
+
+**p4:**
+
+- **Multi-instance workspaces**: Changelists alone are insufficient isolation — P4 will silently reassign an opened file from one CL to another if a second `p4 edit` targets the same file within the same workspace. For full isolation, create a separate workspace per task. Workspace names follow the convention `<user>_<host>_<project>_<branch>-task-<slug>` (e.g., `dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh`). Before creating one, check `todo.txt` for existing `@p4workspace` claims (`todo list @p4workspace`). Record a `todo.txt` entry with:
+  - `@p4workspace:<workspace-name>`
+  - `p4changelist:<changelist-number>` — the primary CL for this task
+  - `session:`, `agent:`, `model:` — same convention as git
+
+  Example: `(B) Add xonsh P4 config +riot @p4workspace:dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh p4changelist:98765 session:20260521T150000Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+
+  On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive the `todo.txt` entry to `done.txt`.
+- **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
+{{- end }}
 
 ## (Code) Reviews
 
