@@ -39,6 +39,7 @@ shellcheck
 shfmt
 stylua
 tmux
+todotxt
 tree
 tree-sitter-cli
 unzip
