@@ -1,13 +1,21 @@
 gh                             2.92.0   ~/.config/mise/conf.d/riot.toml  latest
+hadolint                       2.14.0
 jq                             1.8.1    ~/.config/mise/config.toml       latest
+lua                            5.5.0
 node                           24.15.0  ~/.config/mise/config.toml       lts
 npm:@anthropic-ai/claude-code  2.1.146  ~/.config/mise/config.toml       latest
+npm:markdownlint-cli           0.48.0
 pipx:bandit                    1.9.4    ~/.config/mise/config.toml       latest
 pipx:doit                      0.37.0   ~/.config/mise/config.toml       latest
 pipx:ipython                   9.13.0   ~/.config/mise/config.toml       latest
 pipx:mypy                      2.1.0    ~/.config/mise/config.toml       latest
 pipx:neovim-remote             2.5.1    ~/.config/mise/config.toml       latest
+pipx:pre-commit                4.6.0
+pipx:yamllint                  1.38.0
 pre-commit                     4.6.0    ~/.config/mise/config.toml       latest
 python                         3.13.13  ~/.config/mise/config.toml       3.13
 ruff                           0.15.13  ~/.config/mise/config.toml       latest
+shellcheck                     0.11.0
+shfmt                          3.13.1
+taplo                          0.10.0
 uv                             0.11.15  ~/.config/mise/config.toml       latest
