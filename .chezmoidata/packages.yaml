@@ -47,7 +47,7 @@ my:
     ascii: { brew: ascii }
     asdf: { brew: asdf }
     bash: { brew: bash, pacman: bash }
-    cdargs: { brew: cdargs }
+    cdargs: { brew: cdargs, aur: cdargs }
     cheat: { brew: cheat }
     chezmoi:
       {

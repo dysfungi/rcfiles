@@ -1,2 +1,11 @@
 export PATH="{{ .pathStr }}"
-eval "$($HOME/.local/bin/mise activate bash)" 2>/dev/null || true
+# --shims: adds shims dir to PATH without dynamic hooks; preserves explicit PATH ordering
+eval "$($HOME/.local/bin/mise activate bash --shims)" 2>/dev/null || true
+
+# cdargs shell functions
+_cdargs_sh=/usr/share/cdargs/cdargs-bash.sh
+if [ ! -f "$_cdargs_sh" ] && command -v brew >/dev/null 2>&1; then
+  _cdargs_sh="$(brew --prefix)/share/cdargs/cdargs-bash.sh"
+fi
+[ -f "$_cdargs_sh" ] && . "$_cdargs_sh"
+unset _cdargs_sh
