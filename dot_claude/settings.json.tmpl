@@ -86,6 +86,11 @@
             "type": "command",
             "command": "rm -f \"$HOME/.claude/task-labels/${TMUX_PANE}\"",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/notify-stop.sh",
+            "timeout": 10
           }
         ]
       }
