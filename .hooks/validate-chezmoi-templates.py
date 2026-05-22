@@ -52,7 +52,7 @@ Format-style validators (auto-fixer + linter; produces 3 artifacts on failure):
   toml      auto-fix: taplo fmt <copy>          linter: taplo lint
   markdown  auto-fix: markdownlint --fix <copy> linter: markdownlint
   shell     auto-fix: shfmt -d                  linter: bash -n + shellcheck
-  lua       auto-fix: stylua <copy>             linter: luac -p
+  lua       auto-fix: stylua - (stdin)          linter: luac -p
 
 Linter-only validators (error output is the artifact; no files preserved):
   dockerfile  hadolint
@@ -155,11 +155,14 @@ def partition_into_config_and_other(
 # ---------------------------------------------------------------------------
 
 
-def _mise(tool: str, *args: str) -> subprocess.CompletedProcess:
+def _mise(
+    tool: str, *args: str, input: bytes | None = None
+) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
             ["mise", "exec", "--", tool, *args],
             capture_output=True,
+            input=input,
         )
     except FileNotFoundError:
         sys.exit("FAIL: mise not found on PATH — install mise first")
@@ -248,9 +251,8 @@ def run_autofix_and_write_diff_artifacts(
             _write_artifact(fixed, fmt_result.stdout)
 
     elif output_type == "lua":
-        shutil.copy2(rendered, fixed)
-        os.chmod(fixed, 0o600)
-        _mise("stylua", str(fixed))
+        fmt_result = _mise("stylua", "-", input=rendered.read_bytes())
+        _write_artifact(fixed, fmt_result.stdout)
         diff = _unified_diff(rendered, fixed)
 
     if not diff:
