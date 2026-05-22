@@ -52,12 +52,12 @@ Format-style validators (auto-fixer + linter; produces 3 artifacts on failure):
   toml      auto-fix: taplo fmt <copy>          linter: taplo lint
   markdown  auto-fix: markdownlint --fix <copy> linter: markdownlint
   shell     auto-fix: shfmt -d                  linter: bash -n + shellcheck
+  lua       auto-fix: stylua <copy>             linter: luac -p
 
 Linter-only validators (error output is the artifact; no files preserved):
   dockerfile  hadolint
   json        jq .    (not used as formatter -- reorders keys)
   yaml        yamllint
-  lua         luac -p
 
 Hard skips (never rendered):
   exact_private_dot_secrets/  renders to bare secret strings
@@ -67,7 +67,7 @@ Render-only (Go template syntax checked; no format validator):
   .ps1, .conf, no-extension, and any unrecognised extension
 
 Mise-managed tools (all required; hard-fail if missing):
-  taplo, jq, yamllint, hadolint, shellcheck, shfmt, lua, npm:markdownlint-cli
+  taplo, jq, yamllint, hadolint, shellcheck, shfmt, stylua, lua, npm:markdownlint-cli
 """
 
 from __future__ import annotations
@@ -106,7 +106,7 @@ _OUTPUT_TYPE_TO_SUFFIX: dict[str, str] = {
     "render-only": "",
 }
 
-FORMAT_STYLE_TYPES = frozenset({"toml", "markdown", "shell"})
+FORMAT_STYLE_TYPES = frozenset({"toml", "markdown", "shell", "lua"})
 
 
 # ---------------------------------------------------------------------------
@@ -246,6 +246,12 @@ def run_autofix_and_write_diff_artifacts(
         if diff:
             fmt_result = _mise("shfmt", str(rendered))
             _write_artifact(fixed, fmt_result.stdout)
+
+    elif output_type == "lua":
+        shutil.copy2(rendered, fixed)
+        os.chmod(fixed, 0o600)
+        _mise("stylua", str(fixed))
+        diff = _unified_diff(rendered, fixed)
 
     if not diff:
         return None
