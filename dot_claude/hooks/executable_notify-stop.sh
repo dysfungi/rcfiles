@@ -3,11 +3,18 @@
 [[ ! -f "$HOME/.claude/away" ]] && exit 0
 
 topic="${NTFY_TOPIC:-dfrank-claude-$(hostname -s | tr '[:upper:]' '[:lower:]')}"
-label_file="$HOME/.claude/task-labels/${TMUX_PANE}"
-msg=$([[ -f "$label_file" ]] && cat "$label_file" || echo "Turn complete — input needed")
+project=$(basename "${PWD:-unknown}")
+
+if [[ -n "${TMUX:-}" ]]; then
+  pane_title=$(tmux display-message -p '#{pane_title}' 2>/dev/null)
+  session=$(tmux display-message -p '#S' 2>/dev/null)
+fi
+
+title="${session:+[$session] }${project}"
+msg="${pane_title:-Input needed}"
 
 curl -s \
-  -H "Title: Claude waiting" \
+  -H "Title: ${title}" \
   -H "Priority: default" \
   -d "$msg" \
   "https://ntfy.sh/${topic}" \
