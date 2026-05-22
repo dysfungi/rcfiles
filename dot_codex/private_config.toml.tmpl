@@ -13,7 +13,10 @@ model_provider = "truefoundry" # must be first line in doc
 model = "gpt-5.4" # "gpt-5.3-codex"
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
-notify = ["{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/computer-use/1.0.755/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+notify = [
+  "{{ .chezmoi.homeDir }}/.codex/plugins/cache/openai-bundled/computer-use/1.0.755/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient",
+  "turn-ended",
+]
 cli_auth_credentials_store = "file" # ~/.codex/auth.json
 mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 
@@ -69,33 +72,19 @@ enabled = true
 [plugins."spreadsheets@openai-primary-runtime"]
 enabled = true
 
-{{ if .isRiotMachine -}}
-
-{{ if .isWindows -}}
-
-[projects.'t:\p4\flyingfox\dev-main']
-trust_level = "trusted"
-
-{{ else -}}
-
-[projects."{{ .chezmoi.homeDir }}/Perforce/flyingfox/dev-main"]
-trust_level = "trusted"
-
-{{- end }}
-
-{{- end }}
-
 {{- $projectsIn := .my.projects -}}
 {{- if .isRiotMachine -}}
   {{- $projectsIn = concat $projectsIn .riot.projects -}}
 {{- end -}}
-{{- range $index, $project := $projectsIn }}
+{{- range $index, $project := $projectsIn -}}
+{{- $only_on := dig "only_on" (list) $project -}}
+{{- if or (empty $only_on) (and (has "wsl" $only_on) $.isWSL) (and (has "linux" $only_on) $.isLinux) (and (has "darwin" $only_on) $.isDarwin) (and (has "windows" $only_on) $.isWindows) }}
 
 {{ $projectKey := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
 [projects.{{ $projectKey | quote }}]
 trust_level = "trusted"
-
-{{ end -}}
+{{- end }}
+{{- end }}
 
 [tui]
 status_line = [
