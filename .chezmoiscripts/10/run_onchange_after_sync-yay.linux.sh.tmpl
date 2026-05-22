@@ -57,9 +57,19 @@ fi
 
 backup before install
 
+# cdargs 1.35 has fprintf(stderr, msg) that -Werror=format-security rejects on modern GCC;
+# pass a custom makepkg.conf that appends -Wno-error to override it for all AUR builds here.
+_makepkg_conf=$(mktemp /tmp/makepkg.XXXXXX.conf)
+trap 'rm -f "$_makepkg_conf"' EXIT
+{
+	cat /etc/makepkg.conf
+	echo 'CFLAGS+=" -Wno-error=format-security"'
+	echo 'CXXFLAGS+=" -Wno-error=format-security"'
+} >"$_makepkg_conf"
+
 echo >&2 "INFO: Installing declared AUR packages via yay..."
 # shellcheck disable=SC2086
-yay -Syu --noconfirm --needed --mflags "--skippgpcheck" $declared_packages
+yay -Syu --noconfirm --needed --mflags "--skippgpcheck --config $_makepkg_conf" $declared_packages
 
 backup after install
 
