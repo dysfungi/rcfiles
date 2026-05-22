@@ -259,7 +259,7 @@ def __rc_interactive_aliases_claude(aliases):
     import shutil
     import subprocess
 
-    if ${...}.get("USER", "") != "dfrank":
+    if os.environ.get("USER", "") != "dfrank":
         return
 
     real_claude = shutil.which("claude")
@@ -279,6 +279,20 @@ def __rc_interactive_aliases_claude(aliases):
                 resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default"
             argv = ["--model", resume_model, *argv]
         return subprocess.run([real_claude, *argv]).returncode
+
+    from pathlib import Path
+
+    away_flag = Path.home() / ".claude" / "away"
+
+    @aliases.register("claude-away")
+    def _claude_away(args):
+        away_flag.touch()
+        print(f"Away mode ON — ntfy notifications active ({away_flag})")
+
+    @aliases.register("claude-back")
+    def _claude_back(args):
+        away_flag.unlink(missing_ok=True)
+        print("Away mode OFF")
 
 
 @rc(interactive=True)
