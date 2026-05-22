@@ -16,7 +16,7 @@ local function split(inputstr, sep)
     sep = "%s"
   end
   local t = {}
-  for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+  for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
     table.insert(t, str)
   end
   return t
@@ -88,7 +88,7 @@ if isUnixLike then
   local homeLocalBin = homeLocal .. "/bin"
   local xBin = homeLocal .. "/xonsh-env/xbin"
 
-  local parentPaths = filterExistingDirs(split(os.getenv("PATH") or "", ":"))
+  local parentPaths = filterExistingDirs(split(os.getenv "PATH" or "", ":"))
   local myPaths = filterExistingDirs {
     xBin,
     homeLocalBin,
@@ -101,7 +101,9 @@ if isUnixLike then
     bin,
     sbin,
   }
-  for _, parentPath in ipairs(parentPaths) do table.insert(myPaths, parentPath) end
+  for _, parentPath in ipairs(parentPaths) do
+    table.insert(myPaths, parentPath)
+  end
 
   local tmux = firstFoundPathFor("tmux", myPaths)
   local shell = firstFoundPathFor("xonsh", myPaths)
