@@ -248,6 +248,33 @@ def __rc_interactive_aliases_web_browser(aliases):
 
 
 @rc(interactive=True)
+def __rc_interactive_aliases_claude(aliases):
+    """
+    Workaround for Claude Code session resume bug: stored model 'claude-sonnet-4-6'
+    gets mangled to 'claude-sonnet-4-6/undefined' in the TrueFoundry resume code path.
+    Fix: inject --model explicitly on --resume/--continue so the buggy lookup is bypassed.
+    """
+    import shutil
+    import subprocess
+
+    if not ${...}.get("IS_RIOT_MACHINE", False):
+        return
+
+    real_claude = shutil.which("claude")
+    if not real_claude:
+        return
+
+    _CLAUDE_RESUME_MODEL = "claude-vertex/anthropic-claude-sonnet-4-6-default"
+
+    @aliases.register("claude")
+    def _claude_riot(args: list[str]):
+        argv = list(args)
+        if ("--resume" in argv or "--continue" in argv) and "--model" not in argv and "-m" not in argv:
+            argv = ["--model", _CLAUDE_RESUME_MODEL, *argv]
+        return subprocess.run([real_claude, *argv]).returncode
+
+
+@rc(interactive=True)
 def __rc_interactive_aliases_fun(aliases):
     aliases["starwars"] = ["telnet", "towel.blinkenlights.nl"]
 

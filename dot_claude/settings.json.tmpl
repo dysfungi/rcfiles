@@ -43,6 +43,9 @@
     "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
     "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
     "ANTHROPIC_DEFAULT_OPUSPLAN_MODEL": "claude-vertex/anthropic-claude-opus-4-6",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-vertex/anthropic-claude-opus-4-6",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-vertex/anthropic-claude-sonnet-4-6-default",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1",
     "ENABLE_TOOL_SEARCH": "true"
@@ -108,11 +111,7 @@
   "modelOverrides": {},
   {{- else if .isRiotMachine }}
   "model": "claude-vertex/anthropic-claude-sonnet-4-6-default",
-  "modelOverrides": {
-    "claude-sonnet-4-6": "claude-vertex/anthropic-claude-sonnet-4-6-default",
-    "claude-opus-4-6": "claude-vertex/anthropic-claude-opus-4-6",
-    "claude-haiku-4-5": "claude-vertex/anthropic-claude-haiku-4-5-20251001"
-  },
+  "modelOverrides": {},
   {{- end }}
   "outputStyle": "Explanatory",
   "permissions": {
