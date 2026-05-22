@@ -19,12 +19,12 @@ Manual install (1Password + Git + chezmoi)
 
 ### Package Management Strategy
 
-| Layer | Unix-like | Windows | Purpose |
-|-------|-----------|---------|---------|
-| **Core deps** | Homebrew | winget | Platform-native package manager for OS-level tools (Git, Neovim, ripgrep, tmux, etc.) |
-| **Multi-platform tools** | mise | mise | Polyglot version manager for dev tools (Python, Node, jq, uv, ruff, etc.) |
-| **Python tools** | xpip/UV | xpip/UV | Isolated Python CLI installs (xonsh, pre-commit) |
-| **Editor plugins** | Mason/Lazy | Mason/Lazy | Neovim LSPs, formatters, and plugins |
+| Layer                    | Unix-like  | Windows    | Purpose                                                                               |
+| ------------------------ | ---------- | ---------- | ------------------------------------------------------------------------------------- |
+| **Core deps**            | Homebrew   | winget     | Platform-native package manager for OS-level tools (Git, Neovim, ripgrep, tmux, etc.) |
+| **Multi-platform tools** | mise       | mise       | Polyglot version manager for dev tools (Python, Node, jq, uv, ruff, etc.)             |
+| **Python tools**         | xpip/UV    | xpip/UV    | Isolated Python CLI installs (xonsh, pre-commit)                                      |
+| **Editor plugins**       | Mason/Lazy | Mason/Lazy | Neovim LSPs, formatters, and plugins                                                  |
 
 ### Machine Detection
 
@@ -38,16 +38,16 @@ Manual install (1Password + Git + chezmoi)
 
 Scripts under `.chezmoiscripts/` run in numeric directory order during `chezmoi apply`:
 
-| Stage | Purpose | Examples |
-|-------|---------|---------|
-| `00/` | Sudoers setup | `configure-sudoers` |
+| Stage | Purpose                             | Examples                                                                        |
+| ----- | ----------------------------------- | ------------------------------------------------------------------------------- |
+| `00/` | Sudoers setup                       | `configure-sudoers`                                                             |
 | `10/` | Package managers + WSL provisioning | Homebrew install/sync, winget packages, WSL Arch Linux setup, font registration |
-| `20/` | Tool managers | mise sync, xpip/UV sync, opam, pre-commit, xonsh, Neovim symlink |
-| `40/` | Self-managed symlinked file sync | Copy externally-managed symlinked files pre-apply |
-| `65/` | Log rotation | Rotate chezmoi/tool logs |
-| `70/` | Editor plugin sync | Neovim Mason/Lazy plugin installs |
-| `90/` | Specialized setup | Terminfo compilation, Riot machine tooling (P4, LoL) |
-| `99/` | Backup snapshots | Git-commit snapshots of symlinked files to `.backups/` |
+| `20/` | Tool managers                       | mise sync, xpip/UV sync, opam, pre-commit, xonsh, Neovim symlink                |
+| `40/` | Self-managed symlinked file sync    | Copy externally-managed symlinked files pre-apply                               |
+| `65/` | Log rotation                        | Rotate chezmoi/tool logs                                                        |
+| `70/` | Editor plugin sync                  | Neovim Mason/Lazy plugin installs                                               |
+| `90/` | Specialized setup                   | Terminfo compilation, Riot machine tooling (P4, LoL)                            |
+| `99/` | Backup snapshots                    | Git-commit snapshots of symlinked files to `.backups/`                          |
 
 Script naming encodes platform targeting: `.unix-like.sh`, `.darwin.sh`, `.windows.ps1`, `.shared.sh`. The `.chezmoiignore.tmpl` filters scripts by platform at apply time.
 

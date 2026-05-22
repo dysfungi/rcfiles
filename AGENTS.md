@@ -48,12 +48,12 @@ Both files are ignored by chezmoi (never deployed). Keep them in sync with activ
 
 **Prioritization** — use todo.txt priority markers:
 
-| Priority | Meaning | Examples |
-|----------|---------|---------|
-| `(A)` | Blocking — broken repo behavior | chezmoi apply failures, broken templates |
-| `(B)` | Important — gaps or deferred fixes | missing platform support, known workarounds |
-| `(C)` | Maintenance — refactors, cleanup, tech debt | scattered PATH exports, dead code |
-| _(none)_ | Nice-to-have — exploratory, low urgency | new tooling ideas |
+| Priority | Meaning                                     | Examples                                    |
+| -------- | ------------------------------------------- | ------------------------------------------- |
+| `(A)`    | Blocking — broken repo behavior             | chezmoi apply failures, broken templates    |
+| `(B)`    | Important — gaps or deferred fixes          | missing platform support, known workarounds |
+| `(C)`    | Maintenance — refactors, cleanup, tech debt | scattered PATH exports, dead code           |
+| _(none)_ | Nice-to-have — exploratory, low urgency     | new tooling ideas                           |
 
 **Sync rules:**
 

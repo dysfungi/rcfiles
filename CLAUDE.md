@@ -61,18 +61,18 @@ Platform filtering in script names: `.unix-like.sh`, `.darwin.sh`, `.windows.ps1
 
 Scripts under `.chezmoiscripts/` are staged by numeric subdirectory:
 
-| Stage | Purpose                                                   |
-| ----- | --------------------------------------------------------- |
-| `00/` | Sudoers setup                                             |
+| Stage | Purpose                                                               |
+| ----- | --------------------------------------------------------------------- |
+| `00/` | Sudoers setup                                                         |
 | `10/` | Core/system deps: package manager and tool manager installers + syncs |
 | `20/` | Dev deps: language runtimes and toolchains (mise install, setup-opam) |
-| `30/` | Shell registration: xonsh in /etc/shells, set as default  |
-| `40/` | App-level deps: Python packages via xpip/UV              |
-| `50/` | Self-managed symlinked file sync (pre-apply)              |
-| `65/` | Log rotation                                              |
-| `70/` | Editor plugin sync (Neovim/Mason)                         |
-| `90/` | Specialized setup (terminfo, Riot machine P4/LoL tooling) |
-| `99/` | Git-commit backup snapshots of symlinked files            |
+| `30/` | Shell registration: xonsh in /etc/shells, set as default              |
+| `40/` | App-level deps: Python packages via xpip/UV                           |
+| `50/` | Self-managed symlinked file sync (pre-apply)                          |
+| `65/` | Log rotation                                                          |
+| `70/` | Editor plugin sync (Neovim/Mason)                                     |
+| `90/` | Specialized setup (terminfo, Riot machine P4/LoL tooling)             |
+| `99/` | Git-commit backup snapshots of symlinked files                        |
 
 ### Machine Detection
 
