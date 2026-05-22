@@ -111,7 +111,11 @@
   "modelOverrides": {},
   {{- else if .isRiotMachine }}
   "model": "claude-vertex/anthropic-claude-sonnet-4-6-default",
-  "modelOverrides": {},
+  "modelOverrides": {
+    "claude-sonnet-4-6": "claude-vertex/anthropic-claude-sonnet-4-6-default",
+    "claude-opus-4-6": "claude-vertex/anthropic-claude-opus-4-6",
+    "claude-haiku-4-5": "claude-vertex/anthropic-claude-haiku-4-5-20251001"
+  },
   {{- end }}
   "outputStyle": "Explanatory",
   "permissions": {
