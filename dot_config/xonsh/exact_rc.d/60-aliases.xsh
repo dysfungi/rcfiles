@@ -255,6 +255,7 @@ def __rc_interactive_aliases_claude(aliases):
     Fix: inject --model explicitly on --resume/--continue so the buggy lookup is bypassed.
     """
     import json
+    import os
     import shutil
     import subprocess
 
