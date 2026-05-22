@@ -21,6 +21,14 @@ branch = (
     ).stdout.strip()
 )
 
+pane_title = ""
+if os.environ.get("TMUX"):
+    pane_title = subprocess.run(
+        ["tmux", "display-message", "-p", "#{pane_title}"],
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+
 # Abbreviate path: collapse $HOME → ~, shorten middle segments to first letter
 path = raw_dir.replace(home, "~", 1)
 parts = path.split("/")
@@ -39,7 +47,10 @@ if used is not None:
 if model:
     info_parts.append(model)
 
-line1 = f"┬─[{abbreviated}]"
+line1 = "┬─"
+if pane_title:
+    line1 += f"{{{pane_title}}}─"
+line1 += f"[{abbreviated}]"
 if branch:
     line1 += f"─[{branch}]"
 if venv:
