@@ -267,10 +267,17 @@ def __rc_interactive_aliases_claude(aliases):
 
     @aliases.register("claude")
     def _claude_riot(args: list[str]):
-        # Looked up at invocation time so PATH is always fully initialized.
-        real_claude = shutil.which("claude")
+        import glob
+        # PATH may not include mise tool paths in non-login shells; fall back
+        # to globbing the mise install directory directly.
+        real_claude = shutil.which("claude") or next(
+            reversed(sorted(glob.glob(os.path.expanduser(
+                "~/.local/share/mise/installs/npm-anthropic-ai-claude-code/*/bin/claude"
+            )))),
+            None,
+        )
         if not real_claude:
-            print("claude: not found in PATH", file=__import__("sys").stderr)
+            print("claude: not found in PATH or mise installs", file=__import__("sys").stderr)
             return 127
         argv = list(args)
         if ("--resume" in argv or "--continue" in argv) and "--model" not in argv and "-m" not in argv:
