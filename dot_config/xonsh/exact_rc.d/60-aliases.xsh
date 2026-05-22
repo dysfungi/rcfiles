@@ -258,7 +258,7 @@ def __rc_interactive_aliases_claude(aliases):
     import shutil
     import subprocess
 
-    if not ${...}.get("IS_RIOT_MACHINE", False):
+    if ${...}.get("USER", "") != "dfrank":
         return
 
     real_claude = shutil.which("claude")
