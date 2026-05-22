@@ -254,22 +254,24 @@ def __rc_interactive_aliases_claude(aliases):
     gets mangled to 'claude-sonnet-4-6/undefined' in the TrueFoundry resume code path.
     Fix: inject --model explicitly on --resume/--continue so the buggy lookup is bypassed.
     """
-    import json
     import os
+
+    if os.environ.get("USER") != "dfrank":
+        return
+
+    import json
     import shutil
     import subprocess
-
-    if os.environ.get("USER", "") != "dfrank":
-        return
-
-    real_claude = shutil.which("claude")
-    if not real_claude:
-        return
 
     _SETTINGS_PATH = os.path.expanduser("~/.claude/settings.json")
 
     @aliases.register("claude")
     def _claude_riot(args: list[str]):
+        # Looked up at invocation time so PATH is always fully initialized.
+        real_claude = shutil.which("claude")
+        if not real_claude:
+            print("claude: not found in PATH", file=__import__("sys").stderr)
+            return 127
         argv = list(args)
         if ("--resume" in argv or "--continue" in argv) and "--model" not in argv and "-m" not in argv:
             try:
