@@ -56,9 +56,14 @@
     "Setup": [],
     "UserPromptSubmit": [
       {
-        "type": "command",
-        "command": "{{ .chezmoi.homeDir }}/.claude/hooks/update-pane-title.sh",
-        "timeout": 5
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/update-pane-title.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "UserPromptExpansion": [],
@@ -75,9 +80,14 @@
     "TaskCompleted": [],
     "Stop": [
       {
-        "type": "command",
-        "command": "rm -f \"$HOME/.claude/task-labels/${TMUX_PANE}\"",
-        "timeout": 5
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rm -f \"$HOME/.claude/task-labels/${TMUX_PANE}\"",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "StopFailure": [],
