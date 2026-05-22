@@ -293,12 +293,14 @@ def __rc_interactive_aliases_claude(aliases):
 
     away_flag = Path.home() / ".claude" / "away"
 
-    @aliases.register("claude-away")
+    @aliases.register("away")
+    @aliases.register("ntfy-away")
     def _claude_away(args):
         away_flag.touch()
         print(f"Away mode ON — ntfy notifications active ({away_flag})")
 
-    @aliases.register("claude-back")
+    @aliases.register("back")
+    @aliases.register("ntfy-back")
     def _claude_back(args):
         away_flag.unlink(missing_ok=True)
         print("Away mode OFF")
