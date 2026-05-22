@@ -7,4 +7,8 @@ my:
 riot:
   projects:
     - path: "/mnt/t/p4/flyingfox/dev-main"
+      perforce: true
+      only_on: [wsl]
     - path: "/mnt/t/p4/lion/dev-main"
+      perforce: true
+      only_on: [wsl]

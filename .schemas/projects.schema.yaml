@@ -31,3 +31,11 @@ $defs:
         type: string
       isHomeRelative:
         type: boolean
+      perforce:
+        type: boolean
+      only_on:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          enum: [wsl, linux, darwin, windows]

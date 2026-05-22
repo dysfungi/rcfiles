@@ -4,7 +4,7 @@ P4IGNORE=.p4ignore
 {{- if .isLinux }}
 P4PORT=uegames.p4.riotgames.io:1666
 P4USER={{ .chezmoi.username }}
-P4CONFIG=.p4config
+P4CONFIG=.p4config.wsl
 P4_uegames.p4.riotgames.io:1666_CHARSET=auto
 {{- else }}
 P4CLIENT={{ .chezmoi.username }}_{{ .chezmoi.hostname }}
