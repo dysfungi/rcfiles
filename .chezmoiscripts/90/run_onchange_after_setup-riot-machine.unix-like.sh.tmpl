@@ -80,9 +80,35 @@ Linux)
 
 	# Report existing client workspaces on the server.
 	# Windows P4V workspaces (e.g. dfrank_RGAP-MXL5113G09_flyingfox_dev-main) are
-	# accessible from WSL via P4CONFIG=.p4config auto-discovery in workspace roots.
+	# accessible from WSL via P4CONFIG=.p4config.wsl auto-discovery in workspace roots.
 	echo >&2 "INFO: Existing P4 client workspaces for ${P4USER}:"
 	p4 clients -u "${P4USER}" 2>/dev/null | awk '{print "  " $2, "root=" $4}' >&2 || true
+
+	P4HOST={{ .chezmoi.hostname | quote }}
+
+	_setup_p4_workspace() {
+		local path="$1"
+		local client="$2"
+		mkdir -p "$path"
+		if p4 -c "$client" client -o 2>/dev/null | grep -q "^Access:"; then
+			p4 -c "$client" client -o |
+				awk -v root="$path" '/^Root:/ { $2 = root } { print }' |
+				p4 -c "$client" client -i
+			echo >&2 "INFO: Updated Root for client ${client} to ${path}"
+		else
+			echo >&2 "WARN: Client ${client} not found on server; skipping Root update."
+			echo >&2 "WARN: Create it on the server, then re-run: chezmoi apply --include scripts"
+		fi
+		printf 'P4CLIENT=%s\nP4HOST=%s\n' "$client" "$P4HOST" >"${path}/.p4config.wsl"
+		echo >&2 "INFO: Wrote ${path}/.p4config.wsl"
+	}
+
+{{- range .riot.projects -}}
+{{- if and (dig "perforce" false .) (has "wsl" (dig "only_on" (list) .) ) }}
+	_setup_p4_workspace \
+		{{ .path | quote }} \
+		{{ printf "%s_%s_%s" $.chezmoi.username $.chezmoi.hostname (trimPrefix "/mnt/t/p4/" .path | lower | replace "/" "_") | quote }}
+{{- end }}{{- end }}
 	;;
 *)
 	echo "Unhandled OS $(uname -s); skipping Riot setup."
