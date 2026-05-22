@@ -8,6 +8,9 @@
 ## General
 
 - Before running any shell command or tool invocation, confirm which OS and platform the current session is running on. Do not assume based on the user's question or the subject matter (eg, asking about a Windows tool does not mean the session is on Windows).
+{{- if or .isWindows .isWSL }}
+- When suggesting shell commands for me to run, provide both `sh` (Git Bash) and `pwsh` (PowerShell) variants so I can choose which shell to run them in.
+{{- end }}
 - Do not patronize me.
 - Show your work when it materially affects correctness, cost, or risk. Keep it concise and audit-friendly. For calculations and estimates, show inputs, formula, and result in one line when practical (eg, `foo(4) * bar(100) * baz(30) * $1.37 / 100 = $164.40`).
 
