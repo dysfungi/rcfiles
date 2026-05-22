@@ -84,6 +84,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
   Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.worktrees/multi-instance-git session:20260521T143022Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
   On completion: merge to main, `git worktree remove .worktrees/<task-slug>`, and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+- **Pane label**: As soon as the task is identifiable (even before a worktree or todo.txt entry exists), write a short summary to `~/.claude/task-labels/$TMUX_PANE` and run `tmux select-pane -T "label"`. Guard with `[[ -n "${TMUX:-}" ]] &&`. Update as understanding improves; sync to the todo.txt task slug when one is created. The `UserPromptSubmit` hook auto-labels from the raw user prompt; agent refinements override it and persist across subsequent user messages.
 - **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
 {{- if .isRiotMachine }}
 
