@@ -230,6 +230,8 @@ brew "tfupdate"
 brew "the_silver_searcher"
 # Terminal multiplexer
 brew "tmux"
+# Minimal, todo.txt-focused editor
+brew "todo-txt"
 # CLI for Todoist
 brew "todoist-cli"
 # Display directories as trees (with optional color/HTML output)
