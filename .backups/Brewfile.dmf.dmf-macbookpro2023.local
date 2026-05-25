@@ -114,6 +114,8 @@ brew "keyring"
 brew "kubernetes-cli"
 # Simple terminal UI for git commands
 brew "lazygit"
+# Pager program similar to more
+brew "less"
 # Convert pixel information into colored ASCII art
 brew "libcaca"
 # Library for reading RAW files from digital photo cameras
@@ -132,8 +134,6 @@ brew "mdq"
 brew "mise"
 # Collection of tools that nobody wrote when UNIX was young
 brew "moreutils"
-# Experimental optional static type checker for Python
-brew "mypy"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
 # Control nvim processes using `nvr` command-line tool
@@ -208,6 +208,8 @@ brew "tfupdate"
 brew "the_silver_searcher"
 # Terminal multiplexer
 brew "tmux"
+# Minimal, todo.txt-focused editor
+brew "todo-txt"
 # Official command-line interface for Todoist
 brew "todoist-cli"
 # Display directories as trees (with optional color/HTML output)
@@ -228,8 +230,6 @@ brew "vultr"
 brew "watchexec"
 # Internet file retriever
 brew "wget"
-# Python-powered, cross-platform, Unix-gazing shell language and command prompt
-brew "xonsh"
 # Yet Another Dotfiles Manager
 brew "yadm"
 # JavaScript package manager
@@ -281,8 +281,6 @@ cask "league-of-legends", args: { appdir: "/Applications" }
 cask "logseq", args: { appdir: "/Applications" }
 # Simple application that will prevent iTunes or Apple Music from launching
 cask "notunes"
-# Remote desktop
-cask "parsec", args: { appdir: "/Applications" }
 # VPN client focusing on security
 cask "protonvpn", args: { appdir: "/Applications" }
 # Instant messaging application focusing on security
