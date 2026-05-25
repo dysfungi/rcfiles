@@ -90,7 +90,10 @@ my:
     k9s: { brew: k9s, pacman: k9s }
     keyring: { brew: keyring }
     kubernetes-cli: { brew: kubernetes-cli, pacman: kubectl }
-    lazydocker: { brew: lazydocker, pacman: lazydocker }
+    lazydocker:
+      brew: lazydocker
+      tap: "jesseduffield/lazydocker"
+      pacman: lazydocker
     lazygit: { brew: lazygit, pacman: lazygit }
     less: { brew: less, pacman: less }
     libcaca: { brew: libcaca }
