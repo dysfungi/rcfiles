@@ -1,6 +1,6 @@
 {{- $codeDir := joinPath .chezmoi.homeDir "Code" -}}
 {{- $dropboxDir := joinPath .chezmoi.homeDir "Dropbox" -}}
-{{- $perforceDir := joinPath .chezmoi.homeDir "Perforce" -}}
+{{- $perforceDir := .isWSL | ternary "/mnt/t/p4" (joinPath .chezmoi.homeDir "Perforce") -}}
 chez {{ .chezmoi.sourceDir }}
 dot {{ .chezmoi.homeDir }}/.dotfiles
 dropbox {{ $dropboxDir }}
@@ -14,9 +14,11 @@ goground {{ $codeDir }}/playground/go
 {{- if .isRiotMachine }}
 reliability {{ $codeDir }}/reliability-infrastructure
 sre {{ $codeDir }}/sre-monorepo
+{{- if not .isWSL }}
 main /Users/shared/p4/depot/LoL/__MAIN__/
 devroot /Users/shared/p4/depot/LoL/__MAIN__/DevRoot
 lcu /Users/shared/p4/depot/LoL/__MAIN__/DevRoot/Client
+{{- end }}
 lol {{ $codeDir }}/keystone-products.league-of-legends
 lime {{ $codeDir }}/lime-monorepo
 lotapi {{ $codeDir }}/lot-api-service

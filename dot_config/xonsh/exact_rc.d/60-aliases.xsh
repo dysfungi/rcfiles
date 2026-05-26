@@ -66,11 +66,7 @@ def __rc_interactive_aliases_builtin(aliases):
     """
     from pathlib import Path
 
-    @aliases.register("cv")
-    @aliases.return_command
-    def _cdargs_cv(args: list[str]):
-        cdargs @(args)
-        return ["cd", $(cat '$HOME/.cdargsresult')]
+    aliases["cv"] = "cdb"
 
     aliases["-"] = aliases["cd-"] = "cd -"
 
