@@ -1,9 +1,14 @@
 jq                             1.8.1     ~/.config/mise/config.toml  latest
-node                           22.18.0
+node                           22.18.0   ~/.config/mise/config.toml  lts
 node                           23.0.0
-node                           24.15.0   ~/.config/mise/config.toml  lts
+node                           24.15.0
 npm:@anthropic-ai/claude-code  2.1.143   ~/.config/mise/config.toml  latest
 ollama                         0.22.0
+pipx:bandit                    1.9.4     ~/.config/mise/config.toml  latest
+pipx:doit                      0.37.0    ~/.config/mise/config.toml  latest
+pipx:ipython                   9.13.0    ~/.config/mise/config.toml  latest
+pipx:mypy                      2.1.0     ~/.config/mise/config.toml  latest
+pipx:neovim-remote             2.5.1     ~/.config/mise/config.toml  latest
 poetry                         2.4.1
 pre-commit                     4.6.0     ~/.config/mise/config.toml  latest
 python                         3.12-dev
