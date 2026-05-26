@@ -15,9 +15,19 @@ configDir="$HOME/.config/homebrew"
 brewFile="${configDir}/Brewfile"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/Brewfile.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
+
+_commit_backup() {
+  local clarifier="${1:?required}"
+
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+  git add "${bakFile}"
+  if ! git diff --cached --quiet -- "${bakDir}"; then
+    git commit --message "chore(backups): Dump Brewfile ${clarifier} install for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
 
 backup() {
   local clarifier="${1:?required}"
@@ -26,10 +36,8 @@ backup() {
     rm "${bakFile}"
   fi
   brew bundle dump --describe --file="${bakFile}"
-  git add "${bakFile}"
-  if ! git diff --cached --quiet -- "${bakDir}"; then
-    git commit --message "chore(backups): Dump Brewfile ${clarifier} install for ${userName} on ${hostName}" -- "${bakDir}"
-  fi
+
+  _commit_backup "${clarifier}"
 }
 
 mkdir -p "${bakDir}"

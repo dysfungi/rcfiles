@@ -16,18 +16,27 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/mise-ls.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+_commit_backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+  git add "${bakFile}"
+  if ! git diff --cached --quiet -- "${bakDir}"; then
+    git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
 
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
   mise ls >"${bakFile}"
-  git add "${bakFile}"
-  if ! git diff --cached --quiet -- "${bakDir}"; then
-    git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
-  fi
+
+  _commit_backup "${clarifier}" "${action}"
 }
 
 mkdir -p "${bakDir}"

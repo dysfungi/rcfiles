@@ -8,9 +8,9 @@ set -euo pipefail
 echo >&2 "INFO: Starting $0"
 
 if ! command -v yay >/dev/null 2>&1; then
-	echo >&2 "WARNING: yay not found; skipping AUR sync."
-	echo >&2 "INFO: Ending $0"
-	exit 0
+  echo >&2 "WARNING: yay not found; skipping AUR sync."
+  echo >&2 "INFO: Ending $0"
+  exit 0
 fi
 
 userName="$(whoami)"
@@ -18,20 +18,29 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/yay-packages.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
 mkdir -p "${bakDir}"
 
-backup() {
-	local clarifier="${1:?required}"
-	local action="${2:?required}"
+_commit_backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
 
-	pacman -Qqm | sort >"${bakFile}"
-	git add "${bakFile}"
-	if ! git diff --cached --quiet -- "${bakDir}"; then
-		git commit --message "chore(backups): List yay/AUR packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
-	fi
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+  git add "${bakFile}"
+  if ! git diff --cached --quiet -- "${bakDir}"; then
+    git commit --message "chore(backups): List yay/AUR packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
+backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  pacman -Qqm | sort >"${bakFile}"
+
+  _commit_backup "${clarifier}" "${action}"
 }
 {{- $aurPkgs := list }}
 {{- range $name, $pkg := .my.packages }}
@@ -50,9 +59,9 @@ backup() {
 declared_packages="{{ join " " $aurPkgs }}"
 
 if [ -z "$declared_packages" ]; then
-	echo >&2 "INFO: No AUR packages declared; skipping."
-	echo >&2 "INFO: Ending $0"
-	exit 0
+  echo >&2 "INFO: No AUR packages declared; skipping."
+  echo >&2 "INFO: Ending $0"
+  exit 0
 fi
 
 backup before install
@@ -62,9 +71,9 @@ backup before install
 _makepkg_conf=$(mktemp /tmp/makepkg.XXXXXX.conf)
 trap 'rm -f "$_makepkg_conf"' EXIT
 {
-	cat /etc/makepkg.conf
-	echo 'CFLAGS+=" -Wno-error=format-security"'
-	echo 'CXXFLAGS+=" -Wno-error=format-security"'
+  cat /etc/makepkg.conf
+  echo 'CFLAGS+=" -Wno-error=format-security"'
+  echo 'CXXFLAGS+=" -Wno-error=format-security"'
 } >"$_makepkg_conf"
 
 echo >&2 "INFO: Installing declared AUR packages via yay..."

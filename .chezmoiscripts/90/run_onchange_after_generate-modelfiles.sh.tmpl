@@ -9,8 +9,6 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/ollama-models.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
 mkdir -p "$TARGET_DIR" "${bakDir}"
 
@@ -20,15 +18,26 @@ if ! command -v ollama >/dev/null 2>&1; then
   exit 0
 fi
 
+_commit_backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+  git add "${bakFile}"
+  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
+    git commit --message "chore(backups): List ollama models ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
+
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
   ollama list | sed 's/[[:space:]]*$//' >"${bakFile}"
-  git add "${bakFile}"
-  if [ -n "$(git status --porcelain -- "${bakDir}")" ]; then
-    git commit --message "chore(backups): List ollama models ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
-  fi
+
+  _commit_backup "${clarifier}" "${action}"
 }
 
 backup before install

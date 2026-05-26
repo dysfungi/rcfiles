@@ -19,21 +19,30 @@ bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/pip-freeze.${bakSuffix}"
 reqFile="${HOME}/.default-python-packages"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
-backup() {
+mkdir -p "${bakDir}"
+
+_commit_backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  mise exec python -- uv pip freeze --system >"${bakFile}"
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Freeze pip packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }
 
-mkdir -p "${bakDir}"
+backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  mise exec python -- uv pip freeze --system >"${bakFile}"
+
+  _commit_backup "${clarifier}" "${action}"
+}
 
 backup before install
 mise ls python --installed | awk '{print $2}' | while read -r ver; do

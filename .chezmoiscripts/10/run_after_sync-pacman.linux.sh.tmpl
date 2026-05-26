@@ -8,9 +8,9 @@ set -euo pipefail
 echo >&2 "INFO: Starting $0"
 
 if ! command -v pacman >/dev/null 2>&1; then
-    echo >&2 "WARNING: pacman not found; skipping."
-    echo >&2 "INFO: Ending $0"
-    exit 0
+  echo >&2 "WARNING: pacman not found; skipping."
+  echo >&2 "INFO: Ending $0"
+  exit 0
 fi
 
 userName="$(whoami)"
@@ -18,20 +18,29 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/pacman-packages.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
 mkdir -p "${bakDir}"
+
+_commit_backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
+  git add "${bakFile}"
+  if ! git diff --cached --quiet -- "${bakDir}"; then
+    git commit --message "chore(backups): List pacman packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+  fi
+}
 
 backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
   sudo pacman -Qqe | sort >"${bakFile}"
-  git add "${bakFile}"
-  if ! git diff --cached --quiet -- "${bakDir}"; then
-    git commit --message "chore(backups): List pacman packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
-  fi
+
+  _commit_backup "${clarifier}" "${action}"
 }
 
 {{ $packages := list }}
@@ -46,16 +55,16 @@ backup() {
       {{- $packages = append $packages (printf "%s" $pkg.pacman) }}
     {{- end }}
   {{- end }}
-{{- end }}
+{{- end -}}
 
 declared_packages="{{ join " " $packages }}"
 
 backup before install
 
 if [ -n "$declared_packages" ]; then
-    echo >&2 "INFO: Installing declared pacman packages..."
-    # shellcheck disable=SC2086
-    sudo pacman -Syu --noconfirm --needed $declared_packages
+  echo >&2 "INFO: Installing declared pacman packages..."
+  # shellcheck disable=SC2086
+  sudo pacman -Syu --noconfirm --needed $declared_packages
 fi
 
 backup after install

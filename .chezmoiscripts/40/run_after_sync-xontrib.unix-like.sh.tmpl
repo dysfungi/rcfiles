@@ -14,31 +14,40 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
 bakFile="${bakDir}/xontrib-freeze.${bakSuffix}"
-export GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
-export GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
-backup() {
+mkdir -p "${bakDir}"
+
+_commit_backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  UV_PYTHON="${MAMBA_PYTHON}" uv pip freeze >"${bakFile}"
+  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
+
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
     git commit --message "chore(backups): Freeze xontrib packages ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }
 
-mkdir -p "${bakDir}"
+backup() {
+  local clarifier="${1:?required}"
+  local action="${2:?required}"
+
+  UV_PYTHON="${MAMBA_PYTHON}" uv pip freeze >"${bakFile}"
+
+  _commit_backup "${clarifier}" "${action}"
+}
 
 xontribs=(
 {{ range $name, $pkg := .my.packages -}}
 {{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
-  {{ $pkg.xontrib }}
+{{ printf "  %s" $pkg.xontrib }}
 {{ end -}}
 {{ if .isRiotMachine -}}
 {{ range $name, $pkg := .riot.packages -}}
 {{ if not (hasKey $pkg "xontrib") -}} {{ continue }} {{- end -}}
-  {{ $pkg.xontrib }}
+{{ printf "  %s" $pkg.xontrib }}
 {{ end -}}
 {{ end -}}
 )

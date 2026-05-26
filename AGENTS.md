@@ -17,6 +17,13 @@
 - All chezmoi scripts must log start/end to stderr: sh scripts use `echo >&2 "INFO: Starting $0"` / `echo >&2 "INFO: Ending $0"`; PowerShell scripts use `Write-Host "INFO: Starting $PSCommandPath"` / `Write-Host "INFO: Ending $PSCommandPath"`.
 - When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
 
+## Programming & Engineering
+
+### Bash Scripting Conventions
+
+- **Scoped Environment Variables:** When setting environment variables that are only needed for a subset of commands within a Bash function, use `local -x VAR_NAME="value"` instead of global `export VAR_NAME="value"`. This limits the scope of the variable to the function and its child processes, preventing unintended side effects on subsequent commands.
+- **Isolate Git Operations:** When manipulating files and tracking them with `git` in the same logical operation (e.g., backups), decompose the `git` commands into a separate helper function (e.g., `_commit_backup`). Apply `local -x GIT_DIR` and `local -x GIT_WORK_TREE` _only_ within this helper function to strictly scope the git environment variables and avoid polluting the environment of non-git commands.
+
 ## Platform Conventions
 
 - Prefer OS-specific files (`.darwin.sh`, `.linux.sh`, `.windows.ps1`) over in-script platform branching (`if/case` on `uname`, distro checks, etc.). Let `.chezmoiignore.tmpl` handle platform filtering.
