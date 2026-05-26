@@ -98,13 +98,14 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - If `todo.txt` or `done.txt` don't exist at the repo root, create them (`touch todo.txt done.txt`).
 - Use `todo.sh` commands for all `todo.txt`/`done.txt` operations; fall back to direct file read/edit only when the CLI is not installed.
 
-**Multi-instance worktrees:**
+**Multi-instance worktrees (MANDATORY):**
 
-Multiple agent instances may run concurrently on the same machine against the same working directory and branch, creating undetectable file-edit races (last write wins). When starting a non-trivial task:
+Multiple agent instances run concurrently against the same working directory and branch, creating undetectable file-edit races (last write wins). Every session that will modify files MUST use an isolated git worktree. Do not skip this — on Claude Code sessions, Write/Edit/NotebookEdit tool calls are blocked by a `PreToolUse` hook until you are inside a worktree.
 
   1. `git pull`, then check for existing `@worktree` claims (`todo.sh list @worktree`).
   2. Create the worktree: `git worktree add .worktrees/<task-slug> -b task/<task-slug>`
-  3. Record a `todo.txt` entry with:
+  3. `cd .worktrees/<task-slug>` (your CWD must be inside the worktree for the hook gate to lift).
+  4. Record a `todo.txt` entry with:
      - `@worktree:.worktrees/<task-slug>`
      - `session:<id>` — conversation ID, or `$(date -u +%Y%m%dT%H%M%SZ)` as fallback
      - `agent:<tool>` — e.g. `agent:claude`, `agent:gemini`
@@ -113,6 +114,8 @@ Multiple agent instances may run concurrently on the same machine against the sa
   Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.worktrees/multi-instance-git session:20260521T143022Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
   On completion: merge to main, `git worktree remove .worktrees/<task-slug>`, and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+
+  To bypass for a genuinely trivial read-only session: `touch .claude/worktree-exempt` (gitignored; delete when done).
 
 **Pane label:** As soon as the task is identifiable (even before a worktree or todo.txt entry exists), write a short summary to `~/.claude/task-labels/$TMUX_PANE` and run `tmux select-pane -T "label"`. Guard with `[[ -n "${TMUX:-}" ]] &&`. Update as understanding improves; sync to the todo.txt task slug when one is created. The `UserPromptSubmit` hook auto-labels from the raw user prompt; agent refinements override it and persist across subsequent user messages.
 

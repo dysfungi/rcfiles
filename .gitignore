@@ -12,6 +12,7 @@
 # Claude
 **/.claude/settings.local.json
 **/.claude/worktrees/
+**/.claude/worktree-exempt
 .worktrees/
 
 ##########################################################
