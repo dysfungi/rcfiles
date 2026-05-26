@@ -283,7 +283,18 @@ def __rc_interactive_aliases_claude(aliases):
         if ("--resume" in argv or "--continue" in argv) and "--model" not in argv and "-m" not in argv:
             try:
                 with open(_SETTINGS_PATH) as f:
-                    resume_model = json.load(f).get("model", "claude-vertex/anthropic-claude-sonnet-4-6-default")
+                    settings = json.load(f)
+                resume_model = settings.get("model", "sonnet")
+                # Resolve Claude Code aliases → full TrueFoundry provider paths;
+                # env dict is read from the JSON file, not os.environ.
+                env = settings.get("env", {})
+                alias_map = {
+                    "opusplan": env.get("ANTHROPIC_DEFAULT_OPUSPLAN_MODEL"),
+                    "opus": env.get("ANTHROPIC_DEFAULT_OPUS_MODEL"),
+                    "sonnet": env.get("ANTHROPIC_DEFAULT_SONNET_MODEL"),
+                    "haiku": env.get("ANTHROPIC_DEFAULT_HAIKU_MODEL"),
+                }
+                resume_model = alias_map.get(resume_model) or resume_model
             except Exception:
                 resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default"
             argv = ["--model", resume_model, *argv]
