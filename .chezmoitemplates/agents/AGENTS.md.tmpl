@@ -60,7 +60,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 
 - Only test one hypothesis/variable at a time unless applying a `git bisect` style strategy.
 - For Neovim plugin operations (Lazy update, TSInstall, Mason installs, checkhealth, etc.), prefer `nvim --headless "..." "+qa"` over asking the user to run commands interactively inside Neovim.
-- When a repo has `pre-commit` configured, invoke linters and validators via `pre-commit run <hook-id> --all-files` rather than calling the tool binary directly — the binary may not be on `PATH` outside the pre-commit virtualenv.
+- When a repo has `pre-commit` configured, invoke linters and validators via `pre-commit run <hook-id> --all-files` rather than calling the tool binary directly — the binary may not be on `PATH` outside the pre-commit virtualenv. To verify a set of changes, prefer a single `pre-commit run --all-files` (or scoped to touched files) over hand-assembling equivalent checks (eg, `python3 -m json.tool`, `yamllint`, `chezmoi execute-template`); the hooks already cover them.
 
 ## Observability & Reliability
 
