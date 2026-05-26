@@ -4,57 +4,76 @@
 # Usage: worktree-check.sh <session-start|pre-tool-use>
 #
 # session-start: prints a warning to stdout (injected into Claude's context)
-# pre-tool-use:  exits 2 to block Write/Edit/NotebookEdit tool calls
+# pre-tool-use:  exits 2 to block Write/Edit/NotebookEdit on repo files
 #
-# Touch .claude/worktree-exempt in the project root to bypass enforcement.
-set -euo pipefail
+# Bypass (per-session): touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID
+# Bypass (global):      touch .claude/worktree-exempt
+set -uo pipefail
 
 mode="${1:-pre-tool-use}"
 
-# Find the project root from CLAUDE_PROJECT_DIR or git
 project_dir="${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 
-# Bypass if escape hatch is set
-if [[ -f "${project_dir}/.claude/worktree-exempt" ]]; then
-  exit 0
-fi
-
-# Detect whether we are in a linked worktree.
-# In the main worktree, git-dir and git-common-dir resolve to the same path.
-# In a linked worktree, git-dir is inside .git/worktrees/<name>/, while
-# git-common-dir is the main .git/ — so they differ.
+# --- Worktree detection ---
+# In a linked worktree, git-dir differs from git-common-dir.
 git_dir="$(git rev-parse --git-dir 2>/dev/null)" || exit 0
 git_common="$(git rev-parse --git-common-dir 2>/dev/null)" || exit 0
-
-# Resolve to absolute paths for a reliable comparison
 git_dir="$(cd "${git_dir}" && pwd)"
 git_common="$(cd "${git_common}" && pwd)"
 
 if [[ "${git_dir}" != "${git_common}" ]]; then
-  # In a linked worktree — all clear
   exit 0
 fi
 
-# We are on the main worktree. Act based on mode.
+# --- Helper: extract JSON field via python3 (always available at /usr/sbin/python3) ---
+json_field() {
+  python3 -c "import json,sys; d=json.load(sys.stdin); print(d$1)" 2>/dev/null || true
+}
+
+# --- We are on the main worktree. ---
 case "${mode}" in
 session-start)
-  # Stdout is injected into Claude's context window by the SessionStart hook.
-  # Use this to prime Claude with a visible reminder before it does anything.
-  cat <<'EOF'
+  cat <<EOF
 [WORKTREE ENFORCEMENT] You are on the main git worktree of this chezmoi repo.
-Write, Edit, and NotebookEdit tool calls are BLOCKED until you enter a linked worktree.
+Write, Edit, and NotebookEdit tool calls targeting repo files are BLOCKED until you enter a linked worktree.
 
 Before making any file changes:
-  1. Use the EnterWorktree tool to create an isolated worktree for this task.
-  2. Register a todo.txt entry (see AGENTS.md "Multi-instance worktrees" section).
+  1. Create a worktree: git worktree add .worktrees/<task-slug> -b task/<task-slug>
+  2. cd into it so CWD is inside the worktree.
+  3. Register a todo.txt entry (see AGENTS.md "Multi-instance worktrees" section).
 
-To bypass for a genuinely trivial edit: touch .claude/worktree-exempt
+Per-session bypass: touch .claude/worktree-exempt.\$CLAUDE_CODE_SESSION_ID
 EOF
   exit 0
   ;;
 pre-tool-use)
-  # Exit 2 tells Claude Code to block the tool call and surface stderr to Claude.
-  echo "BLOCKED: Write/Edit/NotebookEdit are disabled on the main worktree. Use EnterWorktree first, or touch .claude/worktree-exempt to bypass." >&2
+  input="$(cat)"
+
+  # --- Allow writes to files outside the repo ---
+  file_path="$(printf '%s' "${input}" | json_field ".get('tool_input',{}).get('file_path') or d.get('tool_input',{}).get('notebook_path') or ''")"
+  if [[ -n "${file_path}" ]]; then
+    repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -n "${repo_root}" ]]; then
+      repo_root="${repo_root%/}/"
+      if [[ "${file_path}" != "${repo_root}"* ]]; then
+        exit 0
+      fi
+    fi
+  fi
+
+  # --- Per-session exempt ---
+  session_id="$(printf '%s' "${input}" | json_field ".get('session_id','')")"
+  sid="${session_id:-${CLAUDE_CODE_SESSION_ID:-}}"
+  if [[ -n "${sid}" ]] && [[ -f "${project_dir}/.claude/worktree-exempt.${sid}" ]]; then
+    exit 0
+  fi
+
+  # --- Global exempt (nuclear option) ---
+  if [[ -f "${project_dir}/.claude/worktree-exempt" ]]; then
+    exit 0
+  fi
+
+  echo "BLOCKED: Write/Edit/NotebookEdit on repo files are disabled on the main worktree. Create a worktree first, or touch .claude/worktree-exempt.\$CLAUDE_CODE_SESSION_ID to bypass this session only." >&2
   exit 2
   ;;
 esac

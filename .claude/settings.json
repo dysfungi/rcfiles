@@ -33,7 +33,7 @@
           },
           {
             "type": "command",
-            "command": "rm -f \"$CLAUDE_PROJECT_DIR/.claude/worktree-exempt\"",
+            "command": "rm -f \"$CLAUDE_PROJECT_DIR/.claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID\"",
             "timeout": 5
           }
         ]

@@ -115,7 +115,7 @@ Multiple agent instances run concurrently against the same working directory and
 
   On completion: merge to main, `git worktree remove .worktrees/<task-slug>`, and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
 
-  To bypass for a genuinely trivial read-only session: `touch .claude/worktree-exempt` (gitignored; delete when done).
+  Per-session bypass (does not affect other concurrent sessions): `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID` (gitignored; auto-removed on session stop).
 
 **Pane label:** As soon as the task is identifiable (even before a worktree or todo.txt entry exists), write a short summary to `~/.claude/task-labels/$TMUX_PANE` and run `tmux select-pane -T "label"`. Guard with `[[ -n "${TMUX:-}" ]] &&`. Update as understanding improves; sync to the todo.txt task slug when one is created. The `UserPromptSubmit` hook auto-labels from the raw user prompt; agent refinements override it and persist across subsequent user messages.
 
