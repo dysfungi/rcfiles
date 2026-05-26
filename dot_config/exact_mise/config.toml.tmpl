@@ -7,6 +7,8 @@ min_version = "2024.9.5"
 # https://mise.jdx.dev/configuration/settings.html
 
 experimental = true
+idiomatic_version_file_enable_tools = ["python"]
+
 {{- if and .isLinux (.isWSL | default false) }}
 trusted_config_paths = [
   "/mnt/c/Users/{{ .chezmoi.username }}/.config/mise",
