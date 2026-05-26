@@ -1,0 +1,4 @@
+# Intentionally managed-empty by chezmoi (source: dot_xonshrc).
+# Real xonsh config lives in ~/.config/xonsh/rc.xsh. This file exists only to
+# neutralize the upstream mamba-install-xonsh.sh bug that appends $XONSHRC here
+# when the installer is run from within a xonsh session.

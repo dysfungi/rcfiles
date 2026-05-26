@@ -7,6 +7,11 @@ export PYTHON_VER={{ (index .my.packages "xonsh").python }}
 export TARGET_DIR="$HOME/.local/xonsh-env"
 export XONSH_VER='{{ (index .my.packages "xonsh").mamba }}'
 
+# The upstream installer appends $XONSHRC to ~/.xonshrc when non-empty. Running
+# from a xonsh session, $XONSHRC is the inherited ':'-joined RC-list, producing
+# a broken ~/.xonshrc. Force it empty so that block is skipped.
+export XONSHRC=''
+
 # https://xon.sh/install_mamba.html
 # We patch the script on-the-fly to handle Windows paths:
 # 1. python.exe is in the target dir root, not bin/
