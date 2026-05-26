@@ -12,10 +12,6 @@ idiomatic_version_file_enable_tools = ["python"]
 trusted_config_paths = [
   # Chezmoi source dir — covers .mise.toml in repo root and any .worktrees/*/
   {{ joinPath .chezmoi.homeDir ".local/share/chezmoi" | quote }},
-{{- if and .isLinux (.isWSL | default false) }}
-  "/mnt/c/Users/{{ .chezmoi.username }}/.config/mise",
-  "/mnt/c/Users/{{ .chezmoi.username }}/.local/share/chezmoi",
-{{- end }}
 ]
 
 [tools]
