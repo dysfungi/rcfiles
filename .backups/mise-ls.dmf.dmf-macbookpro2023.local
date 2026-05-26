@@ -1,14 +1,19 @@
+hadolint                       2.14.0
 jq                             1.8.1     ~/.config/mise/config.toml  latest
-node                           22.22.3   ~/.config/mise/config.toml  lts
+lua                            5.5.0
+node                           22.22.3
 node                           23.0.0
-node                           24.15.0
+node                           24.15.0   ~/.config/mise/config.toml  lts
 npm:@anthropic-ai/claude-code  2.1.150   ~/.config/mise/config.toml  latest
+npm:markdownlint-cli           0.48.0
 ollama                         0.22.0
 pipx:bandit                    1.9.4     ~/.config/mise/config.toml  latest
 pipx:doit                      0.37.0    ~/.config/mise/config.toml  latest
 pipx:ipython                   9.13.0    ~/.config/mise/config.toml  latest
 pipx:mypy                      2.1.0     ~/.config/mise/config.toml  latest
 pipx:neovim-remote             2.5.1     ~/.config/mise/config.toml  latest
+pipx:pre-commit                4.6.0
+pipx:yamllint                  1.38.0
 poetry                         2.4.1
 pre-commit                     4.6.0     ~/.config/mise/config.toml  latest
 python                         3.12-dev
@@ -16,4 +21,8 @@ python                         3.12.7
 python                         3.12.11
 python                         3.13.13   ~/.config/mise/config.toml  3.13
 ruff                           0.15.14   ~/.config/mise/config.toml  latest
+shellcheck                     0.11.0
+shfmt                          3.13.1
+stylua                         2.5.2
+taplo                          0.10.0
 uv                             0.11.16   ~/.config/mise/config.toml  latest
