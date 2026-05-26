@@ -361,16 +361,19 @@ def run_hook(files: list[str]) -> int:
     config_templates, other_templates = partition_into_config_and_other(actionable)
     needs_config_refresh = bool(config_templates)
 
-    config_results = [process_file(f) for f in config_templates]
-    config_templates_all_passed = all(config_results)
-
-    if needs_config_refresh and config_templates_all_passed:
+    # Chezmoi config templates (e.g. .chezmoi.toml.tmpl) use promptString and
+    # onepasswordRead, which are registered only in chezmoi init's FuncMap —
+    # not in execute-template's. They fail at compile time (not runtime), so
+    # render_template_to_file always rejects them. Use chezmoi init instead.
+    config_templates_all_passed = True
+    if needs_config_refresh:
         err = refresh_chezmoi_config_from_staged_template()
         if err:
             print(
-                f"WARN: chezmoi init failed; continuing with existing on-disk config:\n{err}",
+                f"FAIL  chezmoi config templates: chezmoi init failed:\n{err}",
                 file=sys.stderr,
             )
+            config_templates_all_passed = False
 
     other_results = [process_file(f) for f in other_templates]
     other_all_passed = all(other_results)
