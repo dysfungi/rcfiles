@@ -45,13 +45,13 @@ EOF
 pre-tool-use)
   input="$(cat)"
 
-  # --- Allow writes to files outside the repo ---
+  # --- Allow writes outside the repo or to .claude/ (gitignored session infra) ---
   file_path="$(printf '%s' "${input}" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')"
   if [[ -n "${file_path}" ]]; then
     repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     if [[ -n "${repo_root}" ]]; then
       repo_root="${repo_root%/}/"
-      if [[ "${file_path}" != "${repo_root}"* ]]; then
+      if [[ "${file_path}" != "${repo_root}"* ]] || [[ "${file_path}" == "${repo_root}.claude/"* ]]; then
         exit 0
       fi
     fi
