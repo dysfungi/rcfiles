@@ -30,6 +30,11 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/migrate-permissions.sh\""
+          },
+          {
+            "type": "command",
+            "command": "rm -f \"$CLAUDE_PROJECT_DIR/.claude/worktree-exempt\"",
+            "timeout": 5
           }
         ]
       }
