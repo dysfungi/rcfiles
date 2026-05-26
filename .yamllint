@@ -1,0 +1,22 @@
+---
+extends: default
+rules:
+  # GitHub Actions uses 'on:' as a mapping key; YAML 1.1 parses 'on' as
+  # boolean true. check-keys: false skips truthy checks on mapping keys.
+  truthy:
+    allowed-values: ['true', 'false']
+    check-keys: false
+  # No '---' document-start required in this repo's YAML files.
+  document-start: disable
+  # Data files contain URLs and inline comments that exceed 80 chars.
+  line-length:
+    max: 120
+    level: warning
+  # Single-space inline comments are used in models.yaml.
+  comments:
+    min-spaces-from-content: 1
+  # Flow mappings with single spaces { like: this } are allowed.
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+  comments-indentation: disable
