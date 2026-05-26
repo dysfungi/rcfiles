@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S mise x -- bash
+# shellcheck shell=bash
 # Enforces git worktree isolation for Claude Code sessions.
 #
 # Usage: worktree-check.sh <session-start|pre-tool-use>
@@ -25,11 +26,6 @@ if [[ "${git_dir}" != "${git_common}" ]]; then
   exit 0
 fi
 
-# --- Helper: extract JSON field via python3 (always available at /usr/sbin/python3) ---
-json_field() {
-  python3 -c "import json,sys; d=json.load(sys.stdin); print(d$1)" 2>/dev/null || true
-}
-
 # --- We are on the main worktree. ---
 case "${mode}" in
 session-start)
@@ -50,7 +46,7 @@ pre-tool-use)
   input="$(cat)"
 
   # --- Allow writes to files outside the repo ---
-  file_path="$(printf '%s' "${input}" | json_field ".get('tool_input',{}).get('file_path') or d.get('tool_input',{}).get('notebook_path') or ''")"
+  file_path="$(printf '%s' "${input}" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')"
   if [[ -n "${file_path}" ]]; then
     repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     if [[ -n "${repo_root}" ]]; then
@@ -62,7 +58,7 @@ pre-tool-use)
   fi
 
   # --- Per-session exempt ---
-  session_id="$(printf '%s' "${input}" | json_field ".get('session_id','')")"
+  session_id="$(printf '%s' "${input}" | jq -r '.session_id // ""')"
   sid="${session_id:-${CLAUDE_CODE_SESSION_ID:-}}"
   if [[ -n "${sid}" ]] && [[ -f "${project_dir}/.claude/worktree-exempt.${sid}" ]]; then
     exit 0
