@@ -104,7 +104,7 @@ Multiple agent instances run concurrently against the same working directory and
 
   1. `git pull`, then check for existing `@worktree` claims (`todo.sh list @worktree`).
   2. Create the worktree: `git worktree add .worktrees/<task-slug> -b task/<task-slug>`
-  3. `cd .worktrees/<task-slug>` (your CWD must be inside the worktree for the hook gate to lift).
+  3. Enter it — on Claude Code, use `EnterWorktree` with `path: .worktrees/<task-slug>` (lifts the hook gate without creating a second worktree). On other tools: `cd .worktrees/<task-slug>`.
   4. Record a `todo.txt` entry with:
      - `@worktree:.worktrees/<task-slug>`
      - `session:<id>` — conversation ID, or `$(date -u +%Y%m%dT%H%M%SZ)` as fallback
