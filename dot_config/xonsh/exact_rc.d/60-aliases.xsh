@@ -298,6 +298,9 @@ def __rc_interactive_aliases_claude(aliases):
             except Exception:
                 resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default"
             argv = ["--model", resume_model, *argv]
+        import sys
+        print(f"[claude-alias] argv={argv!r}", file=sys.stderr)
+        print(f"[claude-alias] real_claude={real_claude!r}", file=sys.stderr)
         return subprocess.run([real_claude, *argv]).returncode
 
     from pathlib import Path
