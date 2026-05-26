@@ -1,6 +1,7 @@
-NAME                         ID              SIZE      MODIFIED
-qwen3.5:9b                   6488c96fa5fa    6.6 GB    7 days ago
-local__qwen3.5__9b:latest    5e4ebff68f4c    6.6 GB    7 days ago
-deepseek-v4-flash:cloud      ea027821675c    -         7 days ago
-deepseek-r1:1.5b             a42b25d8c10a    1.1 GB    14 months ago
-deepseek-r1:latest           0a8c26691023    4.7 GB    14 months ago
+NAME                                      ID              SIZE      MODIFIED
+local__qwen3-coder-next__q4_K_M:latest    6d158db0e8dc    51 GB     Less than a second ago
+qwen3-coder-next:q4_K_M                   ca06e9e4087c    51 GB     Less than a second ago
+qwen3.5:9b                                6488c96fa5fa    6.6 GB    7 days ago
+deepseek-v4-flash:cloud                   ea027821675c    -         7 days ago
+deepseek-r1:1.5b                          a42b25d8c10a    1.1 GB    14 months ago
+deepseek-r1:latest                        0a8c26691023    4.7 GB    14 months ago
