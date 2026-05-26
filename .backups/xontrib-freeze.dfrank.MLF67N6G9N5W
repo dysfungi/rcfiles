@@ -18,7 +18,7 @@ typing-extensions==4.15.0
 ujson==5.12.1
 urllib3==2.7.0
 wcwidth==0.7.0
-xonsh==0.23.7
+xonsh==0.22.8
 xontrib-1password==0.3.2
 xontrib-dracula==0.1.1
 xontrib-sh==0.3.2
