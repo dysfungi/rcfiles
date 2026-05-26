@@ -1,3 +1,6 @@
+# Template validation scratch (may contain 1Password secrets from rendered output)
+.tmp/
+
 # Mise
 # https://mise.jdx.dev/configuration.html#mise-toml
 **/mise.local.toml

@@ -25,10 +25,14 @@ Design decisions:
     yamllint, hadolint, luac) produce only their error output — no file is
     preserved, because the error message with line/col is sufficient.
 
-  - Temp directories are mode 0o700; files within are mode 0o600. On success
-    the directory is deleted immediately. On failure it is left in place and
-    its path is printed with a secrets warning, since rendered output may
-    contain 1Password secrets.
+  - Temp directories live under .tmp/chezmoi-validate/ at the repo root
+    (gitignored; auto-ignored by chezmoi via dot-prefix). Placing rendered
+    output inside the repo lets every format tool discover repo config
+    (editorconfig, .stylua.toml, taplo.toml) via the normal upward path
+    search — no per-tool flags. Mode 0o700; files within 0o600. On success
+    the directory is deleted. On failure it is left in place and its path
+    is printed with a secrets warning, since rendered output may contain
+    1Password secrets.
 
   - The Python script is a pure orchestrator — all validation logic lives in
     the external tools. No Python built-ins (json.load, tomllib) are used for
@@ -51,8 +55,8 @@ Output type detection (filename-based rules first, then extension):
 Format-style validators (auto-fixer + linter; produces 3 artifacts on failure):
   toml      auto-fix: taplo fmt <copy>          linter: taplo lint
   markdown  auto-fix: markdownlint --fix <copy> linter: markdownlint
-  shell     auto-fix: shfmt -d                  linter: bash -n + shellcheck
-  lua       auto-fix: stylua - (stdin)          linter: luac -p
+  shell     auto-fix: shfmt -w <copy>               linter: bash -n + shellcheck
+  lua       auto-fix: stylua <copy>                 linter: luac -p
 
 Linter-only validators (error output is the artifact; no files preserved):
   dockerfile  hadolint
@@ -72,6 +76,7 @@ Mise-managed tools (all required; hard-fail if missing):
 
 from __future__ import annotations
 
+import functools
 import os
 import re
 import shutil
@@ -155,14 +160,11 @@ def partition_into_config_and_other(
 # ---------------------------------------------------------------------------
 
 
-def _mise(
-    tool: str, *args: str, input: bytes | None = None
-) -> subprocess.CompletedProcess:
+def _mise(tool: str, *args: str) -> subprocess.CompletedProcess:
     try:
         result = subprocess.run(
             ["mise", "exec", "--", tool, *args],
             capture_output=True,
-            input=input,
         )
     except FileNotFoundError:
         sys.exit("FAIL: mise not found on PATH — install mise first")
@@ -170,6 +172,19 @@ def _mise(
     if result.returncode != 0 and _TOOL_NOT_FOUND_RE.search(stderr):
         sys.exit(f"FAIL: {tool} not found — run: mise install")
     return result
+
+
+@functools.lru_cache(maxsize=None)
+def _scratch_root() -> Path:
+    result = subprocess.run(
+        ["git", "rev-parse", "--show-toplevel"], capture_output=True
+    )
+    root = (
+        Path(result.stdout.decode().strip()) if result.returncode == 0 else Path.cwd()
+    )
+    scratch = root / ".tmp" / "chezmoi-validate"
+    scratch.mkdir(parents=True, exist_ok=True)
+    return scratch
 
 
 def _output_if_failed(result: subprocess.CompletedProcess) -> str | None:
@@ -229,32 +244,19 @@ def run_autofix_and_write_diff_artifacts(
 ) -> str | None:
     suffix = suffix_for_output_type(output_type)
     fixed = tmpdir / f"fixed{suffix}"
-    diff: str = ""
+    shutil.copy2(rendered, fixed)
+    os.chmod(fixed, 0o600)
 
     if output_type == "toml":
-        shutil.copy2(rendered, fixed)
-        os.chmod(fixed, 0o600)
         _mise("taplo", "fmt", str(fixed))
-        diff = _unified_diff(rendered, fixed)
-
     elif output_type == "markdown":
-        shutil.copy2(rendered, fixed)
-        os.chmod(fixed, 0o600)
         _mise("markdownlint", "--fix", str(fixed))
-        diff = _unified_diff(rendered, fixed)
-
     elif output_type == "shell":
-        diff_result = _mise("shfmt", "-d", str(rendered))
-        diff = diff_result.stdout.decode(errors="replace")
-        if diff:
-            fmt_result = _mise("shfmt", str(rendered))
-            _write_artifact(fixed, fmt_result.stdout)
-
+        _mise("shfmt", "-w", str(fixed))
     elif output_type == "lua":
-        fmt_result = _mise("stylua", "-", input=rendered.read_bytes())
-        _write_artifact(fixed, fmt_result.stdout)
-        diff = _unified_diff(rendered, fixed)
+        _mise("stylua", str(fixed))
 
+    diff = _unified_diff(rendered, fixed)
     if not diff:
         return None
 
@@ -334,7 +336,7 @@ def _print_artifact_hint(tmpdir: Path) -> None:
 
 def process_file(source: str) -> bool:
     output_type = detect_output_type(source)
-    tmpdir = Path(tempfile.mkdtemp(prefix="chezmoi-validate-"))
+    tmpdir = Path(tempfile.mkdtemp(dir=_scratch_root()))
     os.chmod(tmpdir, 0o700)
     rendered = tmpdir / f"rendered{suffix_for_output_type(output_type)}"
 
