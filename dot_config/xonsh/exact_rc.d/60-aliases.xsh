@@ -280,7 +280,8 @@ def __rc_interactive_aliases_claude(aliases):
             print("claude: not found in PATH or mise installs", file=__import__("sys").stderr)
             return 127
         argv = list(args)
-        if ("--resume" in argv or "--continue" in argv) and "--model" not in argv and "-m" not in argv:
+        _resume_flags = {"-r", "--resume", "-c", "--continue"}
+        if (set(argv) & _resume_flags) and "--model" not in argv and "-m" not in argv:
             try:
                 with open(_SETTINGS_PATH) as f:
                     settings = json.load(f)
@@ -298,9 +299,6 @@ def __rc_interactive_aliases_claude(aliases):
             except Exception:
                 resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default"
             argv = ["--model", resume_model, *argv]
-        import sys
-        print(f"[claude-alias] argv={argv!r}", file=sys.stderr)
-        print(f"[claude-alias] real_claude={real_claude!r}", file=sys.stderr)
         return subprocess.run([real_claude, *argv]).returncode
 
     from pathlib import Path
