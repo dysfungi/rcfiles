@@ -30,9 +30,11 @@
   "effortLevel": "high",
   "env": {
     {{- if .isMyMachine }}
+    {{/*
     "ANTHROPIC_API_KEY": "",
     "ANTHROPIC_AUTH_TOKEN": "ollama",
     "ANTHROPIC_BASE_URL": "http://localhost:11434",
+    */ -}}
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0", {{- /* TODO(dfrank): Enable telemetry */}}
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0",
@@ -112,13 +114,8 @@
   },
   "includeGitInstruction": true,
   "language": "english",
-  {{- if .isMyMachine }}
-  "model": "default",
-  "modelOverrides": {},
-  {{- else if .isRiotMachine }}
   "model": "opusplan",
   "modelOverrides": {},
-  {{- end }}
   "outputStyle": "Explanatory",
   "permissions": {
     "defaultMode": "plan",

@@ -2,6 +2,14 @@
   "general": {
     "defaultApprovalMode": "default",
     "devtools": false,
+    "enableNotifications": true,
+    "checkpointing": {
+      "enabled": true
+    },
+    "plan": {
+      "enabled": true,
+      "modelRouting": true
+    },
     "preferredEditor": "neovim",
     "vimMode": true
   },
@@ -21,9 +29,6 @@
   },
   "model": {
     "compressionThreshold": "0.5"
-    {{- if .isMyMachine }},
-    "name": "gemini-3.1-pro"
-    {{- end }}
   },
   "security": {
     "auth": {
