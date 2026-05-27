@@ -4,6 +4,8 @@ my:
       isHomeRelative: true
     - path: "Code"
       isHomeRelative: true
+    - path: ".local/my/riot-slack"
+      isHomeRelative: true
 riot:
   projects:
     - path: "/mnt/t/p4/flyingfox/dev-main"
