@@ -7,7 +7,14 @@
   {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
 {{- end -}}
 {{- range $mcpName, $mcp := $mcpServersIn -}}
-  {{- $mcpServersOut = set $mcpServersOut $mcpName (dict "type" "http" "url" $mcp.serverUrl) -}}
+  {{- $mcpEntry := dict "type" "http" "url" $mcp.serverUrl -}}
+  {{- if hasKey $mcp "auth" -}}
+    {{- if eq $mcp.auth.type "bearer" -}}
+      {{- $token := onepasswordRead $mcp.auth.opPath -}}
+      {{- $mcpEntry = set $mcpEntry "headers" (dict "Authorization" (printf "Bearer %s" $token)) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $mcpServersOut = set $mcpServersOut $mcpName $mcpEntry -}}
 {{- end -}}
 {{- $config = set $config "mcpServers" $mcpServersOut -}}
 

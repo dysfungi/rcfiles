@@ -24,6 +24,13 @@
     {{- if not $isFirstMcp }},{{- else }}{{- $isFirstMcp = false -}}{{- end }}
     {{ $mcpName | quote -}}: {
       "httpUrl": {{ $mcp.serverUrl | quote }}
+      {{- if hasKey $mcp "auth" -}}
+        {{- if eq $mcp.auth.type "bearer" }},
+      "headers": {
+        "Authorization": {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opPath) | quote }}
+      }
+        {{- end -}}
+      {{- end }}
     }
     {{- end }}
   },

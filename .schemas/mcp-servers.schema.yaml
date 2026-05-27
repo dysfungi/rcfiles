@@ -33,3 +33,17 @@ $defs:
       docUrl:
         type: string
         format: uri
+      auth:
+        $ref: "#/$defs/auth"
+
+  auth:
+    type: object
+    additionalProperties: false
+    required: [type, opPath]
+    properties:
+      type:
+        type: string
+        enum: [bearer]
+      opPath:
+        type: string
+        pattern: "^op://"

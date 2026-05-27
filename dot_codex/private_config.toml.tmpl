@@ -40,6 +40,11 @@ source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plu
 
 [mcp_servers.{{ $mcpName }}] {{ $mcp.docUrl  | comment "# " }}
 url = {{ $mcp.serverUrl | quote }}
+{{- if hasKey $mcp "auth" -}}
+  {{- if eq $mcp.auth.type "bearer" }}
+headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opPath) | quote }} }
+  {{- end -}}
+{{- end }}
 
 {{- end }}
 
