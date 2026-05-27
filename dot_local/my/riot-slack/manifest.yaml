@@ -4,10 +4,16 @@ display_information:
   background_color: "#11172b"
   long_description: Derek Frank's app for integrating his AI agents (eg, Claude, Gemini, Codex) with Slack and using them as his primary interface to reduce the noise of Slack, help him stay on top of ongoing conversations, and assist in drafting responses.
 features:
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: false
+    messages_tab_read_only_enabled: true
   bot_user:
     display_name: dfrank.ai
     always_online: false
 oauth_config:
+  redirect_urls:
+    - http://localhost:8080/callback
   scopes:
     user:
       - bookmarks:read
