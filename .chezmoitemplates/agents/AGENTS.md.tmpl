@@ -76,6 +76,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Outside plan mode (implementation / "accept edits" mode): auto-commit completed work without asking. The user's workflow is: plan mode for design/decision alignment, then implementation mode where commits should flow automatically. Do not pause to ask "should I commit?" after making changes. Exception: if implementation uncovers a fundamental design issue or requires a new significant design/decision, pause and return to plan mode for alignment before continuing.
 - Always pause before destructive or hard-to-reverse operations (`push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
 - **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
+- **Named stashes**: Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name (`git stash list` + `git stash pop stash@{n}` matching the slug). Multiple agents share the stash stack; unnamed stashes will collide.
 {{- if .isRiotMachine }}
 
 **p4:**
