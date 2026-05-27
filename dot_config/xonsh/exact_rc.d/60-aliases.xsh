@@ -313,6 +313,11 @@ def __rc_interactive_aliases_claude(aliases):
         away_flag.unlink(missing_ok=True)
         print("Away mode OFF")
 
+    @aliases.register("riot-slack")
+    def _riot_slack(args):
+        cd ~/.local/my/riot-slack
+        claude --name riot-slack @(args)
+
 
 @rc(interactive=True)
 def __rc_interactive_aliases_fun(aliases):

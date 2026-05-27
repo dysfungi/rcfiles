@@ -1,3 +1,9 @@
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
 (B) 2026-05-19 Investigate GITHUB_TOKEN not being read from [github] config for gitHubLatestReleaseAssetURL externals — must set env var manually for now +chezmoi @bug
 (B) 2026-05-19 Two-repo situation (Windows /mnt/c/ source + WSL ~/  source) causes rebase friction; evaluate making WSL source canonical for this machine +chezmoi @architecture
+(D) Explore codecompanion.nvim with Slack MCP for in-editor triage view +riot-slack +neovim
+(D) Explore mcpchat.nvim as lightweight MCP chat interface in Neovim +riot-slack +neovim
+(D) Add per-channel priority tiers to riot-slack CLAUDE.md after initial usage +riot-slack
+(D) Investigate riot-slack MCP user-token vs bot-token behavior differences +riot-slack
+(D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
+(D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
