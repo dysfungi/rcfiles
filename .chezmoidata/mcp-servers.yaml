@@ -17,3 +17,7 @@ riot:
     riot-lore:
       serverUrl: "https://riot-lore-beta.rcluster.io/lore/v1/mcp"
       docUrl: "https://gh.riotgames.com/clde/glue-lore"
+    slack:
+      serverUrl: "https://mcp.slack.com/mcp"
+      docUrl: |-
+        https://www.notion.so/riotgames/Slack-MCP-2f77f9530fb280488442c5f73a202022?v=26b7f9530fb280caa34a000c71d93783
