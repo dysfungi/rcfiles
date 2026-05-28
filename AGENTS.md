@@ -68,6 +68,24 @@ Both files are ignored by chezmoi (never deployed). Keep them in sync with activ
 - When completing a deferred item from `todo.txt` during a session, move it to `done.txt` with an `x YYYY-MM-DD` prefix (the todo.txt CLI archive convention). Do not delete completed tasks.
 - When a new plan is written, check `todo.txt` for related existing entries and reference or close them.
 
+## Bash Command Worktree Guard
+
+On the main worktree, a `PreToolUse` hook on `Bash` blocks commands that would mutate git state or repo files. Blocked categories:
+
+| Category         | Blocked                                                                                | Allowed                            |
+| ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------- |
+| git stash        | `git stash`, `git stash push/pop/apply/save`                                           | `git stash list`, `git stash show` |
+| git history      | `git commit`, `git merge`, `git rebase`, `git cherry-pick`, `git am`, `git apply`      | —                                  |
+| git working-tree | `git add`, `git checkout`, `git restore`, `git reset`, `git rm`, `git mv`, `git clean` | all other subcommands              |
+| In-place edit    | `sed -i` (any flag combination)                                                        | `sed` without `-i`                 |
+| Shell redirects  | `>`, `>>` (stdout)                                                                     | `2>`, `>&` (stderr/fd)             |
+| File write       | `tee`                                                                                  | —                                  |
+| File ops         | `rm`, `mv`, `cp`                                                                       | —                                  |
+
+The guard uses the same worktree detection and exemption mechanism as the Write/Edit hook (compare `git rev-parse --git-dir` vs `--git-common-dir`; honor `.claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID`). All commands are allowed when inside a linked worktree or when exempted.
+
+This is best-effort, not a sandbox — obfuscated mutations (e.g., `python3 -c "open(...).write(...)"`) bypass it. Always follow the Multi-instance worktrees protocol in your agent instructions.
+
 ## Also See
 
 - [CLAUDE.md](./CLAUDE.md) — bootstrapping instructions for new machines.
