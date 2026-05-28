@@ -916,7 +916,7 @@ require("lazy").setup({
           },
         },
         marksman = {}, -- Markdown
-        ocamllsp = is_windows and nil or {}, -- opam not available on Windows
+        ocamllsp = vim.fn.executable "opam" == 1 and {} or nil, -- skip if opam not on PATH
         rust_analyzer = {},
         -- sqls = {},
         taplo = {}, -- TOML
