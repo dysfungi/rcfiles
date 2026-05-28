@@ -101,7 +101,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 
 **Multi-instance worktrees (MANDATORY):**
 
-Multiple agent instances run concurrently against the same working directory and branch, creating undetectable file-edit races (last write wins). Every session that will modify files MUST use an isolated git worktree. Do not skip this — on Claude Code sessions, Write/Edit/NotebookEdit tool calls are blocked by a `PreToolUse` hook until you are inside a worktree.
+Multiple agent instances run concurrently against the same working directory and branch, creating undetectable file-edit races (last write wins). Every session that will modify files MUST use an isolated git worktree. Do not skip this — on Claude Code sessions, Write/Edit/NotebookEdit tool calls AND mutating Bash commands (git stash/commit/merge/rebase, sed -i, redirects, rm/mv/cp) are blocked by `PreToolUse` hooks until you are inside a worktree.
 
   1. `git pull`, then check for existing `@worktree` claims (`todo.sh list @worktree`).
   2. On Claude Code: call `EnterWorktree name: <task-slug>` — creates `.claude/worktrees/<task-slug>` on branch `worktree-<task-slug>` and lifts the hook gate in one step. On other tools: `git worktree add .worktrees/<task-slug> -b task/<task-slug>` then `cd` into it.

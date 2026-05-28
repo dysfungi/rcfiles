@@ -31,12 +31,13 @@ case "${mode}" in
 session-start)
   cat <<EOF
 [WORKTREE ENFORCEMENT] You are on the main git worktree of this chezmoi repo.
-Write, Edit, and NotebookEdit tool calls targeting repo files are BLOCKED until you enter a linked worktree.
+Write, Edit, and NotebookEdit tool calls targeting repo files are BLOCKED.
+Mutating Bash commands (git stash/commit/merge/rebase, sed -i, redirects, rm/mv/cp) are also BLOCKED.
 
 Before making any file changes:
   1. Create a worktree: git worktree add .worktrees/<task-slug> -b task/<task-slug>
   2. cd into it so CWD is inside the worktree.
-  3. Register a todo.txt entry (see AGENTS.md "Multi-instance worktrees" section).
+  3. Register a todo.txt entry (see the Multi-instance worktrees section in your agent instructions).
 
 Per-session bypass: touch .claude/worktree-exempt.\$CLAUDE_CODE_SESSION_ID
 EOF
