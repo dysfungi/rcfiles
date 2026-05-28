@@ -116,6 +116,7 @@ my:
     openssh: { brew: openssh, pacman: openssh, bootstrap: true }
     openssl: { brew: openssl, pacman: openssl }
     opentofu: { brew: opentofu, pacman: opentofu }
+    pacman-contrib: { pacman: pacman-contrib }
     pandoc: { brew: pandoc }
     poetry: { brew: poetry }
     prettier: { brew: prettier }

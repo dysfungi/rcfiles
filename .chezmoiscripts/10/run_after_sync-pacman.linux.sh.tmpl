@@ -70,7 +70,7 @@ fi
 backup after install
 
 echo >&2 "INFO: Cleaning pacman cache..."
-sudo pacman -Sc --noconfirm
+sudo paccache -rk2 && sudo paccache -ruk0
 
 echo >&2 "INFO: pacman sync complete."
 echo >&2 "INFO: Ending $0"
