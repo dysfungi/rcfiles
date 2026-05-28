@@ -1,0 +1,13 @@
+{{ if and .isRiotMachine (not .isWindows) -}}
+
+#### https://gh.riotgames.com/dfrank/ritoutils ####
+
+[dfrank-ritoutils-local-bin]
+targetPath = ".local/bin"
+type = "archive"
+url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/dfrank/ritoutils/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/bin/*"]
+stripComponents = 2
+executable = true
+{{- end }}
