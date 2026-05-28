@@ -1,2 +1,3 @@
 x 2026-05-19 2026-05-19 (B) Fix GITHUB_TOKEN not being used by chezmoi GitHub template functions — renamed to CHEZMOI_GITHUB_ACCESS_TOKEN via WSLENV +chezmoi @bug
 x 2026-05-27 Add riot-slack Claude workspace (CLAUDE.md, alias, manifest) +chezmoi +riot-slack @worktree:.worktrees/riot-slack-workspace session:20260527T204954Z agent:claude model:claude-vertex/anthropic-claude-opus-4-6
+x 2026-05-27 (B) Add Bash worktree guard hook +chezmoi @worktree:.claude/worktrees/bash-worktree-guard session:20260527T220633Z agent:claude model:claude-vertex/anthropic-claude-opus-4-6
