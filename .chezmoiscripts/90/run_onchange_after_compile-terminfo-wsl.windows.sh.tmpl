@@ -3,7 +3,6 @@ set -euo pipefail
 {{ range (joinPath .chezmoi.homeDir ".config/terminfo/*.terminfo" | glob) -}}
 # {{ . }} hash: {{ include . | sha256sum }}
 {{ end }}
-
 echo >&2 "INFO: Starting $0"
 
 if ! wsl.exe --list --quiet >/dev/null 2>&1; then

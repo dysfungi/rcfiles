@@ -15,6 +15,7 @@ export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:CHEZMOI_GITHUB_ACCESS_TOKEN"
 
 if wsl.exe -d {{ .wslDistro }} -- bash -c 'test -d ~/.local/share/chezmoi'; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
+  # shellcheck disable=SC2016
   wsl.exe -d {{ .wslDistro }} -- bash -c '
     git -C ~/.local/share/chezmoi -c credential.helper="" pull --ff-only \
       "https://x-token:$CHEZMOI_GITHUB_ACCESS_TOKEN@github.com/dysfungi/rcfiles.git" main
@@ -28,6 +29,7 @@ else
   echo >&2 "INFO: Initializing chezmoi in WSL..."
   # chezmoi init needs onepassword.mode=service before the config template renders;
   # write bootstrap to the standard config path so chezmoi init persists the generated config there
+  # shellcheck disable=SC2016
   wsl.exe -d {{ .wslDistro }} -- bash -c '
     mkdir -p "$HOME/.config/chezmoi"
     printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"

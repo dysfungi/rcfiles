@@ -5,25 +5,25 @@
 {{ $refreshPeriod := ternary "0" "168h" .isWindows }}
 
 [fonts-iosevka]
-    targetPath = {{ joinPath $fontsDir "Iosevka" | quote }}
-    type = "archive"
-    url = {{ gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" | quote }}
-    refreshPeriod = {{ $refreshPeriod | quote }}
+targetPath = {{ joinPath $fontsDir "Iosevka" | quote }}
+type = "archive"
+url = {{ gitHubLatestReleaseAssetURL "be5invis/Iosevka" "PkgTTC-Iosevka-*.zip" | quote }}
+refreshPeriod = {{ $refreshPeriod | quote }}
 
 [fonts-powerlevel10k]
-    targetPath = {{ joinPath $fontsDir "PowerLevel10k" | quote }}
-    type = "archive"
-    url = "https://github.com/romkatv/powerlevel10k-media/archive/master.tar.gz"
-    exact = false
-    stripComponents = 1
-    refreshPeriod = {{ $refreshPeriod | quote }}
-    include = ["*/*.ttf"]
+targetPath = {{ joinPath $fontsDir "PowerLevel10k" | quote }}
+type = "archive"
+url = "https://github.com/romkatv/powerlevel10k-media/archive/master.tar.gz"
+exact = false
+stripComponents = 1
+refreshPeriod = {{ $refreshPeriod | quote }}
+include = ["*/*.ttf"]
 
 [fonts-source_code_pro]
-    targetPath = {{ joinPath $fontsDir "SourceCodePro" | quote }}
-    type = "archive"
-    url = "https://github.com/adobe-fonts/source-code-pro/archive/master.tar.gz"
-    exact = false
-    stripComponents = 2
-    refreshPeriod = {{ $refreshPeriod | quote }}
-    include = ["**/*.ttf"]
+targetPath = {{ joinPath $fontsDir "SourceCodePro" | quote }}
+type = "archive"
+url = "https://github.com/adobe-fonts/source-code-pro/archive/master.tar.gz"
+exact = false
+stripComponents = 2
+refreshPeriod = {{ $refreshPeriod | quote }}
+include = ["**/*.ttf"]

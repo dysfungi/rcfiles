@@ -97,6 +97,7 @@ repos:
           (?x)^(
             exact_private_dot_secrets/
             |(.*/)?symlink_
+            |(.*/)?\.chezmoitemplates/ollama/Modelfile\.tmpl
           )$
 
   #######

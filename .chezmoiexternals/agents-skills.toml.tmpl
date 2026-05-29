@@ -1,46 +1,46 @@
 [codex-pickle-rick-skill]
-    targetPath = ".codex/skills/pickle-rick"
-    type = "archive"
-    url = "https://github.com/averystormknight-hue/pickle-rick-multi-cli/archive/main.tar.gz"
-    refreshPeriod = "168h"
-    include = ["*/codex/**"]
-    stripComponents = 2
-    exact = true
+targetPath = ".codex/skills/pickle-rick"
+type = "archive"
+url = "https://github.com/averystormknight-hue/pickle-rick-multi-cli/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/codex/**"]
+stripComponents = 2
+exact = true
 
 [gemini-pickle-rick-extension]
-    targetPath = ".gemini/extensions/pickle-rick"
-    type = "archive"
-    url = "https://github.com/galz10/pickle-rick-extension/archive/main.tar.gz"
-    stripComponents = 1
-    refreshPeriod = "168h"
-    exact = true
+targetPath = ".gemini/extensions/pickle-rick"
+type = "archive"
+url = "https://github.com/galz10/pickle-rick-extension/archive/main.tar.gz"
+stripComponents = 1
+refreshPeriod = "168h"
+exact = true
 
 {{ if and .isRiotMachine (not .isWindows) -}}
 
 #### https://gh.riotgames.com/live-operations/agent-skills ####
 
 [riot-liveops-dot-agents-agents]
-    targetPath = ".agents/agents"
-    type = "archive"
-    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
-    refreshPeriod = "168h"
-    include = ["*/agents/**"]
-    stripComponents = 2
+targetPath = ".agents/agents"
+type = "archive"
+url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/agents/**"]
+stripComponents = 2
 
 [riot-liveops-dot-agents-skills]
-    targetPath = ".agents/skills"
-    type = "archive"
-    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
-    refreshPeriod = "168h"
-    include = ["*/skills/**"]
-    stripComponents = 2
+targetPath = ".agents/skills"
+type = "archive"
+url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/skills/**"]
+stripComponents = 2
 
 [riot-liveops-dot-agents-agents-skills]
-    targetPath = ".agents/skills"
-    type = "archive"
-    url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
-    refreshPeriod = "168h"
-    include = ["*/agents/*/skills/**"]
-    stripComponents = 4
+targetPath = ".agents/skills"
+type = "archive"
+url = "https://{{ .chezmoi.username }}:{{ .riotGithubToken }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/agents/*/skills/**"]
+stripComponents = 4
 
-{{- end -}}
+{{- end }}
