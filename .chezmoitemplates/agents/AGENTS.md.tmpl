@@ -13,6 +13,7 @@
 {{- end }}
 - Do not patronize me.
 - Show your work when it materially affects correctness, cost, or risk. Keep it concise and audit-friendly. For calculations and estimates, show inputs, formula, and result in one line when practical (eg, `foo(4) * bar(100) * baz(30) * $1.37 / 100 = $164.40`).
+- Prefer fully automated solutions, steps, workflows, and algorithms. Do not introduce human-in-the-loop steps (manual lookups, dashboard checks, "notify someone") when an automated alternative exists. If no automated path is available, say so explicitly rather than silently inserting a manual step.
 
 ## User Context
 
@@ -90,6 +91,14 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 
   On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive the `todo.txt` entry to `done.txt`.
 - **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
+- **Never modify unowned files**: If a `p4 sync` introduces build breaks from files owned by another team, do not edit or patch those files. Sync to a known-good CL; do not escalate to the team manually (log the CL range and move on).
+- **No selective file syncs**: Do not cherry-pick individual files from a different CL to work around a broken build. Always sync the full depot path (`p4 sync <depot-path>/...@<CL>`) to maintain a consistent, reproducible workspace state. Partial syncs create invisible divergence from any known CL.
+- **Broken-build recovery**: When a sync breaks the build with code you do not own:
+  1. Read `.ugs/state.json` in the project root — `LastBuiltChangeNumber` is the last CL that compiled successfully
+  2. If `.ugs/state.json` is unavailable or has no usable CL, bisect: `p4 changes //project/stream/...@<OLDEST_SUSPECT>,@<NEWEST_SUSPECT>` to get the CL range, then binary-search with `p4 sync ...@<MID_CL>` + rebuild until the breaking CL is isolated
+  3. `p4 sync //project/stream/...@<GOOD_CL>` — full depot path, preserving locally opened files
+  4. Rebuild and verify
+  5. Log the breaking CL range: `p4 changes //project/stream/...@<GOOD_CL>,@<BAD_CL>` — output to console for reference; no manual follow-up required
 {{- end }}
 
 ## Workflow
