@@ -5,6 +5,7 @@ cdargs
 chezmoi
 colordiff
 direnv
+dotnet-sdk
 fd
 fzf
 git
