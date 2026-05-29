@@ -76,14 +76,18 @@ def __rc_env_riot():
     $GO111MODULE = "on"
     $GOPRIVATE = "*.riotgames.com"
 
-    # P4/Perforce — macOS only; on Linux, server/client config comes from ~/.p4enviro
-    if not @.imp.xonsh.platform.ON_LINUX:
+    # P4/Perforce — config file name for auto-discovery; macOS uses an absolute path
+    if @.imp.xonsh.platform.ON_DARWIN:
         p4_root_dir = p"/Users/Shared/p4"
         p4_depot_dir = p4_root_dir / "depot"
         p4_lol_dir = p4_depot_dir / "LoL"
         p4_lol_main_dir = p4_lol_dir / "__MAIN__"
         p4_lol_code_dir = p4_lol_main_dir / "code"
         $P4CONFIG = p4_lol_code_dir / "RiotClient" / "DevTools" / "VSCodeWorkspace" / ".p4config"
+    elif @.imp.xonsh.platform.ON_LINUX:
+        $P4CONFIG = ".p4config.wsl"
+    else:
+        $P4CONFIG = ".p4config"
 
     # Vault
     $VAULT_ADDR = "https://vault.security.riotgames.io"
