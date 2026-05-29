@@ -188,7 +188,7 @@ my:
     codex: { cask: codex, winget: OpenAI.Codex }
     discord: { cask: discord }
     docker-desktop: { cask: docker-desktop }
-    dotnet-sdk: { cask: dotnet-sdk }
+    dotnet-sdk: { cask: dotnet-sdk, pacman: dotnet-sdk }
     dropbox: { cask: dropbox }
     firefox: { cask: firefox }
     font-andale-mono: { cask: font-andale-mono }
