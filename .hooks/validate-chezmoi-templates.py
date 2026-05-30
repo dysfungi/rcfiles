@@ -62,6 +62,12 @@ Linter-only validators (error output is the artifact; no files preserved):
   dockerfile  hadolint
   json        jq .    (not used as formatter -- reorders keys)
   yaml        yamllint
+  python      ruff check
+
+Shebang override: after rendering, the first line is checked for a shebang
+(#!.*python, #!.*sh/bash/zsh, #!.*lua). If found, the shebang-detected type
+overrides the filename-based type. This handles cases like modify_foo.json.tmpl
+that renders to a Python script rather than JSON.
 
 Hard skips (never rendered):
   exact_private_dot_secrets/  renders to bare secret strings
@@ -71,7 +77,7 @@ Render-only (Go template syntax checked; no format validator):
   .ps1, .conf, no-extension, and any unrecognised extension
 
 Mise-managed tools (all required; hard-fail if missing):
-  taplo, jq, yamllint, hadolint, shellcheck, shfmt, stylua, lua, npm:markdownlint-cli
+  taplo, jq, yamllint, hadolint, shellcheck, shfmt, stylua, lua, npm:markdownlint-cli, ruff
 """
 
 from __future__ import annotations
@@ -98,6 +104,7 @@ _EXT_TO_OUTPUT_TYPE: dict[str, str] = {
     ".sh": "shell",
     ".lua": "lua",
     ".md": "markdown",
+    ".py": "python",
 }
 
 _OUTPUT_TYPE_TO_SUFFIX: dict[str, str] = {
@@ -107,9 +114,16 @@ _OUTPUT_TYPE_TO_SUFFIX: dict[str, str] = {
     "shell": ".sh",
     "lua": ".lua",
     "markdown": ".md",
+    "python": ".py",
     "dockerfile": "",
     "render-only": "",
 }
+
+_SHEBANG_TO_OUTPUT_TYPE: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"^#!.*\bpython"), "python"),
+    (re.compile(r"^#!.*(bash|sh|zsh|dash)"), "shell"),
+    (re.compile(r"^#!.*\blua\b"), "lua"),
+]
 
 FORMAT_STYLE_TYPES = frozenset({"toml", "markdown", "shell", "lua"})
 
@@ -136,6 +150,17 @@ def detect_output_type(path: str) -> str:
     if stem == "Modelfile" or re.match(r"^Dockerfile", stem):
         return "dockerfile"
     return _EXT_TO_OUTPUT_TYPE.get(Path(stem).suffix.lower(), "render-only")
+
+
+def detect_output_type_from_shebang(rendered: Path) -> str | None:
+    try:
+        first_line = rendered.read_text(errors="replace").splitlines()[0]
+    except (IndexError, OSError):
+        return None
+    for pattern, output_type in _SHEBANG_TO_OUTPUT_TYPE:
+        if pattern.match(first_line):
+            return output_type
+    return None
 
 
 def suffix_for_output_type(output_type: str) -> str:
@@ -296,6 +321,9 @@ def run_linter(output_type: str, rendered: Path) -> str | None:
     if output_type == "dockerfile":
         return _output_if_failed(_mise("hadolint", str(rendered)))
 
+    if output_type == "python":
+        return _output_if_failed(_mise("ruff", "check", str(rendered)))
+
     return None  # render-only: no format validator
 
 
@@ -345,6 +373,16 @@ def process_file(source: str) -> bool:
         shutil.rmtree(tmpdir)
         print(f"FAIL  {source}: render failed:\n{render_err}", file=sys.stderr)
         return False
+
+    # Shebang overrides filename-based detection (e.g. modify_foo.json.tmpl
+    # that renders to a Python script).
+    shebang_type = detect_output_type_from_shebang(rendered)
+    if shebang_type and shebang_type != output_type:
+        new_rendered = rendered.rename(
+            tmpdir / f"rendered{suffix_for_output_type(shebang_type)}"
+        )
+        rendered = new_rendered
+        output_type = shebang_type
 
     validation_err = validate_rendered_output(output_type, rendered, tmpdir)
     if validation_err:
