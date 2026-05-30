@@ -50,6 +50,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+# todo.sh mutations (add, do, del, archive, etc.) are blocked on main so agents
+# are forced to run them inside the worktree, where the entry gets committed and
+# arrives on main atomically via the --ff-only merge-back. A mutation run on main
+# after ExitWorktree would race with concurrent sessions and silently disappear if
+# the worktree is removed before the change is committed. See "Multi-instance
+# worktrees" in AGENTS.md for the required completion sequence.
 READONLY_TODO_SUBCMDS = frozenset(
     {
         "help",
@@ -184,7 +190,8 @@ def check_segment(segment: str) -> str | None:
         if subcmd == "stash" and not re.search(r"git\s+stash\s+(list|show)(\s|$)", seg):
             return "git stash (mutating)"
 
-    # todo.sh / todo mutations (add, do, del, pri, etc.)
+    # todo.sh / todo mutations (add, do, del, pri, etc.) — must happen in-worktree
+    # and be committed; see READONLY_TODO_SUBCMDS comment and AGENTS.md.
     todo_match = re.match(r"\s*(?:todo\.sh|todo)\s+(\S+)", seg)
     if todo_match:
         subcmd = todo_match.group(1)

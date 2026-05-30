@@ -68,6 +68,12 @@ _ALLOWED = [
     ("todo.sh lf @worktree", "todo.sh lf with filter (read-only alias)"),
     ("todo.sh help", "todo.sh help"),
     ("todo.sh shorthelp", "todo.sh shorthelp"),
+    # Regression: list with arguments must remain allowed on main (the fallback
+    # in compound commands like `todo.sh do N || todo.sh list @worktree` is
+    # blocked by the `do` segment, but the list itself is always valid standalone).
+    ("todo.sh list @worktree", "todo.sh list with @worktree filter"),
+    ("todo.sh list *", "todo.sh list with wildcard"),
+    ("todo.sh list A", "todo.sh list with priority filter"),
     # Plain commands
     ("echo hello", "echo"),
     ("ls -la", "ls"),

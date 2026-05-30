@@ -99,11 +99,11 @@ Concurrent agents on the same branch create file-edit races (last write wins). E
 
   1. `git pull`, then check existing claims: `todo.sh list @worktree`.
   2. On Claude Code: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`. On other tools: `git worktree add .worktrees/<session-id>.<task-slug> -b task/<session-id>.<task-slug>` then `cd` into it.
-  3. Record in `todo.txt`: `@worktree:.claude/worktrees/<session-id>.<task-slug>`, `session:<id>`, `agent:<tool>`, `model:<full-model-id>`.
+  3. Record in `todo.txt`: `@worktree:.claude/worktrees/<session-id>.<task-slug>`, `session:<id>`, `agent:<tool>`, `model:<full-model-id>`. Commit this entry as part of the worktree's first commit — `todo.sh` mutations are blocked on main, so the entry must be committed here to survive the merge-back.
 
   Example: `(B) Fix auth bug +api @worktree:.claude/worktrees/b9395dee.auth-fix session:b9395dee agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
-  On completion (Claude Code): `ExitWorktree action: remove`, then `git merge --ff-only <worktree-branch>` on main, push, and `git branch -d <worktree-branch>`. The bash guard allows `--ff-only` specifically for this merge-back pattern. On other tools: merge to main, `git worktree remove .worktrees/<session-id>.<task-slug>`, and delete the branch. Archive to `done.txt` with `x YYYY-MM-DD`.
+  On completion (Claude Code): while still **inside** the worktree: run `todo.sh do <task-id>` and commit the change. If main has advanced since branching, run `git rebase main` to linearise the branch so `--ff-only` succeeds. Then `ExitWorktree action: remove`, `git merge --ff-only <worktree-branch>`, `git branch -d <worktree-branch>`, and push. The bash guard allows `--ff-only` specifically for this merge-back pattern. On other tools: merge to main, `git worktree remove .worktrees/<session-id>.<task-slug>`, and delete the branch.
 
   **Auto-cleanup:** The Stop hook removes merged worktrees for the current session and archives their `todo.txt` entries. Prefer explicit `ExitWorktree` — the hook is a safety net, not a substitute.
 
