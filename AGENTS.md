@@ -1,4 +1,117 @@
-# AGENTS.md
+# AGENTS.md / CLAUDE.md / GEMINI.md
+
+This file is the single source of truth for AI coding agents in this repo. `CLAUDE.md` and `GEMINI.md` are symlinks to this file.
+
+## Repo Purpose
+
+Chezmoi-managed dotfiles for both personal machines (`dmf` user) and Riot Games work machines (`dfrank` / RIOTGAMES domain). A single source tree handles multi-OS, multi-machine configurations through templating and conditional logic.
+
+## Commands
+
+Apply all dotfiles to the current machine:
+
+```sh
+chezmoi apply
+```
+
+Preview changes before applying:
+
+```sh
+chezmoi diff
+```
+
+Run only a subset (e.g., re-run scripts after editing):
+
+```sh
+chezmoi apply --include scripts
+```
+
+Lint/format via pre-commit (runs shellcheck, shfmt, ruff, stylua, prettier, etc.):
+
+```sh
+mise x -- pre-commit run --all-files
+```
+
+Run a single hook:
+
+```sh
+mise x -- pre-commit run shellcheck --all-files
+```
+
+Run regression tests:
+
+```sh
+mise x -- pytest .tests/
+```
+
+The `mise x --` prefix is required for `pre-commit` and `pytest` because both are mise-managed (pre-commit via `mise: pre-commit`, pytest via `pip:` under mise-managed Python).
+
+## Architecture
+
+### File Naming Conventions
+
+Chezmoi interprets file/directory name prefixes before placing them in `$HOME`:
+
+| Prefix                       | Meaning                                                            |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `dot_`                       | Becomes `.` in home dir                                            |
+| `exact_`                     | Syncs deletions (removes untracked files in dir)                   |
+| `private_`                   | Sets restrictive permissions; file content encrypted via 1Password |
+| `run_once_before_`           | Script runs once ever, before applying files                       |
+| `run_once_after_`            | Script runs once ever, after applying files                        |
+| `run_onchange_*`             | Script runs when its content (or `.tmpl` inputs) changes           |
+| `run_before_` / `run_after_` | Script runs every `chezmoi apply`                                  |
+| `.tmpl` suffix               | Go template, rendered at apply time                                |
+
+Platform filtering in script names: `.unix-like.sh`, `.darwin.sh`, `.windows.ps1` (matched by `.chezmoiignore.tmpl`).
+
+### Script Execution Order
+
+Scripts under `.chezmoiscripts/` are staged by numeric subdirectory:
+
+| Stage | Purpose                                                               |
+| ----- | --------------------------------------------------------------------- |
+| `00/` | Sudoers setup                                                         |
+| `10/` | Core/system deps: package manager and tool manager installers + syncs |
+| `20/` | Dev deps: language runtimes and toolchains (mise install, setup-opam) |
+| `30/` | Shell registration: xonsh in /etc/shells, set as default              |
+| `40/` | App-level deps: Python packages via xpip/UV                           |
+| `50/` | Self-managed symlinked file sync (pre-apply)                          |
+| `65/` | Log rotation                                                          |
+| `70/` | Editor plugin sync (Neovim/Mason)                                     |
+| `90/` | Specialized setup (terminfo, Riot machine P4/LoL tooling)             |
+| `99/` | Git-commit backup snapshots of symlinked files                        |
+
+### Machine Detection
+
+`.chezmoi.toml.tmpl` sets boolean template variables consumed everywhere:
+
+- `isMyMachine` — username is `dmf`
+- `isRiotMachine` — username is `dfrank` or RIOTGAMES domain
+- `isWorkMachine` — any non-personal machine
+- OS booleans: `isDarwin`, `isLinux`, `isWindows`, `isUnixLike`, `isBsd`
+
+Credentials flow through 1Password (`onepasswordRead()`). The `OP_SERVICE_ACCOUNT_TOKEN` is read from the environment or `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`.
+
+### Templating
+
+Shared templates live in `.chezmoitemplates/` and are included via `{{ includeTemplate "..." . }}`. The canonical example is `.chezmoitemplates/agents/AGENTS.md.tmpl`, which is rendered into each AI tool's config dir rather than installed as a standalone dotfile.
+
+Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
+
+### Backup Strategy
+
+`.backups/` is git-tracked and auto-committed by stage 99 scripts. Snapshots are named `<tool>.<user>@<hostname>.log` (e.g., `Brewfile.dfrank@MLF67N6G9N5W.log`) and captured **before and after** install/upgrade runs for audit trail.
+
+### Key Subsystems
+
+- **Xonsh** (primary shell): `dot_config/xonsh/`
+- **Zsh** (fallback): modular configs in `.zsh/` (riot, gcloud, ocaml, etc.)
+- **Neovim**: `dot_config/exact_nvim/` — Lazy plugin manager, Mason for LSP/formatters
+- **Git**: aliases and config in `dot_config/git/`
+- **AI tools**: `dot_claude/`, `dot_codex/`, `dot_gemini/` — each rendered from shared AGENTS.md template
+- **Homebrew**: `dot_config/homebrew/Brewfile.tmpl`
+- **Mise**: polyglot tool version manager, `dot_config/exact_mise/` + `.mise.toml`
 
 ## Chezmoi Workflow
 
@@ -24,6 +137,21 @@
 
 - **Scoped Environment Variables:** When setting environment variables that are only needed for a subset of commands within a Bash function, use `local -x VAR_NAME="value"` instead of global `export VAR_NAME="value"`. This limits the scope of the variable to the function and its child processes, preventing unintended side effects on subsequent commands.
 - **Isolate Git Operations:** When manipulating files and tracking them with `git` in the same logical operation (e.g., backups), decompose the `git` commands into a separate helper function (e.g., `_commit_backup`). Apply `local -x GIT_DIR` and `local -x GIT_WORK_TREE` _only_ within this helper function to strictly scope the git environment variables and avoid polluting the environment of non-git commands.
+
+## Testing
+
+- Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
+- **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
+
+  - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
+  - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
+  - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators
+
+  One file per script-or-hook under test; multiple test functions per file when a single artifact has multiple behaviors. New tests go in domain dirs from now on; pre-existing flat files stay until naturally touched.
+
+- Convention: parametrized tables with descriptive `ids=` per case. See `.tests/test_bash_worktree_guard.py` for the canonical shape — parametrized truth tables serve as the executable spec.
+- For shell scripts and non-Python artifacts, write subprocess-driven integration tests that invoke the artifact as a real user would. Build a tmp env (HOME tree, fake PATH stubs, tmp git repos for CHEZMOI\_\* vars). Do not refactor production code purely to expose internals for unit testing — the harness adapts to production shape, not vice versa.
+- When adding new functionality with a regression class, add the test file in the same commit.
 
 ## Platform Conventions
 
@@ -91,5 +219,4 @@ This is best-effort, not a sandbox — obfuscated mutations (e.g., `python3 -c "
 
 ## Also See
 
-- [CLAUDE.md](./CLAUDE.md) — bootstrapping instructions for new machines.
 - [README.md](./README.md)
