@@ -29,17 +29,17 @@ WHY THE PARAMETRIZED TABLE
 GIT ISOLATION DESIGN (root-cause note)
     The script uses `local -x GIT_DIR` / `local -x GIT_WORK_TREE` (pointing
     at `CHEZMOI_SOURCE_DIR`) inside `_commit_backup`, so its git calls target
-    the per-test tmp repo, not the real chezmoi repo.  Three guards prevent
-    future regressions:
+    the per-test tmp repo, not the real chezmoi repo.  Two local guards prevent
+    regressions specific to this test file:
 
     1. _clean_env() strips GIT_* vars leaked by pre-commit into child
        processes (git init, git commit, the script itself).
     2. _run_script() sets cwd=CHEZMOI_SOURCE_DIR so the bash script starts
        inside the temp git repo; any bare `git` call without GIT_DIR will
        auto-discover the tmp .git via directory traversal, not the real one.
-    3. assert_real_repo_unaffected (autouse session fixture) records and
-       asserts the real repo's core.bare and HEAD are unchanged after every
-       test session — a canary that catches regressions in the above layers.
+
+    The session-wide guard (assert_real_repo_unaffected in conftest.py) catches
+    regressions in any test file across the whole suite.
 
     Root cause of the original core.bare corruption: the test was developed
     without _clean_env(), allowing pre-commit to leak GIT_DIR into subprocess
@@ -59,36 +59,6 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / ".chezmoiscripts/20/run_after_sync-mise.unix-like.sh"
-_REAL_GIT_DIR = REPO_ROOT / ".git"
-
-
-@pytest.fixture(scope="session", autouse=True)
-def assert_real_repo_unaffected() -> Any:
-    """Guard: verify this test session cannot corrupt the real chezmoi repo.
-
-    Records core.bare and HEAD sha before all tests and asserts both are
-    unchanged after the session completes.  A failure here means one of the
-    GIT isolation layers broke and a test touched the real repo.
-    """
-
-    def _git(*args: str) -> str:
-        return subprocess.run(
-            ["git", "--git-dir", str(_REAL_GIT_DIR), *args],
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-
-    before_bare = _git("config", "--get", "core.bare") or "false"
-    before_head = _git("rev-parse", "HEAD")
-    yield
-    after_bare = _git("config", "--get", "core.bare") or "false"
-    after_head = _git("rev-parse", "HEAD")
-    assert after_bare == before_bare, (
-        f"real repo core.bare changed during tests: {before_bare!r} → {after_bare!r}"
-    )
-    assert after_head == before_head, (
-        f"real repo HEAD changed during tests: {before_head!r} → {after_head!r}"
-    )
 
 
 # Mirror the bash `_host_platform_suffix` logic so tests can construct

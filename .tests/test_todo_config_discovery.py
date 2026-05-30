@@ -7,6 +7,13 @@ cases using real git repos and real filesystem — no mocks.
 
 The discovery mechanism is tested by sourcing the config in a bash subprocess
 with CWD set to the target directory, which is exactly how todo.sh invokes it.
+
+GIT ISOLATION
+    All subprocess calls that invoke git pass env=_clean_env() to strip any
+    GIT_DIR / GIT_INDEX_FILE / etc. leaked by pre-commit; without this, git
+    calls hit the real chezmoi repo and can corrupt its config (core.bare=true).
+    The session-wide assert_real_repo_unaffected fixture in conftest.py is the
+    safety net that catches regressions in this layer.
 """
 
 from __future__ import annotations
@@ -22,6 +29,16 @@ import pytest
 _CONFIG = Path(__file__).resolve().parents[1] / "dot_todo" / "config"
 
 
+def _clean_env() -> dict[str, str]:
+    """Return os.environ with GIT_* vars stripped.
+
+    Pre-commit leaks GIT_DIR / GIT_INDEX_FILE / etc. into subprocess env;
+    stripping them ensures git calls hit the intended tmp repo, not the real
+    chezmoi repo.
+    """
+    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+
 def _source_and_get_todo_dir(cwd: Path) -> str:
     """Source dot_todo/config in bash from cwd and return the value of TODO_DIR."""
     result = subprocess.run(
@@ -29,6 +46,7 @@ def _source_and_get_todo_dir(cwd: Path) -> str:
         cwd=cwd,
         capture_output=True,
         text=True,
+        env=_clean_env(),
     )
     return result.stdout
 
@@ -90,7 +108,9 @@ def _make_opted_in_repo(base: Path) -> Path:
     """Create a git repo with a root todo.txt (opted in). Returns repo root."""
     repo = base / "repo"
     repo.mkdir()
-    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "init", str(repo)], check=True, capture_output=True, env=_clean_env()
+    )
     _git_commit_empty(repo)
     (repo / "todo.txt").touch()
     return repo
@@ -108,7 +128,9 @@ def _make_bare_repo(base: Path) -> Path:
     """Create a git repo with NO todo.txt. Returns repo root."""
     repo = base / "bare-repo"
     repo.mkdir()
-    subprocess.run(["git", "init", str(repo)], check=True, capture_output=True)
+    subprocess.run(
+        ["git", "init", str(repo)], check=True, capture_output=True, env=_clean_env()
+    )
     _git_commit_empty(repo)
     return repo
 
@@ -121,23 +143,19 @@ def _make_plain_dir(base: Path) -> Path:
 
 
 def _git_commit_empty(repo: Path) -> None:
-    # Preserve PATH and other critical env vars; only override git identity
-    # so git can find its exec-path helpers while still ignoring any real
-    # user config that might affect the test outcome.
-    env = {
-        **os.environ,
-        "GIT_AUTHOR_NAME": "test",
-        "GIT_AUTHOR_EMAIL": "t@t",
-        "GIT_COMMITTER_NAME": "test",
-        "GIT_COMMITTER_EMAIL": "t@t",
-        "HOME": str(repo),
-    }
     subprocess.run(
         ["git", "commit", "--allow-empty", "-m", "init"],
         cwd=repo,
         check=True,
         capture_output=True,
-        env=env,
+        env={
+            **_clean_env(),
+            "GIT_AUTHOR_NAME": "test",
+            "GIT_AUTHOR_EMAIL": "t@t",
+            "GIT_COMMITTER_NAME": "test",
+            "GIT_COMMITTER_EMAIL": "t@t",
+            "HOME": str(repo),
+        },
     )
 
 
@@ -149,5 +167,6 @@ def _git_toplevel(path: Path) -> str:
         capture_output=True,
         text=True,
         check=True,
+        env=_clean_env(),
     )
     return result.stdout.strip()

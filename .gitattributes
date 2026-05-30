@@ -17,3 +17,10 @@
 *.bat text eol=crlf
 *.cmd text eol=crlf
 *.reg text eol=crlf
+
+# Append-only log files: keep all lines from both sides during merge.
+# Without this, concurrent worktree sessions always conflict on the last
+# line because git's default text merge can't tell that both sides only
+# appended — it sees a modification, not a pure addition.
+done.txt merge=union
+todo.txt merge=union
