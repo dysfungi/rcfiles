@@ -34,6 +34,17 @@
         ]
       }
     ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree_create_validate.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
@@ -45,6 +56,11 @@
             "type": "command",
             "command": "rm -f \"$CLAUDE_PROJECT_DIR/.claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID\"",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree_stop_cleanup.py\"",
+            "timeout": 10
           }
         ]
       }

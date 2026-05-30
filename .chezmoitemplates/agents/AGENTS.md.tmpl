@@ -113,16 +113,18 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 Multiple agent instances run concurrently against the same working directory and branch, creating undetectable file-edit races (last write wins). Every session that will modify files MUST use an isolated git worktree. Do not skip this — on Claude Code sessions, Write/Edit/NotebookEdit tool calls AND mutating Bash commands (git stash/commit/merge/rebase, sed -i, redirects, rm/mv/cp) are blocked by `PreToolUse` hooks until you are inside a worktree.
 
   1. `git pull`, then check for existing `@worktree` claims (`todo.sh list @worktree`).
-  2. On Claude Code: call `EnterWorktree name: <task-slug>` — creates `.claude/worktrees/<task-slug>` on branch `worktree-<task-slug>` and lifts the hook gate in one step. On other tools: `git worktree add .worktrees/<task-slug> -b task/<task-slug>` then `cd` into it.
+  2. On Claude Code: call `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"` — creates `.claude/worktrees/<session-id>.<task-slug>` on branch `worktree-<session-id>.<task-slug>` and lifts the hook gate in one step. On other tools: `git worktree add .worktrees/<session-id>.<task-slug> -b task/<session-id>.<task-slug>` then `cd` into it (use the tool's equivalent session/conversation ID).
   3. Record a `todo.txt` entry with:
-     - `@worktree:.claude/worktrees/<task-slug>` (or `.worktrees/<task-slug>` for other tools)
+     - `@worktree:.claude/worktrees/<session-id>.<task-slug>` (or `.worktrees/<session-id>.<task-slug>` for other tools)
      - `session:<id>` — conversation ID, or `$(date -u +%Y%m%dT%H%M%SZ)` as fallback
      - `agent:<tool>` — e.g. `agent:claude`, `agent:gemini`
      - `model:<full-model-id>` — e.g. `model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
-  Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.claude/worktrees/multi-instance-git session:20260521T143022Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+  Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.claude/worktrees/b9395dee-d9fd-49e7-80a9-1f0f6bd0a0f6.multi-instance-git session:b9395dee-d9fd-49e7-80a9-1f0f6bd0a0f6 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
-  On completion: merge to main, call `ExitWorktree action: remove` (Claude Code) or `git worktree remove .worktrees/<task-slug>` (other tools), and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+  On completion: merge to main, call `ExitWorktree action: remove` (Claude Code) or `git worktree remove .worktrees/<session-id>.<task-slug>` (other tools), and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+
+  **Auto-cleanup:** On Claude Code, the Stop hook (`worktree_stop_cleanup.py`) automatically removes any worktrees for the current session whose branch is fully merged to main, and archives their `todo.txt` entries. Explicitly calling `ExitWorktree action: remove` is still preferred — the Stop hook is a safety net for crashes and interruptions, not a substitute for intentional cleanup.
 
   Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID` (per-session, gitignored, auto-removed on session stop). Agents must never use this — always create a real worktree.
 
