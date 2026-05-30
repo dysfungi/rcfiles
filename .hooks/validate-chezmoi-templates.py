@@ -119,8 +119,10 @@ _OUTPUT_TYPE_TO_SUFFIX: dict[str, str] = {
     "render-only": "",
 }
 
+# Matches `uv` because modify_* scripts use `#!/usr/bin/env -S uv run`
+# shebangs (per AGENTS.md convention) and have non-.py extensions like .json.
 _SHEBANG_TO_OUTPUT_TYPE: list[tuple[re.Pattern[str], str]] = [
-    (re.compile(r"^#!.*\bpython"), "python"),
+    (re.compile(r"^#!.*(\bpython|\buv\b)"), "python"),
     (re.compile(r"^#!.*(bash|sh|zsh|dash)"), "shell"),
     (re.compile(r"^#!.*\blua\b"), "lua"),
 ]

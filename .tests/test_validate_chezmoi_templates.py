@@ -212,10 +212,15 @@ def test_suffix_for_output_type(output_type: str, expected: str) -> None:
 # detect_output_type_from_shebang
 # ---------------------------------------------------------------------------
 
+# uv shebangs are critical: modify_* scripts (e.g. modify_config.json.tmpl)
+# render to Python but have non-.py extensions — shebang is the only signal.
 _SHEBANG_CASES = [
     ("#!/usr/bin/env python3\nimport sys\n", "python"),
     ("#!/usr/bin/python\nimport os\n", "python"),
     ("#!/usr/bin/env python\nimport sys\n", "python"),
+    ("#!/usr/bin/env -S uv run\nimport sys\n", "python"),
+    ("#!/usr/bin/env -S uv run --script\nimport sys\n", "python"),
+    ("#!/usr/bin/env -S uv run --no-project\nimport sys\n", "python"),
     ("#!/bin/bash\nset -euo pipefail\n", "shell"),
     ("#!/usr/bin/env bash\necho hi\n", "shell"),
     ("#!/bin/sh\necho hi\n", "shell"),
