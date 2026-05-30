@@ -1,13 +1,9 @@
 # === EDIT FILE LOCATIONS BELOW ===
 
-# Your todo.txt directory
+# No global default — todo.sh is used per-project.
+# Each repo carries a .todo/config; invoke as: todo.sh -d .todo/config <cmd>
 #export TODO_DIR="/Users/gina/Documents/todo"
-export TODO_DIR="$HOME/Dropbox/notes"
-
-# Your todo/done/report.txt locations
-export TODO_FILE="$TODO_DIR/todo.txt"
-export DONE_FILE="$TODO_DIR/done.txt"
-export REPORT_FILE="$TODO_DIR/report.txt"
+#export TODO_DIR="$HOME/Dropbox/notes"
 
 # You can customize your actions directory location
 #export TODO_ACTIONS_DIR="$HOME/.todo.actions.d"

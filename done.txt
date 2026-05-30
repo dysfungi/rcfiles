@@ -3,3 +3,4 @@ x 2026-05-27 Add riot-slack Claude workspace (CLAUDE.md, alias, manifest) +chezm
 x 2026-05-27 (B) Add Bash worktree guard hook +chezmoi @worktree:.claude/worktrees/bash-worktree-guard session:20260527T220633Z agent:claude model:claude-vertex/anthropic-claude-opus-4-6
 x 2026-05-29 (B) Manage ~/.parsec/config.json via chezmoi modify script +chezmoi @worktree:.claude/worktrees/manage-parsec-config-json session:20260530T012112Z agent:claude model:claude-vertex/anthropic-claude-opus-4-6
 x 2026-05-29 Upgrade CI actions to Node 24, consolidate with mise +ci @worktree:.claude/worktrees/bde297e1-92a6-42b3-8447-44ae2a9a6cb4.ci-node24-upgrade session:bde297e1-92a6-42b3-8447-44ae2a9a6cb4 agent:claude model:claude-vertex/anthropic-claude-opus-4-6
+x 2026-05-30 Fix todo.sh per-project config +chezmoi @worktree:.claude/worktrees/2296fd15-3227-4451-ac45-b1e45a291b20.todo-per-project-config session:2296fd15-3227-4451-ac45-b1e45a291b20 agent:claude-code model:claude-sonnet-4-6

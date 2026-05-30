@@ -54,6 +54,8 @@
 Maintain `todo.txt` and `done.txt` at the repo root in [todo.txt format](https://github.com/todotxt/todo.txt-cli/wiki/User-Documentation).
 Both files are ignored by chezmoi (never deployed). Keep them in sync with active agent plans and task lists.
 
+**`todo.sh` invocation:** The global `~/.todo/config` has no file-location exports. Always pass the per-project config: `todo.sh -d .todo/config <subcommand>`. This scopes all reads/writes to the repo's own `todo.txt`/`done.txt`.
+
 **Prioritization** — use todo.txt priority markers:
 
 | Priority | Meaning                                     | Examples                                    |

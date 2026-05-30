@@ -1,0 +1,19 @@
+# Per-project todo.sh config — scopes todo.txt/done.txt to this git repo.
+# Usage: todo.sh -d .todo/config <subcommand>
+#
+# WHY a per-project config instead of a global one: the global ~/.todo/config
+# was cleared of file-location exports to prevent all todo.sh calls from
+# landing in a single global directory (previously ~/Dropbox/notes). Each repo
+# that uses todo.sh now carries its own config so entries stay scoped to the
+# project that created them.
+#
+# WHY BASH_SOURCE for TODO_DIR: todo.sh sources this file, so BASH_SOURCE[0]
+# is this config file's path. cd-ing to its dirname and running
+# `git rev-parse --show-toplevel` finds the repo root regardless of the
+# caller's CWD — robust for hooks, worktrees, and subshells.
+export TODO_DIR
+TODO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)"
+export TODO_FILE="$TODO_DIR/todo.txt"
+export DONE_FILE="$TODO_DIR/done.txt"
+export REPORT_FILE="$TODO_DIR/report.txt"
+export TODO_ACTIONS_DIR="$HOME/.todo/actions.d"
