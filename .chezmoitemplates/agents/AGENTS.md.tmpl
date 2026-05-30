@@ -74,7 +74,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Follow [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/): use semantic commit subjects, and include audit-useful rationale/details in the commit body. Also see [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c7106).
 - Auto-proceed on read-only git operations (`status`, `diff`, `log`, `show`, `branch`, `pull`, `push`, `push --force-with-lease`, etc.) without asking.
 - Push immediately after every commit in the same turn — do not wait to be asked.
-- Outside plan mode (implementation / "accept edits" mode): auto-commit completed work without asking. The user's workflow is: plan mode for design/decision alignment, then implementation mode where commits should flow automatically. Do not pause to ask "should I commit?" after making changes. Exception: if implementation uncovers a fundamental design issue or requires a new significant design/decision, pause and return to plan mode for alignment before continuing.
+- Outside plan mode (implementation / "accept edits" mode): auto-commit completed work without asking. The user's workflow is: plan mode for design/decision alignment, then implementation mode where commits should flow automatically. Do not pause to ask "should I commit?" after making changes. Exception: if implementation uncovers a fundamental design issue or requires a new significant design/decision, pause and return to plan mode for alignment before continuing. Also pause (do not auto-commit) when the user corrects or pushes back on a recent change — fix the code and wait for explicit commit instruction.
 - Always pause before destructive or hard-to-reverse operations (`push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
 - **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
 - **Named stashes**: Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name (`git stash list` + `git stash pop stash@{n}` matching the slug). Multiple agents share the stash stack; unnamed stashes will collide.
@@ -93,12 +93,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
 - **Never modify unowned files**: If a `p4 sync` introduces build breaks from files owned by another team, do not edit or patch those files. Sync to a known-good CL; do not escalate to the team manually (log the CL range and move on).
 - **No selective file syncs**: Do not cherry-pick individual files from a different CL to work around a broken build. Always sync the full depot path (`p4 sync <depot-path>/...@<CL>`) to maintain a consistent, reproducible workspace state. Partial syncs create invisible divergence from any known CL.
-- **Broken-build recovery**: When a sync breaks the build with code you do not own:
-  1. Read `.ugs/state.json` in the project root — `LastBuiltChangeNumber` is the last CL that compiled successfully
-  2. If `.ugs/state.json` is unavailable or has no usable CL, bisect: `p4 changes //project/stream/...@<OLDEST_SUSPECT>,@<NEWEST_SUSPECT>` to get the CL range, then binary-search with `p4 sync ...@<MID_CL>` + rebuild until the breaking CL is isolated
-  3. `p4 sync //project/stream/...@<GOOD_CL>` — full depot path, preserving locally opened files
-  4. Rebuild and verify
-  5. Log the breaking CL range: `p4 changes //project/stream/...@<GOOD_CL>,@<BAD_CL>` — output to console for reference; no manual follow-up required
+- **Broken-build recovery**: Check `.ugs/state.json` → `LastBuiltChangeNumber` for the last good CL. If unavailable, bisect with `p4 changes //project/stream/...@<OLDEST>,@<NEWEST>` + `p4 sync ...@<MID_CL>` + rebuild until the breaking CL is isolated. Sync the full depot path to the good CL (`p4 sync //project/stream/...@<GOOD_CL>`), rebuild, and log the breaking CL range to console.
 {{- end }}
 
 ## Workflow
@@ -110,23 +105,19 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 
 **Multi-instance worktrees (MANDATORY):**
 
-Multiple agent instances run concurrently against the same working directory and branch, creating undetectable file-edit races (last write wins). Every session that will modify files MUST use an isolated git worktree. Do not skip this — on Claude Code sessions, Write/Edit/NotebookEdit tool calls AND mutating Bash commands (git stash/commit/merge/rebase, sed -i, redirects, rm/mv/cp) are blocked by `PreToolUse` hooks until you are inside a worktree.
+Concurrent agents on the same branch create file-edit races (last write wins). Every session that modifies files MUST use an isolated git worktree — on Claude Code, Write/Edit/Bash mutations are hook-blocked until inside one.
 
-  1. `git pull`, then check for existing `@worktree` claims (`todo.sh list @worktree`).
-  2. On Claude Code: call `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"` — creates `.claude/worktrees/<session-id>.<task-slug>` on branch `worktree-<session-id>.<task-slug>` and lifts the hook gate in one step. On other tools: `git worktree add .worktrees/<session-id>.<task-slug> -b task/<session-id>.<task-slug>` then `cd` into it (use the tool's equivalent session/conversation ID).
-  3. Record a `todo.txt` entry with:
-     - `@worktree:.claude/worktrees/<session-id>.<task-slug>` (or `.worktrees/<session-id>.<task-slug>` for other tools)
-     - `session:<id>` — conversation ID, or `$(date -u +%Y%m%dT%H%M%SZ)` as fallback
-     - `agent:<tool>` — e.g. `agent:claude`, `agent:gemini`
-     - `model:<full-model-id>` — e.g. `model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+  1. `git pull`, then check existing claims: `todo.sh list @worktree`.
+  2. On Claude Code: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`. On other tools: `git worktree add .worktrees/<session-id>.<task-slug> -b task/<session-id>.<task-slug>` then `cd` into it.
+  3. Record in `todo.txt`: `@worktree:.claude/worktrees/<session-id>.<task-slug>`, `session:<id>`, `agent:<tool>`, `model:<full-model-id>`.
 
-  Example: `(B) Add multi-instance git coordination +chezmoi @worktree:.claude/worktrees/b9395dee-d9fd-49e7-80a9-1f0f6bd0a0f6.multi-instance-git session:b9395dee-d9fd-49e7-80a9-1f0f6bd0a0f6 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+  Example: `(B) Fix auth bug +api @worktree:.claude/worktrees/b9395dee.auth-fix session:b9395dee agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
-  On completion: merge to main, call `ExitWorktree action: remove` (Claude Code) or `git worktree remove .worktrees/<session-id>.<task-slug>` (other tools), and archive the entry to `done.txt` with `x YYYY-MM-DD` (preserve all tags).
+  On completion: merge to main, `ExitWorktree action: remove` (Claude Code) or `git worktree remove .worktrees/<session-id>.<task-slug>` (other tools), archive to `done.txt` with `x YYYY-MM-DD`.
 
-  **Auto-cleanup:** On Claude Code, the Stop hook (`worktree_stop_cleanup.py`) automatically removes any worktrees for the current session whose branch is fully merged to main, and archives their `todo.txt` entries. Explicitly calling `ExitWorktree action: remove` is still preferred — the Stop hook is a safety net for crashes and interruptions, not a substitute for intentional cleanup.
+  **Auto-cleanup:** The Stop hook removes merged worktrees for the current session and archives their `todo.txt` entries. Prefer explicit `ExitWorktree` — the hook is a safety net, not a substitute.
 
-  Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID` (per-session, gitignored, auto-removed on session stop). Agents must never use this — always create a real worktree.
+  Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID`. Agents must never use this.
 
 **Pane label:** As soon as the task is identifiable (even before a worktree or todo.txt entry exists), write a short summary to `~/.claude/task-labels/$TMUX_PANE` and run `tmux select-pane -T "label"`. Guard with `[[ -n "${TMUX:-}" ]] &&`. Update as understanding improves; sync to the todo.txt task slug when one is created. The `UserPromptSubmit` hook auto-labels from the raw user prompt; agent refinements override it and persist across subsequent user messages.
 
@@ -156,31 +147,14 @@ Reviewer output:
 
 ## Auditability
 
-- For any durable, auditable body authored by an LLM agent (eg, Git commit messages, Jira comments, PR descriptions, incident notes, or change records), explicitly state that the work was done by an LLM/agent, preferably via an `Authored By` field whose value names the tool/agent used.
-- For any officially recorded or saved work/output, include a concise auditable summary that explains each material change, decision, or update in a natural flow, combining what changed with why it mattered for each item/topic.
-- Apply that per-item summary rule to Git commit bodies, Jira comments, PR updates/descriptions, incident notes, change records, and similar durable records.
-- If changing a Jira ticket's saved fields in a meaningful way (eg, title, description, acceptance criteria, scope, or status), add a Jira comment that records each material ticket change together with its rationale.
-- Include compact audit metadata in that body with, at minimum:
-  - `Co-Authored-By` (eg, `OpenAI Codex (v0.128.0)`, `Gemini CLI v0.40.1`)
-  - `Model` (eg, `gpt-5.4`, `gemini-2.5-pro`)
-  - `Model-Provider` (eg, `OpenAI`, `Google`, `TrueFoundry`)
-  - `Session-ID` (the tool/session/conversation identifier needed to recover the run later)
-  - `Username` (eg, `dfrank`)
-  - `Hostname` (eg, `MLF67N6G9N5W`)
-- Record the source for each audit attribute inline, not as one shared field, using a short source label (eg, `Co-Authored-By: OpenAI Codex (v0.128.0) (source: session)`, `Model: gpt-5.4 (source: session)`, `Model-Provider: TrueFoundry (source: session)`, `Session-ID: 019df4d2-497a-7da2-9ad1-93acc1da0870 (source: session)`, `Username: dfrank (source: session)`, `Hostname: MLF67N6G9N5W (source: session)`, `Model-Provider: TrueFoundry (source: config.toml)`).
-- Keep source labels terse. Prefer `session` for values derived from the current live session/runtime context and a config filename like `~/.codex/config.toml` for values derived from applied config. Do not use verbose labels like `current session runtime metadata`, `current session status title`, or `fallback` unless explicitly requested.
-- For `Co-Authored-By`, prefer the exact tool/agent name and version from the current live session/runtime context. If the current session shows that value in a status/title area, use that exact value.
-- For `Co-Authored-By`, `Model`, and `Model-Provider`, prefer values already available in the current live session/runtime context, including current session status/UI metadata when exposed there.
-- For `Username` and `Hostname`, derive the values from the current username and hostname in the live session/runtime context.
-- Prefer explicit current-session/runtime metadata for each audit attribute when available.
-- If current session/runtime metadata and applied config disagree, prefer the current live session/runtime value for that attribute.
-- Do not start, resume, fork, or otherwise launch a fresh CLI invocation to derive current-session audit metadata, because CLI flags or overrides can differ from the live session you are documenting.
-- Only fall back to the best explicit applied config value for a specific audit attribute when that specific attribute is not available in the current live session/runtime context, and record that source inline.
-- If falling back to config, use the tool's active applied config for the current environment (eg, `~/.codex/config.toml`), not repo templates, dotfiles source templates, or other unapplied config sources (eg, `dot_codex/private_config.toml.tmpl`).
-- Copy audit attribute values exactly as shown by their source. Do not infer unstated values from API base URLs, proxies, gateways, or assumed upstream vendors.
-- For `Session-ID`, prefer the current tool/session/conversation identifier exposed by the session/runtime with the highest relevant precedence (eg, `CODEX_THREAD_ID` is better than a parent session ID). When it comes from the live session/runtime context, `source: session` is sufficient unless more detail is requested.
-- If a value is unavailable from both the current live session/runtime context and the active applied config, write `unknown (source: unavailable)` rather than guessing, normalizing, or omitting it.
-- Keep audit metadata easy to grep and copy so the session can be recovered later.
+- For any durable, auditable body authored by an LLM agent (eg, Git commits, Jira comments, PR descriptions, incident notes, change records), state agent authorship explicitly via an `Authored By` field naming the tool/agent used.
+- Include a concise auditable summary explaining each material change with its rationale. Apply to Git commit bodies, Jira comments, PRs, incident notes, and similar durable records.
+- If changing a Jira ticket's saved fields materially (title, description, acceptance criteria, scope, status), add a Jira comment recording each change with its rationale.
+- Include compact audit metadata: `Co-Authored-By`, `Model`, `Model-Provider`, `Session-ID`, `Username`, `Hostname`.
+- Record each attribute's source inline (eg, `Model: gpt-5.4 (source: session)`). Terse labels: `session` for live runtime values; config filename (eg, `~/.codex/config.toml`) for applied config.
+- Resolution order for each attribute: (1) current live session/runtime context (including status/UI metadata), (2) active applied config — not repo templates or dotfile source templates. Never launch a fresh CLI invocation to derive metadata. If unavailable from both, write `unknown (source: unavailable)`.
+- Copy values exactly as shown by their source. Do not infer from API base URLs, proxies, or assumed vendors.
+- Keep audit metadata easy to grep so the session can be recovered later.
 
 ## Productivity
 
