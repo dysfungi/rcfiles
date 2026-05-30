@@ -5,7 +5,7 @@ charset-normalizer==3.4.7
 coconut==3.2.0
 cpyparsing==2.4.7.2.4.3
 gnureadline==8.3.3
-idna==3.16
+idna==3.17
 pip @ file:///home/conda/feedstock_root/build_artifacts/pip_1777923994118/work
 prompt-toolkit==3.0.52
 psutil==7.2.2
@@ -18,7 +18,7 @@ typing-extensions==4.15.0
 ujson==5.12.1
 urllib3==2.7.0
 wcwidth==0.7.0
-xonsh==0.23.7
+xonsh==0.23.8
 xontrib-1password==0.3.2
 xontrib-dracula==0.1.1
 xontrib-sh==0.3.2
