@@ -83,21 +83,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
 - **Named stashes**: Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name (`git stash list` + `git stash pop stash@{n}` matching the slug). Multiple agents share the stash stack; unnamed stashes will collide.
 {{- if .isRiotMachine }}
-
-**p4:**
-
-- **Multi-instance workspaces**: Changelists alone are insufficient isolation — P4 will silently reassign an opened file from one CL to another if a second `p4 edit` targets the same file within the same workspace. For full isolation, create a separate workspace per task. Workspace names follow the convention `<user>_<host>_<project>_<branch>-task-<slug>` (e.g., `dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh`). Before creating one, check `todo.txt` for existing `@p4workspace` claims (`todo.sh list @p4workspace`). Record a `todo.txt` entry with:
-  - `@p4workspace:<workspace-name>`
-  - `p4changelist:<changelist-number>` — the primary CL for this task
-  - `session:`, `agent:`, `model:` — same convention as git
-
-  Example: `(B) Add xonsh P4 config +riot @p4workspace:dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh p4changelist:98765 session:20260521T150000Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
-
-  On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive the `todo.txt` entry to `done.txt`.
-- **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
-- **Never modify unowned files**: If a `p4 sync` introduces build breaks from files owned by another team, do not edit or patch those files. Sync to a known-good CL; do not escalate to the team manually (log the CL range and move on).
-- **No selective file syncs**: Do not cherry-pick individual files from a different CL to work around a broken build. Always sync the full depot path (`p4 sync <depot-path>/...@<CL>`) to maintain a consistent, reproducible workspace state. Partial syncs create invisible divergence from any known CL.
-- **Broken-build recovery**: Check `.ugs/state.json` → `LastBuiltChangeNumber` for the last good CL. If unavailable, bisect with `p4 changes //project/stream/...@<OLDEST>,@<NEWEST>` + `p4 sync ...@<MID_CL>` + rebuild until the breaking CL is isolated. Sync the full depot path to the good CL (`p4 sync //project/stream/...@<GOOD_CL>`), rebuild, and log the breaking CL range to console.
+- **P4 workflow**: See the `p4-workflow` skill for Perforce changelists, workspace isolation, sync, submit, and broken-build recovery rules.
 {{- end }}
 
 ## Workflow
@@ -138,17 +124,6 @@ Reviewer output:
 
 - List findings first in severity order with file references; keep summary secondary; if there are no findings, say so explicitly and note residual risks or testing gaps.
 
-{{- if not .isWorkMachine }}
-
-## Therapy
-
-- Never end responses with a follow-up question, coaching prompt, or a request for me to set a goal. Do not ask what I want to do next or how I plan to handle a situation. Conclude the analysis with a definitive statement and simply wait for my input.
-- Do not try to imagine or compare what past me would have done in a situation. No "old you would have done this" or "new you is doing this" thoughts.
-- Do not offer optimism about my future relationships. Focus on practical survival only.
-- Be direct, but do not disregard nor minimize my emotions -- validate my experience and perspective; avoid use of metaphors.
-
-{{- end }}
-
 ## Auditability
 
 - For any durable, auditable body authored by an LLM agent (eg, Git commits, Jira comments, PR descriptions, incident notes, change records), state agent authorship explicitly via an `Authored By` field naming the tool/agent used.
@@ -186,6 +161,16 @@ Reviewer output:
 - Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
 
 [less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
+
+## Compact Instructions
+
+When compacting this conversation, preserve:
+
+- Active worktree path and branch name
+- Current task list state (pending/in-progress items)
+- Design decisions made during the session with their rationale
+- File paths of all modified files
+- Any corrections or feedback from the user in this session
 
 ## Also See
 

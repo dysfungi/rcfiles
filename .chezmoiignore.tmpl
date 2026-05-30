@@ -153,3 +153,18 @@ Documents/**
 {{ end }}
 
 ##########################################
+# Skills: machine-gated deployment
+# P4 workflow is Riot-only; therapy is personal-only.
+# Filtering here (not in SKILL.md) keeps skill content clean and portable.
+
+{{- if not .isRiotMachine }}
+.claude/skills/p4-workflow
+.gemini/extensions/p4-workflow
+.codex/skills/p4-workflow
+{{- end }}
+
+{{- if .isWorkMachine }}
+.claude/skills/therapy
+.gemini/extensions/therapy
+.codex/skills/therapy
+{{- end }}

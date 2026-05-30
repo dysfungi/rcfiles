@@ -1,0 +1,28 @@
+---
+name: p4-workflow
+description: Perforce (P4) version control workflow for Riot machines. Use when working with P4 changelists, workspaces, syncs, submits, or broken-build recovery in a Perforce depot.
+---
+
+# P4 Workflow
+
+## Multi-Instance Workspaces
+
+Changelists alone are insufficient isolation — P4 will silently reassign an opened file from one CL to another if a second `p4 edit` targets the same file within the same workspace. For full isolation, create a separate workspace per task. Workspace names follow the convention `<user>_<host>_<project>_<branch>-task-<slug>` (e.g., `dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh`). Before creating one, check `todo.txt` for existing `@p4workspace` claims (`todo.sh list @p4workspace`). Record a `todo.txt` entry with:
+
+- `@p4workspace:<workspace-name>`
+- `p4changelist:<changelist-number>` — the primary CL for this task
+- `session:`, `agent:`, `model:` — same convention as git
+
+Example: `(B) Add xonsh P4 config +riot @p4workspace:dfrank_RGAP-MXL5113G09_chezmoi_main-task-xonsh p4changelist:98765 session:20260521T150000Z agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+
+On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive the `todo.txt` entry to `done.txt`.
+
+## Submit Rules
+
+- **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
+- **Never modify unowned files**: If a `p4 sync` introduces build breaks from files owned by another team, do not edit or patch those files. Sync to a known-good CL; do not escalate to the team manually (log the CL range and move on).
+- **No selective file syncs**: Do not cherry-pick individual files from a different CL to work around a broken build. Always sync the full depot path (`p4 sync <depot-path>/...@<CL>`) to maintain a consistent, reproducible workspace state. Partial syncs create invisible divergence from any known CL.
+
+## Broken-Build Recovery
+
+Check `.ugs/state.json` → `LastBuiltChangeNumber` for the last good CL. If unavailable, bisect with `p4 changes //project/stream/...@<OLDEST>,@<NEWEST>` + `p4 sync ...@<MID_CL>` + rebuild until the breaking CL is isolated. Sync the full depot path to the good CL (`p4 sync //project/stream/...@<GOOD_CL>`), rebuild, and log the breaking CL range to console.

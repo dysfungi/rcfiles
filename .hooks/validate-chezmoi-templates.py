@@ -225,8 +225,24 @@ def _output_if_failed(result: subprocess.CompletedProcess) -> str | None:
 
 
 def render_template_to_file(source: str, dest: Path) -> str | None:
+    # Pass --source so chezmoi resolves includeTemplate against the current
+    # worktree root, not the default ~/.local/share/chezmoi. This matters when
+    # wrapper files reference new .chezmoitemplates/ entries that only exist in
+    # the worktree and haven't yet been merged to the main source tree.
+    worktree_root = Path(
+        subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
     result = subprocess.run(
-        ["chezmoi", "execute-template", "--file", source],
+        [
+            "chezmoi",
+            "execute-template",
+            "--source",
+            str(worktree_root),
+            "--file",
+            source,
+        ],
         capture_output=True,
     )
     if result.returncode != 0:
