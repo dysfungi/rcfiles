@@ -13,7 +13,8 @@ PROJECT_NAME = "{{ config_root | basename }}"
 
 [tools]
 python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
-"pipx:pre-commit" = "latest"
+uv                     = "latest"
+"pipx:pre-commit"      = "latest"
 # chezmoi template validation (validate-chezmoi-templates pre-commit hook)
 hadolint               = "latest"
 jq                     = "latest"
