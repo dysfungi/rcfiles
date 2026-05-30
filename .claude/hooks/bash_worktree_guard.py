@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --no-project
 """Blocks mutating Bash commands on the main git worktree.
 
 WHY this hook exists:
@@ -28,6 +28,14 @@ HOW command parsing works:
   intentionally simple and may produce false positives on edge cases with
   quoted strings containing delimiters. This is acceptable — false positives
   just ask the agent to use a worktree, which it should be doing anyway.
+
+WHY `git merge --ff-only` is allowed:
+  The worktree merge-back flow requires merging a worktree branch into main
+  after ExitWorktree returns CWD to the main worktree. A bare `git merge` is
+  dangerous (can create merge commits, trigger conflicts), but `--ff-only` is
+  safe — it only advances the branch pointer and fails if the merge isn't a
+  fast-forward. Without this exception, agents cannot complete the documented
+  worktree workflow (AGENTS.md) and must push the branch for manual merge.
 
 EXEMPTIONS: same as worktree_check.py — per-session file, global file.
 
@@ -137,7 +145,7 @@ def check_segment(segment: str) -> str | None:
     # sed -i
     seg_stripped = seg.lstrip()
     if seg_stripped.startswith("sed ") or seg_stripped == "sed":
-        if re.search(r"(^|\s)-[a-zA-Z]*i(\s|$)", seg):
+        if re.search(r"(^|\s)-[a-zA-Z]*i", seg):
             return "sed -i (in-place edit)"
 
     # rm, mv, cp
@@ -149,6 +157,8 @@ def check_segment(segment: str) -> str | None:
     if re.match(r"\s*git(\s|$)", seg):
         subcmd = git_subcmd(seg)
         if subcmd in MUTATING_GIT_SUBCMDS:
+            if subcmd == "merge" and "--ff-only" in seg:
+                return None
             return f"git {subcmd} (mutating)"
         if subcmd == "stash" and not re.search(r"git\s+stash\s+(list|show)(\s|$)", seg):
             return "git stash (mutating)"

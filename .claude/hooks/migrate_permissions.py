@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --no-project
 """Stop hook: merges permissions from settings.local.json into settings.json.
 
 WHY this hook exists:

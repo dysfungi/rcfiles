@@ -100,6 +100,21 @@ repos:
             |(.*/)?\.chezmoitemplates/ollama/Modelfile\.tmpl
           )$
 
+      - id: pytest
+        name: pytest (fast)
+        language: system
+        entry: uv run --with pytest pytest .tests/ -m "not slow" --tb=short -q
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest-integration
+        name: pytest (all, including slow)
+        language: system
+        entry: uv run --with pytest pytest .tests/ --tb=short -q
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
   #######
   # LUA #
   #######

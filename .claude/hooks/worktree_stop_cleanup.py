@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --no-project
 """Stop hook: auto-removes worktrees belonging to the current session.
 
 WHY this hook exists:

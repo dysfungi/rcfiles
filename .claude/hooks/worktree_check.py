@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --no-project
 """Enforces git worktree isolation for Claude Code sessions.
 
 WHY this hook exists:

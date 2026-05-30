@@ -43,7 +43,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Keep logic flat and readable; avoid unnecessary inner helper functions.
 - Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight and composable tools.
 - **Document design decisions at the source**: When a non-obvious architectural or design choice is made (eg, why a specific hook type was chosen, why a naming convention is coupled to another system, why a workaround exists), document the WHY in the source file (docstring, comment, or adjacent README). Never leave a future agent or engineer to rediscover context from git history alone.
-- **Python scripts — `uv` shebangs**: Use `#!/usr/bin/env -S uv run` for stdlib-only scripts, `#!/usr/bin/env -S uv run --script` when the script has [PEP 723](https://peps.python.org/pep-0723/) inline dependency metadata. `uv` handles Python version resolution and dependency isolation — no `mise x`, virtualenv, or `pip install` needed.
+- **Python scripts — `uv` shebangs**: Use `#!/usr/bin/env -S uv run` for stdlib-only scripts, `#!/usr/bin/env -S uv run --script` when the script has [PEP 723](https://peps.python.org/pep-0723/) inline dependency metadata. `uv` handles Python version resolution and dependency isolation — no `mise x`, virtualenv, or `pip install` needed. For scripts that must not couple to a project's `pyproject.toml` (eg, hooks that run from the project root), use `--no-project` to prevent `uv` from discovering and parsing project config at startup.
 - **Python scripts — module-level docstrings**: Every Python script must include a comprehensive module-level docstring covering intent, architecture/design, and key decision trade-offs. A future reader should understand WHY the script exists and how it fits the larger system without reading git history.
 - Comments as code unless explaining a decision or including references
 - No dead code
@@ -59,6 +59,7 @@ _Use this context to calibrate communication style and assumptions, not as a sub
   - Prefer self-documenting names over terse abbreviations (e.g., `p4changelist` over `cl`); stop before restating the type or implementation in the name
   - snake_case > camelCase
   - Spaces > Tabs
+- **Automated functional tests**: When adding or modifying functionality, write automated tests that prevent regressions and document supported features and workflows. Prefer real inputs and outputs over mocks — tests should be as close to actual user behavior as possible. Tests are the durable spec; comments and docstrings supplement but do not replace them.
 
 ## Debugging
 
@@ -116,7 +117,7 @@ Concurrent agents on the same branch create file-edit races (last write wins). E
 
   Example: `(B) Fix auth bug +api @worktree:.claude/worktrees/b9395dee.auth-fix session:b9395dee agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
 
-  On completion: merge to main, `ExitWorktree action: remove` (Claude Code) or `git worktree remove .worktrees/<session-id>.<task-slug>` (other tools), archive to `done.txt` with `x YYYY-MM-DD`.
+  On completion (Claude Code): `ExitWorktree action: remove`, then `git merge --ff-only <worktree-branch>` on main, push, and `git branch -d <worktree-branch>`. The bash guard allows `--ff-only` specifically for this merge-back pattern. On other tools: merge to main, `git worktree remove .worktrees/<session-id>.<task-slug>`, and delete the branch. Archive to `done.txt` with `x YYYY-MM-DD`.
 
   **Auto-cleanup:** The Stop hook removes merged worktrees for the current session and archives their `todo.txt` entries. Prefer explicit `ExitWorktree` — the hook is a safety net, not a substitute.
 

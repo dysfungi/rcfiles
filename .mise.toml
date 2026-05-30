@@ -40,7 +40,7 @@ run = "python app.py"
 
 [tasks.test]
 description = "Run tests"
-run = "pytest tests/"
+run = "uv run --with pytest pytest .tests/ -v"
 
 [tasks.lint]
 description = "Lint the code"

@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env -S uv run --no-project
 """WorktreeCreate factory hook: validates the name, creates the worktree, echoes the path.
 
 WHY this is a WorktreeCreate factory (not a PreToolUse validator):
@@ -34,22 +34,27 @@ import uuid
 from pathlib import Path
 
 
+def validate_name(name: str) -> bool:
+    """Check if name follows <uuid>.<task-slug> format.
+
+    The UUID prefix is required so worktree_stop_cleanup.py can identify
+    this worktree by session ID during Stop hook cleanup. See module docstring.
+    """
+    parts = name.split(".", 1)
+    if len(parts) != 2 or not parts[1]:
+        return False
+    try:
+        uuid.UUID(parts[0])
+    except ValueError:
+        return False
+    return True
+
+
 def main() -> None:
     payload = json.loads(sys.stdin.read())
     name = payload.get("name", "")
 
-    # Validate name format: <uuid>.<task-slug>
-    # The UUID prefix is required so worktree_stop_cleanup.py can identify
-    # this worktree by session ID during Stop hook cleanup. See module docstring.
-    parts = name.split(".", 1)
-    valid = len(parts) == 2 and bool(parts[1])
-    if valid:
-        try:
-            uuid.UUID(parts[0])
-        except ValueError:
-            valid = False
-
-    if not valid:
+    if not validate_name(name):
         print(
             f"BLOCKED: Worktree name '{name}' does not follow the required format.\n"
             "Required: <session-uuid>.<task-slug>\n"
