@@ -11,8 +11,7 @@ preserving any keys Parsec adds at runtime.
 import json
 import sys
 
-IS_RIOT_MACHINE = {{ .isRiotMachine | ternary "True" "False" }}
-
+THREADRIPPER_RGAP_MXL5113G09_IP = "10.202.44.39"
 MANAGED = {
     "app_changelog_ver": {"value": 8},
     "app_flags": {"value": 1},
@@ -20,11 +19,14 @@ MANAGED = {
     "client_macos_key_swap": {"value": False},
     "client_windowed": {"value": True},
     "encoder_bitrate": {"value": 50},
-}
-
-RIOT_MANAGED = {
-    "app_client_stun_address": {"value": "10.202.44.39"},
+    {{- if .isRiotMachine }}
+    "app_client_stun_address": {
+        # WHY? Addresses "Peer-to-peer network connection between you and the other computer failed [-6023 / -11010]" error.
+        # HOW? Access the machine by other means and get the IPv4 address from `ipconfig` output.
+        "value": THREADRIPPER_RGAP_MXL5113G09_IP,
+    },
     "app_saml_team_id": {"value": "riotgames"},
+    {{- end }}
 }
 
 DOC = (
@@ -38,9 +40,5 @@ if stdin:
     config = arr[1] if len(arr) > 1 else {}
 else:
     config = {}
-
-config.update(MANAGED)
-if IS_RIOT_MACHINE:
-    config.update(RIOT_MANAGED)
 
 print(json.dumps([DOC, config], indent="\t"))
