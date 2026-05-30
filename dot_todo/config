@@ -1,16 +1,24 @@
-# === EDIT FILE LOCATIONS BELOW ===
+# === FILE LOCATIONS ===
 
-# No global default — todo.sh is used per-project.
-# Each repo carries a .todo/config; invoke as: todo.sh -d .todo/config <cmd>
-#export TODO_DIR="/Users/gina/Documents/todo"
-#export TODO_DIR="$HOME/Dropbox/notes"
+# TODO_DIR resolves dynamically to the current git repo's root so a bare
+# `todo.sh <cmd>` auto-scopes to the repo (or linked worktree) you're standing
+# in — no -d flag, no per-repo config file, no global catch-all directory.
+#
+# WHY this lives in the global config: todo.sh always sources $HOME/.todo/config
+# first (see its configFileLocations search order) and sources it in the caller's
+# CWD, so `git rev-parse --show-toplevel` resolves to the repo/worktree you're
+# in. A repo opts in by keeping a root-level todo.txt; otherwise TODO_DIR is left
+# unset and todo.sh fails loudly rather than writing to a global dump. todo.sh
+# derives TODO_FILE/DONE_FILE/REPORT_FILE from TODO_DIR automatically.
+if _todo_root="$(git rev-parse --show-toplevel 2>/dev/null)" \
+    && [ -f "$_todo_root/todo.txt" ]; then
+    export TODO_DIR="$_todo_root"
+fi
+unset _todo_root
 
-# You can customize your actions directory location
-#export TODO_ACTIONS_DIR="$HOME/.todo.actions.d"
-# Will still use default if does not exist:
 export TODO_ACTIONS_DIR="$HOME/.todo/actions.d"
 
-# == EDIT FILE LOCATIONS ABOVE ===
+# == END FILE LOCATIONS ===
 
 # === COLOR MAP ===
 
