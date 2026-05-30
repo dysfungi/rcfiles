@@ -1,6 +1,6 @@
 NAME                                      ID              SIZE      MODIFIED
-qwen3-coder-next:q4_K_M                   ca06e9e4087c    51 GB     4 days ago
-local__qwen3-coder-next__q4_K_M:latest    6d158db0e8dc    51 GB     4 days ago
+local__qwen3-coder-next__q4_K_M:latest    6d158db0e8dc    51 GB     Less than a second ago
+qwen3-coder-next:q4_K_M                   ca06e9e4087c    51 GB     Less than a second ago
 qwen3.5:9b                                6488c96fa5fa    6.6 GB    11 days ago
 deepseek-v4-flash:cloud                   ea027821675c    -         12 days ago
 deepseek-r1:1.5b                          a42b25d8c10a    1.1 GB    14 months ago
