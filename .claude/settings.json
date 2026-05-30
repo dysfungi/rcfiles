@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-check.sh\" session-start",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree_check.py\" session-start",
             "timeout": 5
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree-check.sh\" pre-tool-use",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/worktree_check.py\" pre-tool-use",
             "timeout": 5
           }
         ]
@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bash-worktree-guard.sh\"",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/bash_worktree_guard.py\"",
             "timeout": 5
           }
         ]
@@ -50,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/migrate-permissions.sh\""
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/migrate_permissions.py\""
           },
           {
             "type": "command",

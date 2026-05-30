@@ -43,6 +43,8 @@ _Use this context to calibrate communication style and assumptions, not as a sub
 - Keep logic flat and readable; avoid unnecessary inner helper functions.
 - Prefer proven tools over hand-rolled scripts (eg, logrotate for log rotation) -- ideally lightweight and composable tools.
 - **Document design decisions at the source**: When a non-obvious architectural or design choice is made (eg, why a specific hook type was chosen, why a naming convention is coupled to another system, why a workaround exists), document the WHY in the source file (docstring, comment, or adjacent README). Never leave a future agent or engineer to rediscover context from git history alone.
+- **Python scripts — `uv` shebangs**: Use `#!/usr/bin/env -S uv run` for stdlib-only scripts, `#!/usr/bin/env -S uv run --script` when the script has [PEP 723](https://peps.python.org/pep-0723/) inline dependency metadata. `uv` handles Python version resolution and dependency isolation — no `mise x`, virtualenv, or `pip install` needed.
+- **Python scripts — module-level docstrings**: Every Python script must include a comprehensive module-level docstring covering intent, architecture/design, and key decision trade-offs. A future reader should understand WHY the script exists and how it fits the larger system without reading git history.
 - Comments as code unless explaining a decision or including references
 - No dead code
 - When no clear, applicable convention or principle exists, prefer:

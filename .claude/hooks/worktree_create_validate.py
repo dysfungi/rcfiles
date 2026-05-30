@@ -1,4 +1,4 @@
-#!/usr/bin/env -S mise x -- python3
+#!/usr/bin/env -S uv run
 """WorktreeCreate factory hook: validates the name, creates the worktree, echoes the path.
 
 WHY this is a WorktreeCreate factory (not a PreToolUse validator):

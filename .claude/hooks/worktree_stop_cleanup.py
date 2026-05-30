@@ -1,12 +1,31 @@
-#!/usr/bin/env -S mise x -- python3
+#!/usr/bin/env -S uv run
 """Stop hook: auto-removes worktrees belonging to the current session.
 
-Finds worktrees whose path contains $CLAUDE_CODE_SESSION_ID, then:
-  - Merged/empty: removes worktree + branch silently, archives todo.txt entry
-  - Unmerged: warns to stderr and leaves in place
-  - Prunable (dir already gone): runs git worktree prune
+WHY this hook exists:
+  Agent sessions create git worktrees for file-edit isolation (see AGENTS.md,
+  "Multi-instance worktrees"). When a session ends normally, the agent should
+  call ExitWorktree — but crashes, interruptions, and forgetful agents leave
+  orphaned worktrees that accumulate until someone cleans them manually. This
+  Stop hook is the safety net: it runs on every session exit and garbage-collects
+  any worktrees the session left behind.
 
-Exits 0 always — Stop hooks must not block session termination.
+HOW it identifies session worktrees:
+  The worktree naming convention `<session-uuid>.<task-slug>` (enforced by
+  worktree_create_validate.py) embeds $CLAUDE_CODE_SESSION_ID in the directory
+  name. This hook scans `git worktree list --porcelain` for paths containing
+  that UUID. No external registry or state file is needed — the filesystem IS
+  the registry.
+
+WHAT it does for each match:
+  - Merged (no commits ahead of main): `git worktree remove` + `git branch -d`
+  - Unmerged: warns to stderr, leaves in place (data preservation > tidiness)
+  - Prunable (directory already gone): `git worktree prune`
+  - Archives matching @worktree: entries in todo.txt → done.txt
+
+WHY it always exits 0:
+  Stop hooks must not block session termination. A cleanup failure is annoying
+  but not worth preventing the session from ending — the worktree will be
+  caught by the next session's cleanup or manual intervention.
 """
 
 import os
