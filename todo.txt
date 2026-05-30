@@ -1,4 +1,7 @@
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
+(B) Add skills lazy-loading + compact instructions +context @worktree:.claude/worktrees/5e6a8e0d-838d-432c-87a4-8c1634e2098e.context-skills session:5e6a8e0d-838d-432c-87a4-8c1634e2098e agent:claude model:claude-vertex/anthropic-claude-opus-4-6
+(A) Fix brew bundle force-cleanup flag +chezmoi @worktree:.claude/worktrees/2296fd15-3227-4451-ac45-b1e45a291b20.brew-bundle-force-cleanup session:2296fd15-3227-4451-ac45-b1e45a291b20 agent:claude-code model:claude-opus-4-7
+(A) Fix todo.sh per-project config +chezmoi @worktree:.claude/worktrees/2296fd15-3227-4451-ac45-b1e45a291b20.todo-per-project-config session:2296fd15-3227-4451-ac45-b1e45a291b20 agent:claude-code model:claude-sonnet-4-6
 (B) 2026-05-19 Investigate GITHUB_TOKEN not being read from [github] config for gitHubLatestReleaseAssetURL externals — must set env var manually for now +chezmoi @bug
 (B) 2026-05-19 Two-repo situation (Windows /mnt/c/ source + WSL ~/  source) causes rebase friction; evaluate making WSL source canonical for this machine +chezmoi @architecture
 (D) Explore codecompanion.nvim with Slack MCP for in-editor triage view +riot-slack +neovim
