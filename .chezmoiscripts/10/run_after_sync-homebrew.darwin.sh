@@ -43,7 +43,7 @@ backup() {
 mkdir -p "${bakDir}"
 
 backup before
-brew bundle install --cleanup --file="${brewFile}" --upgrade
+brew bundle install --force-cleanup --file="${brewFile}" --upgrade
 backup after
 
 echo >&2 "INFO: Ending $0"
