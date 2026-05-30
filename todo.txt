@@ -10,4 +10,4 @@
 (D) Investigate riot-slack MCP user-token vs bot-token behavior differences +riot-slack
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
-(C) Migrate existing flat .tests/*.py into domain subdirs (.tests/claude-hooks/, .tests/chezmoitemplates/) per new convention +chezmoi @maintenance
+(B) Add gsd-core to packages.yaml for mise install +chezmoi @worktree:.claude/worktrees/be5171d1-d43e-45cf-a2bc-001efda98019.add-gsd-core session:be5171d1-d43e-45cf-a2bc-001efda98019 agent:claude-code model:claude-opus-4-8

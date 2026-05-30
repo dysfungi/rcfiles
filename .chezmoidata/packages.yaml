@@ -213,6 +213,7 @@ my:
     #####################
 
     claude-code: { mise: "npm:@anthropic-ai/claude-code" }
+    gsd-core: { mise: "npm:@opengsd/get-shit-done-redux" }
     jq: { mise: jq }
     node: { mise: node, pacman: nodejs, version: lts }
     npm: { pacman: npm }
