@@ -15,6 +15,7 @@
 - Avoid global env/token side effects; scope credentials by host/tool when possible.
 - For script execution order in Chezmoi, rely on explicit numeric ordering conventions, not environment folder grouping alone.
 - All chezmoi scripts must log start/end to stderr: sh scripts use `echo >&2 "INFO: Starting $0"` / `echo >&2 "INFO: Ending $0"`; PowerShell scripts use `Write-Host "INFO: Starting $PSCommandPath"` / `Write-Host "INFO: Ending $PSCommandPath"`.
+- **Vim filetype modeline for `.tmpl` files**: When a `.tmpl` file renders into a specific language (Python, shell, Lua, etc.), add a `# vim: ft=<lang>` comment on line 2 (after the shebang if present) so editors apply the correct syntax highlighting. Example: `# vim: ft=python` in a `.py.tmpl` or `modify_*.tmpl` that contains Python.
 - When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
 
 ## Programming & Engineering
