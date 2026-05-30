@@ -21,6 +21,7 @@ HOW worktree detection works:
 
 EXEMPTIONS:
   - Files outside the repo or inside `.claude/` (gitignored session infra)
+  - `todo.txt` and `done.txt` at repo root (task-tracking metadata, not code)
   - Per-session: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID`
   - Global: `touch .claude/worktree-exempt`
   Agents must never create exemption files — they exist for human-only bypass.
@@ -108,9 +109,13 @@ def handle_pre_tool_use(project_dir: str) -> None:
         ).stdout.strip()
         if repo_root:
             repo_prefix = repo_root.rstrip("/") + "/"
-            if not file_path.startswith(repo_prefix) or file_path.startswith(
-                repo_prefix + ".claude/"
-            ):
+            if not file_path.startswith(repo_prefix):
+                return
+            # Session infra files exempt: .claude/*, todo.txt, done.txt
+            if file_path.startswith(repo_prefix + ".claude/"):
+                return
+            basename = file_path[len(repo_prefix) :]
+            if basename in ("todo.txt", "done.txt"):
                 return
 
     print(

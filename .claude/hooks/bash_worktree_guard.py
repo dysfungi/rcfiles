@@ -21,6 +21,7 @@ HOW command parsing works:
      - tee, sed -i, rm, mv, cp
      - Git mutations (explicit subcommand list — add, commit, merge, rebase, etc.)
      - Git stash (only list/show allowed)
+     - todo.sh/todo mutations (only read-only subcommands like list/help allowed)
   3. git_subcmd() skips git global flags (-C, -c, --work-tree, --git-dir,
      --namespace) that take a value argument, to find the actual subcommand.
 
@@ -48,6 +49,26 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+READONLY_TODO_SUBCMDS = frozenset(
+    {
+        "help",
+        "shorthelp",
+        "list",
+        "listall",
+        "listaddons",
+        "listcon",
+        "listfile",
+        "listpri",
+        "listproj",
+        "lf",
+        "ls",
+        "lsa",
+        "lsc",
+        "lsp",
+        "lsprj",
+    }
+)
 
 MUTATING_GIT_SUBCMDS = frozenset(
     {
@@ -162,6 +183,13 @@ def check_segment(segment: str) -> str | None:
             return f"git {subcmd} (mutating)"
         if subcmd == "stash" and not re.search(r"git\s+stash\s+(list|show)(\s|$)", seg):
             return "git stash (mutating)"
+
+    # todo.sh / todo mutations (add, do, del, pri, etc.)
+    todo_match = re.match(r"\s*(?:todo\.sh|todo)\s+(\S+)", seg)
+    if todo_match:
+        subcmd = todo_match.group(1)
+        if subcmd not in READONLY_TODO_SUBCMDS:
+            return f"todo.sh {subcmd} (mutating)"
 
     return None
 
