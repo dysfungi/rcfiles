@@ -13,7 +13,7 @@ save_symlinked_changes() {
 
   git add "${symlinkedDir}"
   if [ -n "$(git status --porcelain -- "${symlinkedDir}")" ]; then
-    git commit --message "chore(symlinked): Save updates made to externally managed, symlinked files for ${userName} on ${hostName}" -- "${symlinkedDir}"
+    git commit --no-verify --message "chore(symlinked): Save updates made to externally managed, symlinked files for ${userName} on ${hostName}" -- "${symlinkedDir}"
   fi
 }
 

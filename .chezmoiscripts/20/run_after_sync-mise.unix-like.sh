@@ -26,7 +26,7 @@ _commit_backup() {
 
   git add "${bakFile}"
   if ! git diff --cached --quiet -- "${bakDir}"; then
-    git commit --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
+    git commit --no-verify --message "chore(backups): List mise tools ${clarifier} ${action} for ${userName} on ${hostName}" -- "${bakDir}"
   fi
 }
 
