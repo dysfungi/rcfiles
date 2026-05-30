@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+# vim: ft=python
+"""
+Parsec config.json is a JSON array: [doc_string, config_object].
+Element 0 is a required doc string — Parsec erases the file without it.
+Element 1 is the config object where each key maps to {"value": ...}.
+
+This modify script merges managed keys into the existing config,
+preserving any keys Parsec adds at runtime.
+"""
+import json
+import sys
+
+IS_RIOT_MACHINE = {{ .isRiotMachine | ternary "True" "False" }}
+
+MANAGED = {
+    "app_changelog_ver": {"value": 8},
+    "app_flags": {"value": 1},
+    "client_automatic_displays": {"value": True},
+    "client_macos_key_swap": {"value": False},
+    "client_windowed": {"value": True},
+    "encoder_bitrate": {"value": 50},
+}
+
+RIOT_MANAGED = {
+    "app_client_stun_address": {"value": "10.202.44.39"},
+    "app_saml_team_id": {"value": "riotgames"},
+}
+
+DOC = (
+    "See https://parsec.app/config for documentation and example."
+    " JSON must be valid before saving or file be will be erased."
+)
+
+stdin = sys.stdin.read().strip()
+if stdin:
+    arr = json.loads(stdin)
+    config = arr[1] if len(arr) > 1 else {}
+else:
+    config = {}
+
+config.update(MANAGED)
+if IS_RIOT_MACHINE:
+    config.update(RIOT_MANAGED)
+
+print(json.dumps([DOC, config], indent="\t"))
