@@ -4,7 +4,7 @@ jq                                1.8.1    ~/.config/mise/config.toml       late
 node                              22.2.0
 node                              22.22.3  ~/.config/mise/config.toml       lts
 node                              24.15.0
-npm:@anthropic-ai/claude-code     2.1.158  ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code     2.1.159  ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux  1.1.0    ~/.config/mise/config.toml       latest
 ollama                            0.23.4
 pipx:bandit                       1.9.4    ~/.config/mise/config.toml       latest
