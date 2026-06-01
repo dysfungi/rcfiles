@@ -40,7 +40,15 @@ repos:
     hooks:
       - id: prettier
         types_or: [css, html, json, markdown, yaml]
-        exclude: *fixes_exclude
+        exclude: |-
+          (?x)^(
+            \.symlinked/.*
+            |dot_config/configstore/.*\.json
+            |dot_config/.*karabiner/.*\.json
+            |modify_private_dot_claude.json
+            |AGENTS\.md
+            |GEMINI\.md
+          )$
   - repo: https://github.com/jorisroovers/gitlint
     rev: v0.19.1
     hooks:
