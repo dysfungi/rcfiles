@@ -195,6 +195,7 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:masterminds.github.io)",
       "WebFetch(domain:mise.jdx.dev)",
+      "WebFetch(domain:prettier.io)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:slack.com)",
       "WebFetch(domain:stackoverflow.com)",
