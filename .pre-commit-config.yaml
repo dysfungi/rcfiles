@@ -1,5 +1,11 @@
 ---
 # https://pre-commit.com/hooks.html
+#
+# POLICY: hooks are the contract; files must conform to hooks — not the other way around.
+# Do NOT exclude files, skip hooks, or add workarounds to silence failures without explicit
+# user approval. When a hook fails on a file, fix the file. The only legitimate per-hook
+# excludes are for files that are structurally incompatible (e.g. binary-like JSON, vendored
+# files in .symlinked/) — not files that merely fail formatting checks.
 x-anchors:
   excludes:
     # https://pre-commit.com/#regular-expressions
@@ -40,15 +46,7 @@ repos:
     hooks:
       - id: prettier
         types_or: [css, html, json, markdown, yaml]
-        exclude: |-
-          (?x)^(
-            \.symlinked/.*
-            |dot_config/configstore/.*\.json
-            |dot_config/.*karabiner/.*\.json
-            |modify_private_dot_claude.json
-            |AGENTS\.md
-            |GEMINI\.md
-          )$
+        exclude: *fixes_exclude
   - repo: https://github.com/jorisroovers/gitlint
     rev: v0.19.1
     hooks:

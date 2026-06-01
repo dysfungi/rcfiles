@@ -130,6 +130,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - All chezmoi scripts must log start/end to stderr: sh scripts use `echo >&2 "INFO: Starting $0"` / `echo >&2 "INFO: Ending $0"`; PowerShell scripts use `Write-Host "INFO: Starting $PSCommandPath"` / `Write-Host "INFO: Ending $PSCommandPath"`.
 - **Vim filetype modeline for `.tmpl` files**: When a `.tmpl` file renders into a specific language (Python, shell, Lua, etc.), add a `# vim: ft=<lang>` comment on line 2 (after the shebang if present) so editors apply the correct syntax highlighting. Example: `# vim: ft=python` in a `.py.tmpl` or `modify_*.tmpl` that contains Python.
 - When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
+- **pre-commit hooks are the contract; files must conform.** When a hook fails, fix the source file — do not exclude it from the hook, skip the hook, or add workarounds (e.g. `# noqa`, `# fmt: skip`, extending `exclude:` patterns). The only legitimate hook excludes are structural incompatibilities (binary-like JSON, vendored files). Silencing a hook without explicit user approval is a policy violation. If you're unsure whether a file change is correct, check the hook's documentation.
 
 ## Programming & Engineering
 
@@ -142,7 +143,6 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
-
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
   - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators
