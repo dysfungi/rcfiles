@@ -43,7 +43,11 @@ backup() {
 mkdir -p "${bakDir}"
 
 backup before
-brew bundle install --force-cleanup --file="${brewFile}" --upgrade
+# HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP: on Homebrew HEAD+ --cleanup became
+# interactive (needs --force, --force-cleanup, or this env var); on 5.1.x the
+# env var is a no-op and --cleanup already acts like cleanup --force. Using the
+# env var here avoids depending on --force-cleanup, which doesn't exist in 5.1.x.
+HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP=1 brew bundle install --cleanup --file="${brewFile}" --upgrade
 backup after
 
 echo >&2 "INFO: Ending $0"
