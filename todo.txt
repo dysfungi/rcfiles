@@ -10,3 +10,4 @@
 (D) Investigate riot-slack MCP user-token vs bot-token behavior differences +riot-slack
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
+Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
