@@ -10,4 +10,3 @@
 (D) Investigate riot-slack MCP user-token vs bot-token behavior differences +riot-slack
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
-(B) Fix prettier CI failure - blank line in AGENTS.md +ci @worktree:.claude/worktrees/a1915c3a-5ba6-4b57-9bdb-2e29cbec5737.prettier-agents-md session:a1915c3a-5ba6-4b57-9bdb-2e29cbec5737 agent:claude model:claude-vertex/anthropic-claude-opus-4-6
