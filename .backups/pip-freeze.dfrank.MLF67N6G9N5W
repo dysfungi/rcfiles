@@ -59,7 +59,7 @@ requests==2.34.2
 rich==15.0.0
 setuptools==82.0.1
 stack-data==0.6.3
-starlette==1.2.0
+starlette==1.2.1
 stevedore==5.7.0
 tenacity==9.1.4
 traitlets==5.15.0
