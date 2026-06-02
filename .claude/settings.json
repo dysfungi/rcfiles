@@ -73,6 +73,7 @@
   },
   "permissions": {
     "allow": [
+      "Bash(/Users/dfrank/.local/share/uv/tools/datadog/bin/pip show *)",
       "Bash(/home/dfrank/.local/share/mise/shims/jq --version)",
       "Bash(/home/dfrank/.local/share/mise/shims/pre-commit run *)",
       "Bash(/usr/bin/time -p node -e \"\")",
@@ -97,6 +98,7 @@
       "Bash(defaults read *)",
       "Bash(diff *)",
       "Bash(dir *)",
+      "Bash(dog *)",
       "Bash(dpkg -l cdargs)",
       "Bash(echo \"---exit:$?\")",
       "Bash(echo *)",
