@@ -119,6 +119,7 @@ my:
     pacman-contrib: { pacman: pacman-contrib }
     pandoc: { brew: pandoc }
     poetry: { brew: poetry }
+    poppler: { brew: poppler, pacman: poppler }
     prettier: { brew: prettier }
     prettierd: { brew: prettierd }
     proselint: { brew: proselint }
