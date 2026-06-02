@@ -10,4 +10,3 @@
 (D) Investigate riot-slack MCP user-token vs bot-token behavior differences +riot-slack
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
-(B) Add poppler to packages.yaml +packages @worktree:.claude/worktrees/72481a69-24e9-4903-aee8-611e9342617f.add-poppler session:72481a69-24e9-4903-aee8-611e9342617f agent:claude model:claude-vertex/anthropic-claude-opus-4-6
