@@ -42,6 +42,8 @@
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-vertex/anthropic-claude-opus-4-6",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-vertex/anthropic-claude-sonnet-4-6-default",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
+    "DATADOG_API_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/API Key/api key" | quote }},
+    "DATADOG_APP_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/Application Key/app key" | quote }},
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1",
     "ENABLE_TOOL_SEARCH": "true",
