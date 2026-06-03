@@ -18,9 +18,9 @@ riot:
       serverUrl: "https://riot-lore-beta.rcluster.io/lore/v1/mcp"
       docUrl: "https://gh.riotgames.com/clde/glue-lore"
     riot-slack:
-      serverUrl: "https://mcp.slack.com/mcp"
+      serverUrl: "https://truefoundry.riotgames.io/api/llm/riotgames/mcp/slack-mcp-sandbox/server"
       docUrl: |-
         https://www.notion.so/riotgames/Slack-MCP-2f77f9530fb280488442c5f73a202022?v=26b7f9530fb280caa34a000c71d93783
       auth:
         type: bearer
-        opPath: "op://Riot/Slack App - Agents/user token"
+        opPath: "op://Riot/TrueFoundry - Personal Access Token/credential"
