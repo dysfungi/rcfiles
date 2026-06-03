@@ -29,6 +29,7 @@
     "ANTHROPIC_AUTH_TOKEN": "ollama",
     "ANTHROPIC_BASE_URL": "http://localhost:11434",
     */ -}}
+    "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "50",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_ENABLE_TELEMETRY": "0", {{- /* TODO(dfrank): Enable telemetry */}}
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0",
@@ -44,6 +45,7 @@
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
     "DATADOG_API_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/API Key/api key" | quote }},
     "DATADOG_APP_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/Application Key/app key" | quote }},
+    "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "50",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1",
     "ENABLE_TOOL_SEARCH": "true",
