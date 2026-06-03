@@ -6,6 +6,7 @@ from _utils import rc, reset_current_job
 @rc(interactive=True)
 def __rc_interactive_env_essential(xsh):
     xsh.env.setdefault("EDITOR", "nvim -e")
+    xsh.env.setdefault("LESS", "-R")
     xsh.env.setdefault("VISUAL", "nvim")
     xsh.env.setdefault("SHELL", next((arg for arg in sys.argv if "xonsh" in arg), "xonsh"))
 
