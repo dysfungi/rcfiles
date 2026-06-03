@@ -26,7 +26,7 @@ def _activate_mise(xsh):
         if args and args[0] in ('deactivate', 'shell', 'sh'):
             return execx($(@(_mise_bin) @(args)))
         else:
-            return $(@(_mise_bin) @(args))
+            $[@(_mise_bin) @(args)]
 
     xsh.aliases['mise'] = _mise
 
