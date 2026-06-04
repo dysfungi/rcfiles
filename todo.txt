@@ -11,4 +11,4 @@
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
-(B) Fix chezmoi.nvim blocking editor — async watch + async apply +nvim @worktree:.claude/worktrees/7ba5e802-ec82-4676-aac5-36055106fbc1.chezmoi-nvim-async-watch session:7ba5e802-ec82-4676-aac5-36055106fbc1 agent:claude-code model:claude-vertex/anthropic-claude-opus-4-6
+x 2026-06-04 (B) Fix chezmoi.nvim blocking editor — async watch + async apply +nvim @worktree:.claude/worktrees/7ba5e802-ec82-4676-aac5-36055106fbc1.chezmoi-nvim-async-watch session:7ba5e802-ec82-4676-aac5-36055106fbc1 agent:claude-code model:claude-vertex/anthropic-claude-opus-4-6
