@@ -22,5 +22,6 @@ python                            3.14.3
 ruff                              0.15.15  ~/.config/mise/config.toml       latest
 shellcheck                        0.11.0
 taplo                             0.10.0
+terraform                         1.15.5
 uv                                0.11.17  ~/.config/mise/config.toml       latest
 yarn                              1.22.22
