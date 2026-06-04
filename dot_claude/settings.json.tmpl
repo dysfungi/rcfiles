@@ -49,6 +49,27 @@
     "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "50",
     "CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS": "1",
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1",
+    {{- /*
+      ENABLE_TOOL_SEARCH defers MCP tool schemas out of context (lazy-loading), reclaiming
+      ~33-45k tokens (~16-22% of a 200k window) that our 5 MCP servers otherwise consume up
+      front. It requires the `advanced-tool-use-2025-11-20` anthropic-beta header.
+
+      CURRENTLY A NO-OP on this Riot/Vertex stack: TrueFoundry forwards the beta correctly,
+      but the upstream Vertex Anthropic deployment REJECTS *all* anthropic-beta values with
+      `400 Unexpected value(s) ... for the anthropic-beta header` (verified 2026-06-04 across
+      advanced-tool-use, prompt-caching-scope, redact-thinking, etc.). This is precisely why
+      CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=1 below is load-bearing — without it every
+      request 400s. The two settings coexist intentionally: the disable flag keeps the
+      session alive; this flag is a forward-looking no-op that will start working the moment
+      Vertex accepts the beta, with no config change needed.
+
+      Kept (not removed) so it activates automatically once supported. Re-test by toggling
+      CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS=0 in a throwaway session: if requests stop
+      400ing, Vertex now accepts betas and Tool Search is live.
+        Docs:  https://code.claude.com/docs/en/mcp (tool search auto-disables on Vertex / custom base URLs)
+        Related (closed, client-side): https://github.com/anthropics/claude-code/issues/22893
+      TODO(dfrank): drop CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS once Vertex accepts anthropic-beta values.
+    */ -}}
     "ENABLE_TOOL_SEARCH": "true",
     "NODE_EXTRA_CA_CERTS": "{{ .chezmoi.homeDir }}/.local/share/mise/plugins/riot/certs/riot-issuing-ca.pem"
     {{- end }}
