@@ -16,7 +16,9 @@ python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 uv                     = "latest"
 "pipx:pre-commit"      = "latest"
 # chezmoi template validation (validate-chezmoi-templates pre-commit hook)
-hadolint               = "latest"
+# ubi backend: aqua-registry expects old hadolint-Darwin-* asset names; current
+# releases (2.14.0+) publish hadolint-macos-*. ubi reads GitHub assets directly.
+"ubi:hadolint/hadolint" = "latest"
 jq                     = "latest"
 lua                    = "latest"
 "npm:markdownlint-cli" = "latest"
