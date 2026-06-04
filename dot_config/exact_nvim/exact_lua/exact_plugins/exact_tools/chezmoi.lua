@@ -74,11 +74,6 @@ end
 --   1. chezmoi status (async) — confirms the file is chezmoi-managed.
 --   2. On status success → fire on_watch notification + register BufWritePost.
 --   3. BufWritePost → chezmoi apply (async) → fire on_apply notification.
---
--- NOTE: opts.events.on_*.notification uses "enabled" (with d), but the plugin
--- reads "enable" (without). The user opts key is silently ignored; the plugin
--- default (enable=true) stays in effect. Do not "fix" opts to match — it would
--- suppress notifications by setting enable=false via deep-extend override.
 local function watch(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local config = require("chezmoi").config
@@ -150,19 +145,19 @@ return {
     events = {
       on_open = {
         notification = {
-          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
+          enable = true,
           opts = {},
         },
       },
       on_apply = {
         notification = {
-          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
+          enable = true,
           opts = {},
         },
       },
       on_watch = {
         notification = {
-          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
+          enable = true,
           opts = {},
         },
       },
