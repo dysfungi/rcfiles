@@ -43,6 +43,18 @@ backup() {
 mkdir -p "${bakDir}"
 
 backup before
+
+# Trust non-official taps before bundle install. Homebrew 5.2/6.0 will require
+# explicit trust before loading formulae/casks from non-official taps; trusting
+# here is a harmless no-op on 5.1.x and future-proofs the sync. Derived from
+# the Brewfile so packages.yaml remains the single source of truth — no second
+# hardcoded list that can drift.
+non_official_taps="$(grep -E '^tap ' "${brewFile}" | sed -E 's/^tap "([^"]+)".*/\1/' | grep -v '^homebrew/' || true)"
+if [ -n "${non_official_taps}" ]; then
+  # shellcheck disable=SC2086  # intentional: brew trust takes multiple tap targets as separate args
+  brew trust ${non_official_taps}
+fi
+
 # HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP: on Homebrew HEAD+ --cleanup became
 # interactive (needs --force, --force-cleanup, or this env var); on 5.1.x the
 # env var is a no-op and --cleanup already acts like cleanup --force. Using the

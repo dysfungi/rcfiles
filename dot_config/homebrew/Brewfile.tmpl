@@ -10,8 +10,6 @@ cask_args appdir: "/Applications"
     {{- if hasKey $pkg "tap" }}{{ $_ := set $taps $pkg.tap true }}{{ end }}
   {{- end }}
 {{- end }}
-tap "homebrew/bundle"
-tap "homebrew/services"
 {{- range $tap, $_ := $taps }}
 tap {{ $tap | quote }}
 {{- end }}

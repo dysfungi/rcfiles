@@ -12,3 +12,4 @@
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
 x 2026-06-04 (B) Fix chezmoi.nvim blocking editor — async watch + async apply +nvim @worktree:.claude/worktrees/7ba5e802-ec82-4676-aac5-36055106fbc1.chezmoi-nvim-async-watch session:7ba5e802-ec82-4676-aac5-36055106fbc1 agent:claude-code model:claude-vertex/anthropic-claude-opus-4-6
+(B) Fix Homebrew sync failure: trust non-official taps + drop deprecated homebrew/bundle,services taps +homebrew @worktree:.claude/worktrees/5a24a783-bc06-4a00-9709-4d42b60b918c.homebrew-trust-fix session:5a24a783-bc06-4a00-9709-4d42b60b918c agent:claude model:claude-vertex/anthropic-claude-opus-4-8
