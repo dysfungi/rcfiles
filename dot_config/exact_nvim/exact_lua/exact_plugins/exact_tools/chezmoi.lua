@@ -5,15 +5,16 @@ local wk = require "which-key"
 -- apply() calls, which block the editor for 2.7-6s (chezmoi status/apply on
 -- this repo exceeds plenary's 5s default timeout).
 --
--- requires for chezmoi.* and plenary.job are deferred into function bodies so
--- they resolve after Lazy has loaded plugins. Lua caches results in
--- package.loaded, so repeat calls are a hash lookup — effectively free.
+-- Load order: requires for chezmoi.* and plenary.job are deferred into
+-- function bodies so they resolve after Lazy loads plugins. Lua caches in
+-- package.loaded — repeat calls are a hash lookup, effectively free.
 --
--- Pattern: single-flight + queue-latest, keyed by source_path.
---   - If no job is running for a file, start immediately.
---   - If a job is running, stash the new request (replacing any prior pending
---     request — only the latest matters).
---   - On job exit, pop and start the pending request if any.
+-- Queue pattern: single-flight + queue-latest, keyed by source_path (not
+-- bufnr — multiple buffers can open the same file on disk).
+--   - No active job → start immediately.
+--   - Active job running → stash as pending, replacing any prior pending
+--     (only the latest save matters, intermediates are coalesced).
+--   - On exit → drain pending if present.
 --
 -- Future considerations:
 --   - vim.throttle()/vim.debounce() (neovim/neovim#33179, Mar 2025, not
@@ -53,6 +54,8 @@ local function _run(source_path, args, on_done)
         end)
       end
     end,
+    -- vim.schedule_wrap: plenary callbacks run in a libuv thread; this
+    -- marshals back to the Neovim main loop where API calls are safe.
     on_exit = vim.schedule_wrap(function(_, code)
       _active[source_path] = nil
       on_done(code)
@@ -67,6 +70,15 @@ local function _run(source_path, args, on_done)
   job:start()
 end
 
+-- Async replacement for chezmoi.nvim's watch(). Flow:
+--   1. chezmoi status (async) — confirms the file is chezmoi-managed.
+--   2. On status success → fire on_watch notification + register BufWritePost.
+--   3. BufWritePost → chezmoi apply (async) → fire on_apply notification.
+--
+-- NOTE: opts.events.on_*.notification uses "enabled" (with d), but the plugin
+-- reads "enable" (without). The user opts key is silently ignored; the plugin
+-- default (enable=true) stays in effect. Do not "fix" opts to match — it would
+-- suppress notifications by setting enable=false via deep-extend override.
 local function watch(bufnr)
   bufnr = bufnr or vim.api.nvim_get_current_buf()
   local config = require("chezmoi").config
@@ -138,19 +150,19 @@ return {
     events = {
       on_open = {
         notification = {
-          enabled = true,
+          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
           opts = {},
         },
       },
       on_apply = {
         notification = {
-          enabled = true,
+          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
           opts = {},
         },
       },
       on_watch = {
         notification = {
-          enabled = true,
+          enabled = true, -- intentionally "enabled" (not "enable") — see NOTE in watch()
           opts = {},
         },
       },
@@ -160,9 +172,9 @@ return {
     },
   },
   init = function()
-    -- Treat all files in chezmoi source directory as chezmoi files.
-    -- Automatically applies changes on save for files under chezmoi source path.
-    -- e.g. ~/.local/share/chezmoi/*
+    -- Automatically apply chezmoi-managed files on save.
+    -- Covers all files under ~/.local/share/chezmoi/*, excluding scripts
+    -- (run_*) and dot files (handled natively by chezmoi, not this autocmd).
     local home = vim.env.HOME or vim.env.USERPROFILE or vim.fn.expand "~"
     home = home and home ~= "" and home:gsub("\\", "/") or nil
 
@@ -189,6 +201,8 @@ return {
           -- Skip watch/apply for dot files.
           return
         end
+        -- vim.schedule defers watch() past BufRead so the buffer is fully
+        -- registered before we query its name via nvim_buf_get_name.
         vim.schedule(function()
           watch(ev.buf)
         end)
