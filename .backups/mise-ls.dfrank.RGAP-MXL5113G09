@@ -5,7 +5,7 @@ jq                                1.8.1               ~/.config/mise/config.toml
 lua                               5.5.0
 node                              24.16.0             ~/.config/mise/config.toml       lts
 npm:@anthropic-ai/claude-code     2.1.156             ~/.config/mise/config.toml       latest
-npm:@opengsd/get-shit-done-redux  1.1.0 (missing)     ~/.config/mise/config.toml       latest
+npm:@opengsd/get-shit-done-redux  1.1.0               ~/.config/mise/config.toml       latest
 npm:markdownlint-cli              0.48.0
 pipx:bandit                       1.9.4               ~/.config/mise/config.toml       latest
 pipx:doit                         0.37.0              ~/.config/mise/config.toml       latest
