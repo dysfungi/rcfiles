@@ -170,8 +170,8 @@ return {
     -- Automatically apply chezmoi-managed files on save.
     -- Covers all files under ~/.local/share/chezmoi/*, excluding scripts
     -- (run_*) and dot files (handled natively by chezmoi, not this autocmd).
-    local home = vim.env.HOME or vim.env.USERPROFILE or vim.fn.expand "~"
-    home = home and home ~= "" and home:gsub("\\", "/") or nil
+    local raw_home = vim.env.HOME or vim.env.USERPROFILE or vim.fn.expand "~"
+    local home = (raw_home ~= "" and raw_home:gsub("\\", "/")) or nil
 
     if not home or home == "~" then
       vim.schedule(function()
