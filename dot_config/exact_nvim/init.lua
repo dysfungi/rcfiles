@@ -368,13 +368,86 @@ vim.opt.rtp:prepend(lazypath)
 
 -- [[ Custom Filetypes ]]
 
+-- chezmoi source-name attribute prefixes (stackable, applied left-to-right).
+-- See https://www.chezmoi.io/reference/target-types/ — `dot_` is handled separately
+-- because it transforms to "." rather than being stripped.
+local CHEZMOI_PREFIXES = {
+  "encrypted_",
+  "private_",
+  "readonly_",
+  "executable_",
+  "exact_",
+  "create_",
+  "modify_",
+  "remove_",
+  "symlink_",
+  "run_",
+  "once_",
+  "before_",
+  "after_",
+  "onchange_",
+  "literal_",
+}
+
+-- Reconstruct a chezmoi target basename from its source basename so Neovim's
+-- native detection can resolve the filetype (e.g. "dot_zshenv.tmpl" → ".zshenv").
+-- WHY: vim.filetype.add pattern functions receive the full absolute path, so we must
+-- extract the tail first, then transform the chezmoi name attributes. Reconstructing
+-- the real target name lets vim.filetype.match resolve it without any hardcoded map
+-- of chezmoi-renamed files.
+local function chezmoi_target_basename(source_basename)
+  local name = source_basename:gsub("%.tmpl$", "")
+  local changed = true
+  while changed do
+    changed = false
+    for _, prefix in ipairs(CHEZMOI_PREFIXES) do
+      if name:sub(1, #prefix) == prefix then
+        name = name:sub(#prefix + 1)
+        changed = true
+      end
+    end
+  end
+  return (name:gsub("^dot_", "."))
+end
+
+-- Base filetypes for reconstructed names Neovim still cannot resolve — i.e.
+-- extensions genuinely unknown to Neovim, not files chezmoi renamed. Keep minimal.
+local UNKNOWN_BASE = {
+  [".dogrc"] = "dosini",
+  [".p4enviro"] = "dosini",
+  [".chezmoiignore"] = "gitignore",
+}
+
 -- https://github.com/ngalaiko/tree-sitter-go-template#neovim-integration-using-nvim-treesitter
 vim.filetype.add {
   extension = {
+    -- WHY extension key, not pattern: Neovim 0.12+ ships a built-in *.tmpl → "template"
+    -- mapping; user pattern rules share the same priority tier and lose to it. The
+    -- extension key wins over built-in patterns, giving us priority control.
+    -- WHY fnamemodify ":t": the function receives the full absolute path, not the
+    -- basename — the "^dot_" gsub would never match without extracting the tail first.
+    -- chezmoi Go-template files: reconstruct the real target basename, let Neovim
+    -- detect the base filetype, and return compound "gotmpl.<base>" so the gotmpl
+    -- TreeSitter parser highlights {{ }} directives (primary) while the host language
+    -- gets Vim syntax highlighting (secondary). Falls back to plain "gotmpl" when the
+    -- base type is unknown (symlink targets, secrets, plain-text lists).
+    -- A per-file `# vim: ft=...` modeline overrides this for misnamed files (e.g.
+    -- a .json.tmpl whose body is actually Python, not JSON).
+    tmpl = function(path)
+      local tail = vim.fn.fnamemodify(path, ":t")
+      local base = chezmoi_target_basename(tail)
+      local ft = vim.filetype.match { filename = base } or UNKNOWN_BASE[base]
+      return ft and ("gotmpl." .. ft) or "gotmpl"
+    end,
     gotmpl = "gotmpl",
   },
-  pattern = {
-    [".*%.tmpl"] = "gotmpl",
+  filename = {
+    -- chezmoi modify_ scripts that emit JSON are Go-template bodies despite the
+    -- `.json` extension and the absence of `.tmpl`. The `filename` key (literal tail
+    -- lookup) is used instead of `pattern` because the built-in json extension rule
+    -- fires before user-defined patterns in vim.filetype.match resolution order.
+    -- WHY exact name: these files are stable chezmoi source names, not runtime-generated.
+    ["modify_private_dot_claude.json"] = "gotmpl.json",
   },
 }
 
@@ -1011,6 +1084,16 @@ require("lazy").setup({
       notify_no_formatters = true,
       notify_on_error = true,
       format_on_save = function(bufnr)
+        -- Never format chezmoi Go-template buffers: {{ }} directives break every
+        -- formatter even when a compound filetype (e.g. gotmpl.python) provides
+        -- host-language highlighting. The gotmpl component is always the primary
+        -- (first) component, so :find("gotmpl") reliably matches all template buffers.
+        -- Returning false causes Conform's BufWritePre handler to skip M.format entirely
+        -- (no formatters run, no LSP fallback) — confirmed in conform.nvim source.
+        if vim.bo[bufnr].filetype:find "gotmpl" then
+          return false
+        end
+
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
@@ -1032,14 +1115,7 @@ require("lazy").setup({
         go = { "goimports", "gofmt" },
         javascript = { "prettierd", "prettier", stop_after_first = true },
         lua = { "stylua" },
-        -- Conform can also run multiple formatters sequentially
-        python = function(bufnr)
-          if require("conform").get_formatter_info("ruff_format", bufnr).available then
-            return { "ruff_organize_imports", "ruff_fix", "ruff_format" }
-          else
-            return { "ruff_organize_imports", "ruff_fix", "ruff_format" }
-          end
-        end,
+        python = { "ruff_organize_imports", "ruff_fix", "ruff_format" },
         rust = { "rustfmt", lsp_format = "fallback" },
         terraform = { "tofu_fmt" },
         typescript = { "prettierd", "prettier", stop_after_first = true },
