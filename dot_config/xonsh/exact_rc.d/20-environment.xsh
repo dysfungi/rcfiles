@@ -26,8 +26,11 @@ def _activate_mise(xsh):
     def _mise(args):
         if args and args[0] in ('deactivate', 'shell', 'sh'):
             return execx($(@(_mise_bin) @(args)))
-        else:
-            $[@(_mise_bin) @(args)]
+        # Use ![...] not $[...]: $[] raises CalledProcessError on non-zero exit;
+        # FuncAliases run on a ProcProxyThread, so uncaught exceptions surface as
+        # "Exception in thread" noise rather than setting $?. ![] never raises —
+        # return the int exit code so xonsh sets $? correctly.
+        return ![@(_mise_bin) @(args)].returncode
 
     xsh.aliases['mise'] = _mise
 
