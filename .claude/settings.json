@@ -110,6 +110,7 @@
       "Bash(gh issue *)",
       "Bash(gh repo *)",
       "Bash(gh run *)",
+      "Bash(gh search *)",
       "Bash(git *)",
       "Bash(go *)",
       "Bash(grep *)",
