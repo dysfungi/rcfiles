@@ -49,11 +49,11 @@ backup before
 # here is a harmless no-op on 5.1.x and future-proofs the sync. Derived from
 # the Brewfile so packages.yaml remains the single source of truth — no second
 # hardcoded list that can drift.
-non_official_taps="$(grep -E '^tap ' "${brewFile}" | sed -E 's/^tap "([^"]+)".*/\1/' | grep -v '^homebrew/' || true)"
-if [ -n "${non_official_taps}" ]; then
-  # shellcheck disable=SC2086  # intentional: brew trust takes multiple tap targets as separate args
-  brew trust ${non_official_taps}
-fi
+# `brew trust --tap` (not bare `brew trust`) is required for 2-part user/repo
+# tap names; bare positional targets expect 3-part user/repo/formula notation.
+while IFS= read -r tap; do
+  [ -n "${tap}" ] && brew trust --tap "${tap}"
+done < <(grep -E '^tap ' "${brewFile}" | sed -E 's/^tap "([^"]+)".*/\1/' | grep -v '^homebrew/' || true)
 
 # HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP: on Homebrew HEAD+ --cleanup became
 # interactive (needs --force, --force-cleanup, or this env var); on 5.1.x the
