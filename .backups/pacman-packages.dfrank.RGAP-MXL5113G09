@@ -33,6 +33,7 @@ openssh
 opentofu
 p4
 pacman-contrib
+poppler
 ripgrep
 rsync
 ruff
