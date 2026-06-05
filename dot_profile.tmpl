@@ -1,6 +1,9 @@
 export PATH="{{ .pathStr }}"
 # --shims: adds shims dir to PATH without dynamic hooks; preserves explicit PATH ordering
-eval "$($HOME/.local/bin/mise activate bash --shims)" 2>/dev/null || true
+# Resolve mise via PATH (set above), not a hardcoded path — it may live under
+# Homebrew, pacman, etc. depending on platform. Guard so a mise-less machine skips
+# cleanly rather than erroring.
+command -v mise >/dev/null 2>&1 && eval "$(mise activate bash --shims)"
 
 # cdargs shell functions
 _cdargs_sh=/usr/share/cdargs/cdargs-bash.sh

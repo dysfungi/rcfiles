@@ -11,3 +11,4 @@
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
+(B) Fix hardcoded mise path in dot_profile.tmpl +chezmoi @worktree:.claude/worktrees/5abce181-c67e-4e8b-b6fd-0352faf9f4cd.profile-mise-path session:5abce181-c67e-4e8b-b6fd-0352faf9f4cd agent:claude-code model:claude-vertex/anthropic-claude-opus-4-8
