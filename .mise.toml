@@ -16,17 +16,19 @@ python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 uv                     = "latest"
 "pipx:pre-commit"      = "latest"
 # chezmoi template validation (validate-chezmoi-templates pre-commit hook)
-# ubi backend: aqua-registry expects old hadolint-Darwin-* asset names; current
-# releases (2.14.0+) publish hadolint-macos-*. ubi reads GitHub assets directly.
-"ubi:hadolint/hadolint" = "latest"
+# github backend: aqua-registry expects old hadolint-Darwin-* asset names; current
+# releases (2.14.0+) publish hadolint-macos-*. github reads GitHub assets directly.
+# (ubi backend was deprecated in favor of github — removed in mise 2027.1.0.)
+"github:hadolint/hadolint" = "latest"
 jq                     = "latest"
 lua                    = "latest"
 "npm:markdownlint-cli" = "latest"
 "pipx:yamllint"        = "latest"
 shellcheck             = "latest"
-# ubi: aqua registry looks for sha256sums.txt which mvdan/sh no longer publishes.
-# exe= hint required because repo name (sh) differs from binary name (shfmt).
-"ubi:mvdan/sh[exe=shfmt]" = "latest"
+# github backend: aqua registry looks for sha256sums.txt which mvdan/sh no longer
+# publishes. bin= required because repo name (sh) differs from binary name (shfmt).
+# (ubi backend was deprecated in favor of github — removed in mise 2027.1.0.)
+"github:mvdan/sh" = { version = "latest", bin = "shfmt" }
 stylua                 = "latest"
 taplo                  = "latest"
 
