@@ -18,7 +18,7 @@
 #   pacman       — Arch Linux package name (official repos)
 #   aur          — AUR package name; installed via yay (independent of pacman:)
 #   winget       — winget package ID
-#   bootstrap    — true if installed by .bootstrap.windows.ps1 before chezmoi runs (documentation only)
+#   bootstrap    — true if installed by the platform .bootstrap.* script before chezmoi runs (documentation only)
 #   mise         — mise tool spec: "tool@version" (eg, "jq@latest", "python@3.13")
 #   skip         — platforms to skip for mise: [darwin, linux, windows]
 #   pip          — pip/UV package name
@@ -105,7 +105,14 @@ my:
     markdownlint-cli: { brew: markdownlint-cli }
     mdq: { brew: mdq }
     micromamba: { winget: Mamba.Micromamba }
-    mise: { brew: mise, pacman: mise, winget: jdx.mise }
+    # mise is a bootstrap dependency: each platform's .bootstrap.* script installs
+    # it via the package manager below (brew/pacman/winget) before chezmoi's stage
+    # scripts run, since stage 20 `mise install` needs mise on PATH. The legacy
+    # standalone install at ~/.local/bin/mise (curl https://mise.run) is removed
+    # declaratively on `chezmoi apply` by dot_local/bin/remove_mise, leaving only
+    # the package-manager copy (which `brew bundle --upgrade` / `pacman -Syu` keep
+    # current). See .bootstrap.darwin.sh, .bootstrap.linux.sh, .bootstrap.windows.ps1.
+    mise: { brew: mise, pacman: mise, winget: jdx.mise, bootstrap: true }
     moreutils: { brew: moreutils, pacman: moreutils }
     mypy: { mise: "pipx:mypy" }
     neovim: { brew: neovim, pacman: neovim, winget: Neovim.Neovim }
