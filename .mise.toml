@@ -24,7 +24,9 @@ lua                    = "latest"
 "npm:markdownlint-cli" = "latest"
 "pipx:yamllint"        = "latest"
 shellcheck             = "latest"
-shfmt                  = "latest"
+# ubi: aqua registry looks for sha256sums.txt which mvdan/sh no longer publishes.
+# exe= hint required because repo name (sh) differs from binary name (shfmt).
+"ubi:mvdan/sh[exe=shfmt]" = "latest"
 stylua                 = "latest"
 taplo                  = "latest"
 
