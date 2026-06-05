@@ -11,7 +11,7 @@ Chezmoi-managed dotfiles for both personal machines (`dmf` user) and Riot Games 
 ```
 Manual install (1Password + Git + chezmoi)
   → chezmoi init (triggers .bootstrap.ps1 or .bootstrap.sh)
-    → Bootstrap installs platform package manager + WSL (Windows)
+    → Bootstrap installs platform package manager + mise + WSL (Windows)
       → chezmoi apply
         → Stage 00–99 scripts run in order
         → Templates render with machine-specific variables
@@ -19,12 +19,12 @@ Manual install (1Password + Git + chezmoi)
 
 ### Package Management Strategy
 
-| Layer                    | Unix-like  | Windows    | Purpose                                                                               |
-| ------------------------ | ---------- | ---------- | ------------------------------------------------------------------------------------- |
-| **Core deps**            | Homebrew   | winget     | Platform-native package manager for OS-level tools (Git, Neovim, ripgrep, tmux, etc.) |
-| **Multi-platform tools** | mise       | mise       | Polyglot version manager for dev tools (Python, Node, jq, uv, ruff, etc.)             |
-| **Python tools**         | xpip/UV    | xpip/UV    | Isolated Python CLI installs (xonsh, pre-commit)                                      |
-| **Editor plugins**       | Mason/Lazy | Mason/Lazy | Neovim LSPs, formatters, and plugins                                                  |
+| Layer                    | Unix-like  | Windows    | Purpose                                                                                                                                                             |
+| ------------------------ | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Core deps**            | Homebrew   | winget     | Platform-native package manager for OS-level tools (Git, Neovim, ripgrep, tmux, etc.)                                                                               |
+| **Multi-platform tools** | mise       | mise       | Polyglot version manager for dev tools (Python, Node, jq, uv, ruff, etc.); mise itself is bootstrap-installed via the platform package manager (brew/pacman/winget) |
+| **Python tools**         | xpip/UV    | xpip/UV    | Isolated Python CLI installs (xonsh, pre-commit)                                                                                                                    |
+| **Editor plugins**       | Mason/Lazy | Mason/Lazy | Neovim LSPs, formatters, and plugins                                                                                                                                |
 
 ### Machine Detection
 
