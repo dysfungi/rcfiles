@@ -34,14 +34,13 @@ taplo                  = "latest"
 [tasks]
 # https://mise.jdx.dev/tasks/
 
-[tasks.install]
-description = "Install dependencies"
-alias = "i"
-run = "uv pip install --requirement=dot_default-python-packages"
+[tasks.apply]
+description = "Chezmoi apply"
+run = "chezmoi apply --verbose"
 
-[tasks.run]
-description = "Run the application"
-run = "python app.py"
+[tasks.execute-template]
+description = "Chezmoi execute-template"
+run = "chezmoi --verbose execute-template --file"
 
 [tasks.test]
 description = "Run tests"
@@ -49,11 +48,12 @@ run = "uv run --with pytest pytest .tests/ -v"
 
 [tasks.lint]
 description = "Lint the code"
-run = "pre-commit run --all-files --show-diff-on-failure"
+run = "pre-commit run --all-files --hook-stage=manual --show-diff-on-failure"
 
-[tasks.info]
-description = "Print project information"
-run = '''
-echo "Project: $PROJECT_NAME"
-echo "Virtual Environment: $VIRTUAL_ENV"
-'''
+[tasks.run]
+description = "Chezmoi run script after rendering from template"
+run = "TODO"
+
+[tasks.update]
+description = "Chezmoi update"
+run = "chezmoi update --verbose"
