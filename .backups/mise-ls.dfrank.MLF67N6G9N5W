@@ -6,14 +6,14 @@ jq                                1.8.1    ~/.config/mise/config.toml       late
 lua                               5.5.0
 node                              22.2.0
 node                              22.22.3
-node                              24.15.0  ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code     2.1.163  ~/.config/mise/config.toml       latest
+node                              24.16.0  ~/.config/mise/config.toml       lts
+npm:@anthropic-ai/claude-code     2.1.165  ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux  1.1.0    ~/.config/mise/config.toml       latest
 npm:markdownlint-cli              0.48.0
 ollama                            0.23.4
 pipx:bandit                       1.9.4    ~/.config/mise/config.toml       latest
 pipx:doit                         0.37.0   ~/.config/mise/config.toml       latest
-pipx:ipython                      9.14.0   ~/.config/mise/config.toml       latest
+pipx:ipython                      9.14.1   ~/.config/mise/config.toml       latest
 pipx:mypy                         2.1.0    ~/.config/mise/config.toml       latest
 pipx:neovim-remote                2.5.1    ~/.config/mise/config.toml       latest
 pipx:pre-commit                   4.6.0
