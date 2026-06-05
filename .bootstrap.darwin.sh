@@ -4,7 +4,7 @@ set -euo pipefail
 export PATH="${PATH}:/opt/homebrew/bin"
 
 # Fast-path: skip logging and installs if all bootstrap deps are present
-if command -v brew >/dev/null 2>&1 && command -v op >/dev/null 2>&1; then
+if command -v brew >/dev/null 2>&1 && command -v op >/dev/null 2>&1 && command -v mise >/dev/null 2>&1; then
   exit 0
 fi
 
@@ -17,6 +17,12 @@ fi
 
 if ! command -v op >/dev/null 2>&1; then
   brew install 1password-cli
+fi
+
+# mise must exist before chezmoi's stage-20 `mise install` runs. Declared in
+# .chezmoidata/packages.yaml (brew: mise) and bootstrapped here.
+if ! command -v mise >/dev/null 2>&1; then
+  brew install mise
 fi
 
 echo >&2 "INFO: Ending $0"
