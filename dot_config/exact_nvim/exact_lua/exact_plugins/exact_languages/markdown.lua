@@ -25,10 +25,10 @@ return {
     config = function(_, opts)
       require("render-markdown").setup(opts)
       -- wildcharm's bg-blend makes RenderMarkdownCode nearly invisible against text;
-      -- link to CursorLine which is always distinct from Normal in every colorscheme.
+      -- link to Visual which is always designed to contrast against Normal fg.
       -- vim.schedule defers past render-markdown's own ColorScheme autocmd so ours wins.
       local function fix_code_hl()
-        vim.api.nvim_set_hl(0, "RenderMarkdownCode", { link = "CursorLine" })
+        vim.api.nvim_set_hl(0, "RenderMarkdownCode", { link = "Visual" })
       end
       fix_code_hl()
       vim.api.nvim_create_autocmd("ColorScheme", {
