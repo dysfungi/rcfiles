@@ -69,6 +69,7 @@
     unmerged = diff --name-only --diff-filter=U
     resolve = mergetool --no-gui --tool=vimdiff3
     untrack = rm --cached
+    sync = !sh -c \"git pull && git pf\"
 [color]
     diff = auto
     status = auto
