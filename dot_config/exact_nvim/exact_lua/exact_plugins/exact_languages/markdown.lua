@@ -23,6 +23,11 @@ return {
     ---@type render.md.UserConfig
     opts = {
       code = { enabled = false },
+      -- render-markdown sets conceallevel=3 by default, which hides text (e.g. HTML
+      -- comments) completely outside the cursor line. 0 = never conceal anything.
+      win_options = {
+        conceallevel = { default = 0, rendered = 0 },
+      },
     },
   },
 }
