@@ -1,0 +1,5 @@
+{{- if .isRiotMachine -}}
+@riot:registry=https://artifacts.riotgames.com/artifactory/api/npm/npm
+@riot:email={{ .email }}
+//artifacts.riotgames.com/artifactory/api/npm/:_auth={{ printf "%s:%s" .email (onepasswordRead "op://Riot/JFrog Artifactory API Key - npm/credential") | b64enc }}
+{{- end }}
