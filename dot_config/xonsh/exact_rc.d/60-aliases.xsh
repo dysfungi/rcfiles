@@ -295,7 +295,7 @@ def __rc_interactive_aliases_claude(aliases):
             except Exception:
                 # NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames!
                 resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default[1m]"
-            argv = ["--model", resume_model, *argv]
+            argv = ["--allow-dangerously-skip-permissions", "--model", resume_model, *argv]
         return subprocess.run([real_claude, *argv]).returncode
 
     from pathlib import Path
