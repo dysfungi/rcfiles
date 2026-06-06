@@ -21,22 +21,11 @@ return {
     -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
     ---@module 'render-markdown'
     ---@type render.md.UserConfig
-    opts = {},
-    config = function(_, opts)
-      require("render-markdown").setup(opts)
-      -- wildcharm's bg-blend makes RenderMarkdownCode nearly invisible against text;
-      -- link to Visual which is always designed to contrast against Normal fg.
-      -- vim.schedule defers past render-markdown's own ColorScheme autocmd so ours wins.
-      local function fix_code_hl()
-        vim.api.nvim_set_hl(0, "RenderMarkdownCode", { link = "Visual" })
-      end
-      fix_code_hl()
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = function()
-          vim.schedule(fix_code_hl)
-        end,
-      })
-    end,
+    opts = {
+      code = {
+        -- no value in a block background; Normal bg = effectively transparent
+        highlight = "Normal",
+      },
+    },
   },
 }
