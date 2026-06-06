@@ -22,10 +22,7 @@ return {
     ---@module 'render-markdown'
     ---@type render.md.UserConfig
     opts = {
-      code = {
-        -- no value in a block background; Normal bg = effectively transparent
-        highlight = "Normal",
-      },
+      code = { enabled = false },
     },
   },
 }
