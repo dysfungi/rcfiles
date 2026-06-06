@@ -281,7 +281,7 @@ def __rc_interactive_aliases_claude(aliases):
             try:
                 with open(_SETTINGS_PATH) as f:
                     settings = json.load(f)
-                resume_model = settings.get("model", "opusplan")
+                resume_model = settings.get("model", "sonnet")
                 # Resolve Claude Code aliases → full TrueFoundry provider paths;
                 # env dict is read from the JSON file, not os.environ.
                 env = settings.get("env", {})
@@ -294,7 +294,7 @@ def __rc_interactive_aliases_claude(aliases):
                 resume_model = alias_map.get(resume_model) or resume_model
             except Exception:
                 # NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames!
-                resume_model = "claude-vertex/anthropic-claude-opus-4-8"
+                resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default[1m]"
             argv = ["--model", resume_model, *argv]
         return subprocess.run([real_claude, *argv]).returncode
 
