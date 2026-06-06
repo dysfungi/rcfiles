@@ -1265,7 +1265,8 @@ require("lazy").setup({
       vim.cmd.colorscheme "wildcharm"
 
       -- You can configure highlights by doing something like:
-      vim.cmd.hi "Comment gui=none"
+      -- wildcharm Comment fg (#767676) is near-invisible on black; lift to a readable grey
+      vim.cmd.hi "Comment gui=none guifg=#aaaaaa"
     end,
   },
 
