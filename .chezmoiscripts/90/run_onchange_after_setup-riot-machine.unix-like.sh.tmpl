@@ -112,7 +112,12 @@ Linux)
       echo >&2 "WARN: Client ${client} not found on server; skipping Root update."
       echo >&2 "WARN: Create it on the server, then re-run: chezmoi apply --include scripts"
     fi
-    printf 'P4CLIENT=%s\nP4HOST=%s\n' "$client" "$P4HOST" >"${path}/.p4config.wsl"
+    # TODO: prefix $P4PORT value with `ssl:`
+    cat >"${path}/.p4config.wsl" <<-EOF
+	P4CLIENT=$client
+	P4HOST=$P4HOST
+	P4PORT=uegames.p4.riotgames.io:1666
+	EOF
     echo >&2 "INFO: Wrote ${path}/.p4config.wsl"
   }
 {{- range .riot.projects -}}
