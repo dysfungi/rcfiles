@@ -1,15 +1,19 @@
 {{- if .isRiotMachine -}}{{- /* List/Set values with `p4 set` */ -}}
 P4CHARSET=utf8
 P4IGNORE=.p4ignore
-{{- if .isLinux }}
-P4PORT=uegames.p4.riotgames.io:1666
-P4USER={{ .chezmoi.username }}
-P4CONFIG=.p4config.wsl
-P4_uegames.p4.riotgames.io:1666_CHARSET=auto
-{{- else }}
-P4CLIENT={{ .chezmoi.username }}_{{ .chezmoi.hostname }}
+{{- if .isDarwin }}
+P4CLIENT={{ .username }}_{{ .chezmoi.hostname }}
 P4PORT=PERFLAX01:1666
-P4USER={{ .chezmoi.username }}
+P4USER={{ .username }}
 P4_PERFLAX01:1666_CHARSET=auto
+{{- else }}
+P4PORT=uegames.p4.riotgames.io:1666
+P4USER={{ .username }}
+{{- if .isLinux }}
+P4CONFIG=.p4config.wsl
+{{- else }}
+P4CONFIG=.p4config
+{{- end }}
+P4_uegames.p4.riotgames.io:1666_CHARSET=auto
 {{- end }}
 {{- end -}}
