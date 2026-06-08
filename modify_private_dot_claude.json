@@ -25,15 +25,22 @@
     {{- end -}}
   {{- end -}}
   {{- if hasKey $mcp "env" -}}
-    {{- $renderedEnv := dict -}}
-    {{- range $k, $v := index $mcp "env" -}}
-      {{- $rendered := tpl $v $ -}}
-      {{- if $rendered -}}
-        {{- $renderedEnv = set $renderedEnv $k $rendered -}}
+    {{- $mcpEntry = set $mcpEntry "env" (index $mcp "env") -}}
+  {{- else if hasKey $mcp "envProfile" -}}
+    {{- $profile := index $mcp "envProfile" -}}
+    {{- if eq $profile "p4" -}}
+      {{- $p4env := dict "P4CHARSET" "utf8" "P4USER" $.username -}}
+      {{- if $.isDarwin -}}
+        {{- $p4env = set $p4env "P4PORT" "PERFLAX01:1666" -}}
+      {{- else -}}
+        {{- $p4env = set $p4env "P4PORT" "ssl:uegames.p4.riotgames.io:1666" -}}
+        {{- if $.isLinux -}}
+          {{- $p4env = set $p4env "P4CONFIG" ".p4config.wsl" -}}
+        {{- else -}}
+          {{- $p4env = set $p4env "P4CONFIG" ".p4config" -}}
+        {{- end -}}
       {{- end -}}
-    {{- end -}}
-    {{- if $renderedEnv -}}
-      {{- $mcpEntry = set $mcpEntry "env" $renderedEnv -}}
+      {{- $mcpEntry = set $mcpEntry "env" $p4env -}}
     {{- end -}}
   {{- end -}}
   {{- $mcpServersOut = set $mcpServersOut $mcpName $mcpEntry -}}

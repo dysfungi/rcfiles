@@ -30,8 +30,4 @@ riot:
         package: "p4mcp-server"
         args:
           - "--allow-usage"
-      env:
-        P4CHARSET: "utf8"
-        P4USER: "{{ .username }}"
-        P4PORT: "{{ if .isDarwin }}PERFLAX01:1666{{ else }}ssl:uegames.p4.riotgames.io:1666{{ end }}"
-        P4CONFIG: "{{ if .isLinux }}.p4config.wsl{{ else if not .isDarwin }}.p4config{{ end }}"
+      envProfile: "p4"
