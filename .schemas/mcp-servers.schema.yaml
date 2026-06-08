@@ -24,17 +24,47 @@ $defs:
 
   mcpServer:
     type: object
-    additionalProperties: false
-    required: [serverUrl, docUrl]
-    properties:
-      serverUrl:
-        type: string
-        format: uri
-      docUrl:
-        type: string
-        format: uri
-      auth:
-        $ref: "#/$defs/auth"
+    required: [docUrl]
+    oneOf:
+      - title: http
+        required: [serverUrl]
+        additionalProperties: false
+        properties:
+          docUrl:
+            type: string
+            format: uri
+          serverUrl:
+            type: string
+            format: uri
+          auth:
+            $ref: "#/$defs/auth"
+          env:
+            $ref: "#/$defs/envVars"
+      - title: uvx
+        required: [uvx]
+        additionalProperties: false
+        properties:
+          docUrl:
+            type: string
+            format: uri
+          uvx:
+            type: object
+            required: [package]
+            additionalProperties: false
+            properties:
+              package:
+                type: string
+              args:
+                type: array
+                items:
+                  type: string
+          env:
+            $ref: "#/$defs/envVars"
+
+  envVars:
+    type: object
+    additionalProperties:
+      type: string
 
   auth:
     type: object

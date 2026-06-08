@@ -37,6 +37,7 @@ source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plu
   {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
 {{- end -}}
 {{- range $mcpName, $mcp := $mcpServersIn }}
+{{- if hasKey $mcp "serverUrl" }}
 
 [mcp_servers.{{ $mcpName }}] {{ $mcp.docUrl  | comment "# " }}
 url = {{ $mcp.serverUrl | quote }}
@@ -46,6 +47,7 @@ headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opP
   {{- end -}}
 {{- end }}
 
+{{- end }}
 {{- end }}
 
 {{ if .isRiotMachine -}}

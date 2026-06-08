@@ -7,11 +7,33 @@
   {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
 {{- end -}}
 {{- range $mcpName, $mcp := $mcpServersIn -}}
-  {{- $mcpEntry := dict "type" "http" "url" $mcp.serverUrl -}}
-  {{- if hasKey $mcp "auth" -}}
-    {{- if eq $mcp.auth.type "bearer" -}}
-      {{- $token := onepasswordRead $mcp.auth.opPath -}}
-      {{- $mcpEntry = set $mcpEntry "headers" (dict "Authorization" (printf "Bearer %s" $token)) -}}
+  {{- $mcpEntry := dict -}}
+  {{- if hasKey $mcp "uvx" -}}
+    {{- $uvx := index $mcp "uvx" -}}
+    {{- $args := list (index $uvx "package") -}}
+    {{- if hasKey $uvx "args" -}}
+      {{- $args = concat $args (index $uvx "args") -}}
+    {{- end -}}
+    {{- $mcpEntry = dict "type" "stdio" "command" "uvx" "args" $args -}}
+  {{- else -}}
+    {{- $mcpEntry = dict "type" "http" "url" (index $mcp "serverUrl") -}}
+    {{- if hasKey $mcp "auth" -}}
+      {{- if eq (index $mcp.auth "type") "bearer" -}}
+        {{- $token := onepasswordRead $mcp.auth.opPath -}}
+        {{- $mcpEntry = set $mcpEntry "headers" (dict "Authorization" (printf "Bearer %s" $token)) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if hasKey $mcp "env" -}}
+    {{- $renderedEnv := dict -}}
+    {{- range $k, $v := index $mcp "env" -}}
+      {{- $rendered := tpl $v $ -}}
+      {{- if $rendered -}}
+        {{- $renderedEnv = set $renderedEnv $k $rendered -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $renderedEnv -}}
+      {{- $mcpEntry = set $mcpEntry "env" $renderedEnv -}}
     {{- end -}}
   {{- end -}}
   {{- $mcpServersOut = set $mcpServersOut $mcpName $mcpEntry -}}

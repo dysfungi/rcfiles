@@ -21,6 +21,7 @@
 
     {{- $isFirstMcp := true -}}
     {{- range $mcpName, $mcp := $mcpServersIn }}
+    {{- if hasKey $mcp "serverUrl" }}
     {{- if not $isFirstMcp }},{{- else }}{{- $isFirstMcp = false -}}{{- end }}
     {{ $mcpName | quote -}}: {
       "httpUrl": {{ $mcp.serverUrl | quote }}
@@ -32,6 +33,7 @@
         {{- end -}}
       {{- end }}
     }
+    {{- end }}
     {{- end }}
   },
   "model": {
