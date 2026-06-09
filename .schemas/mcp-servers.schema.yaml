@@ -60,7 +60,7 @@ $defs:
                   type: string
           env:
             $ref: "#/$defs/envVars"
-          envProfile:
+          env_tmpl:
             type: string
 
   envVars:

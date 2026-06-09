@@ -30,4 +30,4 @@ riot:
         package: "p4mcp-server"
         args:
           - "--allow-usage"
-      envProfile: "p4"
+      env_tmpl: "env-files/p4.yaml.tmpl"
