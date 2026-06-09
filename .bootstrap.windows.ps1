@@ -5,15 +5,16 @@ if (-not $isAdmin) { exit 0 }
 
 $wslDistro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
 
-# Fast-path: skip if 1Password CLI, Git, mise, and WSL distro are already installed
+# Fast-path: skip if 1Password CLI, Git, mise, uv, and WSL distro are already installed
 $opOk   = (Get-Command op   -ErrorAction SilentlyContinue) -ne $null
 $gitOk  = (Get-Command git  -ErrorAction SilentlyContinue) -ne $null
 $miseOk = (Get-Command mise -ErrorAction SilentlyContinue) -ne $null
+$uvOk   = (Get-Command uv   -ErrorAction SilentlyContinue) -ne $null
 $ErrorActionPreference = "Continue"
 wsl -d $wslDistro -- true 2>$null | Out-Null
 $wslOk = $LASTEXITCODE -eq 0
 $ErrorActionPreference = "Stop"
-if ($opOk -and $gitOk -and $miseOk -and $wslOk) { exit 0 }
+if ($opOk -and $gitOk -and $miseOk -and $uvOk -and $wslOk) { exit 0 }
 
 Write-Host "INFO: Starting $PSCommandPath"
 
@@ -51,11 +52,12 @@ secedit /configure /db $dbFile /cfg $tempFile /areas USER_RIGHTS | Out-Null
 # Cleanup
 Remove-Item $tempFile, $dbFile -ErrorAction SilentlyContinue
 
-# 3. Install 1Password, Git, and mise (early dependencies)
-# mise must exist before chezmoi's stage-20 `mise install` runs. Declared in
-# .chezmoidata/packages.yaml (winget: jdx.mise) and bootstrapped here.
-Write-Host "Installing 1Password, Git, and mise..."
-$packages = @("AgileBits.1Password", "AgileBits.1Password.CLI", "Git.Git", "jdx.mise")
+# 3. Install 1Password, Git, mise, and uv (early dependencies)
+# mise must exist before chezmoi's stage-20 `mise install` runs.
+# uv must exist before chezmoi's file-sync phase runs modify_* scripts.
+# Both declared in .chezmoidata/packages.yaml and bootstrapped here.
+Write-Host "Installing 1Password, Git, mise, and uv..."
+$packages = @("AgileBits.1Password", "AgileBits.1Password.CLI", "Git.Git", "jdx.mise", "astral-sh.uv")
 foreach ($package in $packages) {
     winget install --id $package --silent --accept-package-agreements --accept-source-agreements
 }

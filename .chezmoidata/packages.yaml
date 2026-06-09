@@ -171,7 +171,8 @@ my:
     tree-sitter-cli: { brew: tree-sitter-cli, pacman: tree-sitter-cli }
     typescript: { brew: typescript }
     typescript-language-server: { brew: typescript-language-server }
-    uv: { brew: uv, pacman: uv, mise: uv }
+    uv:
+      { brew: uv, pacman: uv, mise: uv, winget: astral-sh.uv, bootstrap: true }
     vint: { brew: vint }
     vultr: { brew: vultr }
     watchexec: { brew: watchexec, pacman: watchexec }

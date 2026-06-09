@@ -10,14 +10,15 @@ arch)
     command -v git >/dev/null 2>&1 &&
     command -v unzip >/dev/null 2>&1 &&
     command -v curl >/dev/null 2>&1 &&
-    command -v mise >/dev/null 2>&1; then
+    command -v mise >/dev/null 2>&1 &&
+    command -v uv >/dev/null 2>&1; then
     exit 0
   fi
 
   echo >&2 "INFO: Starting $0"
-  # mise must exist before chezmoi's stage-20 `mise install` runs. Declared in
-  # .chezmoidata/packages.yaml (pacman: mise) and bootstrapped here.
-  sudo pacman -Syu --noconfirm --needed git unzip curl mise
+  # mise and uv must exist before chezmoi's file-sync phase runs modify_* scripts. Declared in
+  # .chezmoidata/packages.yaml (pacman: mise, pacman: uv) and bootstrapped here.
+  sudo pacman -Syu --noconfirm --needed git unzip curl mise uv
 
   if ! command -v op >/dev/null 2>&1; then
     arch=amd64
