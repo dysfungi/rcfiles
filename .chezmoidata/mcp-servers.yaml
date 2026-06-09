@@ -31,3 +31,6 @@ riot:
         args:
           - "--allow-usage"
       env_tmpl: "env-files/p4.yaml.tmpl"
+    unreal-engine:
+      serverUrl: "http://localhost:8765/mcp"
+      docUrl: "https://app.notion.com/p/riotgames/RGI-Unreal-MCP-Server-2e97f9530fb2806db19bc3d1ec036dec"
