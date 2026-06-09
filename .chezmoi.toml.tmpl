@@ -98,9 +98,10 @@ args = [
 [diff]
 exclude = ["scripts"]
 
-[interpreters.sh]
 {{- if $isWindows }}
-command = "C:\\Program Files\\Git\\bin\\bash.exe"
+[interpreters]
+sh   = { command = 'C:\Program Files\Git\bin\bash.exe' }
+json = { command = "uv", args = ["run", "--no-project"] }
 {{- end }}
 
 [hooks.read-source-state.pre]
