@@ -40,7 +40,7 @@
     "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
     "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
     {{- /* NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames! */}}
-    "ANTHROPIC_DEFAULT_OPUSPLAN_MODEL": "claude-vertex/anthropic-claude-opus-4-8[1m]",
+    {{- /* "ANTHROPIC_DEFAULT_OPUSPLAN_MODEL": "claude-vertex/anthropic-claude-opus-4-8[1m]", */}}
     "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-vertex/anthropic-claude-opus-4-8[1m]",
     "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-vertex/anthropic-claude-sonnet-4-6-default[1m]",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",

@@ -286,7 +286,6 @@ def __rc_interactive_aliases_claude(aliases):
                 # env dict is read from the JSON file, not os.environ.
                 env = settings.get("env", {})
                 alias_map = {
-                    "opusplan": env.get("ANTHROPIC_DEFAULT_OPUSPLAN_MODEL"),
                     "opus": env.get("ANTHROPIC_DEFAULT_OPUS_MODEL"),
                     "sonnet": env.get("ANTHROPIC_DEFAULT_SONNET_MODEL"),
                     "haiku": env.get("ANTHROPIC_DEFAULT_HAIKU_MODEL"),
