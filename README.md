@@ -8,14 +8,30 @@ Chezmoi-managed dotfiles for both personal machines (`dmf` user) and Riot Games 
 
 ### Bootstrap Flow
 
+`chezmoi apply` has three distinct phases, and the dependency direction between them is non-negotiable:
+
 ```
-Manual install (1Password + Git + chezmoi)
-  → chezmoi init (triggers .bootstrap.ps1 or .bootstrap.sh)
-    → Bootstrap installs platform package manager + mise + WSL (Windows)
-      → chezmoi apply
-        → Stage 00–99 scripts run in order
-        → Templates render with machine-specific variables
+Phase 1 — Bootstrap (runs BEFORE chezmoi apply, via [hooks.read-source-state.pre])
+  .bootstrap.*.sh / .bootstrap.*.ps1
+  Installs: 1Password CLI, Git, mise, uv, WSL (Windows)
+  WHY: These must exist before Phase 2, because modify_* scripts run during
+       file sync and cannot be deferred to a later chezmoiscript stage.
+
+Phase 2 — File sync (chezmoi apply core)
+  • Renders .tmpl files → writes managed files to $HOME
+  • Executes modify_* scripts (e.g. private_dot_parsec/modify_config.json.tmpl)
+  • modify_* scripts run here, not in Phase 3 — tools they need must be in Phase 1.
+
+Phase 3 — chezmoiscripts (run_after_ / run_once_after_ / run_onchange_after_)
+  Stage 10: Platform package manager sync (Homebrew, pacman, winget)
+  Stage 20: Tool manager sync (mise install, xpip, opam, pre-commit)
+  Stage 40+: Everything else (shell, editor plugins, backups)
+  WHY stages 10–20 are NOT sufficient for modify_* deps: file sync (Phase 2)
+  runs BEFORE any run_after_ script, so tools installed here aren't yet on PATH
+  when modify_* scripts execute.
 ```
+
+**Consequence:** Any tool required by a `modify_*` script is a bootstrap dependency. It must be installed in `.bootstrap.*` (Phase 1) and declared with `bootstrap: true` in `.chezmoidata/packages.yaml`. Moving install scripts to `run_before_` does not help — `run_before_` scripts in `.chezmoiscripts/` still run after file sync, not before it.
 
 ### Package Management Strategy
 

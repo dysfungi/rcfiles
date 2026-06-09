@@ -161,6 +161,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 ## Package Management
 
 - Package definitions live in `.chezmoidata/packages.yaml` — do not hardcode package lists in scripts (except bootstrap-critical deps in `.bootstrap.*.sh`/`.bootstrap.*.ps1`).
+- **Bootstrap dependency rule:** Any tool required by a `modify_*` script is a bootstrap dependency and must be installed in all three `.bootstrap.*` scripts (not in chezmoiscript stages). Reason: `modify_*` scripts execute during the file-sync phase (Phase 2), which runs _before_ any `run_after_` chezmoiscript (Phase 3). A tool not present in Phase 1 will cause `chezmoi apply` to fail on a fresh machine. Mark these in `packages.yaml` with `bootstrap: true`. See README.md Bootstrap Flow for the full phase diagram.
 - Package entry schema and ordering convention is documented in the `.chezmoidata/packages.yaml` header comment.
 - Package sync scripts must: backup before and after to `.backups/<tool>.<user>.<host>` (no `.log` extension; period-separated; `whoami` and `hostname` as-is), git-commit each snapshot. The git diff history in `.backups/` is the audit trail.
 - Declarative removal (uninstalling packages not in the declared list) is not universally implemented — confirm per-script before assuming it applies.
