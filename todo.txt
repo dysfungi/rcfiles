@@ -11,3 +11,4 @@
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
+(C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
