@@ -101,7 +101,7 @@ exclude = ["scripts"]
 {{- if $isWindows }}
 [interpreters]
 sh   = { command = 'C:\Program Files\Git\bin\bash.exe' }
-json = { command = "uv", args = ["run", "--no-project"] }
+json = { command = "uv", args = ["run", "--script", "--no-project"] }
 {{- end }}
 
 [hooks.read-source-state.pre]
