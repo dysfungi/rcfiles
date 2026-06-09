@@ -77,6 +77,7 @@ Script naming encodes platform targeting: `.unix-like.sh`, `.darwin.sh`, `.windo
 - **Wezterm** — terminal emulator, cross-platform config in `dot_wezterm.lua`
 - **Homebrew** — `dot_config/homebrew/Brewfile.tmpl`
 - **Mise** — `dot_config/exact_mise/` + `.mise.toml`
+- **WSL** — `dot_wslconfig` → `%USERPROFILE%\.wslconfig` (Windows-only; gated in `.chezmoiignore.tmpl`). Sets `networkingMode=mirrored` so `localhost` inside WSL reaches Windows-host services (e.g. the in-editor Unreal MCP server); requires Windows 11 22H2+ and `wsl --shutdown` to take effect.
 
 ## Setting Up a New Machine
 

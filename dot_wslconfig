@@ -1,0 +1,20 @@
+# Managed by chezmoi (source: dot_wslconfig).
+# WSL2 global config — read by Windows from %USERPROFILE%\.wslconfig.
+# Deployed ONLY on native Windows chezmoi runs (.chezmoiignore.tmpl gates
+# .wslconfig out on non-Windows). Applies to ALL WSL2 distros on this host.
+#
+# WHY: mirrored networking makes WSL share the Windows network stack so
+# `localhost` inside WSL reaches Windows-host services (e.g. the RGI Unreal
+# MCP Server on localhost:8765). Default NAT mode isolates WSL behind a
+# Hyper-V virtual NIC, breaking localhost reachability across the boundary.
+# Requires Windows 11 22H2+ (this host: 25H2).
+#
+# Apply: edit on Windows, `chezmoi apply`, then `wsl --shutdown` and reopen.
+
+[wsl2]
+# Share the Windows network interface (vs default isolated NAT).
+networkingMode=mirrored
+# VPN companions for mirrored mode on corporate (Riot) networks:
+dnsTunneling=true   # resolve DNS through the Windows/VPN tunnel
+autoProxy=true      # inherit Windows proxy settings in WSL
+firewall=true       # apply Hyper-V firewall (explicit; default true)
