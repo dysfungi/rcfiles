@@ -80,7 +80,7 @@ Linux)
 
   # Report existing client workspaces on the server.
   # Windows P4V workspaces (e.g. dfrank_RGAP-MXL5113G09_flyingfox_dev-main) are
-  # accessible from WSL via P4CONFIG=.p4config.wsl auto-discovery in workspace roots.
+  # accessible from WSL via P4CONFIG=.p4config auto-discovery in workspace roots.
   echo >&2 "INFO: Existing P4 client workspaces for ${P4USER}:"
   p4 clients -u "${P4USER}" 2>/dev/null | awk '{print "  " $2, "root=" $4}' >&2 || true
 
@@ -113,12 +113,12 @@ Linux)
       echo >&2 "WARN: Create it on the server, then re-run: chezmoi apply --include scripts"
     fi
     # TODO: prefix $P4PORT value with `ssl:`
-    cat >"${path}/.p4config.wsl" <<-EOF
+    cat >"${path}/.p4config" <<-EOF
 	P4CLIENT=$client
 	P4HOST=$P4HOST
 	P4PORT=uegames.p4.riotgames.io:1666
 	EOF
-    echo >&2 "INFO: Wrote ${path}/.p4config.wsl"
+    echo >&2 "INFO: Wrote ${path}/.p4config"
   }
 {{- range .riot.projects -}}
 {{- if and (dig "perforce" false .) (has "wsl" (dig "only_on" (list) .) ) }}

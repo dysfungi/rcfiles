@@ -34,11 +34,7 @@
         {{- $p4env = set $p4env "P4PORT" "PERFLAX01:1666" -}}
       {{- else -}}
         {{- $p4env = set $p4env "P4PORT" "ssl:uegames.p4.riotgames.io:1666" -}}
-        {{- if $.isLinux -}}
-          {{- $p4env = set $p4env "P4CONFIG" ".p4config.wsl" -}}
-        {{- else -}}
-          {{- $p4env = set $p4env "P4CONFIG" ".p4config" -}}
-        {{- end -}}
+        {{- $p4env = set $p4env "P4CONFIG" ".p4config" -}}
       {{- end -}}
       {{- $mcpEntry = set $mcpEntry "env" $p4env -}}
     {{- end -}}
