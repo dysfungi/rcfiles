@@ -6,72 +6,64 @@ Manages ~/.claude.json (Claude Code per-user config: MCP servers + project trust
 Merges managed MCP server entries and project trust keys into the existing file,
 preserving any keys Claude adds at runtime (numStartups, tipsHistory, etc.).
 
-MCP server and project data are rendered from .chezmoidata/{mcp-servers,projects}.yaml
-at chezmoi apply time via Go template, producing Python constants below.
+Go template injects raw chezmoidata and resolves machine/platform conditionals
+into Python constants; all transformation and merge logic is Python.
 """
+{{- $p4Env := dict "P4CHARSET" "utf8" "P4USER" .username -}}
+{{- $p4Env = set $p4Env "P4PORT" (ternary "PERFLAX01:1666" "ssl:uegames.p4.riotgames.io:1666" .isDarwin) -}}
+{{- if not .isDarwin -}}{{- $p4Env = set $p4Env "P4CONFIG" ".p4config" -}}{{- end }}
 import json
+import subprocess
 import sys
-{{- /* Build managed MCP server map from chezmoidata */ -}}
-{{- $mcpServersIn := .my.mcpServers -}}
-{{- if .isRiotMachine -}}
-  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
-{{- end -}}
-{{- $managedMcp := dict -}}
-{{- range $name, $mcp := $mcpServersIn -}}
-  {{- $entry := dict -}}
-  {{- if hasKey $mcp "uvx" -}}
-    {{- $uvx := index $mcp "uvx" -}}
-    {{- $args := list (index $uvx "package") -}}
-    {{- if hasKey $uvx "args" -}}{{- $args = concat $args (index $uvx "args") -}}{{- end -}}
-    {{- $entry = dict "type" "stdio" "command" "uvx" "args" $args -}}
-  {{- else -}}
-    {{- $entry = dict "type" "http" "url" (index $mcp "serverUrl") -}}
-    {{- if hasKey $mcp "auth" -}}
-      {{- if eq (index $mcp.auth "type") "bearer" -}}
-        {{- $token := onepasswordRead $mcp.auth.opPath -}}
-        {{- $entry = set $entry "headers" (dict "Authorization" (printf "Bearer %s" $token)) -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
-  {{- if hasKey $mcp "env" -}}
-    {{- $entry = set $entry "env" (index $mcp "env") -}}
-  {{- else if hasKey $mcp "envProfile" -}}
-    {{- if eq (index $mcp "envProfile") "p4" -}}
-      {{- $p4env := dict "P4CHARSET" "utf8" "P4USER" $.username -}}
-      {{- if $.isDarwin -}}
-        {{- $p4env = set $p4env "P4PORT" "PERFLAX01:1666" -}}
-      {{- else -}}
-        {{- $p4env = set $p4env "P4PORT" "ssl:uegames.p4.riotgames.io:1666" -}}
-        {{- $p4env = set $p4env "P4CONFIG" ".p4config" -}}
-      {{- end -}}
-      {{- $entry = set $entry "env" $p4env -}}
-    {{- end -}}
-  {{- end -}}
-  {{- $managedMcp = set $managedMcp $name $entry -}}
-{{- end -}}
-{{- $projectsIn := .my.projects -}}
-{{- if .isRiotMachine -}}
-  {{- $projectsIn = concat $projectsIn .riot.projects -}}
-{{- end -}}
-{{- $projectKeys := list -}}
-{{- range $_, $project := $projectsIn -}}
-  {{- $key := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
-  {{- $projectKeys = append $projectKeys $key -}}
-{{- end }}
+from pathlib import Path
 
-MANAGED_MCP_SERVERS = {{ $managedMcp | mustToJson }}
-MANAGED_PROJECT_KEYS = {{ $projectKeys | mustToJson }}
+HOME_DIR = Path({{ .chezmoi.homeDir | quote }})
+USERNAME = {{ .username | quote }}
+P4_ENV: dict = json.loads({{ $p4Env | mustToJson | quote }})
+MCP_SERVERS: dict = json.loads({{ mergeOverwrite .my.mcpServers (ternary .riot.mcpServers (dict) .isRiotMachine) | mustToJson | quote }})
+PROJECTS: list = json.loads({{ concat .my.projects (ternary .riot.projects (list) .isRiotMachine) | mustToJson | quote }})
+
+
+def op_read(path: str) -> str:
+    return subprocess.run(
+        ["op", "read", path], capture_output=True, text=True, check=True
+    ).stdout.strip()
+
+
+def build_mcp_entry(mcp: dict) -> dict:
+    if "uvx" in mcp:
+        uvx = mcp["uvx"]
+        entry: dict = {"type": "stdio", "command": "uvx", "args": [uvx["package"]] + uvx.get("args", [])}
+    else:
+        entry = {"type": "http", "url": mcp["serverUrl"]}
+        auth = mcp.get("auth", {})
+        if auth.get("type") == "bearer":
+            entry["headers"] = {"Authorization": f"Bearer {op_read(auth['opPath'])}"}
+
+    if "env" in mcp:
+        entry["env"] = mcp["env"]
+    elif mcp.get("envProfile") == "p4":
+        entry["env"] = P4_ENV
+
+    return entry
+
+
+def resolve_project_key(project: dict) -> str:
+    path = project["path"]
+    return str(HOME_DIR / path) if project.get("isHomeRelative") else path
 
 
 def main() -> None:
     stdin = sys.stdin.read().strip()
     config = json.loads(stdin) if stdin else {}
 
-    config.setdefault("mcpServers", {}).update(MANAGED_MCP_SERVERS)
+    mcp = config.setdefault("mcpServers", {})
+    for name, server in MCP_SERVERS.items():
+        mcp[name] = build_mcp_entry(server)
 
     projects = config.setdefault("projects", {})
-    for key in MANAGED_PROJECT_KEYS:
-        projects.setdefault(key, {})["hasTrustDialogAccepted"] = True
+    for project in PROJECTS:
+        projects.setdefault(resolve_project_key(project), {})["hasTrustDialogAccepted"] = True
 
     print(json.dumps(config, indent=2))
 
