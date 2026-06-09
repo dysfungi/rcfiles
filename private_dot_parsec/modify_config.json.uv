@@ -1,5 +1,4 @@
 #!/usr/bin/env -S uv run --script --no-project
-# vim: ft=gotmpl.python
 """
 Parsec config.json is a JSON array: [doc_string, config_object].
 Element 0 is a required doc string — Parsec erases the file without it.

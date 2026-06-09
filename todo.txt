@@ -13,3 +13,4 @@
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
 (C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
 (B) Fix parsec chezmoi update on Windows: uv bootstrap + interpreter config +chezmoi @worktree:.claude/worktrees/64a8bd55-c321-4f6c-9551-af22b4547f43.parsec-uv-fix session:64a8bd55-c321-4f6c-9551-af22b4547f43 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default
+(B) Fix modify scripts: rename to .uv, drop json interpreter +chezmoi @worktree:.claude/worktrees/836f40ae-3d38-4a65-bcce-d918d955a3b3.modify-scripts-uv session:836f40ae-3d38-4a65-bcce-d918d955a3b3 agent:claude-code model:claude-vertex/anthropic-claude-sonnet-4-6-default[1m]

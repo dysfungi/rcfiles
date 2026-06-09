@@ -98,10 +98,16 @@ args = [
 [diff]
 exclude = ["scripts"]
 
-{{- if $isWindows }}
+# uv interpreter registered on ALL platforms: .uv modify scripts use the shebang
+# on Unix and this entry on Windows (where shebangs are ignored). Must be
+# unconditional — without it, .uv is not stripped from target names on Linux/Mac,
+# producing wrong targets (e.g. ~/.claude.json.uv).
+# Replaces `json = {uv}` (removed): that caused modify_private_dot_claude.json to
+# lose its .json extension on Windows → target ~/.claude → collision with dot_claude/.
 [interpreters]
-sh   = { command = 'C:\Program Files\Git\bin\bash.exe' }
-json = { command = "uv", args = ["run", "--script", "--no-project"] }
+uv = { command = "uv", args = ["run", "--script", "--no-project"] }
+{{- if $isWindows }}
+sh = { command = 'C:\Program Files\Git\bin\bash.exe' }
 {{- end }}
 
 [hooks.read-source-state.pre]

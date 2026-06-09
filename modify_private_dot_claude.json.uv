@@ -1,4 +1,3 @@
-{{- /* chezmoi:modify-template */ -}}
 {{- $config := fromJson (default "{}" (trim .chezmoi.stdin)) -}}
 
 {{- $mcpServersOut := default (dict) (get $config "mcpServers") -}}
