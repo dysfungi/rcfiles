@@ -13,4 +13,3 @@
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
 (C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
 (B) Fix parsec chezmoi update on Windows: uv bootstrap + interpreter config +chezmoi @worktree:.claude/worktrees/64a8bd55-c321-4f6c-9551-af22b4547f43.parsec-uv-fix session:64a8bd55-c321-4f6c-9551-af22b4547f43 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default
-(B) Export DATADOG_API_KEY and DATADOG_APP_KEY via ~/.secrets/ +chezmoi @worktree:.claude/worktrees/f8b73067-6efc-4b26-849c-24f7f858d315.datadog-secrets session:f8b73067-6efc-4b26-849c-24f7f858d315 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default[1m]
