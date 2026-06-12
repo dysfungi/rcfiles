@@ -1,6 +1,6 @@
-tap "1password/tap"
-tap "hashicorp/tap"
-tap "jesseduffield/lazydocker"
+tap "1password/tap", trusted: true
+tap "hashicorp/tap", trusted: true
+tap "jesseduffield/lazydocker", trusted: true
 # Search tool like grep, but optimized for programmers
 brew "ack"
 # General-purpose data compression with high compression ratio
