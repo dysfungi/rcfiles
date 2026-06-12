@@ -1,5 +1,5 @@
 asdf:luizm/asdf-shfmt             3.13.1
-gh                                2.93.0   ~/.config/mise/conf.d/riot.toml  latest
+gh                                2.94.0   ~/.config/mise/conf.d/riot.toml  latest
 github:hadolint/hadolint          2.14.0
 github:mvdan/sh                   3.13.1
 jq                                1.8.1    ~/.config/mise/config.toml       latest
@@ -7,7 +7,7 @@ lua                               5.5.0
 node                              22.2.0
 node                              22.22.3
 node                              24.16.0  ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code     2.1.169  ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code     2.1.173  ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux  1.1.0    ~/.config/mise/config.toml       latest
 npm:markdownlint-cli              0.48.0
 ollama                            0.23.4
@@ -21,7 +21,7 @@ pipx:yamllint                     1.38.0
 poetry                            2.4.1
 pre-commit                        4.6.0    ~/.config/mise/config.toml       latest
 python                            3.11.7
-python                            3.13.13  ~/.config/mise/config.toml       3.13
+python                            3.13.14  ~/.config/mise/config.toml       3.13
 python                            3.14.3
 ruff                              0.15.16  ~/.config/mise/config.toml       latest
 shellcheck                        0.11.0
@@ -29,5 +29,5 @@ stylua                            2.5.2
 taplo                             0.10.0
 terraform                         1.15.5
 tmux                              3.6a
-uv                                0.11.19  ~/.config/mise/config.toml       latest
+uv                                0.11.20  ~/.config/mise/config.toml       latest
 yarn                              1.22.22
