@@ -35,7 +35,7 @@ backup() {
   if [ -e "${bakFile}" ]; then
     rm "${bakFile}"
   fi
-  brew bundle dump --describe --file="${bakFile}"
+  brew bundle dump --file="${bakFile}"
 
   _commit_backup "${clarifier}"
 }
@@ -55,11 +55,10 @@ while IFS= read -r tap; do
   [ -n "${tap}" ] && brew trust --tap "${tap}"
 done < <(grep -E '^tap ' "${brewFile}" | sed -E 's/^tap "([^"]+)".*/\1/' | grep -v '^homebrew/' || true)
 
-# HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP: on Homebrew HEAD+ --cleanup became
-# interactive (needs --force, --force-cleanup, or this env var); on 5.1.x the
-# env var is a no-op and --cleanup already acts like cleanup --force. Using the
-# env var here avoids depending on --force-cleanup, which doesn't exist in 5.1.x.
-HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP=1 brew bundle install --cleanup --file="${brewFile}" --upgrade
+# HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP: replaces the deprecated --cleanup flag.
+# The flag was removed in Homebrew 5.x; the env var activates non-interactive
+# cleanup (equivalent to the old --cleanup --force) across all supported versions.
+HOMEBREW_BUNDLE_FORCE_INSTALL_CLEANUP=1 brew bundle install --file="${brewFile}" --upgrade
 backup after
 
 echo >&2 "INFO: Ending $0"
