@@ -1,55 +1,75 @@
-{{- $codeDir := joinPath .chezmoi.homeDir "Code" -}}
-{{- $dropboxDir := joinPath .chezmoi.homeDir "Dropbox" -}}
-{{- $perforceDir := .isWSL | ternary "/mnt/t/p4" (joinPath .chezmoi.homeDir "Perforce") -}}
-chez {{ .chezmoi.sourceDir }}
-dot {{ .chezmoi.homeDir }}/.dotfiles
+{{- $userLocalDir := joinPath .chezmoi.homeDir ".local" }}
+{{- $localMyDir := joinPath $userLocalDir "my" }}
+{{- $localShareDir := joinPath $userLocalDir "share" }}
+
+{{- $dropboxDir := joinPath .chezmoi.homeDir "Dropbox" }}
+
 dropbox {{ $dropboxDir }}
-notes {{ $dropboxDir }}/notes
+notes {{ joinPath $dropboxDir "notes" }}
+
+chez {{ .chezmoi.sourceDir }}
+dot {{ joinPath .chezmoi.homeDir ".dotfiles" }}
+
+{{- $codeDir := joinPath .chezmoi.homeDir "Code" }}
+{{- $codePlaygroundDir := joinPath $codeDir "playground" }}
+
 code {{ $codeDir }}
-www {{ $codeDir }}/defrank.github.io
-playground {{ $codeDir }}/playground
-pyground {{ $codeDir }}/playground/python
-goground {{ $codeDir }}/playground/go
+www {{ joinPath $codeDir "dysfungi.github.io" }}
+playground {{ $codePlaygroundDir }}
+goground {{ joinPath $codePlaygroundDir "go" }}
+pyground {{ joinPath $codePlaygroundDir "python" }}
 
 {{- if .isRiotMachine }}
-reliability {{ $codeDir }}/reliability-infrastructure
-sre {{ $codeDir }}/sre-monorepo
-{{- if not .isWSL }}
+
+jira {{ joinPath $localMyDir "jira" }}
+riot-slack {{ joinPath $localMyDir "riot-slack" }}
+
+reliability {{ joinPath $codeDir "reliability-infrastructure" }}
+
+lime {{ joinPath $codeDir "lime-monorepo" }}
+
+lol {{ joinPath $codeDir "keystone-products.league-of-legends" }}
+
+{{- $perforceDir := .isWSL | ternary "/mnt/t/p4" (joinPath .chezmoi.homeDir "Perforce") }}
+{{- $flxDir := joinPath $perforceDir "flyingfox" "dev-main" }}
+{{- $lionDir := joinPath $perforceDir "lion" "dev-main" }}
+
+p4 {{ $perforceDir }}
+flyingfox {{ $flxDir }}
+flx {{ $flxDir }}
+lion {{ $lionDir }}
+2xko {{ $lionDir }}
+{{- if .isDarwin }}
+
 main /Users/shared/p4/depot/LoL/__MAIN__/
 devroot /Users/shared/p4/depot/LoL/__MAIN__/DevRoot
 lcu /Users/shared/p4/depot/LoL/__MAIN__/DevRoot/Client
+
 {{- end }}
-lol {{ $codeDir }}/keystone-products.league-of-legends
-lime {{ $codeDir }}/lime-monorepo
-lotapi {{ $codeDir }}/lot-api-service
-mt {{ $codeDir }}/maintenance-tool
-rs-admin {{ $codeDir }}/riotstatus-admin
-rs-page {{ $codeDir }}/riotstatus-page
-p4 {{ $perforceDir }}
-flyingfox {{ $perforceDir }}/flyingfox/dev-main
-flx {{ $perforceDir }}/flyingfox/dev-main
-lion {{ $perforceDir }}/lion/dev-main
-2xko {{ $perforceDir }}/lion/dev-main
 
 {{- else }}
-monorepo {{ $codeDir }}/monorepo
-fsharp {{ $codeDir }}/monorepo/fsharp
-fsharp-api {{ $codeDir }}/monorepo/fsharp/api
-automate-api {{ $codeDir }}/monorepo/fsharp/api/automate
-terraform {{ $codeDir }}/monorepo/terraform
-infrastructure {{ $codeDir }}/monorepo/terraform/infrastructure
-frankenstructure {{ $codeDir }}/monorepo/terraform/infrastructure/frankenstructure
-gateway {{ $codeDir }}/monorepo/terraform/infrastructure/gateway
-monitoring {{ $codeDir }}/monorepo/terraform/infrastructure/monitoring
-observability {{ $codeDir }}/monorepo/terraform/infrastructure/observability
-modules {{ $codeDir }}/monorepo/terraform/modules
-route {{ $codeDir }}/monorepo/terraform/modules/gateway-route
-postgres {{ $codeDir }}/monorepo/terraform/modules/vultr-managed-postgres
-probes {{ $codeDir }}/monorepo/terraform/modules/blackbox-probe
-applications {{ $codeDir }}/monorepo/terraform/applications
-httpbin {{ $codeDir }}/monorepo/terraform/applications/httpbin
-miniflux {{ $codeDir }}/monorepo/terraform/applications/miniflux
-node-red {{ $codeDir }}/monorepo/terraform/applications/node-red
-ollama {{ $codeDir }}/monorepo/terraform/applications/ollama
+
+{{- $monorepoDir := joinPath $codeDir "monorepo" }}
+{{- $fsharpDir := joinPath $monorepoDir "fsharp" }}
+{{- $terraformDir := joinPath $monorepoDir "terraform" }}
+
+monorepo {{ $monorepoDir }}
+fsharp {{ $fsharpDir }}
+fsharp-api {{ joinPath $fsharpDir "api" }}
+automate-api {{ joinPath $fsharpDir "api" "automate" }}
+terraform {{ $terraformDir }}
+infrastructure {{ joinPath $terraformDir "infrastructure" }}
+frankenstructure {{ joinPath $terraformDir "infrastructure" "frankenstructure" }}
+gateway {{ joinPath $terraformDir "infrastructure" "gateway" }}
+monitoring {{ joinPath $terraformDir "infrastructure" "monitoring" }}
+observability {{ joinPath $terraformDir "infrastructure" "observability" }}
+modules {{ joinPath $terraformDir "modules" }}
+route {{ joinPath $terraformDir "modules" "gateway-route" }}
+postgres {{ joinPath $terraformDir "modules" "vultr-managed-postgres" }}
+probes {{ joinPath $terraformDir "modules" "blackbox-probe" }}
+applications {{ joinPath $terraformDir "applications" }}
+httpbin {{ joinPath $terraformDir "applications" "httpbin" }}
+miniflux {{ joinPath $terraformDir "applications" "miniflux" }}
+ollama {{ joinPath $terraformDir "applications" "ollama" }}
 
 {{- end }}
