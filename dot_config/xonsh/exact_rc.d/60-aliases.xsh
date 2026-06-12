@@ -250,20 +250,20 @@ def __rc_interactive_aliases_claude(aliases):
     gets mangled to 'claude-sonnet-4-6/undefined' in the TrueFoundry resume code path.
     Fix: inject --model explicitly on --resume/--continue so the buggy lookup is bypassed.
     """
+    import glob
+    import json
     import os
+    import shutil
+    import subprocess
+    from pathlib import Path
 
     if os.environ.get("USER") != "dfrank":
         return
-
-    import json
-    import shutil
-    import subprocess
 
     _SETTINGS_PATH = os.path.expanduser("~/.claude/settings.json")
 
     @aliases.register("claude")
     def _claude_riot(args: list[str]):
-        import glob
         # PATH may not include mise tool paths in non-login shells; fall back
         # to globbing the mise install directory directly.
         real_claude = shutil.which("claude") or next(
@@ -276,6 +276,7 @@ def __rc_interactive_aliases_claude(aliases):
             print("claude: not found in PATH or mise installs", file=__import__("sys").stderr)
             return 127
         argv = list(args)
+
         _resume_flags = {"-r", "--resume", "-c", "--continue"}
         if (set(argv) & _resume_flags) and "--model" not in argv and "-m" not in argv:
             try:
@@ -295,10 +296,10 @@ def __rc_interactive_aliases_claude(aliases):
                 # NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames!
                 # resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default[1m]"
                 resume_model = "opusplan"
-            argv = ["--allow-dangerously-skip-permissions", "--model", resume_model, *argv]
-        return subprocess.run([real_claude, *argv]).returncode
+            argv = ["--model", resume_model, *argv]
 
-    from pathlib import Path
+        argv = ["--allow-dangerously-skip-permissions", *argv]
+        return subprocess.run([real_claude, *argv]).returncode
 
     away_flag = Path.home() / ".claude" / "away"
 
