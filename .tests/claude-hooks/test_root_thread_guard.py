@@ -204,3 +204,83 @@ def test_sentinel_file_absence_still_blocks(tmp_path: Path) -> None:
     (tmp_path / ".claude").mkdir(parents=True, exist_ok=True)
     result = _run_hook(_root_payload("Bash"), home=tmp_path)
     assert result.returncode == 2
+
+
+# ---------------------------------------------------------------------------
+# Path-scoped Read exemption — self-authored scratch files allowed in root
+# ---------------------------------------------------------------------------
+
+_PATH_EXEMPT = [
+    (
+        "plans file",
+        lambda h: str(h / ".claude" / "plans" / "my-plan.md"),
+        0,  # allowed
+    ),
+    (
+        "plans nested file",
+        lambda h: str(h / ".claude" / "plans" / "sub" / "notes.md"),
+        0,
+    ),
+    (
+        "memory file",
+        lambda h: str(
+            h / ".claude" / "projects" / "-some-project" / "memory" / "fact.md"
+        ),
+        0,
+    ),
+    (
+        "memory nested file",
+        lambda h: str(
+            h / ".claude" / "projects" / "-some-project" / "memory" / "sub" / "fact.md"
+        ),
+        0,
+    ),
+    (
+        "projects root file (not in memory/)",
+        lambda h: str(
+            h / ".claude" / "projects" / "-some-project" / "transcript.jsonl"
+        ),
+        2,  # blocked — not inside memory/
+    ),
+    (
+        "arbitrary file outside scratch",
+        lambda _: "/etc/passwd",
+        2,  # blocked
+    ),
+    (
+        "empty file_path",
+        lambda _: "",
+        2,  # blocked — no path → not in scratch
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    "label,path_fn,expected_rc",
+    _PATH_EXEMPT,
+    ids=[x[0] for x in _PATH_EXEMPT],
+)
+def test_read_path_scoped_exemption(
+    label: str,
+    path_fn,
+    expected_rc: int,
+    tmp_path: Path,
+) -> None:
+    """Read is allowed in root only for self-authored scratch paths."""
+    file_path = path_fn(tmp_path)
+    payload = _root_payload("Read", tool_input={"file_path": file_path})
+    result = _run_hook(payload, home=tmp_path)
+    assert result.returncode == expected_rc, (
+        f"[{label}] Expected exit {expected_rc} for Read of {file_path!r}, "
+        f"got {result.returncode}.\nstderr: {result.stderr!r}"
+    )
+
+
+def test_non_read_tool_still_blocked_for_scratch_path(tmp_path: Path) -> None:
+    """Grep/Bash/etc. are blocked even if tool_input contains a scratch file_path."""
+    scratch_path = str(tmp_path / ".claude" / "plans" / "foo.md")
+    payload = _root_payload("Grep", tool_input={"file_path": scratch_path})
+    result = _run_hook(payload, home=tmp_path)
+    assert result.returncode == 2, (
+        "Path-scoped exemption must only apply to Read, not other blocked tools"
+    )

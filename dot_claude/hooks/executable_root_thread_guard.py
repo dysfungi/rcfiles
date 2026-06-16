@@ -61,6 +61,31 @@ Blocked by default (not in allowlist — representative examples):
   TaskOutput                          — retrieves raw background task output
   Any future tool not listed above    — safe-by-default
 
+  Exception: Read of self-authored scratch paths is allowed (see below).
+
+PATH-SCOPED READ EXEMPTION — Edit-requires-Read consistency fix:
+  The harness requires a Read before any Edit call (the tool validates that
+  the file was previously read in context). Edit/Write are on the allowlist
+  because mutations don't dump content into context, but Read is not. This
+  creates an inconsistency: editing any existing file in root is structurally
+  impossible without the sentinel, even though Edit is "allowed."
+
+  For self-authored scratch files this friction has zero context-savings
+  payoff — plan files and memory files are small, bounded, and written by
+  the agent itself. The Read-before-Edit requirement must be satisfiable.
+
+  Fix: Read is allowed in root when the target resolves under:
+    ~/.claude/plans/               — plan-mode scratch files
+    ~/.claude/projects/*/memory/   — per-project memory files (one dir per
+                                     project; slug is cwd with "/" → "-")
+
+  Implementation: _is_scratch_path() resolves both the target and the anchor
+  dirs before comparing (handles macOS /var → /private/var symlinks).
+  resolve(strict=False) tolerates not-yet-existent paths. The memory dir
+  match uses a depth check — after stripping ~/.claude/projects/, the
+  second path segment must be "memory" — so project-root files like
+  transcript.jsonl are correctly blocked.
+
 EXEMPTION — sentinel file (requires explicit user permission):
   The sentinel file ~/.claude/root-guard-exempt disables the guard for the
   entire session. AGENTS MUST NOT create this file without explicit user
@@ -82,6 +107,33 @@ import json
 import os
 import sys
 from pathlib import Path
+
+
+def _is_scratch_path(file_path: str, home: Path) -> bool:
+    """Return True if file_path resolves under a self-authored scratch dir.
+
+    Allowed:
+      ~/.claude/plans/**
+      ~/.claude/projects/<slug>/memory/**
+
+    Denied (representative): ~/.claude/projects/<slug>/transcript.jsonl
+    """
+    if not file_path:
+        return False
+    target = Path(file_path).resolve(strict=False)
+
+    plans_dir = (home / ".claude" / "plans").resolve(strict=False)
+    if target.is_relative_to(plans_dir):
+        return True
+
+    projects_dir = (home / ".claude" / "projects").resolve(strict=False)
+    try:
+        rel = target.relative_to(projects_dir)
+    except ValueError:
+        return False
+    # rel.parts: ('<slug>', 'memory', ...) — require exactly 'memory' at index 1
+    return len(rel.parts) >= 2 and rel.parts[1] == "memory"
+
 
 # Tools allowed in the root thread. Everything else is blocked.
 # Intentionally narrow: the root thread is for orchestration and decisions,
@@ -149,6 +201,14 @@ def main() -> None:
     tool = payload.get("tool_name", "")
     if tool in ALLOWED_ROOT_TOOLS:
         return
+
+    # --- Path-scoped Read exemption ---
+    # Read of self-authored scratch files (plans, memory) is allowed so that
+    # Edit-before-Read consistency holds without requiring the sentinel.
+    if tool == "Read":
+        file_path = payload.get("tool_input", {}).get("file_path", "")
+        if _is_scratch_path(file_path, home):
+            return
 
     print(
         f"BLOCKED in root thread: {tool}. {_DELEGATE_HINT}",
