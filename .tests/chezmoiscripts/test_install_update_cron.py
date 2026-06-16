@@ -21,27 +21,25 @@ TRUTH TABLE
     6. cronie already enabled                 → systemctl enable NOT called again
     7. systemctl absent (macOS-like)          → succeeds without cronie step
 
-CROSS-PLATFORM PATH STRATEGY
-    Tests need system coreutils (cat, awk, cksum, hostname, mkdir, printf) but
-    must shadow `crontab` and `systemctl` with stubs. Solution: put tmp_path/bin
-    first in PATH, followed by a curated set of real system dirs, then add stubs
-    for only `crontab`, `systemctl`, and `chezmoi-sudo`.
+HERMETIC PATH STRATEGY
+    Tests run with PATH set to exactly tmp_path/bin — nothing else. This makes
+    "tool absent" a genuine property: unlink() the stub and command -v fails,
+    with no real system binary to leak in from /usr/bin.
 
-    This avoids two problems that arose from previous approaches:
-    - Fully isolated PATH (bin only): stubs lack access to `cat`, `grep`, etc.
-    - Omitting systemctl stub when /usr/bin is on PATH: the real systemctl on
-      GitHub Actions returns "Interactive authentication required" → exit 1.
+    The few real coreutils the script (and its stubs) need are symlinked into
+    bin_dir by _link_real_tools():
+      - awk, cksum, hostname — used directly by the script
+      - cat — used inside the _make_fake_crontab stub
 
-    The rule: always stub `crontab`, `chezmoi-sudo`, and `systemctl`.
-    Tests that want a tool "absent" omit its stub AND also stub it to fail
-    (for systemctl: simply don't add the stub; it won't be found on PATH since
-    the system dir is excluded when we use _system_path() without it).
+    Everything else is either a bash builtin (echo, printf, [[]], $(( ))) or a
+    stub (crontab, chezmoi-sudo, systemctl). bash itself is referenced by
+    absolute path in stub shebangs, so it needs no PATH entry.
 
-    _system_path() returns the real system dirs needed for coreutils, excluding
-    any directory that contains a conflicting real tool (crontab, systemctl).
-    Since these live in /usr/bin on Linux and /usr/sbin on macOS, we must
-    include /usr/bin (for awk/cat/etc.) and rely on stub precedence to shadow
-    them — the stub dir is always first.
+    Why hermetic over prepend-and-shadow: if PATH includes /usr/bin, removing a
+    stub from bin_dir does not simulate absence — `command -v systemctl` still
+    resolves the real /usr/bin/systemctl. On Linux CI this triggers polkit auth
+    failure and a spurious exit 1. The hermetic model eliminates this class of
+    leaks permanently.
 """
 
 from __future__ import annotations
@@ -65,15 +63,34 @@ SCRIPT = (
 
 _BASH = shutil.which("bash") or "/bin/bash"
 
-# Real system dirs needed for coreutils. Stubs in tmp/bin shadow any conflicting
-# tools (crontab, systemctl) since tmp/bin is always first in PATH.
-_SYSTEM_DIRS = ":".join(
-    d for d in ["/usr/local/bin", "/usr/bin", "/bin"] if Path(d).is_dir()
-)
+# Real coreutils the script (and stubs) need on PATH. Symlinked into bin_dir
+# by _link_real_tools() so the subprocess PATH stays fully hermetic (bin_dir only).
+#   awk, cksum, hostname — used directly by the cron-install script
+#   cat — used inside the _make_fake_crontab stub
+_REAL_TOOLS = ("awk", "cksum", "hostname", "cat")
 
 
 def _clean_env() -> dict[str, str]:
     return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+
+
+def _link_real_tools(bin_dir: Path) -> None:
+    """Symlink real coreutils from _REAL_TOOLS into bin_dir.
+
+    Called by _make_base_stubs so every test gets the hermetic toolset.
+    Fails loudly if a tool isn't found — a missing tool surfaces as a clear
+    missing-dependency error rather than a confusing script failure.
+    """
+    for name in _REAL_TOOLS:
+        real = shutil.which(name)
+        if real is None:
+            raise RuntimeError(
+                f"Required coreutil '{name}' not found on the builder's PATH. "
+                "Install it before running these tests."
+            )
+        link = bin_dir / name
+        if not link.exists():
+            link.symlink_to(real)
 
 
 def _make_stub(bin_dir: Path, name: str, body: str) -> Path:
@@ -85,16 +102,16 @@ def _make_stub(bin_dir: Path, name: str, body: str) -> Path:
 
 
 def _make_base_stubs(bin_dir: Path) -> None:
-    """Add stubs for tools the script invokes that must not touch real state.
+    """Populate bin_dir with stubs and real-tool symlinks for a hermetic test env.
 
-    - crontab: must be stubbed to avoid touching the real user crontab
-    - chezmoi-sudo: delegates to its args (so systemctl stub works)
-    - systemctl (no-op): prevents the real systemctl from requiring auth.
-      Tests that specifically test systemctl behavior replace this with a
-      recording stub via _make_fake_systemctl().
+    - _link_real_tools: symlinks awk, cksum, hostname, cat from the real PATH
+    - crontab: stubbed to avoid touching real user crontab; replace via _make_fake_crontab
+    - chezmoi-sudo: delegates to its args (so the systemctl stub is called correctly)
+    - systemctl (no-op): default stub exits 0; tests that need absence call unlink()
+      and rely on the hermetic PATH (bin_dir only) to make command -v fail genuinely
     """
     bin_dir.mkdir(exist_ok=True)
-    # Stub crontab with a no-op initial state; callers may replace via _make_fake_crontab.
+    _link_real_tools(bin_dir)
     _make_stub(bin_dir, "crontab", "exit 1")
     _make_stub(bin_dir, "chezmoi-sudo", 'exec "$@"')
     # Default systemctl stub: cronie already enabled → no enable call, exits 0.
@@ -149,16 +166,18 @@ def _run_script(
     tmp_path: Path,
     env_overrides: dict | None = None,
 ) -> subprocess.CompletedProcess:
-    """Run the install-update-cron script.
+    """Run the install-update-cron script with a hermetic PATH.
 
-    PATH: tmp_path/bin first (stubs shadow system tools), then real system dirs
-    for coreutils. The stubs for crontab and systemctl always take precedence.
+    PATH is set to exactly tmp_path/bin — no system dirs. Real coreutils
+    (awk, cksum, hostname, cat) are symlinked in by _make_base_stubs via
+    _link_real_tools(). This makes unlink() a genuine absence: command -v
+    finds nothing because there is no /usr/bin fallback to leak in.
     """
     bin_dir = str(tmp_path / "bin")
     env = {
         **_clean_env(),
         "HOME": str(tmp_path),
-        "PATH": f"{bin_dir}:{_SYSTEM_DIRS}",
+        "PATH": bin_dir,
         **(env_overrides or {}),
     }
     return subprocess.run(
@@ -220,21 +239,16 @@ def test_cron_block_install(
         assert "/other/task" in final, "unrelated crontab entry was clobbered"
 
 
-@pytest.mark.skipif(
-    shutil.which("crontab") is not None,
-    reason="system crontab is on PATH; cannot simulate absence without excluding /usr/bin",
-)
 def test_skip_when_crontab_absent(tmp_path: Path) -> None:
     """When crontab is not on PATH, script emits WARN and exits 0.
 
-    Skipped on machines where a system crontab is installed (macOS, Ubuntu runner
-    with cron) because we cannot reliably hide /usr/bin/crontab while keeping
-    coreutils accessible. This scenario is exercised on Arch Linux containers
-    where cron is not installed by default.
+    With a hermetic PATH (bin_dir only, no /usr/bin), unlink() genuinely removes
+    the only crontab on PATH — no system crontab can leak in regardless of what's
+    installed on the runner.
     """
     bin_dir = tmp_path / "bin"
     _make_base_stubs(bin_dir)
-    # Remove the default stub so command -v crontab fails
+    # Remove the stub so command -v crontab fails in the hermetic PATH.
     (bin_dir / "crontab").unlink()
 
     result = _run_script(tmp_path)
@@ -284,7 +298,7 @@ def test_no_cronie_without_systemctl(tmp_path: Path) -> None:
     _make_base_stubs(bin_dir)
     crontab_state = tmp_path / "crontab_state.txt"
     _make_fake_crontab(bin_dir, crontab_state)
-    # Remove the default systemctl stub → command -v systemctl fails → cronie skipped.
+    # Remove the stub — hermetic PATH means command -v systemctl genuinely fails.
     (bin_dir / "systemctl").unlink()
 
     result = _run_script(tmp_path)
