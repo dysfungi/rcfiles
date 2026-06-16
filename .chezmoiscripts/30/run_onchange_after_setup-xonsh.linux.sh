@@ -12,7 +12,7 @@ if [ ! -f "$XONSH_EXECUTABLE" ]; then
   exit 1
 elif [ "$XONSH_EXECUTABLE" != "${SHELL:-}" ]; then
   # chsh requires PAM auth which is not wired in WSL; usermod is sudo-friendly
-  sudo usermod -s "$XONSH_EXECUTABLE" "$USER"
+  chezmoi-sudo usermod -s "$XONSH_EXECUTABLE" "$USER"
   echo >&2 "INFO: Set $XONSH_EXECUTABLE as default shell for $USER!"
 fi
 

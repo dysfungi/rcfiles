@@ -2,6 +2,11 @@
 # Sync pacman packages in Arch Linux (WSL or otherwise).
 # Reads pacman: fields from .chezmoidata/packages.yaml. AUR packages (aur: field) are handled by sync-yay.
 # Idempotent — safe to re-run.
+#
+# Privileged calls use chezmoi-sudo instead of bare sudo so that unattended daily
+# cron runs (via chezmoi-update-cron) can skip gracefully instead of blocking on a
+# password prompt. chezmoi-sudo falls back through: cached creds → interactive TTY
+# → SUDO_ASKPASS (1Password) → WARN+skip. See ~/.local/bin/chezmoi-sudo for details.
 
 set -euo pipefail
 
@@ -38,7 +43,7 @@ backup() {
   local clarifier="${1:?required}"
   local action="${2:?required}"
 
-  sudo pacman -Qqe | sort >"${bakFile}"
+  chezmoi-sudo pacman -Qqe | sort >"${bakFile}"
 
   _commit_backup "${clarifier}" "${action}"
 }
@@ -64,13 +69,13 @@ backup before install
 if [ -n "$declared_packages" ]; then
   echo >&2 "INFO: Installing declared pacman packages..."
   # shellcheck disable=SC2086
-  sudo pacman -Syu --noconfirm --needed $declared_packages
+  chezmoi-sudo pacman -Syu --noconfirm --needed $declared_packages
 fi
 
 backup after install
 
 echo >&2 "INFO: Cleaning pacman cache..."
-sudo paccache -rk2 && sudo paccache -ruk0
+chezmoi-sudo paccache -rk2 && chezmoi-sudo paccache -ruk0
 
 echo >&2 "INFO: pacman sync complete."
 echo >&2 "INFO: Ending $0"

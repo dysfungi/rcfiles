@@ -10,7 +10,7 @@ if [ ! -f "$XONSH_EXECUTABLE" ]; then
   echo >&2 "ERROR: Cannot set xonsh as default shell; does not exist at $XONSH_EXECUTABLE"
 elif [ "${XONSH_EXECUTABLE}" != "${SHELL}" ]; then
   if ! grep -q "${XONSH_EXECUTABLE}" /etc/shells; then
-    echo "${XONSH_EXECUTABLE}" | sudo tee -a /etc/shells
+    echo "${XONSH_EXECUTABLE}" | chezmoi-sudo tee -a /etc/shells
     echo >&2 "INFO: Added $XONSH_EXECUTABLE to /etc/shells"
   fi
 
