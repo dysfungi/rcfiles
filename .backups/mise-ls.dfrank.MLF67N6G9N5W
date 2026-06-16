@@ -7,7 +7,7 @@ lua                               5.5.0
 node                              22.2.0
 node                              22.22.3
 node                              24.16.0  ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code     2.1.173  ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code     2.1.177  ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux  1.1.0    ~/.config/mise/config.toml       latest
 npm:markdownlint-cli              0.48.0
 ollama                            0.23.4
