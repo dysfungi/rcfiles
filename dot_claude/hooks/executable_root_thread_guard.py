@@ -61,22 +61,21 @@ Blocked by default (not in allowlist — representative examples):
   TaskOutput                          — retrieves raw background task output
   Any future tool not listed above    — safe-by-default
 
-EXEMPTION — sentinel file:
-  Create ~/.claude/root-guard-exempt to disable the guard for the entire
-  session (e.g., during interactive debugging or initial onboarding). Remove
-  it to re-enable. This mirrors the worktree-exempt.$SESSION_ID pattern used
-  by the worktree guard.
+EXEMPTION — sentinel file (requires explicit user permission):
+  The sentinel file ~/.claude/root-guard-exempt disables the guard for the
+  entire session. AGENTS MUST NOT create this file without explicit user
+  approval — ask first, create only after the user confirms. The sentinel
+  bypasses a deliberate user-configured safety constraint; silently creating
+  it when the guard is inconvenient defeats its purpose.
 
-  IMPORTANT: Since Bash itself is blocked in root, you cannot use `touch` to
-  create the sentinel from the CLI. Use the Write tool (it's not blocked) or
-  create the file via an external shell (not inside a Claude session). Once
-  the file exists, Bash unblocks and you can delete it from a subagent
-  or from outside the session.
+  Mechanics: the Write tool can create the file (it's on the allowlist); Bash
+  cannot (it's blocked). Once the file exists all tools unblock, including
+  Bash, which can be used to delete it. Remove the file to re-enable the guard.
 
   There is intentionally NO plan-mode exemption and NO env-var escape hatch
   (chosen by the user). Plan mode already delegates exploration to the Plan
   subagent, so blocking root reads there is consistent. The sentinel file is
-  the one-line escape when the guard is too rigid.
+  the one-line escape when the guard is too rigid — but only with user consent.
 """
 
 import json
@@ -128,7 +127,8 @@ ALLOWED_ROOT_TOOLS = frozenset(
 
 _DELEGATE_HINT = (
     "Run this tool in a subagent (e.g. @scout, @distill, or a Task call). "
-    "Or create ~/.claude/root-guard-exempt via the Write tool to disable the guard."
+    "To disable the guard, ask the user for permission first, then create "
+    "~/.claude/root-guard-exempt via the Write tool."
 )
 
 
