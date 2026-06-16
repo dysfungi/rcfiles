@@ -59,7 +59,10 @@ wsl -d {{ .wslDistro }} -u root -- id {{ .username }} 2>$null
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Creating WSL user '{{ .username }}'..."
-    wsl -d {{ .wslDistro }} -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
+    # [boot] systemd=true is required for cronie (the cron daemon) to run in WSL.
+    # Without it, cron jobs registered by the stage-90 install-update-cron script
+    # will never fire. Include both [boot] and [user] sections on first write.
+    wsl -d {{ .wslDistro }} -u root -- bash -c "set -e; useradd -m -G wheel {{ .username }}; passwd -l {{ .username }}; printf '[boot]\nsystemd=true\n[user]\ndefault={{ .username }}\n' > /etc/wsl.conf; echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/wheel; chmod 0440 /etc/sudoers.d/wheel"
     if ($LASTEXITCODE -ne 0) {
         Write-Error "FATAL: WSL user creation failed."
         exit 1
@@ -68,6 +71,20 @@ if ($LASTEXITCODE -ne 0) {
     Write-Host "WSL user '{{ .username }}' created. Distro restarted."
 } else {
     Write-Host "WSL user '{{ .username }}' already exists."
+}
+
+# Ensure systemd is enabled in wsl.conf (idempotent; needed for cronie).
+# Already-provisioned machines that pre-date this change need this update.
+$ErrorActionPreference = "Continue"
+wsl -d {{ .wslDistro }} -u root -- bash -c "grep -q 'systemd=true' /etc/wsl.conf" 2>$null
+$ErrorActionPreference = "Stop"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Adding [boot] systemd=true to WSL /etc/wsl.conf..."
+    wsl -d {{ .wslDistro }} -u root -- bash -c "printf '\n[boot]\nsystemd=true\n' >> /etc/wsl.conf"
+    wsl --terminate {{ .wslDistro }}
+    Write-Host "WSL restarted to apply systemd=true."
+} else {
+    Write-Host "WSL systemd already enabled."
 }
 
 wsl --set-default {{ .wslDistro }}

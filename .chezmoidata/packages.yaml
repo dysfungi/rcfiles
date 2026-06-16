@@ -60,6 +60,10 @@ my:
     coconut: { brew: coconut }
     colordiff: { brew: colordiff, pacman: colordiff }
     coreutils: { brew: coreutils }
+    # cronie: Arch Linux cron daemon. Installed via pacman; enabled by the stage-90
+    # install-update-cron script via `systemctl enable --now cronie`. macOS uses the
+    # built-in cron daemon (managed by launchd), so no brew entry is needed.
+    cronie: { pacman: cronie }
     cowsay: { brew: cowsay }
     csvq: { brew: csvq }
     curl: { brew: curl, pacman: curl, bootstrap: true }

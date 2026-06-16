@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# SUDO_ASKPASS helper: supplies the sudo password from 1Password for unattended runs.
+#
+# Design:
+#   sudo -A reads the password from the program named by $SUDO_ASKPASS, which must
+#   print just the password to stdout. This script does exactly that — it calls
+#   `op read` against the user's sudo-password item in 1Password.
+#
+#   The 1Password item must be created once manually:
+#     op item create --category Login --title "sudo" --vault Private \
+#       password="$(op read op://Private/sudo/password 2>/dev/null || read -rs -p 'sudo password: ')"
+#   Or simpler: create a "Login" item named "sudo" in the "Private" vault and set
+#   the password field to your user account password.
+#
+#   The OP_SERVICE_ACCOUNT_TOKEN must already be in the environment (set by chezmoi-update-cron
+#   before invoking chezmoi, which in turn invokes the chezmoiscripts that use sudo).
+#
+# Usage: not called directly — set via SUDO_ASKPASS=/path/to/chezmoi-askpass before sudo -A.
+#
+# Failure modes:
+#   - Missing OP token: op prints an auth error to stderr; this script exits non-zero.
+#   - Item not found: op exits non-zero; sudo -A falls back to prompting or failing.
+#   Both are loud (stderr), never silent.
+set -euo pipefail
+
+OP_ITEM="{{ if .isRiotMachine }}op://Riot/sudo/password{{ else }}op://Private/sudo/password{{ end }}"
+
+if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+  echo >&2 "ERROR: chezmoi-askpass: OP_SERVICE_ACCOUNT_TOKEN is not set; cannot retrieve sudo password."
+  exit 1
+fi
+
+exec op read "${OP_ITEM}"

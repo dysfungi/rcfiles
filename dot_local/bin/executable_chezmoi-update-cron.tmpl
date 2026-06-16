@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# chezmoi-update-cron: daily unattended dotfile auto-update runner.
+#
+# Design:
+#   Invoked by cron once per day (registered by the stage-90 install script).
+#   Cron provides a minimal environment with no interactive TTY and a stripped PATH.
+#   This script reconstructs the environment needed by chezmoi and its chezmoiscripts,
+#   then runs `chezmoi update --init --verbose`.
+#
+#   Key behaviours:
+#     - PATH: mirrors [scriptEnv] PATH from .chezmoi.toml.tmpl so all tools are reachable.
+#     - 1Password token: sourced from ~/.secrets/OP_SERVICE_ACCOUNT_TOKEN (non-interactive).
+#       If absent, op calls inside chezmoiscripts will fail loudly (never silently).
+#     - SUDO_ASKPASS: set to chezmoi-askpass so privileged chezmoiscripts can call
+#       `chezmoi-sudo` which in turn uses `sudo -A` for unattended password supply.
+#       Homebrew's internal sudo ignores SUDO_ASKPASS; new privileged casks should
+#       be installed via an interactive `chezmoi apply` instead.
+#     - Lock: mkdir-based (portable; macOS lacks flock). Prevents overlapping runs
+#       (e.g. machine wakes during a previous missed-run catch-up that never completed).
+#     - Log: appended to ~/.local/state/chezmoi/update-cron.log, rotated weekly by
+#       the stage-65 logrotate config (dot_config/logrotate/chezmoi.conf).
+#
+#   Caveats documented in README "Automatic updates":
+#     - Plain cron doesn't catch up missed runs (no PowerNap / wakeup-on-idle like launchd).
+#     - macOS cron requires Full Disk Access once (System Settings → Privacy & Security).
+#     - Homebrew privileged cask installs may be skipped; add them interactively.
+
+set -euo pipefail
+
+# ── environment ──────────────────────────────────────────────────────────────
+
+# Mirror [scriptEnv] PATH from .chezmoi.toml.tmpl. Template variable substitution
+# makes this self-consistent when the file is rendered by chezmoi.
+export PATH="{{ .pathStr }}"
+
+ASKPASS="${HOME}/.local/bin/chezmoi-askpass"
+export SUDO_ASKPASS="${ASKPASS}"
+
+OP_TOKEN_FILE="${HOME}/.secrets/OP_SERVICE_ACCOUNT_TOKEN"
+if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+  if [ -f "${OP_TOKEN_FILE}" ]; then
+    OP_SERVICE_ACCOUNT_TOKEN="$(cat "${OP_TOKEN_FILE}")"
+    export OP_SERVICE_ACCOUNT_TOKEN
+  else
+    echo >&2 "WARN: chezmoi-update-cron: ${OP_TOKEN_FILE} not found and OP_SERVICE_ACCOUNT_TOKEN not set."
+    echo >&2 "WARN: chezmoi-update-cron: 1Password reads inside chezmoiscripts will fail."
+  fi
+fi
+
+# ── lock ─────────────────────────────────────────────────────────────────────
+
+LOCK_DIR="${HOME}/.local/state/chezmoi/update-cron.lock"
+if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
+  echo >&2 "INFO: chezmoi-update-cron: another run is in progress (${LOCK_DIR}); exiting."
+  exit 0
+fi
+# Always remove the lock on exit, even on error.
+trap 'rm -rf "${LOCK_DIR}"' EXIT
+
+# ── logging ──────────────────────────────────────────────────────────────────
+
+LOG_DIR="${HOME}/.local/state/chezmoi"
+LOG_FILE="${LOG_DIR}/update-cron.log"
+mkdir -p "${LOG_DIR}"
+
+exec >>"${LOG_FILE}" 2>&1
+
+# ── run ──────────────────────────────────────────────────────────────────────
+
+echo "INFO: Starting chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+echo "INFO: hostname=$(hostname) user=$(whoami)"
+
+chezmoi update --init --verbose
+
+echo "INFO: Ending chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"

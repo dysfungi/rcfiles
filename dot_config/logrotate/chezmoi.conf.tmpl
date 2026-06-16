@@ -12,3 +12,15 @@
     dateext
     dateformat -%Y%m%d-%H%M%S
 }
+
+{{ .chezmoi.homeDir }}/.local/state/chezmoi/update-cron.log {
+    weekly
+    rotate 4
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d-%H%M%S
+}

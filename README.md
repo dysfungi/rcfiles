@@ -62,10 +62,42 @@ Scripts under `.chezmoiscripts/` run in numeric directory order during `chezmoi 
 | `40/` | Self-managed symlinked file sync    | Copy externally-managed symlinked files pre-apply                               |
 | `65/` | Log rotation                        | Rotate chezmoi/tool logs                                                        |
 | `70/` | Editor plugin sync                  | Neovim Mason/Lazy plugin installs                                               |
-| `90/` | Specialized setup                   | Terminfo compilation, Riot machine tooling (P4, LoL)                            |
+| `90/` | Specialized setup                   | Terminfo compilation, Riot machine tooling (P4, LoL), daily auto-update cron    |
 | `99/` | Backup snapshots                    | Git-commit snapshots of symlinked files to `.backups/`                          |
 
 Script naming encodes platform targeting: `.unix-like.sh`, `.darwin.sh`, `.windows.ps1`, `.shared.sh`. The `.chezmoiignore.tmpl` filters scripts by platform at apply time.
+
+### Automatic Updates
+
+Each machine runs `chezmoi update --init --verbose` daily via a cron job registered by the stage-90 install script. `crontab` is the single interface on both macOS and Linux; the daemon implementation differs (macOS: built-in, Arch/WSL: `cronie`).
+
+**Components:**
+
+| File                               | Role                                                                                                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `~/.local/bin/chezmoi-update-cron` | Runner invoked by cron. Sets PATH, sources OP token, exports `SUDO_ASKPASS`, takes a lock, runs chezmoi, logs to `~/.local/state/chezmoi/update-cron.log`. |
+| `~/.local/bin/chezmoi-askpass`     | `SUDO_ASKPASS` helper. Reads the sudo password from 1Password: `op://Private/sudo/password` (personal) or `op://Riot/sudo/password` (Riot).                |
+| `~/.local/bin/chezmoi-sudo`        | `sudo` wrapper. Falls back: cached creds → interactive prompt → `sudo -A` (1Password) → WARN+skip (exit 0). Never blocks.                                  |
+
+**One-time setup (per machine):**
+
+1. Create the 1Password sudo-password item:
+
+   ```sh
+   op item create --category Login --title "sudo" --vault Private password="<your-user-password>"
+   ```
+
+   (Riot machines: vault `Riot`, title `sudo`.)
+
+2. **macOS only:** Grant `cron` Full Disk Access in _System Settings → Privacy & Security → Full Disk Access_ — add `/usr/sbin/cron`. Without this, cron silently fails on protected paths.
+
+3. Run `chezmoi apply` once interactively to register the cron job.
+
+**Caveats:**
+
+- Plain cron does not catch up missed runs (e.g. laptop was sleeping). The midday schedule mitigates this for laptops that are awake during the day.
+- New Homebrew casks that require privileged install should be applied interactively (`chezmoi apply`); `brew bundle`'s internal `sudo` calls bypass `chezmoi-sudo` and may be skipped unattended.
+- Skipped privileged steps emit a `WARN` to the log and are deferred to the next interactive apply — they never fail silently.
 
 ### Key Subsystems
 

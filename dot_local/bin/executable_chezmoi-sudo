@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# chezmoi-sudo: sudo wrapper for unattended chezmoi runs.
+#
+# Design:
+#   chezmoiscripts need sudo for privileged operations (pacman -Syu, tee /etc/shells, etc.).
+#   A daily cron job has no interactive TTY and the sudo credential cache is always expired.
+#   This wrapper provides a three-way fallback:
+#
+#     1. Active credential cache → plain `sudo` (fastest, works post-interactive-session)
+#     2. Interactive TTY         → plain `sudo` with normal password prompt
+#     3. SUDO_ASKPASS set + `op` reachable → `sudo -A` (1Password-backed, unattended)
+#     4. None of the above      → WARN to stderr, exit 0 (skip gracefully, never block)
+#
+#   Strategy 3 is activated by the chezmoi-update-cron runner, which exports
+#   SUDO_ASKPASS=~/.local/bin/chezmoi-askpass before running `chezmoi update`.
+#   Strategies 1-2 handle normal interactive `chezmoi apply` invocations transparently.
+#   Strategy 4 is the safety net: unattended + no 1Password → WARN + defer to the
+#   next interactive apply. This satisfies "never fail silently, fail loudly" —
+#   the warning is visible in the cron log.
+#
+#   chezmoiscripts that call bare `sudo` should be replaced with `chezmoi-sudo` for any
+#   sudo that recurs on every daily run (primarily pacman -Syu, paccache). One-time
+#   setup calls (run_once_before_) need not be migrated.
+#
+# Usage: chezmoi-sudo [sudo-args] COMMAND [args...]
+#   Accepts the same arguments as sudo.
+
+set -euo pipefail
+
+_have_cached_creds() {
+  # sudo -n -v returns 0 if credentials are cached, non-zero otherwise.
+  sudo -n -v 2>/dev/null
+}
+
+_have_tty() {
+  [ -t 0 ]
+}
+
+_askpass_works() {
+  [ -n "${SUDO_ASKPASS:-}" ] && [ -x "${SUDO_ASKPASS}" ]
+}
+
+if _have_cached_creds; then
+  exec sudo "$@"
+elif _have_tty; then
+  exec sudo "$@"
+elif _askpass_works; then
+  exec sudo -A "$@"
+else
+  echo >&2 "WARN: chezmoi-sudo: no credential cache, no TTY, and SUDO_ASKPASS is not set or not executable."
+  echo >&2 "WARN: chezmoi-sudo: skipping: sudo $*"
+  echo >&2 "WARN: chezmoi-sudo: re-run 'chezmoi apply' interactively to apply privileged changes."
+  exit 0
+fi
