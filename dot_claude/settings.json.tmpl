@@ -90,7 +90,18 @@
       }
     ],
     "UserPromptExpansion": [],
-    "PreToolUse": [],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/root-thread-guard.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "PermissionRequest": [],
     "PermissionDenied": [],
     "PostToolUse": [],
