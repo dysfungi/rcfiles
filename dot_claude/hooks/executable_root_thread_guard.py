@@ -44,10 +44,16 @@ ALWAYS_ALLOWED_ROOT_TOOLS:
                            that rely on structured MCP responses
 
 EXEMPTION — sentinel file:
-  Touch ~/.claude/root-guard-exempt to disable the guard for the entire
+  Create ~/.claude/root-guard-exempt to disable the guard for the entire
   session (e.g., during interactive debugging or initial onboarding). Remove
   it to re-enable. This mirrors the worktree-exempt.$SESSION_ID pattern used
   by the worktree guard.
+
+  IMPORTANT: Since Bash itself is blocked in root, you cannot use `touch` to
+  create the sentinel from the CLI. Use the Write tool (it's not blocked) or
+  create the file via an external shell (not inside a Claude session). Once
+  the file exists, Bash unblocks and you can `rm` it normally from a subagent
+  or from outside the session.
 
   There is intentionally NO plan-mode exemption and NO env-var escape hatch
   (chosen by the user). Plan mode already delegates exploration to the Plan
