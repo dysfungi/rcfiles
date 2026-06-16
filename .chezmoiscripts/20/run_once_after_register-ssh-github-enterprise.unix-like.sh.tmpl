@@ -1,0 +1,15 @@
+{{- if .isRiotMachine -}}
+#!/usr/bin/env bash
+# Register the machine's SSH public key with Riot's GitHub Enterprise Server
+# (gh.riotgames.com). Scoped to Riot machines only; no-op on personal machines.
+# Runs once per machine after files are applied (so ~/.ssh/id_ed25519.pub is
+# guaranteed to exist from the modify_ script).
+set -euo pipefail
+
+echo >&2 "INFO: Starting $0"
+
+{{ includeTemplate "github/register-ssh-key.sh" }}
+register_ssh_key "gh.riotgames.com" "${MISE_GITHUB_ENTERPRISE_TOKEN}"
+
+echo >&2 "INFO: Ending $0"
+{{ end -}}
