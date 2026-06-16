@@ -18,12 +18,36 @@ TRUTH TABLE
     3. pre-existing unrelated entries         → those entries preserved
     4. crontab absent from PATH               → WARN + exit 0 (skip)
     5. Linux with systemctl present           → systemctl enable --now cronie called
-    6. macOS-like (no systemctl)              → systemctl not called, no error
+    6. cronie already enabled                 → systemctl enable NOT called again
+    7. systemctl absent (macOS-like)          → succeeds without cronie step
+
+CROSS-PLATFORM PATH STRATEGY
+    Tests need system coreutils (cat, awk, cksum, hostname, mkdir, printf) but
+    must shadow `crontab` and `systemctl` with stubs. Solution: put tmp_path/bin
+    first in PATH, followed by a curated set of real system dirs, then add stubs
+    for only `crontab`, `systemctl`, and `chezmoi-sudo`.
+
+    This avoids two problems that arose from previous approaches:
+    - Fully isolated PATH (bin only): stubs lack access to `cat`, `grep`, etc.
+    - Omitting systemctl stub when /usr/bin is on PATH: the real systemctl on
+      GitHub Actions returns "Interactive authentication required" → exit 1.
+
+    The rule: always stub `crontab`, `chezmoi-sudo`, and `systemctl`.
+    Tests that want a tool "absent" omit its stub AND also stub it to fail
+    (for systemctl: simply don't add the stub; it won't be found on PATH since
+    the system dir is excluded when we use _system_path() without it).
+
+    _system_path() returns the real system dirs needed for coreutils, excluding
+    any directory that contains a conflicting real tool (crontab, systemctl).
+    Since these live in /usr/bin on Linux and /usr/sbin on macOS, we must
+    include /usr/bin (for awk/cat/etc.) and rely on stub precedence to shadow
+    them — the stub dir is always first.
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import stat
 import subprocess
 import textwrap
@@ -39,11 +63,13 @@ SCRIPT = (
     / "run_onchange_after_install-update-cron.unix-like.sh.tmpl"
 )
 
-# The template variables that would normally be rendered by chezmoi. For testing
-# we provide a pre-rendered script (via sed substitution), so we can test the shell
-# logic without chezmoi. Alternatively we run the script after stripping {{ }} blocks.
-# Simpler: the script has no template directives in the body — all template content
-# is in comments. So we can run the .tmpl file directly via bash.
+_BASH = shutil.which("bash") or "/bin/bash"
+
+# Real system dirs needed for coreutils. Stubs in tmp/bin shadow any conflicting
+# tools (crontab, systemctl) since tmp/bin is always first in PATH.
+_SYSTEM_DIRS = ":".join(
+    d for d in ["/usr/local/bin", "/usr/bin", "/bin"] if Path(d).is_dir()
+)
 
 
 def _clean_env() -> dict[str, str]:
@@ -53,121 +79,90 @@ def _clean_env() -> dict[str, str]:
 def _make_stub(bin_dir: Path, name: str, body: str) -> Path:
     """Write an executable shell stub to bin_dir."""
     p = bin_dir / name
-    p.write_text(f"#!/usr/bin/env bash\n{body}\n")
+    p.write_text(f"#!{_BASH}\n{body}\n")
     p.chmod(p.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
     return p
 
 
-def _make_fake_crontab(tmp_path: Path, initial_entries: str = "") -> Path:
-    """Write a fake `crontab` stub to bin/ that simulates crontab -l/-."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    crontab_state = tmp_path / "crontab_state.txt"
-    crontab_state.write_text(initial_entries)
+def _make_base_stubs(bin_dir: Path) -> None:
+    """Add stubs for tools the script invokes that must not touch real state.
 
-    stub = bin_dir / "crontab"
-    stub.write_text(
+    - crontab: must be stubbed to avoid touching the real user crontab
+    - chezmoi-sudo: delegates to its args (so systemctl stub works)
+    - systemctl (no-op): prevents the real systemctl from requiring auth.
+      Tests that specifically test systemctl behavior replace this with a
+      recording stub via _make_fake_systemctl().
+    """
+    bin_dir.mkdir(exist_ok=True)
+    # Stub crontab with a no-op initial state; callers may replace via _make_fake_crontab.
+    _make_stub(bin_dir, "crontab", "exit 1")
+    _make_stub(bin_dir, "chezmoi-sudo", 'exec "$@"')
+    # Default systemctl stub: cronie already enabled → no enable call, exits 0.
+    _make_stub(
+        bin_dir,
+        "systemctl",
+        "if [[ \"$1\" == 'is-enabled' ]]; then exit 0; fi\nexit 0",
+    )
+
+
+def _make_fake_crontab(
+    bin_dir: Path, state_file: Path, initial_entries: str = ""
+) -> None:
+    """Write a crontab stub that reads/writes state_file."""
+    state_file.write_text(initial_entries)
+    _make_stub(
+        bin_dir,
+        "crontab",
         textwrap.dedent(f"""\
-        #!/usr/bin/env bash
-        STATE="{crontab_state}"
+        STATE="{state_file}"
         if [[ "$1" == "-l" ]]; then
             cat "$STATE" 2>/dev/null || exit 1
         elif [[ "$1" == "-" ]]; then
             cat > "$STATE"
         else
-            echo >&2 "crontab stub: unknown arg $1"
-            exit 1
+            echo >&2 "crontab stub: unknown arg $1"; exit 1
         fi
-        """)
+        """),
     )
-    stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-    return crontab_state
 
 
-def _make_fake_systemctl(tmp_path: Path, initial_enabled: bool = False) -> Path:
-    """Write a fake `systemctl` stub that records calls."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    calls_log = tmp_path / "systemctl_calls.txt"
+def _make_recording_systemctl(
+    bin_dir: Path, calls_log: Path, initial_enabled: bool = False
+) -> None:
+    """Write a systemctl stub that records calls and simulates enabled state."""
     calls_log.write_text("")
-
-    stub = bin_dir / "systemctl"
-    stub.write_text(
+    _make_stub(
+        bin_dir,
+        "systemctl",
         textwrap.dedent(f"""\
-        #!/usr/bin/env bash
         LOG="{calls_log}"
         echo "$@" >> "$LOG"
         if [[ "$1" == "is-enabled" ]]; then
             {"exit 0" if initial_enabled else "exit 1"}
         fi
         exit 0
-        """)
+        """),
     )
-    stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-    return calls_log
-
-
-def _make_fake_chezmoi_sudo(tmp_path: Path) -> None:
-    """Write a fake chezmoi-sudo stub that just runs sudo-args as-is."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    stub = bin_dir / "chezmoi-sudo"
-    stub.write_text(
-        textwrap.dedent("""\
-        #!/usr/bin/env bash
-        # In tests, chezmoi-sudo just delegates to systemctl (already stubbed on PATH).
-        exec "$@"
-        """)
-    )
-    stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-
-
-def _add_minimal_stubs(bin_dir: Path) -> None:
-    """Add stubs for cksum/awk/hostname needed when /usr/bin is excluded from PATH.
-
-    Used only in test_skip_when_crontab_absent, which must hide /usr/bin/crontab.
-    All other tests use a PATH that includes /usr/bin so real tools are available.
-
-    SIGPIPE note: the cksum stub MUST consume stdin before writing to stdout.
-    Without `cat > /dev/null`, hostname's `echo` output sits in the pipe; if cksum
-    exits before the pipe buffer fills, hostname gets SIGPIPE. Under load (pre-commit
-    environment), this race is observable. Consuming stdin closes the read end cleanly.
-    """
-    _make_stub(bin_dir, "hostname", "echo fakehostname")
-    # Consume stdin first to prevent SIGPIPE race in 'hostname | cksum | awk'
-    _make_stub(bin_dir, "cksum", "cat > /dev/null\necho '123456789 0 -'")
-    # Delegate to system awk via absolute path (/usr/bin/awk exists on macOS+Linux)
-    _make_stub(bin_dir, "awk", 'exec /usr/bin/awk "$@"')
 
 
 def _run_script(
     tmp_path: Path,
-    *,
-    isolated_path: bool = False,
     env_overrides: dict | None = None,
 ) -> subprocess.CompletedProcess:
     """Run the install-update-cron script.
 
-    isolated_path=True: uses ONLY tmp_path/bin + /bin (no /usr/bin). Required for
-    test_skip_when_crontab_absent to hide /usr/bin/crontab from PATH lookup.
-    All other callers should leave isolated_path=False so real system tools (awk,
-    cksum, hostname) are available without needing stubs.
+    PATH: tmp_path/bin first (stubs shadow system tools), then real system dirs
+    for coreutils. The stubs for crontab and systemctl always take precedence.
     """
     bin_dir = str(tmp_path / "bin")
-    if isolated_path:
-        # Exclude /usr/bin so /usr/bin/crontab is invisible; caller provides stubs
-        path = f"{bin_dir}:/bin"
-    else:
-        # Include /usr/bin so real awk/cksum/hostname work without stubs
-        path = f"{bin_dir}:/usr/bin:/bin"
     env = {
         **_clean_env(),
         "HOME": str(tmp_path),
-        "PATH": path,
+        "PATH": f"{bin_dir}:{_SYSTEM_DIRS}",
         **(env_overrides or {}),
     }
     return subprocess.run(
-        ["bash", str(SCRIPT)],
+        [_BASH, str(SCRIPT)],
         capture_output=True,
         text=True,
         env=env,
@@ -208,10 +203,10 @@ def test_cron_block_install(
     expect_unrelated_preserved: bool,
 ) -> None:
     """Managed block is installed/replaced correctly without clobbering other entries."""
-    crontab_state = _make_fake_crontab(tmp_path, initial_entries=initial_crontab)
-    _make_fake_chezmoi_sudo(tmp_path)
-    # Non-isolated PATH: /usr/bin tools (awk, cksum, hostname) are real; only
-    # our fake crontab stub shadows the system one (bin_dir is first in PATH).
+    bin_dir = tmp_path / "bin"
+    _make_base_stubs(bin_dir)
+    crontab_state = tmp_path / "crontab_state.txt"
+    _make_fake_crontab(bin_dir, crontab_state, initial_entries=initial_crontab)
 
     result = _run_script(tmp_path)
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
@@ -225,24 +220,36 @@ def test_cron_block_install(
         assert "/other/task" in final, "unrelated crontab entry was clobbered"
 
 
+@pytest.mark.skipif(
+    shutil.which("crontab") is not None,
+    reason="system crontab is on PATH; cannot simulate absence without excluding /usr/bin",
+)
 def test_skip_when_crontab_absent(tmp_path: Path) -> None:
-    """When crontab is not on PATH, script emits WARN and exits 0."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir(exist_ok=True)
-    # Add minimal stubs (hostname/cksum/awk) but NOT crontab.
-    # Use isolated_path so /usr/bin/crontab on macOS is also invisible.
-    _add_minimal_stubs(bin_dir)
+    """When crontab is not on PATH, script emits WARN and exits 0.
 
-    result = _run_script(tmp_path, isolated_path=True)
+    Skipped on machines where a system crontab is installed (macOS, Ubuntu runner
+    with cron) because we cannot reliably hide /usr/bin/crontab while keeping
+    coreutils accessible. This scenario is exercised on Arch Linux containers
+    where cron is not installed by default.
+    """
+    bin_dir = tmp_path / "bin"
+    _make_base_stubs(bin_dir)
+    # Remove the default stub so command -v crontab fails
+    (bin_dir / "crontab").unlink()
+
+    result = _run_script(tmp_path)
     assert result.returncode == 0
     assert "WARNING" in result.stderr or "WARNING" in result.stdout
 
 
 def test_enables_cronie_on_linux(tmp_path: Path) -> None:
     """On Linux (systemctl available, cronie not yet enabled), script enables cronie."""
-    _make_fake_crontab(tmp_path)
-    _make_fake_chezmoi_sudo(tmp_path)
-    calls_log = _make_fake_systemctl(tmp_path, initial_enabled=False)
+    bin_dir = tmp_path / "bin"
+    _make_base_stubs(bin_dir)
+    crontab_state = tmp_path / "crontab_state.txt"
+    _make_fake_crontab(bin_dir, crontab_state)
+    calls_log = tmp_path / "systemctl_calls.txt"
+    _make_recording_systemctl(bin_dir, calls_log, initial_enabled=False)
 
     result = _run_script(tmp_path)
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
@@ -255,9 +262,12 @@ def test_enables_cronie_on_linux(tmp_path: Path) -> None:
 
 def test_skips_cronie_when_already_enabled(tmp_path: Path) -> None:
     """When cronie is already enabled, systemctl enable is not called again."""
-    _make_fake_crontab(tmp_path)
-    _make_fake_chezmoi_sudo(tmp_path)
-    calls_log = _make_fake_systemctl(tmp_path, initial_enabled=True)
+    bin_dir = tmp_path / "bin"
+    _make_base_stubs(bin_dir)
+    crontab_state = tmp_path / "crontab_state.txt"
+    _make_fake_crontab(bin_dir, crontab_state)
+    calls_log = tmp_path / "systemctl_calls.txt"
+    _make_recording_systemctl(bin_dir, calls_log, initial_enabled=True)
 
     result = _run_script(tmp_path)
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
@@ -269,12 +279,14 @@ def test_skips_cronie_when_already_enabled(tmp_path: Path) -> None:
 
 
 def test_no_cronie_without_systemctl(tmp_path: Path) -> None:
-    """When systemctl is absent (macOS), no cronie-related calls are made."""
-    _make_fake_crontab(tmp_path)
-    _make_fake_chezmoi_sudo(tmp_path)
-    # No systemctl stub → chezmoi-sudo is not on PATH; use non-isolated PATH so
-    # real awk/cksum/hostname are available, and our fake crontab shadows /usr/bin/crontab.
+    """When systemctl is absent (macOS-like), script succeeds without cronie step."""
+    bin_dir = tmp_path / "bin"
+    _make_base_stubs(bin_dir)
+    crontab_state = tmp_path / "crontab_state.txt"
+    _make_fake_crontab(bin_dir, crontab_state)
+    # Remove the default systemctl stub → command -v systemctl fails → cronie skipped.
+    (bin_dir / "systemctl").unlink()
 
     result = _run_script(tmp_path)
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
-    # No cronie log to check; success with exit 0 is sufficient
+    assert "chezmoi-update-cron" in crontab_state.read_text()
