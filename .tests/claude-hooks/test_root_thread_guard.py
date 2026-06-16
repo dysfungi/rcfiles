@@ -6,6 +6,14 @@ path, including shebang resolution and stdin parsing.
 
 Truth table: each case asserts whether the hook exits 0 (allow) or 2 (block).
 Exit code 2 is the Claude Code hooks convention for "hard deny".
+
+The guard uses an ALLOWLIST model: only explicitly listed tools are allowed in
+the root thread; everything else is blocked by default. Tests cover:
+  - Explicitly allowed tools → exit 0
+  - Explicitly expected-blocked tools → exit 2
+  - Unknown/future tool names → exit 2 (the key allowlist benefit)
+  - Same blocked tools in subagent context (agent_id present) → exit 0
+  - Sentinel file exemption → all tools allowed
 """
 
 from __future__ import annotations
@@ -54,28 +62,90 @@ def _subagent_payload(tool: str, **extra) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Root thread: blocked tools (no agent_id) → exit 2
+# Allowed tools in root thread → exit 0
+# ---------------------------------------------------------------------------
+
+_ALWAYS_ALLOWED = [
+    # Delegation
+    "Agent",
+    "Task",
+    # File mutations
+    "Write",
+    "Edit",
+    "NotebookEdit",
+    # UI / plan mode
+    "AskUserQuestion",
+    "EnterPlanMode",
+    "ExitPlanMode",
+    # Task tracking
+    "TodoWrite",
+    "TaskCreate",
+    "TaskUpdate",
+    "TaskGet",
+    "TaskList",
+    "TaskStop",
+    # Orchestration
+    "Workflow",
+    "Monitor",
+    "CronCreate",
+    "CronDelete",
+    "CronList",
+    "ScheduleWakeup",
+    "PushNotification",
+    # Worktree management
+    "EnterWorktree",
+    "ExitWorktree",
+    # Skills / design
+    "Skill",
+    "DesignSync",
+]
+
+
+@pytest.mark.parametrize("tool", _ALWAYS_ALLOWED)
+def test_allowed_in_root(tool: str, tmp_path: Path) -> None:
+    """Allowlisted tools in the root thread exit 0."""
+    result = _run_hook(_root_payload(tool), home=tmp_path)
+    assert result.returncode == 0, (
+        f"Expected exit 0 for {tool} in root thread, got {result.returncode}.\n"
+        f"stderr: {result.stderr!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Blocked tools in root thread → exit 2
 # ---------------------------------------------------------------------------
 
 _BLOCKED_IN_ROOT = [
+    # Original denylist entries
     ("Read", "file reader"),
     ("Grep", "pattern search"),
     ("Glob", "file glob"),
     ("Bash", "shell command"),
+    ("PowerShell", "powershell command"),
     ("WebFetch", "web content fetch"),
     ("WebSearch", "web search"),
+    # MCP server tools (now blocked via allowlist — were previously allowed)
+    ("mcp__notion__notion-fetch", "notion page fetch (unbounded content)"),
+    ("mcp__notion__notion-search", "notion search"),
+    ("mcp__p4-mcp__query_files", "p4 file query"),
+    ("mcp__slack__post_message", "slack write — blocked by allowlist"),
+    # MCP resource tools
+    ("ReadMcpResourceTool", "MCP resource reader"),
+    ("ListMcpResourcesTool", "MCP resource lister"),
+    # Background task output
+    ("TaskOutput", "raw background task output"),
 ]
 
 
 @pytest.mark.parametrize(
     "tool,label", _BLOCKED_IN_ROOT, ids=[x[0] for x in _BLOCKED_IN_ROOT]
 )
-def test_root_thread_blocked(tool: str, label: str, tmp_path: Path) -> None:
-    """Blocked tools in the root thread exit 2."""
+def test_blocked_in_root(tool: str, label: str, tmp_path: Path) -> None:
+    """Non-allowlisted tools in the root thread exit 2."""
     result = _run_hook(_root_payload(tool), home=tmp_path)
     assert result.returncode == 2, (
-        f"Expected exit 2 for {tool} in root thread, got {result.returncode}.\n"
-        f"stderr: {result.stderr!r}"
+        f"Expected exit 2 for {tool} ({label}) in root thread, "
+        f"got {result.returncode}.\nstderr: {result.stderr!r}"
     )
     assert tool in result.stderr, f"Expected tool name {tool!r} in deny message"
     assert "root-guard-exempt" in result.stderr, (
@@ -83,48 +153,27 @@ def test_root_thread_blocked(tool: str, label: str, tmp_path: Path) -> None:
     )
 
 
-# ---------------------------------------------------------------------------
-# Subagent context: same blocked tools are allowed (agent_id present) → exit 0
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "tool,label", _BLOCKED_IN_ROOT, ids=[x[0] for x in _BLOCKED_IN_ROOT]
-)
-def test_subagent_allowed(tool: str, label: str, tmp_path: Path) -> None:
-    """Same tools are allowed when agent_id is present (subagent context)."""
-    result = _run_hook(_subagent_payload(tool), home=tmp_path)
-    assert result.returncode == 0, (
-        f"Expected exit 0 for {tool} in subagent, got {result.returncode}.\n"
-        f"stderr: {result.stderr!r}"
+def test_unknown_future_tool_blocked(tmp_path: Path) -> None:
+    """Unknown/future tool names are blocked by default (key allowlist benefit)."""
+    result = _run_hook(_root_payload("SomeFutureNewTool"), home=tmp_path)
+    assert result.returncode == 2, (
+        "Expected exit 2 for an unknown tool — allowlist model must be safe-by-default"
     )
 
 
 # ---------------------------------------------------------------------------
-# Always-allowed tools in root thread → exit 0
+# Subagent context: all tools are allowed (agent_id present) → exit 0
 # ---------------------------------------------------------------------------
 
-_ALWAYS_ALLOWED = [
-    "Agent",
-    "Task",
-    "Write",
-    "Edit",
-    "NotebookEdit",
-    "TodoWrite",
-    "AskUserQuestion",
-    "ExitPlanMode",
-    "Skill",
-    "mcp__notion__notion-fetch",
-    "mcp__slack__post_message",
-]
+_SUBAGENT_SAMPLE = [t for t, _ in _BLOCKED_IN_ROOT[:6]]  # representative subset
 
 
-@pytest.mark.parametrize("tool", _ALWAYS_ALLOWED)
-def test_always_allowed_in_root(tool: str, tmp_path: Path) -> None:
-    """Non-blocked tools in root thread are always allowed."""
-    result = _run_hook(_root_payload(tool), home=tmp_path)
+@pytest.mark.parametrize("tool", _SUBAGENT_SAMPLE)
+def test_subagent_allowed(tool: str, tmp_path: Path) -> None:
+    """All tools are allowed when agent_id is present (subagent context)."""
+    result = _run_hook(_subagent_payload(tool), home=tmp_path)
     assert result.returncode == 0, (
-        f"Expected exit 0 for {tool} in root thread, got {result.returncode}.\n"
+        f"Expected exit 0 for {tool} in subagent, got {result.returncode}.\n"
         f"stderr: {result.stderr!r}"
     )
 
@@ -135,10 +184,10 @@ def test_always_allowed_in_root(tool: str, tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "tool,label", _BLOCKED_IN_ROOT, ids=[x[0] for x in _BLOCKED_IN_ROOT]
+    "tool,label", _BLOCKED_IN_ROOT[:6], ids=[x[0] for x in _BLOCKED_IN_ROOT[:6]]
 )
 def test_sentinel_file_exempts_root(tool: str, label: str, tmp_path: Path) -> None:
-    """When ~/.claude/root-guard-exempt exists, blocked tools are allowed."""
+    """When ~/.claude/root-guard-exempt exists, all tools are allowed."""
     sentinel = tmp_path / ".claude" / "root-guard-exempt"
     sentinel.parent.mkdir(parents=True, exist_ok=True)
     sentinel.touch()
@@ -152,7 +201,6 @@ def test_sentinel_file_exempts_root(tool: str, label: str, tmp_path: Path) -> No
 
 def test_sentinel_file_absence_still_blocks(tmp_path: Path) -> None:
     """Without sentinel, blocking is active (sanity check)."""
-    # Ensure .claude dir exists but sentinel is absent
     (tmp_path / ".claude").mkdir(parents=True, exist_ok=True)
     result = _run_hook(_root_payload("Bash"), home=tmp_path)
     assert result.returncode == 2

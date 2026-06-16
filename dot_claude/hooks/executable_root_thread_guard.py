@@ -1,18 +1,17 @@
 #!/usr/bin/env -S uv run --no-project
-"""Blocks read-heavy and Bash tools in the root conversation thread.
+"""Blocks all tools in the root conversation thread except a narrow orchestration allowlist.
 
 WHY this hook exists:
   Keeping the root context window small is the primary lever for long-running
-  sessions. Every Read, Grep, Glob, Bash, WebFetch, or WebSearch call in the
-  root thread dumps raw output (file bodies, search hits, web pages) directly
-  into the main context — even if Claude only reads one line of it, the whole
-  response counts against the window. The fix: run those tools inside a
-  subagent, which gets its own isolated context window. Only the subagent's
-  summary (not the raw output) returns to the root thread.
+  sessions. Any tool that returns raw text — file bodies, grep results, shell
+  output, web pages, MCP fetches — dumps that content directly into the main
+  context window, even if Claude only needs one line of it. The fix: run those
+  tools inside a subagent, which gets its own isolated context window. Only the
+  subagent's summary returns to the root thread.
 
-  This hook enforces that pattern by hard-blocking the high-context tools
-  in the root thread. Subagents are exempt — they have their own context
-  windows and can use the tools freely.
+  This hook enforces that pattern by hard-blocking everything except a narrow
+  set of orchestration tools in the root thread. Subagents are exempt — they
+  have their own context windows and can use any tool freely.
 
 DESIGN — agent_id presence as the discriminator:
   The PreToolUse hook payload includes an `agent_id` field that is PRESENT
@@ -26,22 +25,41 @@ DESIGN — agent_id presence as the discriminator:
   to the root session too. Since these sessions are launched without --agent
   (interactive use), that case is moot here but documented for clarity.
 
-BLOCKED_ROOT_TOOLS:
-  Read, Grep, Glob       — file reading/searching (high raw-output volume)
-  Bash                   — shell commands (any Bash in root = raw output risk;
-                           orchestration Bash like git/chezmoi/mise must run in
-                           a subagent or with the sentinel file)
-  WebFetch, WebSearch    — web content (entire pages/results land in context)
+DESIGN — allowlist over denylist:
+  Previous version used a denylist (BLOCKED_ROOT_TOOLS). That model is
+  unsafe-by-default: any new tool — future Claude Code tool, new MCP server,
+  etc. — is silently allowed until explicitly blocked. The allowlist inverts
+  this: new tools are blocked by default and must be explicitly added to
+  ALLOWED_ROOT_TOOLS to work in root. This is the right default for a
+  context-discipline system where the expected case is "delegate to subagent."
 
-ALWAYS_ALLOWED_ROOT_TOOLS:
-  Agent, Task            — spawning subagents (the whole point)
-  Write, Edit, NotebookEdit — file mutations (root edits are intentional;
-                              the worktree guard separately enforces isolation)
-  TodoWrite, AskUserQuestion, ExitPlanMode — UI/task-management tools
-  Skill                  — skill invocation (meta-level orchestration)
-  MCP tools (mcp__*)     — MCP calls have unpredictable output size; allowed
-                           because blocking them would break agentic workflows
-                           that rely on structured MCP responses
+ALLOWED_ROOT_TOOLS:
+  Agent, Task           — spawning subagents (the whole point)
+  Write, Edit,
+  NotebookEdit          — file mutations (intentional; worktree guard handles isolation)
+  AskUserQuestion,
+  EnterPlanMode,
+  ExitPlanMode          — UI and plan-mode transitions
+  TodoWrite, TaskCreate,
+  TaskUpdate, TaskGet,
+  TaskList, TaskStop    — task tracking
+  Workflow, Monitor,
+  CronCreate, CronDelete,
+  CronList, ScheduleWakeup,
+  PushNotification      — orchestration and background scheduling
+  EnterWorktree,
+  ExitWorktree          — worktree management
+  Skill                 — skill invocation (meta-level orchestration)
+  DesignSync            — design system sync
+
+Blocked by default (not in allowlist — representative examples):
+  Read, Grep, Glob, Bash, PowerShell  — file/shell access (unbounded output)
+  WebFetch, WebSearch                 — web content (pages/results land in context)
+  mcp__*                              — MCP tool calls (can dump full page/ticket content)
+  ReadMcpResourceTool,
+  ListMcpResourcesTool                — MCP resource reads
+  TaskOutput                          — retrieves raw background task output
+  Any future tool not listed above    — safe-by-default
 
 EXEMPTION — sentinel file:
   Create ~/.claude/root-guard-exempt to disable the guard for the entire
@@ -52,7 +70,7 @@ EXEMPTION — sentinel file:
   IMPORTANT: Since Bash itself is blocked in root, you cannot use `touch` to
   create the sentinel from the CLI. Use the Write tool (it's not blocked) or
   create the file via an external shell (not inside a Claude session). Once
-  the file exists, Bash unblocks and you can `rm` it normally from a subagent
+  the file exists, Bash unblocks and you can delete it from a subagent
   or from outside the session.
 
   There is intentionally NO plan-mode exemption and NO env-var escape hatch
@@ -66,21 +84,51 @@ import os
 import sys
 from pathlib import Path
 
-# Tools blocked in the root thread (any tool not listed here is allowed).
-BLOCKED_ROOT_TOOLS = frozenset(
+# Tools allowed in the root thread. Everything else is blocked.
+# Intentionally narrow: the root thread is for orchestration and decisions,
+# not execution. Add a tool here only when it is genuinely orchestration-level
+# (spawning work, writing results, tracking state) rather than reading/fetching.
+ALLOWED_ROOT_TOOLS = frozenset(
     {
-        "Read",
-        "Grep",
-        "Glob",
-        "Bash",
-        "WebFetch",
-        "WebSearch",
+        # Delegation
+        "Agent",
+        "Task",
+        # File mutations (intentional; worktree guard handles isolation)
+        "Write",
+        "Edit",
+        "NotebookEdit",
+        # UI / plan mode
+        "AskUserQuestion",
+        "EnterPlanMode",
+        "ExitPlanMode",
+        # Task tracking
+        "TodoWrite",
+        "TaskCreate",
+        "TaskUpdate",
+        "TaskGet",
+        "TaskList",
+        "TaskStop",
+        # Orchestration / background scheduling
+        "Workflow",
+        "Monitor",
+        "CronCreate",
+        "CronDelete",
+        "CronList",
+        "ScheduleWakeup",
+        "PushNotification",
+        # Worktree management
+        "EnterWorktree",
+        "ExitWorktree",
+        # Skills (meta-level orchestration; underlying tool calls are themselves guarded)
+        "Skill",
+        # Design system sync
+        "DesignSync",
     }
 )
 
 _DELEGATE_HINT = (
     "Run this tool in a subagent (e.g. @scout, @distill, or a Task call). "
-    "Or touch ~/.claude/root-guard-exempt to disable the guard for this session."
+    "Or create ~/.claude/root-guard-exempt via the Write tool to disable the guard."
 )
 
 
@@ -97,9 +145,9 @@ def main() -> None:
     if (home / ".claude" / "root-guard-exempt").exists():
         return
 
-    # --- Root thread: enforce blocklist ---
+    # --- Root thread: enforce allowlist ---
     tool = payload.get("tool_name", "")
-    if tool not in BLOCKED_ROOT_TOOLS:
+    if tool in ALLOWED_ROOT_TOOLS:
         return
 
     print(
