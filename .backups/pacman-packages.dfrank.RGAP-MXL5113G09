@@ -4,6 +4,7 @@ base-devel
 cdargs
 chezmoi
 colordiff
+cronie
 direnv
 dotnet-sdk
 fd
