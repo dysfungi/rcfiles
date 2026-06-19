@@ -258,6 +258,7 @@ inoremap("}", "}<C-g>u")
 
 -- [Helpers]
 -- Terminal Escape modes
+tnoremap("<C-\\><Esc>", "<Esc>")
 tnoremap("<Esc>", "<C-\\><C-n>")
 -- tnoremap(',m', '<C-\\><C-n>')
 
