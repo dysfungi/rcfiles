@@ -1,6 +1,4 @@
 tap "1password/tap"
-tap "homebrew/bundle"
-tap "homebrew/services"
 tap "jesseduffield/lazydocker"
 # Search tool like grep, but optimized for programmers
 brew "ack"
@@ -154,6 +152,8 @@ brew "opentofu"
 brew "pandoc"
 # Python package management tool
 brew "poetry"
+# PDF rendering library (based on the xpdf-3.0 code base)
+brew "poppler"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Prettier daemon
