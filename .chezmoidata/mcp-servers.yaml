@@ -1,5 +1,9 @@
 my:
-  mcpServers: {}
+  mcpServers:
+    todoist:
+      serverUrl: "https://ai.todoist.net/mcp"
+      docUrl: |-
+        https://www.todoist.com/help/articles/use-todoist-with-claude-code-cli-and-mcp-b1USJ4HB3#h_01KMDC3NG1SJKTRNJ8F4NHKRHD
 riot:
   mcpServers:
     atlassian-rovo:
