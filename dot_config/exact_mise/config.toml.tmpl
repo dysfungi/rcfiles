@@ -41,4 +41,15 @@ trusted_config_paths = [
 # Optional local dotenv — skipped silently if absent (no .env required)
 _.file = ".env"
 
+# First-class, bootstrap-level creds.
+{{- if not (env "OP_SERVICE_ACCOUNT_TOKEN") }}
+OP_SERVICE_ACCOUNT_TOKEN = "{{ .opServiceAccountToken }}"
+{{- else if .isMyMachine }}
+OP_SERVICE_ACCOUNT_TOKEN = "{{ onepasswordRead "op://CLI/1Password Service Account - CLI - Personal/credential" }}"
+{{- else if .isWorkMachine }}
+OP_SERVICE_ACCOUNT_TOKEN = "{{ onepasswordRead "op://CLI/1Password Service Account - CLI - Work/credential" }}"
+{{- end }}
+CHEZMOI_GITHUB_ACCESS_TOKEN = "{{ .githubToken }}"
+
+# Non-bootstrap
 TODOIST_API_TOKEN = "{{"{{"}} exec(command=\"op read 'op://CLI/Todoist API Token - CLI/credential'\", cache_key='todoist_api_token') {{"}}"}}"

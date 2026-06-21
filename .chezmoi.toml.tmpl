@@ -36,13 +36,8 @@
 {{- end }}
 
 {{ $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
-{{ $opTokenFile := joinPath .chezmoi.homeDir ".secrets" "OP_SERVICE_ACCOUNT_TOKEN" -}}
 {{ if not $opToken -}}
-  {{ if stat $opTokenFile -}}
-    {{ $opToken = include $opTokenFile | trim -}}
-  {{ else -}}
-    {{ $opToken = promptString "1Password service account token" -}}
-  {{ end -}}
+  {{ $opToken = promptString "1Password service account token" -}}
 {{ end -}}
 
 [data]
