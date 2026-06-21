@@ -36,3 +36,9 @@ trusted_config_paths = [
 
 [alias]
 # https://mise.jdx.dev/dev-tools/aliases.html
+
+[env]
+# Optional local dotenv — skipped silently if absent (no .env required)
+_.file = ".env"
+
+TODOIST_API_TOKEN = "{{"{{"}} exec(command=\"op read 'op://CLI/Todoist API Token - CLI/credential'\", cache_key='todoist_api_token') {{"}}"}}"
