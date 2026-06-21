@@ -63,6 +63,12 @@ _THRESHOLD_CASES = [
 ]
 
 
+@pytest.fixture(autouse=True)
+def configure_thresholds(monkeypatch):
+    monkeypatch.setenv("CTX_WARN_PCT", 20)
+    monkeypatch.setenv("CTX_CRIT_PCT", 25)
+
+
 @pytest.mark.parametrize(
     "pct,expect_yellow,expect_red,desc",
     _THRESHOLD_CASES,

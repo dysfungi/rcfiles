@@ -294,8 +294,7 @@ def __rc_interactive_aliases_claude(aliases):
                 resume_model = alias_map.get(resume_model) or resume_model
             except Exception:
                 # NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames!
-                # resume_model = "claude-vertex/anthropic-claude-sonnet-4-6-default[1m]"
-                resume_model = "opusplan"
+                resume_model = "opus"
             argv = ["--model", resume_model, *argv]
 
         argv = ["--allow-dangerously-skip-permissions", *argv]

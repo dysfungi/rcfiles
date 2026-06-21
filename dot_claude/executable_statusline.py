@@ -20,8 +20,8 @@ import sys
 # Below CTX_WARN_PCT: default terminal color.
 # CTX_WARN_PCT to CTX_CRIT_PCT: yellow — delegate reads now.
 # At or above CTX_CRIT_PCT: red — reset context or you're paying for it.
-CTX_WARN_PCT = 20
-CTX_CRIT_PCT = 25
+CTX_WARN_PCT = int(os.environ.get("CTX_WARN_PCT", 25))
+CTX_CRIT_PCT = int(os.environ.get("CTX_CRIT_PCT", 50))
 
 # ANSI escape codes (reset is always applied after the colored segment).
 _ANSI_YELLOW = "\033[33m"
