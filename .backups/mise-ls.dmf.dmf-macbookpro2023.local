@@ -1,3 +1,5 @@
+github:hadolint/hadolint          2.14.0
+github:mvdan/sh                   3.13.1
 hadolint                          2.14.0
 jq                                1.8.2     ~/.config/mise/config.toml  latest
 lua                               5.5.0
