@@ -143,7 +143,6 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
-
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
   - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators
@@ -199,9 +198,9 @@ Both files are ignored by chezmoi (never deployed). Keep them in sync with activ
 - When completing a deferred item from `todo.txt` during a session, move it to `done.txt` with an `x YYYY-MM-DD` prefix (the todo.txt CLI archive convention). Do not delete completed tasks.
 - When a new plan is written, check `todo.txt` for related existing entries and reference or close them.
 
-## Bash Command Worktree Guard
+## Bash Command Worktree Guard (Claude Code)
 
-On the main worktree, a `PreToolUse` hook on `Bash` blocks commands that would mutate git state or repo files. Blocked categories:
+Claude Code-specific: a `PreToolUse` hook (`bash_worktree_guard.py`) blocks mutating Bash commands on the main worktree. Pi enforces the same policy via its `worktree-guard.ts` extension with the same denylist. Blocked categories:
 
 | Category         | Blocked                                                                                | Allowed                            |
 | ---------------- | -------------------------------------------------------------------------------------- | ---------------------------------- |

@@ -116,19 +116,36 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 
 **Multi-instance worktrees (MANDATORY):**
 
-Concurrent agents on the same branch create file-edit races (last write wins). Every session that modifies files MUST use an isolated git worktree — on Claude Code, Write/Edit/Bash mutations are hook-blocked until inside one.
+Concurrent agents on the same branch create file-edit races (last write wins). Every session that modifies files MUST use an isolated git worktree. Write/Edit/Bash mutations are hook-blocked on the main checkout until inside one.
 
   1. `git pull`, then check existing claims: `todo.sh list @worktree`.
-  2. On Claude Code: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`. On other tools: `git worktree add .worktrees/<session-id>.<task-slug> -b task/<session-id>.<task-slug>` then `cd` into it.
-  3. Record in `todo.txt`: `@worktree:.claude/worktrees/<session-id>.<task-slug>`, `session:<id>`, `agent:<tool>`, `model:<full-model-id>`. Commit this entry as part of the worktree's first commit — `todo.sh` mutations are blocked on main, so the entry must be committed here to survive the merge-back.
+  2. Create a worktree and work inside it (see tool-specific instructions below).
+  3. Record in `todo.txt`: `@worktree:<worktree-path>`, `session:<id>`, `agent:<tool>`, `model:<full-model-id>`. Commit this entry as part of the worktree's first commit — `todo.sh` mutations are blocked on main, so the entry must be committed here to survive the merge-back.
+  4. On completion: while still **inside** the worktree, run `todo.sh do <task-id>` and commit the change. If main has advanced since branching, run `git rebase main` to linearise the branch so `--ff-only` succeeds. Then merge back: `git merge --ff-only <worktree-branch>`, `git branch -d <worktree-branch>`, and push.
 
-  Example: `(B) Fix auth bug +api @worktree:.claude/worktrees/b9395dee.auth-fix session:b9395dee agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+  Agents must never create worktree exemption files — they exist for human-only bypass.
+{{- if hasSuffix "/CLAUDE.md" $.chezmoi.targetFile }}
 
-  On completion (Claude Code): while still **inside** the worktree: run `todo.sh do <task-id>` and commit the change. If main has advanced since branching, run `git rebase main` to linearise the branch so `--ff-only` succeeds. Then `ExitWorktree action: remove`, `git merge --ff-only <worktree-branch>`, `git branch -d <worktree-branch>`, and push. The bash guard allows `--ff-only` specifically for this merge-back pattern. On other tools: merge to main, `git worktree remove .worktrees/<session-id>.<task-slug>`, and delete the branch.
+  **Claude Code worktree workflow:**
 
-  **Auto-cleanup:** The Stop hook removes merged worktrees for the current session and archives their `todo.txt` entries. Prefer explicit `ExitWorktree` — the hook is a safety net, not a substitute.
+  - Create: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`
+  - Worktree path: `.claude/worktrees/<session-id>.<task-slug>`
+  - Example: `(B) Fix auth bug +api @worktree:.claude/worktrees/b9395dee.auth-fix session:b9395dee agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default`
+  - Complete: `ExitWorktree action: remove`, then `git merge --ff-only`, `git branch -d`, push.
+  - **Auto-cleanup:** The Stop hook removes merged worktrees for the current session and archives their `todo.txt` entries. Prefer explicit `ExitWorktree` — the hook is a safety net, not a substitute.
+  - Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID`
+{{- end }}
+{{- if contains "/.pi/" $.chezmoi.targetFile }}
 
-  Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID`. Agents must never use this.
+  **Pi worktree workflow:**
+
+  - Create: `/worktree create <task-slug>` (or launch with `pi --worktree <task-slug>`)
+  - Pi relaunches inside the worktree via tmux — all tools bind to the new cwd.
+  - Worktree path: `.worktrees/<task-slug>`, branch: `worktree/<task-slug>`
+  - Example: `(B) Fix auth bug +api @worktree:.worktrees/auth-fix agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8`
+  - Complete: merge back to main, then `/worktree destroy <task-slug>` (or manual `git worktree remove`).
+  - Human-only bypass: `touch .pi/worktree-exempt`
+{{- end }}
 
 **Pane label:** As soon as the task is identifiable (even before a worktree or todo.txt entry exists), write a short summary to `~/.claude/task-labels/$TMUX_PANE` and run `tmux select-pane -T "label"`. Guard with `[[ -n "${TMUX:-}" ]] &&`. Update as understanding improves; sync to the todo.txt task slug when one is created. The `UserPromptSubmit` hook auto-labels from the raw user prompt; agent refinements override it and persist across subsequent user messages.
 
