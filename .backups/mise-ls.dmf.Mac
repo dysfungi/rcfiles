@@ -9,7 +9,7 @@ node                                 24.17.0   ~/.config/mise/config.toml       
 npm:@anthropic-ai/claude-code        2.1.185   ~/.config/mise/config.toml         latest
 npm:@earendil-works/pi-coding-agent  0.79.9    ~/.config/mise/config.toml         latest
 npm:@opengsd/get-shit-done-redux     1.1.0     ~/.config/mise/config.toml         latest
-npm:markdownlint-cli                 0.48.0    ~/.local/share/chezmoi/.mise.toml  latest
+npm:markdownlint-cli                 0.49.0    ~/.local/share/chezmoi/.mise.toml  latest
 ollama                               0.22.0
 pipx:bandit                          1.9.4     ~/.config/mise/config.toml         latest
 pipx:doit                            0.37.0    ~/.config/mise/config.toml         latest
