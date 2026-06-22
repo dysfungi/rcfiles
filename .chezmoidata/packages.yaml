@@ -43,6 +43,7 @@ my:
         bootstrap: true,
       }
     ack: { brew: ack }
+    act: { brew: act, pacman: act }
     archey4: { brew: archey4 }
     ascii: { brew: ascii }
     asdf: { brew: asdf }
