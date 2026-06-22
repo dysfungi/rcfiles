@@ -1,0 +1,11 @@
+# pi coding agent extensions pulled from upstream.
+# The plan-mode extension is an example bundled with pi (not a published package),
+# so we pull it from the mono-repo source tree via archive extraction.
+# refreshPeriod syncs with pi version upgrades (~weekly check).
+
+[".pi/agent/extensions/plan-mode"]
+    type = "archive"
+    url = "https://github.com/earendil-works/pi-mono/archive/main.tar.gz"
+    refreshPeriod = "168h"
+    stripComponents = 6
+    include = ["*/packages/coding-agent/examples/extensions/plan-mode/**"]
