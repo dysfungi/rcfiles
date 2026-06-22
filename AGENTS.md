@@ -109,7 +109,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - **Zsh** (fallback): modular configs in `.zsh/` (riot, gcloud, ocaml, etc.)
 - **Neovim**: `dot_config/exact_nvim/` — Lazy plugin manager, Mason for LSP/formatters
 - **Git**: aliases and config in `dot_config/git/`
-- **AI tools**: `dot_claude/`, `dot_codex/`, `dot_gemini/` — each rendered from shared AGENTS.md template
+- **AI tools**: `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` — each rendered from shared AGENTS.md template
 - **Homebrew**: `dot_config/homebrew/Brewfile.tmpl`
 - **Mise**: polyglot tool version manager, `dot_config/exact_mise/` + `.mise.toml`
 
@@ -143,6 +143,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
+
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
   - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators

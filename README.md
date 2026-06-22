@@ -105,7 +105,7 @@ Each machine runs `chezmoi update --init --verbose` daily via a cron job registe
 - **Zsh** — fallback shell, modular configs in `.zsh/`
 - **Neovim** — `dot_config/exact_nvim/`, Lazy plugin manager, Mason for LSP/formatters
 - **Git** — aliases and config in `dot_config/git/`
-- **AI tools** — `dot_claude/`, `dot_codex/`, `dot_gemini/`, each rendered from shared `AGENTS.md` template
+- **AI tools** — `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` (`~/.pi/agent/`), each rendered from shared `AGENTS.md` template
 - **Wezterm** — terminal emulator, cross-platform config in `dot_wezterm.lua`
 - **Homebrew** — `dot_config/homebrew/Brewfile.tmpl`
 - **Mise** — `dot_config/exact_mise/` + `.mise.toml`
