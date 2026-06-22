@@ -1,6 +1,16 @@
-{
+{ {{- /* https://pi.dev/docs/latest/settings */}}
+  {{- if .isRiotMachine }}
+  {{- /* Riot machines have no direct Anthropic access; route via the TrueFoundry
+         gateway provider defined in private_models.json.tmpl. */}}
+  "defaultModel": "claude-vertex/anthropic-claude-opus-4-8",
+  "defaultProvider": "truefoundry",
+  {{- else }}
+  "defaultModel": "claude-opus-4-8",
+  "defaultProvider": "anthropic",
+  {{- end }}
   "defaultProjectTrust": "always",
   "defaultThinkingLevel": "high",
   "hideThinkingBlock": false,
+  "lastChangelogVersion": "0.79.9",
   "theme": "dark"
 }
