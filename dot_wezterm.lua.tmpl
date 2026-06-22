@@ -271,6 +271,7 @@ config.keys = {
       },
     },
   },
+  { key = "Enter", mods = "ALT", action = wezterm.action.SendString "\x1b[13;3u" },
 }
 
 -- Maximized window on startup
@@ -279,5 +280,8 @@ wezterm.on("gui-startup", function(cmd)
   local tab, pane, window = wezterm.mux.spawn_window(cmd or {})
   window:gui_window():maximize()
 end)
+
+-- pi (pi.dev): reliable Shift+Enter detection
+config.enable_kitty_keyboard = true
 
 return config
