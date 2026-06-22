@@ -17,3 +17,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 
 
 Refactor and migrate '~/.secrets' to be managed by Mise
+(B) Set up pi.dev as main harness, chezmoi-managed +pi @worktree:.claude/worktrees/a05a54d5-49e2-42b2-a16e-18928dda8fde.pi-harness session:a05a54d5-49e2-42b2-a16e-18928dda8fde agent:claude model:claude-opus-4-8
