@@ -1,0 +1,47 @@
+{{- /*
+  MCP server config for pi, consumed by the `pi-mcp-adapter` package
+  (registered in settings.json.tmpl). pi has no built-in MCP; the adapter
+  exposes a single context-cheap proxy tool and connects servers lazily.
+
+  Generated from the central .chezmoidata/mcp-servers.yaml, the same source
+  codex/gemini/claude render from. Unlike those (which only handle remote
+  `serverUrl` entries), the adapter also supports stdio servers, so this
+  template additionally wires `uvx`-launched servers (e.g. p4-mcp) with env
+  rendered from their referenced env_tmpl.
+
+  private_ prefix: rendered bearer tokens (onepasswordRead) are secrets.
+  Built as a dict + toPrettyJson so JSON validity/commas are structural,
+  not hand-managed. Map keys serialize sorted -> deterministic output.
+*/ -}}
+{{- $mcpServersIn := .my.mcpServers -}}
+{{- if .isRiotMachine -}}
+  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
+{{- end -}}
+{{- $servers := dict -}}
+{{- range $name, $mcp := $mcpServersIn -}}
+  {{- $entry := dict -}}
+  {{- if hasKey $mcp "serverUrl" -}}
+    {{- $_ := set $entry "url" $mcp.serverUrl -}}
+    {{- if hasKey $mcp "auth" -}}
+      {{- if eq $mcp.auth.type "bearer" -}}
+        {{- $_ := set $entry "auth" "bearer" -}}
+        {{- $_ := set $entry "bearerToken" (onepasswordRead $mcp.auth.opPath) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else if hasKey $mcp "uvx" -}}
+    {{- $_ := set $entry "command" "uvx" -}}
+    {{- $args := list $mcp.uvx.package -}}
+    {{- if hasKey $mcp.uvx "args" -}}
+      {{- $args = concat $args $mcp.uvx.args -}}
+    {{- end -}}
+    {{- $_ := set $entry "args" $args -}}
+    {{- if hasKey $mcp "env_tmpl" -}}
+      {{- $_ := set $entry "env" (includeTemplate $mcp.env_tmpl $ | fromYaml) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $_ := set $servers $name $entry -}}
+{{- end -}}
+{{- $root := dict
+      "settings" (dict "toolPrefix" "server" "autoAuth" true)
+      "mcpServers" $servers -}}
+{{ $root | toPrettyJson }}

@@ -40,3 +40,5 @@ x 2026-06-16 Fix CI: hermetic PATH for cron-install tests +tests @worktree:.clau
 x 2026-06-21 Fix cron-install: run_after_ + hard-fail + macOS launchctl @worktree:.claude/worktrees/d1bd3a4d-cd09-4e0e-8c86-51ee96b2cf7c.cron-fix session:d1bd3a4d-cd09-4e0e-8c86-51ee96b2cf7c agent:claude model:claude-opus-4-8
 x 2026-06-22 Set up pi.dev as main harness, chezmoi-managed +pi @worktree:.claude/worktrees/a05a54d5-49e2-42b2-a16e-18928dda8fde.pi-harness session:a05a54d5-49e2-42b2-a16e-18928dda8fde agent:claude model:claude-opus-4-8
 x 2026-06-22 fix(nvim): gotmpl TreeSitter highlighter for chezmoi templates +nvim @worktree:.worktree/fix/nvim-gotmpl-hl session:019ef0e3 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
+
+x 2026-06-22 feat(pi): wire MCP support via pi-mcp-adapter, rendering mcp-servers.yaml into ~/.pi/agent/mcp.json +pi +mcp @worktree:.worktree/feat/pi-mcp-adapter agent:pi model:claude-vertex/anthropic-claude-opus-4-8
