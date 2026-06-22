@@ -1,0 +1,65 @@
+{
+  {{- /*
+    pi custom providers — https://pi.dev/docs/latest/providers (models.json reference: docs/models.md)
+
+    On Riot machines, pi has no direct Anthropic/OpenAI access; all traffic must route
+    through the TrueFoundry LLM gateway (same proxy Codex and Claude Code use):
+      - base:  https://truefoundry.riotgames.io/api/llm
+      - auth:  Personal Access Token (PAT) from 1Password
+      - wire:  anthropic-messages (parity with Claude Code's ANTHROPIC_BASE_URL path)
+
+    The PAT is injected at `chezmoi apply` time via onepasswordRead and lands in a 0600
+    file (private_ prefix). We deliberately avoid pi's `!command` apiKey form (`!op read ...`):
+    pi applies no TTL/caching to command-based keys (docs/models.md), so it would shell out
+    to 1Password on every request.
+
+    compat.forceAdaptiveThinking: pi auto-sets adaptive thinking for *built-in* Claude
+    models, but custom-provider models do not inherit that. Opus 4.8 / Sonnet 4.6 / Haiku 4.5
+    are adaptive-thinking models, so it must be set explicitly here or thinking requests fail.
+
+    Model IDs and the fact that this path works are sourced from the live, working Claude Code
+    config (dot_claude/settings.json.tmpl ANTHROPIC_DEFAULT_*_MODEL).
+  */ -}}
+  "providers": {
+    {{- if .isRiotMachine }}
+    "truefoundry": {
+      "name": "TrueFoundry (Riot)",
+      "baseUrl": "https://truefoundry.riotgames.io/api/llm",
+      "api": "anthropic-messages",
+      "apiKey": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote }},
+      "compat": {
+        "forceAdaptiveThinking": true
+      },
+      "models": [
+        {
+          "id": "claude-vertex/anthropic-claude-opus-4-8",
+          "name": "Claude Opus 4.8 (TrueFoundry)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 200000,
+          "maxTokens": 32000,
+          "cost": { "input": 15, "output": 75, "cacheRead": 1.5, "cacheWrite": 18.75 }
+        },
+        {
+          "id": "claude-vertex/anthropic-claude-sonnet-4-6-default",
+          "name": "Claude Sonnet 4.6 (TrueFoundry)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 200000,
+          "maxTokens": 64000,
+          "cost": { "input": 3, "output": 15, "cacheRead": 0.3, "cacheWrite": 3.75 }
+        },
+        {
+          "id": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
+          "name": "Claude Haiku 4.5 (TrueFoundry)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 200000,
+          "maxTokens": 64000,
+          "cost": { "input": 1, "output": 5, "cacheRead": 0.1, "cacheWrite": 1.25 }
+        }
+      ]
+    }
+    {{- end }}
+  }
+}
