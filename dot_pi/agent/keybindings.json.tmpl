@@ -1,0 +1,18 @@
+{
+  {{- /*
+    pi keybindings — https://pi.dev/docs/latest/keybindings (docs/keybindings.md)
+
+    Preference: Enter inserts a newline; submit with Ctrl+J.
+
+    Why Ctrl+J and not Shift+Enter / Ctrl+Enter: most terminals send an identical
+    byte (carriage return) for Enter, Shift+Enter, and Ctrl+Enter unless they speak
+    the kitty keyboard protocol, so pi cannot tell those combos apart. Ctrl+J emits a
+    distinct line-feed byte and therefore works as a submit key in every terminal.
+    ctrl+enter is kept as a bonus binding for terminals that do expose enhanced keys.
+
+    Rendered as a chezmoi template purely so this rationale survives as a comment;
+    the emitted file is plain JSON (pi rejects non-keybinding keys like "_comment").
+  */ -}}
+  "tui.input.newLine": ["enter", "shift+enter"],
+  "tui.input.submit": ["ctrl+j", "ctrl+enter"]
+}
