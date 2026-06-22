@@ -429,9 +429,13 @@ vim.filetype.add {
     -- basename — the "^dot_" gsub would never match without extracting the tail first.
     -- chezmoi Go-template files: reconstruct the real target basename, let Neovim
     -- detect the base filetype, and return compound "gotmpl.<base>" so the gotmpl
-    -- TreeSitter parser highlights {{ }} directives (primary) while the host language
-    -- gets Vim syntax highlighting (secondary). Falls back to plain "gotmpl" when the
-    -- base type is unknown (symlink targets, secrets, plain-text lists).
+    -- TreeSitter parser highlights {{ }} directives. The compound ".<base>" tail records
+    -- the host language for tooling/formatters; it is NOT used for a second Vim-syntax
+    -- pass — the FileType autocmd below calls vim.treesitter.start, which disables legacy
+    -- syntax. (Running host Vim syntax alongside would re-introduce false-positive error
+    -- highlights on the interleaved {{ }} directives.) The host body therefore renders as
+    -- plain text; this is the accepted trade-off for clean, readable directive coloring.
+    -- Falls back to plain "gotmpl" when the base type is unknown (symlinks, secrets, lists).
     -- A per-file `# vim: ft=...` modeline overrides this for misnamed files (e.g.
     -- a .json.tmpl whose body is actually Python, not JSON).
     tmpl = function(path)
@@ -451,6 +455,23 @@ vim.filetype.add {
     ["modify_private_dot_claude.json"] = "gotmpl.json",
   },
 }
+
+-- Start the gotmpl TreeSitter highlighter for every chezmoi template buffer.
+-- WHY this is required: nvim-treesitter `main` does NOT auto-start highlighting, and
+-- Neovim core only auto-starts TS for filetypes that ship a runtime ftplugin calling
+-- vim.treesitter.start (lua, markdown, ...). Without this autocmd, gotmpl* buffers get
+-- no TreeSitter highlighting and fall back to the host-language Vim syntax, which flags
+-- every {{ }} directive as a syntax error (jsonNoQuotesError/jsonCommentError -> Error,
+-- rendered as an unreadable red block). Starting the gotmpl parser highlights directives
+-- correctly and (by disabling legacy syntax) removes those false-positive error blocks.
+-- Scoped to gotmpl* only — all other filetypes keep their working built-in Vim syntax.
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("chezmoi-gotmpl-treesitter", { clear = true }),
+  pattern = { "gotmpl", "gotmpl.*" },
+  callback = function(args)
+    pcall(vim.treesitter.start, args.buf, "gotmpl")
+  end,
+})
 
 -- [[ Configure and install plugins ]]
 --
