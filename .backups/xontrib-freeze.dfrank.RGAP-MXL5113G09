@@ -1,6 +1,6 @@
 anyio==4.14.0
 async-generator==1.10
-certifi==2026.5.20
+certifi==2026.6.17
 charset-normalizer==3.4.7
 coconut==3.2.0
 cpyparsing==2.4.7.2.4.3
