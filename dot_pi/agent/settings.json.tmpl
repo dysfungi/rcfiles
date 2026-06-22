@@ -8,6 +8,17 @@
   "defaultModel": "claude-opus-4-8",
   "defaultProvider": "anthropic",
   {{- end }}
+  {{- /* enabledModels: Ctrl+P cycling rotation — latest of each tier, base context only.
+       Use /model to reach older versions or [1m] variants when needed. */}}
+  "enabledModels": [
+    {{- if .isRiotMachine }}
+    "claude-vertex/anthropic-claude-opus-4-8",
+    "claude-vertex/anthropic-claude-sonnet-4-6-default"
+    {{- else }}
+    "claude-opus-4-8",
+    "claude-sonnet-4-6"
+    {{- end }}
+  ],
   "defaultProjectTrust": "always",
   "defaultThinkingLevel": "high",
   "hideThinkingBlock": false,
