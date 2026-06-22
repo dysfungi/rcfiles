@@ -139,11 +139,16 @@ Concurrent agents on the same branch create file-edit races (last write wins). E
 
   **Pi worktree workflow:**
 
-  - Create: `/worktree create <task-slug>` (or launch with `pi --worktree <task-slug>`)
-  - Pi relaunches inside the worktree via tmux — all tools bind to the new cwd.
-  - Worktree path: `.worktrees/<task-slug>`, branch: `worktree/<task-slug>`
-  - Example: `(B) Fix auth bug +api @worktree:.worktrees/auth-fix agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8`
-  - Complete: merge back to main, then `/worktree destroy <task-slug>` (or manual `git worktree remove`).
+  - Create: call `worktree_start` tool with a prompt or explicit branch name.
+    The `@rezamonangg/pi-worktree` package creates the worktree and routes all
+    subsequent write/edit/bash tool calls into it via path rewriting.
+  - Worktree path: `.worktree/<branch>`, branch inferred from task type
+    (feat/, fix/, docs/, refactor/, test/)
+  - Example: `(B) Fix auth bug +api @worktree:.worktree/fix/auth-bug agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8`
+  - The `worktree-guard.ts` extension blocks mutations until `worktree_start`
+    succeeds. All `worktree_*` tools are always allowed.
+  - Complete: call `worktree_stop` (optionally with `remove: true`), then
+    merge back from main: `git merge --ff-only <branch>`, `git branch -d`, push.
   - Human-only bypass: `touch .pi/worktree-exempt`
 {{- end }}
 

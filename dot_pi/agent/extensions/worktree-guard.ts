@@ -1,30 +1,40 @@
 /**
  * Worktree Enforcement Extension
  *
- * Blocks file mutations when pi is launched from a git repo's main checkout,
- * enforcing isolated worktree usage for all agent sessions. Complements the
- * `pi-worktree` package (lifecycle management via `/worktree create`).
+ * Blocks file mutations until the agent activates a worktree via
+ * @rezamonangg/pi-worktree's `worktree_start` tool. Ensures every session
+ * that modifies files does so in an isolated git worktree — enforced at
+ * the tool_call level, not by instructions.
  *
  * Detection (on session_start, cached for session lifetime):
- *   1. `git rev-parse --show-toplevel` — if it fails, not a git repo → inert.
- *   2. `detectWorktreeName(ctx.cwd)` — checks if cwd contains `/.worktrees/`.
- *      If present → inside a worktree → allow everything.
- *      If absent → main checkout → block mutations.
+ *   1. `git rev-parse --show-toplevel` — fails → not a git repo → inert.
+ *   2. `detectWorktreeName(ctx.cwd)` — cwd contains `/.worktree/` or
+ *      `/.worktrees/` → already inside a worktree → inert.
+ *   3. Otherwise → main checkout → block mutations until worktree_start
+ *      succeeds.
  *
  * Guard scope: git repositories only. Non-git workspaces (Perforce, plain
  * directories, etc.) are unguarded — no worktree isolation concept applies,
  * and P4's changelist model handles concurrent access natively.
+ *
+ * Integration with @rezamonangg/pi-worktree:
+ *   - That package registers `worktree_start` as an agent-callable tool
+ *   - That package intercepts tool_call events to rewrite paths into the
+ *     worktree and overrides bash cwd via spawnHook
+ *   - This extension just enforces that worktree_start is called first
+ *   - On tool_result for worktree_start (success) → guard disables itself
  *
  * Blocked on main (git repos only):
  *   - write, edit tools (except .pi/ session infra paths)
  *   - bash: git mutations, sed -i, rm/mv/cp, shell redirects, tee, todo.sh
  *
  * Allowed on main:
- *   - All read-only operations
+ *   - All read-only operations (read, bash read commands, grep, find, ls)
+ *   - worktree_start, worktree_status, worktree_resolve_file (the workflow)
  *   - git merge --ff-only (worktree merge-back per AGENTS.md)
  *   - git branch -d (cleanup after merge-back)
  *   - git pull/fetch/push (remote sync, no file-edit race risk)
- *   - git worktree add/remove/list (the workflow itself)
+ *   - git worktree add/remove/list
  *
  * Exemption: touch .pi/worktree-exempt in repo root (human-only, agents
  * must never create this).
@@ -36,13 +46,17 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-// --- Session-level state (set once on session_start, never changes) ---
+// --- Session-level state ---
 
 let guardActive = false;
 let repoRoot = "";
 
+/**
+ * Detect if cwd is inside a worktree. Checks both .worktree/ (used by
+ * @rezamonangg/pi-worktree) and .worktrees/ (used by pi-worktree).
+ */
 function detectWorktreeName(cwd: string): string | null {
-  const m = cwd.match(/\/\.worktrees\/([^/]+)/);
+  const m = cwd.match(/\/\.worktrees?\/([^/]+)/);
   return m ? m[1] : null;
 }
 
@@ -92,17 +106,13 @@ function checkSegment(segment: string): string | undefined {
 
   // Git mutations
   if (/^\s*git(?:\s|$)/.test(seg)) {
-    const tokens = seg.trim().split(/\s+/).slice(1); // skip "git"
+    const tokens = seg.trim().split(/\s+/).slice(1);
     const subcmd = gitSubcmd(tokens);
     if (!subcmd) return undefined;
 
-    // Allow git merge --ff-only (worktree merge-back)
     if (subcmd === "merge" && seg.includes("--ff-only")) return undefined;
-
-    // Allow git branch -d/-D (cleanup after merge-back)
     if (subcmd === "branch") return undefined;
 
-    // Allow stash list/show
     if (subcmd === "stash") {
       if (/git\s+stash\s+(list|show)(?:\s|$)/.test(seg)) return undefined;
       return "git stash (mutating)";
@@ -143,8 +153,7 @@ function isSessionInfraPath(filePath: string): boolean {
 const BLOCK_MSG = `\
 Blocked: file mutations are not allowed on the main checkout.
 
-Create an isolated worktree first:
-  /worktree create <task-slug>    (or: pi --worktree <task-slug>)
+Call worktree_start first to create an isolated worktree, then retry.
 
 See AGENTS.md "Multi-instance worktrees" for the full workflow.
 Human bypass: touch .pi/worktree-exempt`;
@@ -172,8 +181,20 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
+  // Disable guard when worktree_start succeeds
+  pi.on("tool_result", async (event, ctx) => {
+    if (!guardActive) return;
+    if (event.toolName === "worktree_start" && !event.error) {
+      guardActive = false;
+      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("success", "🌿 worktree active"));
+    }
+  });
+
   pi.on("tool_call", async (event) => {
     if (!guardActive) return;
+
+    // Always allow worktree management tools
+    if (event.toolName.startsWith("worktree_")) return;
 
     if (event.toolName === "write" || event.toolName === "edit") {
       const path = event.input?.path as string | undefined;
