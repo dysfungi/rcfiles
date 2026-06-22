@@ -1,287 +1,193 @@
 /**
- * Worktree Guard Extension
+ * Worktree Enforcement Extension
  *
- * Blocks file mutations when on the main git worktree, enforcing isolated
- * worktree usage for all agent sessions. Mirrors the Claude Code PreToolUse
- * worktree guard (worktree_check.py + bash_worktree_guard.py).
+ * Blocks file mutations when pi is launched from a git repo's main checkout,
+ * enforcing isolated worktree usage for all agent sessions. Complements the
+ * `pi-worktree` package (lifecycle management via `/worktree create`).
  *
- * Detection: compares `git rev-parse --git-dir` vs `--git-common-dir`.
- * When they resolve to the same real path → main worktree → mutations blocked.
- * When they differ → linked worktree → all tools allowed.
+ * Detection (on session_start, cached for session lifetime):
+ *   1. `git rev-parse --show-toplevel` — if it fails, not a git repo → inert.
+ *   2. `detectWorktreeName(ctx.cwd)` — checks if cwd contains `/.worktrees/`.
+ *      If present → inside a worktree → allow everything.
+ *      If absent → main checkout → block mutations.
  *
- * Blocked tools:
- *   - write, edit: always blocked on main worktree
- *   - bash: blocked when the command matches known mutation patterns
- *     (git mutations, sed -i, rm/mv/cp, shell redirects, tee, todo.sh writes)
+ * Guard scope: git repositories only. Non-git workspaces (Perforce, plain
+ * directories, etc.) are unguarded — no worktree isolation concept applies,
+ * and P4's changelist model handles concurrent access natively.
  *
- * Allowed on main worktree:
- *   - All read-only operations (read, bash read commands, grep, find, ls)
- *   - git merge --ff-only (worktree merge-back pattern per AGENTS.md)
+ * Blocked on main (git repos only):
+ *   - write, edit tools (except .pi/ session infra paths)
+ *   - bash: git mutations, sed -i, rm/mv/cp, shell redirects, tee, todo.sh
+ *
+ * Allowed on main:
+ *   - All read-only operations
+ *   - git merge --ff-only (worktree merge-back per AGENTS.md)
  *   - git branch -d (cleanup after merge-back)
- *   - git stash list/show (read-only stash inspection)
+ *   - git pull/fetch/push (remote sync, no file-edit race risk)
+ *   - git worktree add/remove/list (the workflow itself)
  *
- * Exemptions:
- *   - Not in a git repo (no worktree concept applies)
- *   - .pi/worktree-exempt exists in repo root (human-only bypass)
- *   - Paths inside .pi/ or .claude/ (gitignored session infra)
+ * Exemption: touch .pi/worktree-exempt in repo root (human-only, agents
+ * must never create this).
  *
- * Best-effort, not a sandbox — obfuscated mutations (eval, python -c, etc.)
- * bypass it. The goal is preventing accidental file-edit races between
- * concurrent sessions, not sandboxing untrusted code.
+ * Best-effort guardrail, not a sandbox — obfuscated mutations bypass it.
  */
 
-import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
-import { execSync } from "node:child_process";
-import { existsSync, realpathSync } from "node:fs";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-// --- Worktree detection (cached per cwd) ---
+// --- Session-level state (set once on session_start, never changes) ---
 
-interface WorktreeState {
-  isMain: boolean;
-  isGitRepo: boolean;
-  repoRoot: string;
-  exempt: boolean;
-}
+let guardActive = false;
+let repoRoot = "";
 
-let cachedCwd: string | undefined;
-let cachedState: WorktreeState | undefined;
-
-function getWorktreeState(cwd: string): WorktreeState {
-  if (cachedCwd === cwd && cachedState) return cachedState;
-
-  const state: WorktreeState = { isMain: false, isGitRepo: false, repoRoot: "", exempt: false };
-
-  try {
-    const gitDir = execSync("git rev-parse --git-dir", { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
-    const gitCommon = execSync("git rev-parse --git-common-dir", { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
-    const repoRoot = execSync("git rev-parse --show-toplevel", { cwd, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
-
-    state.isGitRepo = true;
-    state.repoRoot = repoRoot;
-
-    // Compare resolved paths — same = main worktree
-    const resolvedGitDir = realpathSync(resolve(cwd, gitDir));
-    const resolvedCommon = realpathSync(resolve(cwd, gitCommon));
-    state.isMain = resolvedGitDir === resolvedCommon;
-
-    // Check exemption file
-    state.exempt = existsSync(join(repoRoot, ".pi", "worktree-exempt"));
-  } catch {
-    // Not a git repo or git not available
-    state.isGitRepo = false;
-  }
-
-  cachedCwd = cwd;
-  cachedState = state;
-  return state;
+function detectWorktreeName(cwd: string): string | null {
+  const m = cwd.match(/\/\.worktrees\/([^/]+)/);
+  return m ? m[1] : null;
 }
 
 // --- Bash command analysis ---
+// Aligned with Claude Code's bash_worktree_guard.py MUTATING_GIT_SUBCMDS.
 
-// Git subcommands that mutate state
 const MUTATING_GIT_SUBCMDS = new Set([
-  "add", "checkout", "restore", "reset", "rm", "mv", "clean",       // working-tree
-  "commit", "merge", "rebase", "cherry-pick", "am", "apply",         // history
-  "stash", "push", "pull", "fetch", "clone", "init", "tag",          // stash + remote + init
+  "add", "am", "apply", "checkout", "cherry-pick", "clean", "commit",
+  "fast-import", "merge", "mv", "rebase", "reset", "restore", "revert",
+  "rm", "update-index", "update-ref",
 ]);
 
-// Git subcommands that are always read-only
-const READONLY_GIT_SUBCMDS = new Set([
-  "status", "log", "diff", "show", "branch", "remote", "config",
-  "ls-files", "ls-tree", "ls-remote", "describe", "rev-parse",
-  "name-rev", "shortlog", "blame", "grep", "reflog", "bisect",
-  "worktree",  // worktree add/remove/list — needed for the workflow itself
-]);
-
-// Git global flags that take a value argument (must be skipped to find subcommand)
 const GIT_FLAGS_WITH_VALUE = new Set(["-C", "-c", "--work-tree", "--git-dir", "--namespace"]);
 
-// todo.sh read-only subcommands
 const READONLY_TODO_SUBCMDS = new Set([
   "help", "shorthelp", "list", "listall", "listaddons", "listcon",
   "listfile", "listpri", "listproj", "lf", "ls", "lsa", "lsc", "lsp", "lsprj",
 ]);
 
-/**
- * Extract the git subcommand from a command string, skipping global flags.
- */
 function gitSubcmd(tokens: string[]): string | undefined {
   let i = 0;
   while (i < tokens.length) {
     const tok = tokens[i];
-    if (GIT_FLAGS_WITH_VALUE.has(tok)) {
-      i += 2; // skip flag + value
-    } else if (tok.startsWith("-")) {
-      i += 1; // skip other flags
-    } else {
-      return tok;
-    }
+    if (GIT_FLAGS_WITH_VALUE.has(tok)) { i += 2; continue; }
+    if (tok.startsWith("-")) { i += 1; continue; }
+    return tok;
   }
   return undefined;
 }
 
-/**
- * Check if a single command segment contains a blocked mutation.
- * Returns a reason string if blocked, undefined if allowed.
- */
 function checkSegment(segment: string): string | undefined {
-  const trimmed = segment.trim();
-  if (!trimmed) return undefined;
+  const seg = segment.trim();
+  if (!seg) return undefined;
 
-  // Output redirects: > and >> but not 2>, &>, >&
-  if (/(?<![2&\d])>(?!&)/.test(trimmed)) {
-    return "shell output redirect (>, >>)";
-  }
+  // Output redirects (>, >>) excluding stderr (2>, &>)
+  if (/(?<![2&])>{1,2}(?!&)/.test(seg)) return "output redirect (>, >>)";
 
-  // tee
-  if (/\btee\b/.test(trimmed)) return "tee";
+  // tee — only at start of segment or after pipe
+  if (/(?:^|\|)\s*tee(?:\s|$)/.test(seg)) return "tee";
 
-  // sed -i (in-place edit, any flag order)
-  if (/\bsed\b/.test(trimmed) && /\s-[^\s]*i/.test(trimmed)) return "sed -i (in-place edit)";
+  // sed -i
+  if (/^\s*sed\s/.test(seg) && /\s-[a-zA-Z]*i/.test(seg)) return "sed -i (in-place edit)";
 
   // File operations
-  if (/\brm\b/.test(trimmed)) return "rm";
-  if (/\bmv\b/.test(trimmed)) return "mv";
-  if (/\bcp\b/.test(trimmed)) return "cp";
-  if (/\bmkdir\b/.test(trimmed)) return "mkdir";
-  if (/\btouch\b/.test(trimmed)) return "touch";
-  if (/\bchmod\b/.test(trimmed)) return "chmod";
+  const fileOp = seg.match(/^\s*(rm|mv|cp)\s/);
+  if (fileOp) return `${fileOp[1]} (file operation)`;
 
-  // Git commands
-  const gitMatch = trimmed.match(/\bgit\s+(.*)/);
-  if (gitMatch) {
-    const tokens = gitMatch[1].split(/\s+/);
+  // Git mutations
+  if (/^\s*git(?:\s|$)/.test(seg)) {
+    const tokens = seg.trim().split(/\s+/).slice(1); // skip "git"
     const subcmd = gitSubcmd(tokens);
     if (!subcmd) return undefined;
 
-    // Allow git merge --ff-only (worktree merge-back pattern)
-    if (subcmd === "merge" && /--ff-only/.test(trimmed)) return undefined;
+    // Allow git merge --ff-only (worktree merge-back)
+    if (subcmd === "merge" && seg.includes("--ff-only")) return undefined;
 
     // Allow git branch -d/-D (cleanup after merge-back)
-    if (subcmd === "branch" && /\s-[dD]\b/.test(trimmed)) return undefined;
+    if (subcmd === "branch") return undefined;
 
     // Allow stash list/show
     if (subcmd === "stash") {
-      const stashSub = tokens[tokens.indexOf("stash") + 1];
-      if (stashSub === "list" || stashSub === "show") return undefined;
-      return "git stash (use a worktree)";
+      if (/git\s+stash\s+(list|show)(?:\s|$)/.test(seg)) return undefined;
+      return "git stash (mutating)";
     }
 
-    // Allow all read-only subcommands
-    if (READONLY_GIT_SUBCMDS.has(subcmd)) return undefined;
-
-    // Block known mutating subcommands
-    if (MUTATING_GIT_SUBCMDS.has(subcmd)) return `git ${subcmd}`;
+    if (MUTATING_GIT_SUBCMDS.has(subcmd)) return `git ${subcmd} (mutating)`;
   }
 
-  // todo.sh / todo mutations
-  const todoMatch = trimmed.match(/\btodo\.sh\s+(\S+)/);
-  if (todoMatch) {
-    const subcmd = todoMatch[1].toLowerCase();
-    if (!READONLY_TODO_SUBCMDS.has(subcmd)) return `todo.sh ${subcmd}`;
+  // todo.sh mutations
+  const todoMatch = seg.match(/^\s*(?:todo\.sh|todo)\s+(\S+)/);
+  if (todoMatch && !READONLY_TODO_SUBCMDS.has(todoMatch[1])) {
+    return `todo.sh ${todoMatch[1]} (mutating)`;
   }
 
   return undefined;
 }
 
-/**
- * Check if a bash command contains blocked mutations.
- * Splits on &&, ||, ; then on | to check each segment.
- */
 function checkBashCommand(command: string): string | undefined {
-  // Split compound commands
-  const compounds = command.split(/\s*(?:&&|\|\||;)\s*/);
-  for (const compound of compounds) {
-    // Split pipeline segments
-    const segments = compound.split(/\s*\|\s*/);
-    for (const segment of segments) {
-      const reason = checkSegment(segment);
+  const lines = command.replace(/&&/g, "\n").replace(/\|\|/g, "\n").replace(/;/g, "\n");
+  for (const line of lines.split("\n")) {
+    if (!line.trim()) continue;
+    for (const part of line.split("|")) {
+      const reason = checkSegment(part);
       if (reason) return reason;
     }
   }
   return undefined;
 }
 
-/**
- * Check if a file path is inside a session-infra directory (allowed on main).
- */
-function isSessionInfraPath(filePath: string, repoRoot: string): boolean {
+function isSessionInfraPath(filePath: string): boolean {
   const resolved = resolve(repoRoot, filePath);
-  const piDir = join(repoRoot, ".pi");
-  const claudeDir = join(repoRoot, ".claude");
-  return resolved.startsWith(piDir) || resolved.startsWith(claudeDir);
+  return resolved.startsWith(join(repoRoot, ".pi") + "/") ||
+         resolved.startsWith(join(repoRoot, ".claude") + "/");
 }
 
 // --- Extension ---
 
 const BLOCK_MSG = `\
-Blocked: file mutations are not allowed on the main worktree.
+Blocked: file mutations are not allowed on the main checkout.
 
 Create an isolated worktree first:
-  git worktree add .worktrees/<task-slug> -b task/<task-slug>
-Then cd into it before making changes.
+  /worktree create <task-slug>    (or: pi --worktree <task-slug>)
 
 See AGENTS.md "Multi-instance worktrees" for the full workflow.
-To bypass (human-only): touch .pi/worktree-exempt`;
+Human bypass: touch .pi/worktree-exempt`;
 
 export default function (pi: ExtensionAPI) {
-  pi.on("tool_call", async (event, ctx) => {
-    const state = getWorktreeState(ctx.cwd);
+  pi.on("session_start", async (_event, ctx) => {
+    const { code, stdout } = await pi.exec("git", ["rev-parse", "--show-toplevel"], { timeout: 3_000 });
+    const isGitRepo = code === 0 && stdout.trim().length > 0;
 
-    // Not a git repo or already in a linked worktree — allow everything
-    if (!state.isGitRepo || !state.isMain || state.exempt) return;
-
-    // Block write/edit on main worktree
-    if (isToolCallEventType("write", event)) {
-      if (isSessionInfraPath(event.input.path, state.repoRoot)) return;
-      return { block: true, reason: `${BLOCK_MSG}\n\nAttempted: write ${event.input.path}` };
+    if (!isGitRepo) {
+      guardActive = false;
+      return;
     }
 
-    if (isToolCallEventType("edit", event)) {
-      if (isSessionInfraPath(event.input.path, state.repoRoot)) return;
-      return { block: true, reason: `${BLOCK_MSG}\n\nAttempted: edit ${event.input.path}` };
+    repoRoot = stdout.trim();
+    const worktreeName = detectWorktreeName(ctx.cwd);
+    const exempt = existsSync(join(repoRoot, ".pi", "worktree-exempt"));
+
+    guardActive = !worktreeName && !exempt;
+
+    if (guardActive) {
+      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("warning", "🔒 main (read-only)"));
+    } else if (worktreeName) {
+      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("success", `🌿 ${worktreeName}`));
+    }
+  });
+
+  pi.on("tool_call", async (event) => {
+    if (!guardActive) return;
+
+    if (event.toolName === "write" || event.toolName === "edit") {
+      const path = event.input?.path as string | undefined;
+      if (path && isSessionInfraPath(path)) return;
+      return { block: true, reason: `${BLOCK_MSG}\n\nAttempted: ${event.toolName} ${path ?? "(unknown)"}` };
     }
 
-    // Block mutating bash commands on main worktree
-    if (isToolCallEventType("bash", event)) {
-      const reason = checkBashCommand(event.input.command);
+    if (event.toolName === "bash") {
+      const command = event.input?.command as string | undefined;
+      if (!command) return;
+      const reason = checkBashCommand(command);
       if (reason) {
-        return { block: true, reason: `${BLOCK_MSG}\n\nBlocked: ${reason}\nCommand: ${event.input.command}` };
+        return { block: true, reason: `${BLOCK_MSG}\n\nBlocked: ${reason}\nCommand: ${command}` };
       }
     }
   });
-
-  // Invalidate cache on cwd change
-  pi.on("session_start", () => {
-    cachedCwd = undefined;
-    cachedState = undefined;
-  });
-
-  // Show guard status in footer
-  pi.on("session_start", async (_event, ctx) => {
-    updateStatus(ctx);
-  });
-
-  // Update status when model changes (proxy for general activity)
-  pi.on("turn_start", async (_event, ctx) => {
-    // Re-check in case cwd changed (e.g., after cd in bash)
-    cachedCwd = undefined;
-    cachedState = undefined;
-    updateStatus(ctx);
-  });
-
-  function updateStatus(ctx: ExtensionContext) {
-    const state = getWorktreeState(ctx.cwd);
-    if (!state.isGitRepo) {
-      ctx.ui.setStatus("worktree-guard", undefined);
-    } else if (state.isMain && !state.exempt) {
-      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("warning", "🔒 main (read-only)"));
-    } else if (state.exempt) {
-      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("muted", "🔓 exempt"));
-    } else {
-      ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("success", "🌿 worktree"));
-    }
-  }
 }
