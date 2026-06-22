@@ -1,5 +1,8 @@
 my:
   mcpServers:
+    honeycomb:
+      serverUrl: "https://mcp.honeycomb.io/mcp"
+      docUrl: "https://docs.honeycomb.io/integrations/mcp"
     todoist:
       serverUrl: "https://ai.todoist.net/mcp"
       docUrl: |-
