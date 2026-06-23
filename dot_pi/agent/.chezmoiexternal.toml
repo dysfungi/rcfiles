@@ -1,0 +1,24 @@
+# pi agent externals (namespaced to ~/.pi/agent/ — entries below are resolved
+# relative to this file's target directory).
+#
+# Note: chezmoi does not support subdirectories inside `.chezmoiexternals/`
+# (see chezmoi#4274), so per-namespace externals live colocated with their
+# target directory via `.chezmoiexternal.<format>` instead.
+
+# pi-memory store, synced across machines via git over SSH.
+#
+# Memory is runtime-mutable data the `pi-memory` extension writes home-side,
+# which fights chezmoi's one-way source→home apply. So chezmoi only owns the
+# clone + periodic pull here; the companion `memory-git-sync.ts` extension
+# pushes runtime writes on session_shutdown.
+#
+# Enabled on every machine: clone relies on SSH access to the remote. The
+# companion extension self-gates (no-op unless the dir is a git work tree with
+# an origin), so deployment is uniform; a machine without SSH access to the
+# remote will fail loudly at `chezmoi apply` clone time.
+[memory]
+    type = "git-repo"
+    url = "git@github.com:dysfungi/ai.memory.git"
+    refreshPeriod = "168h"
+    [memory.pull]
+        args = ["--rebase", "--autostash"]
