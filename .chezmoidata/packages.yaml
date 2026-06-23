@@ -234,6 +234,7 @@ my:
     npm: { pacman: npm }
     pre-commit: { mise: pre-commit, skip: [windows] }
     python: { mise: python, version: "3.13" }
+    qmd: { mise: "npm:@tobilu/qmd" } # semantic search backend for the pi-memory extension
 
     ##################
     # APP PACKAGES   #
