@@ -6,8 +6,8 @@ hadolint                             2.14.0
 jq                                   1.8.2               ~/.config/mise/config.toml       latest
 lua                                  5.5.0
 node                                 24.17.0             ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code        2.1.185             ~/.config/mise/config.toml       latest
-npm:@earendil-works/pi-coding-agent  0.79.9              ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code        2.1.186             ~/.config/mise/config.toml       latest
+npm:@earendil-works/pi-coding-agent  0.79.10             ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux     1.1.0               ~/.config/mise/config.toml       latest
 npm:markdownlint-cli                 0.48.0
 pipx:bandit                          1.9.4               ~/.config/mise/config.toml       latest
