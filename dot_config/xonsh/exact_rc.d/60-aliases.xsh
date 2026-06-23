@@ -257,9 +257,6 @@ def __rc_interactive_aliases_claude(aliases):
     import subprocess
     from pathlib import Path
 
-    if os.environ.get("USER") != "dfrank":
-        return
-
     _SETTINGS_PATH = os.path.expanduser("~/.claude/settings.json")
 
     @aliases.register("claude")
