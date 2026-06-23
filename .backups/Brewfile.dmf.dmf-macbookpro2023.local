@@ -2,6 +2,8 @@ tap "1password/tap"
 tap "jesseduffield/lazydocker"
 # Search tool like grep, but optimized for programmers
 brew "ack"
+# Run your GitHub Actions locally
+brew "act"
 # General-purpose data compression with high compression ratio
 brew "xz"
 # TIFF library and utilities
