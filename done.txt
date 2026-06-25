@@ -44,3 +44,4 @@ x 2026-06-22 fix(nvim): gotmpl TreeSitter highlighter for chezmoi templates +nvi
 x 2026-06-22 feat(pi): wire MCP support via pi-mcp-adapter, rendering mcp-servers.yaml into ~/.pi/agent/mcp.json +pi +mcp @worktree:.worktree/feat/pi-mcp-adapter agent:pi model:claude-vertex/anthropic-claude-opus-4-8
 
 x 2026-06-22 feat(pi): pi-memory extension + qmd semantic search + git-synced memory store +chezmoi +pi @worktree:.worktree/feat/pi-memory-extension agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8
+x 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
