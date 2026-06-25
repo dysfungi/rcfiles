@@ -17,6 +17,10 @@ riot:
       serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
       docUrl: |-
         http://notion.so/riotgames/Datadog-MCP-2f17f9530fb2801aa246d6772418c003?v=1eb7f9530fb2808cb97e000cd41c76b4
+    figma:
+      serverUrl: "https://mcp.figma.com/mcp"
+      docUrl: |-
+        https://app.notion.com/p/riotgames/Figma-MCP-2f77f9530fb2808eb9acdd2ab9df41ce
     notion:
       serverUrl: "https://mcp.notion.com/mcp"
       docUrl: |-
