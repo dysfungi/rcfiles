@@ -21,6 +21,18 @@ riot:
       serverUrl: "https://mcp.figma.com/mcp"
       docUrl: |-
         https://app.notion.com/p/riotgames/Figma-MCP-2f77f9530fb2808eb9acdd2ab9df41ce
+      # Figma gates MCP OAuth dynamic client registration
+      # (POST https://api.figma.com/v1/oauth/mcp/register) on an EXACT
+      # client_name allowlist. pi-mcp-adapter registers as "Pi Coding Agent"
+      # by default -> HTTP 403 Forbidden. Verified 2026-06-25: only the literal
+      # names "Claude Code" and "Codex" pass; even other catalog clients
+      # (Cursor/Zed/VS Code) 403 under these generic strings. The codex and
+      # claude CLIs send matching names natively; pi can override its DCR
+      # client_name, so spoof an allowlisted one. Fragile -- Figma may change
+      # the gate. See `spoofs` in .schemas/mcp-servers.schema.yaml.
+      spoofs:
+        - tools: [pi]
+          oauth_client_name: "Claude Code"
     notion:
       serverUrl: "https://mcp.notion.com/mcp"
       docUrl: |-

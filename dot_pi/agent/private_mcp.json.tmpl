@@ -9,6 +9,12 @@
   template additionally wires `uvx`-launched servers (e.g. p4-mcp) with env
   rendered from their referenced env_tmpl.
 
+  `spoofs` handling: a server may declare client-identity spoofs (see schema).
+  pi implements support, so for entries whose `tools` include `pi` (or `all`)
+  this renders the adapter's OAuth `clientName` to a spoofed dynamic-
+  registration name where a vendor gates on it (e.g. figma). Other tools'
+  templates don't read `spoofs`.
+
   private_ prefix: rendered bearer tokens (onepasswordRead) are secrets.
   Built as a dict + toPrettyJson so JSON validity/commas are structural,
   not hand-managed. Map keys serialize sorted -> deterministic output.
@@ -26,6 +32,12 @@
       {{- if eq $mcp.auth.type "bearer" -}}
         {{- $_ := set $entry "auth" "bearer" -}}
         {{- $_ := set $entry "bearerToken" (onepasswordRead $mcp.auth.opPath) -}}
+      {{- end -}}
+    {{- end -}}
+    {{- range $spoof := (dig "spoofs" (list) $mcp) -}}
+      {{- if or (has "all" $spoof.tools) (has "pi" $spoof.tools) -}}
+        {{/* schema oauth_client_name -> adapter's camelCase clientName */}}
+        {{- $_ := set $entry "oauth" (dict "clientName" (index $spoof "oauth_client_name")) -}}
       {{- end -}}
     {{- end -}}
   {{- else if hasKey $mcp "uvx" -}}

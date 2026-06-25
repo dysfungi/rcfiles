@@ -20,9 +20,9 @@ $defs:
       mcpServers:
         type: object
         additionalProperties:
-          $ref: "#/$defs/mcpServer"
+          $ref: "#/$defs/mcp_server"
 
-  mcpServer:
+  mcp_server:
     type: object
     required: [docUrl]
     oneOf:
@@ -39,7 +39,9 @@ $defs:
           auth:
             $ref: "#/$defs/auth"
           env:
-            $ref: "#/$defs/envVars"
+            $ref: "#/$defs/env_vars"
+          spoofs:
+            $ref: "#/$defs/spoofs"
       - title: uvx
         required: [uvx]
         additionalProperties: false
@@ -59,14 +61,40 @@ $defs:
                 items:
                   type: string
           env:
-            $ref: "#/$defs/envVars"
+            $ref: "#/$defs/env_vars"
           env_tmpl:
             type: string
 
-  envVars:
+  env_vars:
     type: object
     additionalProperties:
       type: string
+
+  # Per-server client-identity spoofs for vendors that gate OAuth dynamic
+  # client registration on an exact client_name allowlist. Each entry binds a
+  # spoofed identity to one or more tools.
+  #
+  # SUPPORT IS NOT AUTOMATIC: a tool is spoofed only if (a) it is listed in
+  # `tools` (or `all`) AND (b) its own template implements spoof handling.
+  # Adding a new tool therefore requires BOTH extending the `tools` enum below
+  # AND wiring that tool's template to read `spoofs`. `all` applies to every
+  # tool that currently implements support (today: pi only).
+  spoofs:
+    type: array
+    minItems: 1
+    items:
+      type: object
+      additionalProperties: false
+      required: [tools, oauth_client_name]
+      properties:
+        tools:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            enum: [all, pi]
+        oauth_client_name:
+          type: string
 
   auth:
     type: object
