@@ -5,8 +5,11 @@ description: Authoring conventions for Mermaid diagrams as code. Use whenever ge
 
 # Mermaid Diagrams as Code
 
+## Conventions
+
 - Default the orientation to top-down (`TD`/`TB`), not left-right (`LR`). Most screen sizes are too narrow, so `LR` constrains the render to be too small and unreadable; top-down is generally not height-constrained. Escape hatch: use `LR` only when explicitly requested, or when a graph is genuinely wide-and-shallow such that top-down would be worse.
 - Use `<br/>` for line breaks in node labels and titles — literal `\n` does not render in Mermaid.
+- Newest `-beta` and recently added types (e.g. Swimlanes, `architecture-beta`, `radar`) may not render in every host, including Notion — verify rendering before relying on them.
 - Always include a title via frontmatter, e.g.:
 
   ```mermaid
@@ -16,3 +19,58 @@ description: Authoring conventions for Mermaid diagrams as code. Use whenever ge
   flowchart TD
       A[Start] --> B[End]
   ```
+
+## Choosing a diagram type
+
+Pick the type from the question the diagram must answer. Default to the most
+specific fit, not the most familiar (`flowchart`). Common lesson: for system
+interactions and call flows, a `sequenceDiagram` beats a `flowchart`; when the
+key question is *who owns each step*, prefer a swimlane diagram.
+
+### Process & interaction
+
+| Type | Use when |
+| --- | --- |
+| `flowchart` | Branching logic, decisions, and algorithms — "what happens next?" with conditional paths. Avoid when actor ownership or message ordering matters. |
+| `sequenceDiagram` | Ordered messages between participants over time — "who calls whom, in what order." Best for request/response, API/protocol, and distributed call flows (incl. high-level architecture flows). |
+| Swimlanes | A process divided by responsibility — "who owns each step?" Approval flows, support/delivery processes, any work that crosses teams or systems. |
+| `stateDiagram-v2` | Lifecycle of a single entity through states and transitions — status machines. |
+| `journey` | Steps a user takes with a satisfaction rating per step — UX flows. |
+
+### Structure & data
+
+| Type | Use when |
+| --- | --- |
+| `classDiagram` | Static structure: types, attributes, and relationships — OOP/domain models. |
+| `erDiagram` | Data model: entities, attributes, and cardinality — database schema design. |
+| `architecture-beta` | Cloud/service infrastructure: services, groups, and their connections — system topology. |
+| `C4Context` / `C4Container` / `C4Component` | Software architecture at context/container/component levels. |
+| `block-beta` | Arbitrary fixed-layout block diagrams when other types don't fit. |
+| `treemap` | Nested proportional hierarchy — relative sizes within a tree. |
+| `mindmap` | Hierarchical brainstorming / idea trees. |
+
+### Time & planning
+
+| Type | Use when |
+| --- | --- |
+| `gantt` | Project schedule: tasks, durations, and dependencies over a timeline. |
+| `timeline` | Chronological events — history or roadmap. |
+| `kanban` | Work items across workflow columns/status. |
+| `gitGraph` | Branch/commit/merge history. |
+
+### Quantitative
+
+| Type | Use when |
+| --- | --- |
+| `pie` | Proportions of a single whole. |
+| `xychart-beta` | Numeric series as bars/lines over an axis. |
+| `quadrantChart` | Items plotted on two axes (e.g., effort vs. impact). |
+| `sankey-beta` | Magnitude of flow between nodes (traffic, budget, energy). |
+| `radar` | Compare multiple metrics across categories. |
+
+### None of these fit?
+
+If no type above answers the question, consult the Mermaid diagram-syntax docs
+for the full, current type list and syntax: <https://mermaid.js.org/intro/> (the
+left sidebar lists every diagram type). Prototype and confirm it renders in the
+live editor before committing: <https://mermaid.live>.
