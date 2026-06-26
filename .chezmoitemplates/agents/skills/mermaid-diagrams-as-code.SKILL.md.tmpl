@@ -27,6 +27,16 @@ specific fit, not the most familiar (`flowchart`). Common lesson: for system
 interactions and call flows, a `sequenceDiagram` beats a `flowchart`; when the
 key question is *who owns each step*, prefer a swimlane diagram.
 
+**Complement, don't duplicate.** Choose the type by what adjacent prose, tables,
+and lists leave *unsaid* — not by the subject alone. If a table already
+enumerates an entity's states or terminal outcomes, a `stateDiagram-v2` that
+merely restates them earns nothing; show the *action sequence* (`flowchart`) or
+*interactions* (`sequenceDiagram`) instead. Disambiguating the two that most
+often collide on lifecycle subjects: `flowchart` answers *what happens next*
+(the action/sub-step sequence), while `stateDiagram-v2` answers *what states it
+can be in* (the status machine). When both seem to fit, pick the one whose
+question the surrounding content has not already answered.
+
 ### Process & interaction
 
 | Type | Use when |
