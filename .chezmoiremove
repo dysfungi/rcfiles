@@ -1,0 +1,14 @@
+# Targets chezmoi should remove from the destination on every apply.
+#
+# Removing a file from the source tree does NOT delete its deployed target
+# (chezmoi "forgets" it, leaving an orphan). These entries clean up orphans from
+# the plan-mode migration:
+#
+#   - plan-mode-default.ts: the previous plan-mode approach (injected a synthetic
+#     `/plan` user message at session_start). Replaced by the owned
+#     extensions/plan-mode/ extension. It is a top-level .ts, so pi auto-loads
+#     it — it MUST be removed or the old hack runs alongside the new extension.
+#   - plan-mode/utils.ts: leftover from the old upstream-example external (now
+#     replaced by owned source files in the same directory).
+.pi/agent/extensions/plan-mode-default.ts
+.pi/agent/extensions/plan-mode/utils.ts

@@ -16,3 +16,4 @@ Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestrat
 Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cleanup Stop hooks, make todo.txt tracking optional, relax   ff-only requirement +chezmoi +backlog
 Refactor and migrate '~/.secrets' to be managed by Mise
 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
+(B) Default-on plan mode for pi via owned extension: shell-quote bash safety + scoped plan_write +pi @worktree:.worktree/fix/pi-plan-mode-default agent:pi model:claude-opus-4
