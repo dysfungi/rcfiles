@@ -1,5 +1,11 @@
 my:
   mcpServers:
+    github:
+      serverUrl: "https://api.githubcopilot.com/mcp/"
+      docUrl: "https://github.com/github/github-mcp-server"
+      auth:
+        type: bearer
+        opPath: "op://CLI/GitHub Token - AI/token"
     honeycomb:
       serverUrl: "https://mcp.honeycomb.io/mcp"
       docUrl: "https://docs.honeycomb.io/integrations/mcp"
