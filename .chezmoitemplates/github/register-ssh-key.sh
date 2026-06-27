@@ -9,49 +9,64 @@
 #           Non-empty → GitHub Enterprise Server (uses GH_HOST + GH_ENTERPRISE_TOKEN).
 #   token - PAT with admin:public_key or write:public_key scope.
 #
-# Behaviour:
-#   - Reads ~/.ssh/id_ed25519.pub (guaranteed present when a run_once_after_ script runs,
-#     because the modify_private_id_ed25519 file sync runs in Phase 2 before scripts).
+# Behaviour & WHY:
+#   - Derives the public key from the PRIVATE key (`ssh-keygen -y`), not from
+#     id_ed25519.pub. The private key is the source of truth, so we can never
+#     upload an orphan public key whose private half is missing/unusable — the
+#     exact failure behind the 2026-06-26 github.com lockout.
+#   - ADD-ONLY: never deletes existing keys. The previous version deleted any
+#     same-title key before adding the new one; a failed/return-less add then left
+#     the account with NO usable key. Stale per-host entries are pruned manually.
 #   - Idempotent: skips if the key body is already registered on the target host.
-#   - Stale-key cleanup: if a key with the same machine title but a different body is
-#     registered, it is deleted before re-adding (handles key rotation).
-#   - Title format: "$(uname -s):$(whoami)@$(hostname)" — matches the comment burned into
-#     the key by ssh-keygen and is human-readable in the GitHub web UI.
+#   - Best-effort: missing key / no network / bad token warn loudly and return 0
+#     rather than aborting the whole `chezmoi apply`.
+#   - Title format: "$(uname -s):$(whoami)@$(hostname)" — matches the comment
+#     burned into the key and is human-readable in the GitHub web UI.
 register_ssh_key() {
   local host="$1"
   local token="$2"
+  local label="${host:-github.com}"
 
-  local pub_key="${HOME}/.ssh/id_ed25519.pub"
-  local key_body
-  key_body="$(awk '{print $2}' "${pub_key}")"
+  local key="${HOME}/.ssh/id_ed25519"
+  if [[ ! -s "${key}" ]]; then
+    echo >&2 "WARN: ${key} missing; cannot register SSH key on ${label}."
+    return 0
+  fi
+
+  # Source of truth: derive the public half from the private key.
+  local pub_line key_body
+  if ! pub_line="$(ssh-keygen -y -f "${key}" 2>/dev/null)"; then
+    echo >&2 "WARN: ${key} is not a usable private key; skipping ${label} registration."
+    return 0
+  fi
+  key_body="$(printf '%s' "${pub_line}" | awk '{print $2}')"
   local key_title
   key_title="$(uname -s):$(whoami)@$(hostname)"
 
   # Build the minimal env needed to authenticate gh against the target host.
-  # GH_TOKEN targets github.com / ghe.com cloud; GH_ENTERPRISE_TOKEN + GH_HOST
-  # targets a self-hosted GitHub Enterprise Server instance.
+  # GH_TOKEN targets github.com; GH_ENTERPRISE_TOKEN + GH_HOST targets a
+  # self-hosted GitHub Enterprise Server instance.
   local -a gh_env
   if [[ -n "${host}" ]]; then
     gh_env=(GH_HOST="${host}" GH_ENTERPRISE_TOKEN="${token}")
   else
-    host="github.com"
     gh_env=(GH_TOKEN="${token}")
   fi
 
-  if env "${gh_env[@]}" gh ssh-key list | grep -qF "${key_body}"; then
-    echo >&2 "INFO: SSH public key already registered on ${host}; skipping."
-    return
+  local listed
+  if ! listed="$(env "${gh_env[@]}" gh ssh-key list 2>/dev/null)"; then
+    echo >&2 "WARN: cannot reach ${label} (network/token); skipping SSH key registration."
+    return 0
+  fi
+  if grep -qF "${key_body}" <<<"${listed}"; then
+    echo >&2 "INFO: SSH public key already registered on ${label}; skipping."
+    return 0
   fi
 
-  local existing_id
-  existing_id="$(env "${gh_env[@]}" gh api /user/keys \
-    --jq ".[] | select(.title == \"${key_title}\") | .id")"
-  if [[ -n "${existing_id}" ]]; then
-    env "${gh_env[@]}" gh ssh-key delete "${existing_id}" --yes
-    echo >&2 "INFO: Deleted stale SSH key '${key_title}' (id: ${existing_id}) from ${host}."
+  if env "${gh_env[@]}" gh ssh-key add "${key}.pub" \
+    --title "${key_title}" --type authentication 2>/dev/null; then
+    echo >&2 "INFO: SSH public key added to ${label} as '${key_title}'."
+  else
+    echo >&2 "WARN: failed to add SSH key to ${label}; existing keys left untouched."
   fi
-
-  env "${gh_env[@]}" gh ssh-key add "${pub_key}" \
-    --title "${key_title}" --type authentication
-  echo >&2 "INFO: SSH public key added to ${host} as '${key_title}'."
 }

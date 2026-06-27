@@ -1,0 +1,13 @@
+Host github.com
+    StrictHostKeyChecking accept-new
+{{- if .isUnixLike }}
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+{{- end }}
+
+Host gh.riotgames.com
+    StrictHostKeyChecking accept-new
+{{- if .isUnixLike }}
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+{{- end }}

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Register this machine's SSH public key with github.com, then — only if SSH auth
+# actually verifies — switch the chezmoi source remote from HTTPS to SSH.
+#
+# WHY run_onchange_ (not run_once_)
+#   run_once_ never re-ran after a key rotation, so a stale/failed registration
+#   silently persisted and could lock the account out. Keying on the live public
+#   key below makes this re-run exactly when the key changes.
+#
+# WHY the remote flip is guarded
+#   Unconditionally flipping origin to SSH created a bootstrap deadlock: a broken
+#   key then blocked `chezmoi update`'s own `git pull`. We flip only after
+#   confirming SSH auth works, else stay on HTTPS.
+#
+# pubkey: {{ if stat (printf "%s/.ssh/id_ed25519.pub" .chezmoi.homeDir) }}{{ output "cat" (printf "%s/.ssh/id_ed25519.pub" .chezmoi.homeDir) }}{{ end }}
+set -euo pipefail
+
+echo >&2 "INFO: Starting $0"
+
+{{ includeTemplate "github/register-ssh-key.sh" }}
+register_ssh_key "" "${MISE_GITHUB_TOKEN}"
+
+repo="${HOME}/.local/share/chezmoi"
+auth_out="$(ssh -o BatchMode=yes -o ConnectTimeout=8 -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 || true)"
+if grep -q "successfully authenticated" <<<"${auth_out}"; then
+  git -C "${repo}" remote set-url origin git@github.com:dysfungi/rcfiles.git
+  echo >&2 "INFO: chezmoi remote set to SSH."
+else
+  echo >&2 "WARN: SSH auth to github.com failed; leaving chezmoi remote on HTTPS."
+fi
+
+echo >&2 "INFO: Ending $0"

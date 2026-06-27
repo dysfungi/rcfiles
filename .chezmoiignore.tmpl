@@ -23,6 +23,12 @@ GEMINI*
 # Logs
 **/*.log
 
+# SSH: per-host keypair is generated on the machine (see
+# .chezmoiscripts/20/run_before_generate-ssh-key.unix-like.sh). It has no
+# declarative source, so it is intentionally NOT chezmoi-managed on any platform.
+.ssh/id_ed25519
+.ssh/id_ed25519.pub
+
 # Neovim
 **/.luarc.json
 **/spell/
@@ -136,9 +142,6 @@ Documents/**
 
 .chezmoiscripts/*.unix-like.*
 .chezmoiscripts/**/*.unix-like.*
-
-.ssh/id_ed25519
-.ssh/id_ed25519.pub
 
 {{ end }}
 
