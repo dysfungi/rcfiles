@@ -32,7 +32,10 @@ def _mark(args):
     if not args:
         print("usage: mark <alias>", file=_sys.stderr)
         return 1
-    cdargs @(f"--add=:{args[0]}:{$(pwd).strip()}")
+    # Capture $(pwd) into a local first: Python 3.14's PEP 701 f-string parser
+    # cannot handle xonsh $()/@() subproc substitution inside an f-string literal.
+    _pwd = $(pwd).strip()
+    cdargs @(f"--add=:{args[0]}:{_pwd}")
 
 
 @aliases.register('ca')
@@ -40,4 +43,6 @@ def _ca(args):
     if not args:
         print("usage: ca <alias>", file=_sys.stderr)
         return 1
-    cdargs @(f"--add=:{args[0]}:{$(pwd).strip()}")
+    # See _mark: $() subproc syntax is illegal inside f-strings on Python 3.14.
+    _pwd = $(pwd).strip()
+    cdargs @(f"--add=:{args[0]}:{_pwd}")

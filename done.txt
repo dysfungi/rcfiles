@@ -45,3 +45,4 @@ x 2026-06-22 feat(pi): wire MCP support via pi-mcp-adapter, rendering mcp-server
 
 x 2026-06-22 feat(pi): pi-memory extension + qmd semantic search + git-synced memory store +chezmoi +pi @worktree:.worktree/feat/pi-memory-extension agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8
 x 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
+x 2026-06-26 Fix xonsh f-string $() subproc crash on Python 3.14 in cdargs +xonsh @worktree:.worktree/fix/xonsh-fstring-py314 agent:pi model:unknown
