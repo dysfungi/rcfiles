@@ -22,10 +22,22 @@ description: Authoring conventions for Mermaid diagrams as code. Use whenever ge
 
 ## Choosing a diagram type
 
-Pick the type from the question the diagram must answer. Default to the most
-specific fit, not the most familiar (`flowchart`). Common lesson: for system
-interactions and call flows, a `sequenceDiagram` beats a `flowchart`; when the
-key question is *who owns each step*, prefer a swimlane diagram.
+Choose in this order: **(1) audience → (2) the question the diagram must answer →
+(3) the most specific type that fits** (not the most familiar, `flowchart`). For
+the question step: system interactions and call flows favor `sequenceDiagram`
+over `flowchart`; when the key question is *who owns each step*, prefer a swimlane
+diagram.
+
+### Match the audience first
+
+Name the reader before the type, and match the type, abstraction level, and label
+vocabulary to them — the most technically correct type can be the wrong
+communication choice; audience-fit wins.
+
+- **Engineers / technical:** engineering-register types fit — component-level `sequenceDiagram`, `stateDiagram-v2`, `classDiagram`, `erDiagram`.
+- **Product / leadership / non-technical:** prefer `flowchart`, `journey`, or `timeline` in domain vocabulary, not implementation terms. For player/UX experience subjects, also consider `journey`.
+- *Example:* an operation lifecycle (start + terminal states) *fits* a `stateDiagram-v2`, but for a Product audience a `flowchart` of the actual gameplay/experience flow in domain language communicates far better.
+- **Complement, don't duplicate:** when the diagram sits beside prose or tables that already state part of the picture, bias it toward what they leave unsaid.
 
 ### Process & interaction
 
