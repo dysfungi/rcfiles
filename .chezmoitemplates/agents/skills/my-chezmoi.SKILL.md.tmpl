@@ -1,0 +1,99 @@
+---
+name: my-chezmoi
+description: Working reference for Derek's chezmoi dotfiles repo (~/.local/share/chezmoi). Use when editing managed dotfiles, authoring templates or chezmoiscripts, adding packages, applying changes, or following the repo's naming/commit conventions. Covers architecture, file-name prefixes, script stages, machine detection, templating, data files, the snake_case convention, backups, and validation.
+---
+
+# my-chezmoi
+
+Reference for working in Derek's chezmoi-managed dotfiles. Source tree: `~/.local/share/chezmoi`.
+One source tree serves multi-OS / multi-machine configs via templating + conditionals.
+
+## Apply workflow (operational — every time)
+
+- After editing ANY managed dotfile, run `chezmoi apply <target-path>` immediately — live files are
+  stale until applied, so testing is impossible otherwise.
+- Pass **target paths** (`~/.config/nvim/init.lua`), NOT source paths (`dot_config/exact_nvim/...`) —
+  source paths return a "not managed" error.
+- Preview: `chezmoi diff`. Subset re-run: `chezmoi apply --include scripts`.
+- A config file created outside the source tree must be added to chezmoi management before finishing.
+
+## File-name prefixes (decoded into $HOME)
+
+| Prefix | Meaning |
+| --- | --- |
+| `dot_` | becomes `.` in home |
+| `exact_` | dir syncs deletions (removes untracked) |
+| `private_` | restrictive perms; content via 1Password |
+| `run_once_before_` / `run_once_after_` | runs once ever, before/after files |
+| `run_onchange_*` | runs when its content (or `.tmpl` inputs) change |
+| `run_before_` / `run_after_` | runs every apply |
+| `.tmpl` | Go template, rendered at apply |
+
+Platform suffixes filtered by `.chezmoiignore.tmpl`: `.darwin.*`, `.linux.*`, `.windows.*`,
+`.unix-like.*` (cross-Unix only), `.shared.*`. Prefer OS-specific files over in-script `uname` branching.
+
+## Script stages (`.chezmoiscripts/<NN>/`)
+
+`00` sudoers · `10` core/system deps · `20` dev deps (mise, opam) · `30` shell registration ·
+`40` app deps (xpip/uv) · `50` symlink sync · `65` log rotation · `70` editor plugins ·
+`90` specialized (terminfo, Riot P4/LoL) · `99` git-commit backup snapshots. Every script logs
+start/end to stderr (`echo >&2 "INFO: Starting $0"` / `Ending`).
+
+## Machine detection (`.chezmoi.toml.tmpl` `[data]`, snake_case)
+
+`is_my_machine` (dmf) · `is_riot_machine` (dfrank / RIOTGAMES) · `is_work_machine` ·
+OS: `is_darwin` `is_linux` `is_windows` `is_unix_like` `is_bsd`. Credentials flow through 1Password
+(`onepasswordRead()`); `op_service_account_token` from env or `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`.
+
+## Templating
+
+- Shared fragments in `.chezmoitemplates/`, included via `{{ "{{" }} includeTemplate "..." . {{ "}}" }}`. Canonical
+  example: `.chezmoitemplates/agents/AGENTS.md.tmpl` rendered into each AI tool config.
+- Machine-specific data in `.chezmoidata/` (MCP servers, projects, packages, models).
+- Access optional map fields with `index $pkg "key"`, NOT `$pkg.key` (dot-notation panics on missing
+  keys; `index` returns nil/falsy).
+- `.tmpl` highlighting is auto-handled by the nvim config; add a `# vim: ft=gotmpl.<lang>` modeline
+  only when the filename lies about the body (e.g. a `.json.tmpl` whose body is Python) AND the
+  comment won't leak into rendered output (`modify_*` scripts are safe; direct-render configs aren't).
+
+## Naming: snake_case for identifiers you own
+
+All chezmoi-source identifiers use `snake_case`: `[data]` keys, `.chezmoidata/*.yaml` keys templates
+read, and inline locals (`{{ "{{" }} $my_github_token := ... {{ "}}" }}`). Never camelCase.
+
+**Exception — external-contract output keys stay verbatim.** A key mandated by another tool's config
+format and emitted into rendered output belongs to that tool's namespace. Snake the SOURCE identifier;
+map it back to the required key in the OUTPUT. Litmus: is the string a key in a file chezmoi renders
+*for another program to read*? If yes, match that program's spelling in output and only snake the
+source-side variable. Known external-output keys: `mcpServers` (MCP client config; source key is
+`mcp_servers`), Ollama Modelfile `num_ctx`/`num_predict`/`temperature`, pi-mcp-adapter
+`clientName`/`bearerToken`/`httpUrl`.
+
+## Packages (`.chezmoidata/packages.yaml`)
+
+Package lists live here, never hardcoded in scripts (except bootstrap-critical deps in `.bootstrap.*`
+scripts). Bootstrap rule: any tool a `modify_*` script needs is a bootstrap dep — install it in all
+three `.bootstrap.*` scripts and mark `bootstrap: true` (modify_* runs in Phase 2, before any
+run_after_ chezmoiscript in Phase 3). Sync scripts back up before+after to
+`.backups/<tool>.<user>.<host>` and git-commit each snapshot.
+
+## Backups
+
+`.backups/` is git-tracked, auto-committed by stage-99 scripts. Snapshots named
+`<tool>.<user>@<hostname>.log`, captured before and after install/upgrade for an audit trail.
+
+## Validation
+
+- `mise x -- pre-commit run --all-files` (shellcheck, shfmt, ruff, stylua, prettier, template
+  validators). Single hook: `mise x -- pre-commit run <hook-id> --all-files`. The `mise x --` prefix is
+  required (pre-commit + pytest are mise-managed).
+- `mise x -- pytest .tests/` — regression harness, organized by subsystem under `.tests/<domain>/`.
+- pre-commit hooks are the contract: fix the source file when a hook fails; never add `# noqa`,
+  extend `exclude:`, or skip a hook without approval.
+
+## Commits
+
+Conventional commits describing the repo's desired-state change (not the downstream machine effect):
+`chore(...)` for package-inventory changes, `fix(...)` for broken repo behavior, `feat(...)` only for a
+new user-facing managed capability. One logical change per commit; scope = subsystem (`homebrew`,
+`git`, `zsh`).
