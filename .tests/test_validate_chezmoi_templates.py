@@ -1,16 +1,20 @@
-"""Tests for .hooks/validate-chezmoi-templates.py — template classification.
+"""Tests for .hooks/validate-chezmoi-templates.py.
 
-Covers the pure classification functions that determine how each staged file
-is routed: output type detection (extension, filename, shebang), hard-skip
-rules, config template identification, and partitioning.
-
-These are regression tests — the functions are deterministic and don't touch
-the filesystem (except detect_output_type_from_shebang, which reads a file).
+Two layers:
+  - Unit: pure classification functions that route each staged file — output
+    type detection (extension, filename, shebang), hard-skip rules, config
+    template identification, partitioning. Deterministic; no filesystem writes
+    (except detect_output_type_from_shebang, which reads a file).
+  - Integration: the whitespace-only skip guard, exercised by invoking the hook
+    as a real subprocess against fixture *.tmpl files in a throwaway git repo
+    (see the "empty-render skip" section at the bottom).
 """
 
 from __future__ import annotations
 
 import importlib.util
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -262,3 +266,78 @@ def test_shebang_none(tmp_path: Path, content: str, desc: str) -> None:
 
 def test_shebang_missing_file(tmp_path: Path) -> None:
     assert detect_output_type_from_shebang(tmp_path / "nonexistent") is None
+
+
+# ---------------------------------------------------------------------------
+# Integration: whitespace-only render skip
+#
+# Subprocess-driven (per repo convention): invoke the hook as a real
+# `python3 .hooks/validate-chezmoi-templates.py <file>` against fixture *.tmpl
+# files inside a throwaway git repo, exactly as pre-commit would. This is the
+# executable spec for the empty-render guard: a template that renders empty on
+# the current host (a body wholly wrapped in `{{ if .isRiotMachine }}…{{ end }}`)
+# must PASS without being handed to shellcheck (which would false-positive with
+# SC2148 on the empty buffer). The malformed-shell case guards against the skip
+# being too broad — a NON-empty render must still be linted and still fail.
+# ---------------------------------------------------------------------------
+
+
+def _run_hook(repo: Path, filename: str, body: str) -> subprocess.CompletedProcess:
+    """Drop a fixture template into the repo and run the hook against it.
+
+    cwd is the throwaway repo so the hook's `git rev-parse --show-toplevel`
+    (used for --source and the .tmp scratch dir) resolves there, not the real
+    chezmoi repo. GIT_* is stripped from env for the same isolation reason as
+    conftest's git helpers (pre-commit leaks GIT_DIR into subprocess env).
+    """
+    (repo / filename).write_text(body)
+    clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    return subprocess.run(
+        [sys.executable, str(_hook_path), filename],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        env=clean,
+    )
+
+
+# (filename, body, should_pass, description)
+_EMPTY_RENDER_CASES = [
+    (
+        "empty.sh.tmpl",
+        "{{ if false }}echo hi{{ end }}\n",
+        True,
+        "conditional renders empty -> skip (no SC2148 false-positive)",
+    ),
+    (
+        "blank.sh.tmpl",
+        "{{ if false }}x{{ end }}\n  \n\t\n",
+        True,
+        "whitespace-only render -> skip (.strip() guard, not just len 0)",
+    ),
+    (
+        "bad.sh.tmpl",
+        "if then fi\n",
+        False,
+        "non-empty malformed shell still linted and fails (skip not too broad)",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("filename", "body", "should_pass", "desc"),
+    _EMPTY_RENDER_CASES,
+    ids=[c[3] for c in _EMPTY_RENDER_CASES],
+)
+def test_empty_render_skip(
+    git_repo: Path, filename: str, body: str, should_pass: bool, desc: str
+) -> None:
+    result = _run_hook(git_repo, filename, body)
+    if should_pass:
+        assert result.returncode == 0, (
+            f"expected PASS: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+    else:
+        assert result.returncode != 0, (
+            f"expected FAIL: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )

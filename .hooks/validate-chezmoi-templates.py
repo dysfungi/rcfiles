@@ -392,6 +392,18 @@ def process_file(source: str) -> bool:
         print(f"FAIL  {source}: render failed:\n{render_err}", file=sys.stderr)
         return False
 
+    # Whitespace-only render -> PASS without type detection or linting.
+    # Mirrors chezmoi's "empty render = no target file" semantics (the empty_
+    # attribute prefix opts OUT of that). A template wholly wrapped in a
+    # machine/platform conditional (e.g. {{ if .isRiotMachine }}…{{ end }})
+    # legitimately renders empty on the current host: there is no target file
+    # and thus nothing to format or lint. A successful render already validated
+    # the Go-template syntax, so short-circuit rather than feed an empty buffer
+    # to shellcheck (SC2148) or another linter that would false-positive on it.
+    if rendered.read_text(errors="replace").strip() == "":
+        shutil.rmtree(tmpdir)
+        return True
+
     # Shebang overrides filename-based detection (e.g. modify_foo.json.tmpl
     # that renders to a Python script).
     shebang_type = detect_output_type_from_shebang(rendered)

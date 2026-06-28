@@ -16,3 +16,4 @@ Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestrat
 Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cleanup Stop hooks, make todo.txt tracking optional, relax   ff-only requirement +chezmoi +backlog
 Refactor and migrate '~/.secrets' to be managed by Mise
 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
+x 2026-06-27 fix(hooks) skip empty template renders in validator @worktree:.claude/worktrees/0e488018-b04d-4d73-8eca-7e29abc37890.validator-empty-render session:0e488018 agent:claude model:claude-opus-4-8
