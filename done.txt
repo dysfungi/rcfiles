@@ -48,3 +48,4 @@ x 2026-06-22 feat(pi): pi-memory extension + qmd semantic search + git-synced me
 x 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
 x 2026-06-26 Fix xonsh f-string $() subproc crash on Python 3.14 in cdargs +xonsh @worktree:.worktree/fix/xonsh-fstring-py314 agent:pi model:unknown
 x 2026-06-26 Fix SSH key lifecycle: replace ENOSPC-fragile modify_ with idempotent generate script + add-only registration +chezmoi @worktree:.worktree/fix/ssh-key-lifecycle agent:pi
+x 2026-06-27 Add github remote MCP server scoped to AI PAT +mcp @worktree:.claude/worktrees/8fd2e827-430a-4575-a7cc-cd1504d8758a.github-ai-mcp session:8fd2e827 agent:claude model:claude-opus-4-8
