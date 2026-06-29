@@ -318,6 +318,11 @@ def __rc_interactive_aliases_claude(aliases):
 
 
 @rc(interactive=True)
+def __rc_interactive_aliases_gemini(aliases):
+    aliases["gemini"] = "agy"  # Gemini CLI migrated to Antigravity (agy)
+
+
+@rc(interactive=True)
 def __rc_interactive_aliases_fun(aliases):
     aliases["starwars"] = ["telnet", "towel.blinkenlights.nl"]
 
