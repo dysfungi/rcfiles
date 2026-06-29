@@ -19,3 +19,4 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (B) style(codex) pad inline comments to 2 spaces in private_config.toml.tmpl {{ else if .isRiotMachine }} branch (~L20-21); unverifiable on personal machine, would fail taplo on a riot machine
 (B) Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8caddfd6-7d62-4a1d-b0fa-218bf7a22704.pi-gemini session:8caddfd6-7d62-4a1d-b0fa-218bf7a22704 agent:claude model:claude-opus-4-8
 (B) Convert agent instructions into my-* skills +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.agents-to-skills session:0beb48b4 agent:claude model:claude-opus-4-8
+(C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — parallel chezmoi runs trip over sibling .tmp/chezmoi-validate dirs (lstat ENOENT on random file) +tooling
