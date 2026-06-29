@@ -104,8 +104,6 @@ brew "httpie"
 brew "imagemagick"
 # Convert JPG images to ASCII
 brew "jp2a"
-# Lightweight and flexible command-line JSON processor
-brew "jq"
 # Handy way to save and run project-specific commands
 brew "just"
 # Kubernetes CLI To Manage Your Clusters In Style!
@@ -158,8 +156,6 @@ brew "pandoc"
 brew "poetry"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
-# Framework for managing multi-language pre-commit hooks
-brew "pre-commit"
 # Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML
 brew "prettier"
 # Prettier daemon
@@ -222,8 +218,6 @@ brew "todoist-cli"
 brew "tree"
 # Parser generator tool
 brew "tree-sitter-cli"
-# Vulnerability scanner for container images, file systems, and Git repos
-brew "trivy"
 # Language for application scale JavaScript development
 brew "typescript"
 # Language Server Protocol implementation for TypeScript wrapping tsserver
