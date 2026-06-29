@@ -2,18 +2,43 @@
   {{- /*
     pi keybindings — https://pi.dev/docs/latest/keybindings (docs/keybindings.md)
 
-    Preference: Enter inserts a newline; submit with Ctrl+Enter.
+    Two intents captured here:
 
-    Trying Ctrl+Enter as the primary submit key. The earlier concern — that most
-    terminals send an identical carriage-return byte for Enter, Shift+Enter, and
-    Ctrl+Enter unless they speak the kitty keyboard protocol — was never actually
-    verified in this terminal, so we're testing whether Ctrl+Enter works here.
-    Ctrl+J is kept as a fallback because it emits a distinct line-feed byte and
-    therefore works as a submit key in every terminal.
+    1. Submit / newline. Enter inserts a newline; submit with Ctrl+Enter
+       (Ctrl+J kept as a fallback — it emits a distinct line-feed byte and so
+       works as submit in terminals that don't speak the kitty keyboard
+       protocol, where Enter / Shift+Enter / Ctrl+Enter are otherwise
+       indistinguishable).
+
+    2. Keep standard Emacs/readline editing chords intact in the prompt. Pi
+       binds the readline set by default (Ctrl+A/E/B/F/K/U/W/Y, Alt+B/F/D/Y,
+       Ctrl+D, Ctrl+-) but several app actions are hoisted onto the main editor
+       and shadow editing chords. Free them so Ctrl/Alt+letter editing keys
+       behave as an Emacs/readline user expects, and move pi's app commands to
+       the Alt namespace:
+         - Ctrl+P / Ctrl+N      -> cursor up / down (were: model cycle / unbound)
+         - Alt+Left / Alt+Right -> model cycle prev / next (off Ctrl+P; Alt
+           rather than Ctrl+arrow because macOS Mission Control eats Ctrl+arrow)
+         - Alt+M                -> model select (was Ctrl+L = clear-screen)
+         - Ctrl+T and Ctrl+G unbound — app.thinking.toggle (transpose-chars)
+           and app.editor.external (abort/keyboard-quit) removed from those
+           chords; reach them via menu / slash commands.
+       Word movement keeps Alt+B / Alt+F (and Ctrl+Left / Ctrl+Right). Ctrl+D
+       stays app.exit but pi gates it to an empty buffer, so delete-char-forward
+       is preserved while typing. These bindings also apply inside pi-vimmode's
+       INSERT mode, which delegates editing keys to pi's native editor (see
+       settings.json `packages`).
 
     Rendered as a chezmoi template purely so this rationale survives as a comment;
     the emitted file is plain JSON (pi rejects non-keybinding keys like "_comment").
   */ -}}
   "tui.input.newLine": ["enter", "shift+enter"],
-  "tui.input.submit": ["ctrl+enter", "ctrl+j"]
+  "tui.input.submit": ["ctrl+enter", "ctrl+j"],
+  "tui.editor.cursorUp": ["up", "ctrl+p"],
+  "tui.editor.cursorDown": ["down", "ctrl+n"],
+  "app.model.cycleForward": ["alt+right"],
+  "app.model.cycleBackward": ["alt+left"],
+  "app.model.select": ["alt+m"],
+  "app.thinking.toggle": [],
+  "app.editor.external": []
 }
