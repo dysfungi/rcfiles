@@ -21,3 +21,4 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (B) Convert agent instructions into my-* skills +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.agents-to-skills session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — parallel chezmoi runs trip over sibling .tmp/chezmoi-validate dirs (lstat ENOENT on random file) +tooling
 (B) Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.antigravity-migration session:248a100a agent:claude model:claude-opus-4-8
+(A) Fix YAML colon-space breaking skill descriptions +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-desc-yaml-fix session:0beb48b4 agent:claude model:claude-opus-4-8
