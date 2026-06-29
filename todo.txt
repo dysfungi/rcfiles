@@ -21,3 +21,4 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (B) Convert agent instructions into my-* skills +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.agents-to-skills session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — parallel chezmoi runs trip over sibling .tmp/chezmoi-validate dirs (lstat ENOENT on random file) +tooling
 (A) Fix YAML colon-space breaking skill descriptions +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-desc-yaml-fix session:0beb48b4 agent:claude model:claude-opus-4-8
+(C) Rename therapy→my-therapy, p4-workflow→my-perforce +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-renames session:0beb48b4 agent:claude model:claude-opus-4-8
