@@ -16,10 +16,16 @@ DESIGN
     expansion. Discovery is dynamic (glob) and each skill is its own
     parametrized case (id = file stem) so a failure names the offending skill.
 
-    Frontmatter is parsed with a tiny stdlib reader instead of PyYAML: the mise
-    Python has no `yaml` module, and the only fields under test (`name`,
-    `description`) are a single inline scalar and a folded scalar — adding a
-    dependency to read two keys is not worth it.
+    Frontmatter is parsed with real PyYAML (`yaml.safe_load`), NOT a hand-rolled
+    stdlib reader. An earlier version of this test used a tiny tolerant parser
+    and gave false confidence: it happily read frontmatter that a real YAML
+    loader rejects. 13 of the deployed skills had an unquoted plain-scalar
+    `description` containing `": "` (colon-space, e.g. `Keywords: ...`), which is
+    invalid in a YAML plain scalar — the real loader raised a ScannerError and
+    the harness silently fell back to the H1 title. Parsing with the same loader
+    the agent harness uses means any unparseable frontmatter fails here loudly.
+    PyYAML is supplied to both test runners via `uv run --with pyyaml` (the mise
+    `test` task and the pre-commit pytest hooks).
 """
 
 from __future__ import annotations
@@ -27,8 +33,10 @@ from __future__ import annotations
 import os
 import subprocess
 from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SKILLS_DIR = REPO_ROOT / ".chezmoitemplates" / "agents" / "skills"
@@ -67,13 +75,15 @@ def _render(path: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _parse_frontmatter(rendered: str) -> dict[str, str]:
-    """Extract top-level scalar keys from leading `---`-delimited YAML.
+def _parse_frontmatter(rendered: str) -> dict[str, Any]:
+    """Extract and `yaml.safe_load` the leading `---`-delimited YAML frontmatter.
 
-    Handles inline scalars (`name: my-git`) and folded scalars whose value
-    continues on indented lines (`description:` wrapped across lines). Returns a
-    flat key -> whitespace-collapsed string mapping. Raises if no frontmatter
-    block is present so a render that loses its `---` fences fails loudly.
+    Parses with the real YAML loader, so any frontmatter the agent harness
+    cannot parse (e.g. an unquoted plain scalar containing `": "`) raises here
+    instead of being silently tolerated — this is the regression guard. Raises
+    ValueError if the `---` fences are missing, and lets `yaml.YAMLError`
+    propagate so an invalid-YAML render fails the test loudly. A non-mapping
+    frontmatter body is also rejected.
     """
     lines = rendered.splitlines()
     if not lines or lines[0].strip() != "---":
@@ -83,16 +93,11 @@ def _parse_frontmatter(rendered: str) -> dict[str, str]:
     except StopIteration as exc:
         raise ValueError("missing closing frontmatter fence") from exc
 
-    fields: dict[str, str] = {}
-    current: str | None = None
-    for line in lines[1:end]:
-        if line and not line[0].isspace() and ":" in line:
-            key, _, value = line.partition(":")
-            current = key.strip()
-            fields[current] = value.strip()
-        elif current is not None and line.strip():
-            fields[current] = f"{fields[current]} {line.strip()}".strip()
-    return fields
+    block = "\n".join(lines[1:end])
+    data = yaml.safe_load(block)
+    if not isinstance(data, dict):
+        raise ValueError(f"frontmatter is not a mapping: {type(data).__name__}")
+    return data
 
 
 def test_skills_discovered() -> None:

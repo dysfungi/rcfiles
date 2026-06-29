@@ -109,14 +109,14 @@ repos:
       - id: pytest
         name: pytest (fast)
         language: system
-        entry: uv run --with pytest pytest .tests/ -m "not slow" --tb=short -q
+        entry: uv run --with pytest --with pyyaml pytest .tests/ -m "not slow" --tb=short -q
         pass_filenames: false
         always_run: true
 
       - id: pytest-integration
         name: pytest (all, including slow)
         language: system
-        entry: uv run --with pytest pytest .tests/ --tb=short -q
+        entry: uv run --with pytest --with pyyaml pytest .tests/ --tb=short -q
         pass_filenames: false
         always_run: true
         stages: [pre-push]
@@ -152,7 +152,9 @@ repos:
         #   - "--ignore-missing-imports"
         #   - "--explicit-package-bases"
         #   - "--scripts-are-modules"
-        additional_dependencies: []
+        # types-PyYAML supplies stubs for `import yaml` used in the skill
+        # frontmatter test; without it mypy reports import-untyped.
+        additional_dependencies: ["types-PyYAML"]
         exclude: \.tmpl$
 
   #########
