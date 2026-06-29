@@ -55,3 +55,4 @@ x 2026-06-28 Add regression test for validate-chezmoi-templates worktree --sourc
 x 2026-06-29 Fix CI chezmoi provisioning +mise @worktree:.claude/worktrees/a960e0a6-114a-44a6-b1f2-b4a2375c7bef.ci-chezmoi-mise session:a960e0a6 agent:claude model:claude-opus-4-8
 x 2026-06-29 Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8caddfd6-7d62-4a1d-b0fa-218bf7a22704.pi-gemini session:8caddfd6-7d62-4a1d-b0fa-218bf7a22704 agent:claude model:claude-opus-4-8
 x 2026-06-29 Pi vim mode + Emacs keybinding consistency +pi @worktree:.claude/worktrees/29c0b4f9-0648-43be-bbc8-fd36f757be56.pi-keybindings-2 session:29c0b4f9-0648-43be-bbc8-fd36f757be56 agent:claude model:claude-opus-4-8
+x 2026-06-29 Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.antigravity-migration session:248a100a agent:claude model:claude-opus-4-8
