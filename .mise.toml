@@ -14,6 +14,7 @@ PROJECT_NAME = "{{ config_root | basename }}"
 [tools]
 python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 uv                     = "latest"
+chezmoi                = "latest"
 "pipx:pre-commit"      = "latest"
 # chezmoi template validation (validate-chezmoi-templates pre-commit hook)
 # github backend: aqua-registry expects old hadolint-Darwin-* asset names; current
