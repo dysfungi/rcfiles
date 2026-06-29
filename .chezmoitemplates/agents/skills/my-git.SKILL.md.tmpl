@@ -49,42 +49,41 @@ hook-blocked on the main checkout until inside a worktree.
 2. Create a worktree and work inside it.
 3. Record the claim in todo.txt and commit it in the worktree's first commit.
    ← todo.txt format: my-task-tracking.
-4. On completion, inside the worktree: mark the task done and commit. Then merge
-   back by origin type:
-   - GitHub origin (github.com or an Enterprise/self-hosted GitHub host, e.g.
-     anything `gh` recognizes): push the branch and open a PR (`gh pr create`).
-     When the PR is ready, self-review it per `my-code-review` before merging.
-     Auto-merge (squash) ONLY if the repo owner is one of my own accounts
-     ({{ .my.github_personal_owners | join ", " }}) — `gh pr merge --squash --delete-branch`. Any other
-     owner (work/shared) → leave the PR open for review; do NOT auto-merge.
-   - Non-GitHub / no remote, my own project (I work directly off main): squash-merge
-     the branch into main — `git merge --squash <branch>` + single conventional
-     commit — then `git branch -D <branch>` (squash leaves it "unmerged", so `-d`
-     fails), push. `--squash` is blocked on the main checkout, so run the squash from
-     a subagent whose cwd is the worktree (all git is allowed there); see the
-     merge-back subsection below.
-   - Any other case (e.g. a non-GitHub remote that isn't mine): default to STOP —
-     ask me how to proceed, and propose a concrete update to this skill so the
-     new use-case is covered next time (see `my-agent-memory`).
 
-### Worktree merge-back — what's agent-gated
+### Completing the worktree — merge-back
 
-The guard restricts mutating git **only on the main checkout**. Inside a linked
-worktree (cwd = the worktree) ALL git is allowed — the guard returns early there.
+The worktree guard only restricts git whose **cwd is the main checkout**. So run every step
+below from **inside the worktree** (where all git is allowed) and advance main via
+`git -C <main> …` — the guard stays inert and the whole flow is agent-doable. The only
+human-only action is creating a `worktree-exempt` file; never create one. `<main>` = the
+primary checkout (the parent of `git rev-parse --git-common-dir`).
 
-- `git rebase main` to linearize the branch when main advanced runs **inside the
-  worktree** — worktree-local, so **agent-allowed**. Do it before integrating so
-  the branch fast-forwards cleanly.
-- `git merge --ff-only <branch>` into the main checkout is **agent-allowed** via an
-  explicit carve-out — it only advances the pointer and fails if it isn't a
-  fast-forward. This is the gated-but-allowed path, NOT human-gated.
-- A bare merge-commit or `git merge --squash` on the **main checkout** cwd is
-  **blocked**. Run it from a subagent whose cwd is the worktree (where all git is
-  allowed) — spawn the merge subagent with the worktree as cwd (see `my-agent-memory`).
-- `gh pr merge` completes **server-side** and never touches the local main
-  checkout — always **agent-allowed**.
-- The only human-only step is the `worktree-exempt` bypass file; agents never
-  create it.
+1. **Finish & verify.** Mark the task done in todo.txt and commit. Run the project's automated
+   gates (e.g. `mise run lint && mise run test`, or the repo's equivalents) and fix failures —
+   see `my-linting`, `my-testing`. Then self-review per `my-code-review` (a fresh sub-agent) and
+   address its findings.
+2. **Rebase onto latest main** (it may have advanced): `git fetch origin && git rebase origin/main`.
+   Runs in the worktree → allowed.
+   - *Conflict:* resolve the files, `git add`, `git rebase --continue`. If a conflict is a genuine
+     semantic clash you can't resolve with confidence, `git rebase --abort` and surface the
+     conflicting files + both sides to the user — don't guess.
+3. **Integrate, by origin type:**
+   - *GitHub, owner ∈ my accounts ({{ .my.github_personal_owners | join ", " }}):* `git push -u origin <branch>`;
+     `gh pr create --fill`; after self-review, `gh pr merge --squash --delete-branch`; then sync local
+     main with `git -C <main> pull --rebase`. (`gh` is server-side; `git -C <main>` from the worktree
+     cwd is guard-inert.)
+   - *GitHub, owner NOT mine (work/shared):* `git push` + `gh pr create` for human review; leave the PR
+     open — do not merge.
+   - *Non-GitHub / no remote, my own project:* squash from the worktree cwd — `git -C <main> pull --rebase`
+     (if it has a remote), `git -C <main> merge --squash <branch>` + one conventional commit,
+     `git -C <main> push`, then `git branch -D <branch>` (squash leaves the branch "unmerged", so `-d`
+     refuses).
+   - *Unrecognized origin:* gather the facts (remote URL, owner, is it yours?), ask the user how to
+     integrate, then propose a `my-git` update so it's covered next time (see `my-agent-memory`).
+4. **Push rejected (non-fast-forward):** `git -C <main> pull --rebase && git -C <main> push`; retry once,
+   then surface.
+5. **Cleanup:** the Stop hook / `ExitWorktree` removes ff-merged worktrees and archives the todo claim;
+   a squash-merged branch you already deleted with `git branch -D` above.
 
 {{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
