@@ -7,7 +7,7 @@ description: Planning and co-design discipline. Use when scoping any non-trivial
   with self-feedback loops; keep plans concise and scannable. When a decision needs
   alignment, compare the alternatives in a table. Keywords: plan, planning, co-design,
   design, tech design doc, scope, approach, alternatives, idiomatic, declarative, reuse,
-  documentation, plan template, plan mode.
+  review, documentation, plan template, plan mode.
 ---
 
 # Planning
@@ -20,6 +20,13 @@ description: Planning and co-design discipline. Use when scoping any non-trivial
   proceed after just enough inspection to form a concrete plan.
 - When a specific decision needs your input, compare the alternatives in a trade-off
   table — not a questionnaire — so they're easy to weigh side by side.
+
+## Review the plan
+
+- Before presenting a plan to the user, have a fresh sub-agent review it using
+  `my-code-review`; address its findings first.
+- After the user's review and iteration, if there were significant changes, run the
+  fresh-sub-agent `my-code-review` pass again before proceeding to implementation.
 
 ## Research before building
 
