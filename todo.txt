@@ -17,3 +17,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 Refactor and migrate '~/.secrets' to be managed by Mise
 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
 (B) style(codex) pad inline comments to 2 spaces in private_config.toml.tmpl {{ else if .isRiotMachine }} branch (~L20-21); unverifiable on personal machine, would fail taplo on a riot machine
+(B) Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8caddfd6-7d62-4a1d-b0fa-218bf7a22704.pi-gemini session:8caddfd6-7d62-4a1d-b0fa-218bf7a22704 agent:claude model:claude-opus-4-8

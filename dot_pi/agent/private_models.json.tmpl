@@ -74,6 +74,42 @@
       {{- end }}
       ]
     }
+    {{- else if .is_my_machine }}
+    "google": {
+      "name": "Google Gemini",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+      "api": "google-generative-ai",
+      "apiKey": {{ onepasswordRead "op://CLI/Gemini API Key - Frankish/credential" | quote }},
+      "models": [
+        {
+          "id": "gemini-3.1-pro-preview",
+          "name": "Gemini 3.1 Pro",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1048576,
+          "maxTokens": 65536,
+          "cost": { "input": 2.0, "output": 12.0, "cacheRead": 0.2, "cacheWrite": 0 }
+        },
+        {
+          "id": "gemini-3.5-flash",
+          "name": "Gemini 3.5 Flash",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1048576,
+          "maxTokens": 65536,
+          "cost": { "input": 1.5, "output": 9.0, "cacheRead": 0.15, "cacheWrite": 0 }
+        },
+        {
+          "id": "gemini-3.1-flash-lite",
+          "name": "Gemini 3.1 Flash-Lite",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "contextWindow": 1048576,
+          "maxTokens": 65536,
+          "cost": { "input": 0.25, "output": 1.5, "cacheRead": 0.025, "cacheWrite": 0 }
+        }
+      ]
+    }
     {{- end }}
   }
 }
