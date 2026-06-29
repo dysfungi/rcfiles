@@ -255,7 +255,20 @@ def render_template_to_file(source: str, dest: Path) -> str | None:
 
 
 def refresh_chezmoi_config_from_staged_template() -> str | None:
-    result = subprocess.run(["chezmoi", "init"], capture_output=True)
+    # Pass --source for the same reason as render_template_to_file: in a linked
+    # worktree the config must refresh from the staged worktree template, not
+    # chezmoi's configured source (the main checkout). Otherwise a template that
+    # renames a .chezmoi.toml.tmpl key renders against a config regenerated from
+    # main's stale template and fails with `map has no entry for key`.
+    worktree_root = Path(
+        subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
+    result = subprocess.run(
+        ["chezmoi", "init", "--source", str(worktree_root)],
+        capture_output=True,
+    )
     if result.returncode != 0:
         return result.stderr.decode(errors="replace").strip()
     return None
@@ -395,7 +408,7 @@ def process_file(source: str) -> bool:
     # Whitespace-only render -> PASS without type detection or linting.
     # Mirrors chezmoi's "empty render = no target file" semantics (the empty_
     # attribute prefix opts OUT of that). A template wholly wrapped in a
-    # machine/platform conditional (e.g. {{ if .isRiotMachine }}…{{ end }})
+    # machine/platform conditional (e.g. {{ if .is_riot_machine }}…{{ end }})
     # legitimately renders empty on the current host: there is no target file
     # and thus nothing to format or lint. A successful render already validated
     # the Go-template syntax, so short-circuit rather than feed an empty buffer
