@@ -65,6 +65,22 @@ hook-blocked on the main checkout until inside a worktree.
      ask me how to proceed, and propose a concrete update to this skill so the
      new use-case is covered next time (see `my-agent-memory`).
 
+### Worktree merge-back — what's agent-gated
+
+The worktree guard blocks mutating git only on the **main checkout**, not in a
+linked worktree:
+
+- `git rebase main` to linearize the branch when main advanced runs **inside the
+  worktree** (cwd = the worktree) — this is a worktree-local mutation, so it is
+  **agent-allowed** and is NOT the gated step. Do it before integrating so the
+  branch fast-forwards cleanly.
+- Integrating into main is the gated boundary: a local `git merge` /
+  `git merge --ff-only` into the main checkout is **blocked** (a human, or a
+  `worktree-exempt` file, is required), whereas `gh pr merge` completes
+  server-side and never touches the local main checkout, so it is
+  **agent-allowed**. Prefer the PR path where available; otherwise hand the final
+  local merge to the human.
+
 {{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
 ### Claude Code create / exit mechanics
