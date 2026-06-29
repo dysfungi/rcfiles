@@ -17,5 +17,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 Refactor and migrate '~/.secrets' to be managed by Mise
 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
 (B) style(codex) pad inline comments to 2 spaces in private_config.toml.tmpl {{ else if .isRiotMachine }} branch (~L20-21); unverifiable on personal machine, would fail taplo on a riot machine
-Refactor chezmoi identifiers to snake_case + add my-chezmoi skill +chezmoi @worktree:.claude/worktrees/862841d3-22d9-4769-bdae-90ea789f3792.snake-case-refactor session:862841d3 agent:claude model:claude-opus-4-8
 (B) Add regression test for validate-chezmoi-templates worktree --source refresh +chezmoi +testing
