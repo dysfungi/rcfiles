@@ -1,33 +1,48 @@
-github:hadolint/hadolint             2.14.0
-github:mvdan/sh                      3.13.1
-hadolint                             2.14.0
-jq                                   1.8.2     ~/.config/mise/config.toml  latest
-lua                                  5.5.0
-node                                 22.22.3
-node                                 23.0.0
-node                                 24.17.0   ~/.config/mise/config.toml  lts
-npm:@anthropic-ai/claude-code        2.1.185   ~/.config/mise/config.toml  latest
-npm:@earendil-works/pi-coding-agent  0.79.9    ~/.config/mise/config.toml  latest
-npm:@opengsd/get-shit-done-redux     1.1.0     ~/.config/mise/config.toml  latest
-npm:markdownlint-cli                 0.49.0
-ollama                               0.22.0
-pipx:bandit                          1.9.4     ~/.config/mise/config.toml  latest
-pipx:doit                            0.37.0    ~/.config/mise/config.toml  latest
-pipx:ipython                         9.14.0
-pipx:ipython                         9.14.1    ~/.config/mise/config.toml  latest
-pipx:mypy                            2.1.0     ~/.config/mise/config.toml  latest
-pipx:neovim-remote                   2.5.1     ~/.config/mise/config.toml  latest
-pipx:pre-commit                      4.6.0
-pipx:yamllint                        1.38.0
-poetry                               2.4.1
-pre-commit                           4.6.0     ~/.config/mise/config.toml  latest
-python                               3.12-dev
-python                               3.12.7
-python                               3.12.11
-python                               3.13.14   ~/.config/mise/config.toml  3.13
-ruff                                 0.15.18   ~/.config/mise/config.toml  latest
-shellcheck                           0.11.0
-shfmt                                3.13.1
-stylua                               2.5.2
-taplo                                0.10.0
-uv                                   0.11.23   ~/.config/mise/config.toml  latest
+cargo:rust-parallel                   1.23.0
+dbmate                                2.33.0
+dotnet                                9.0.315 (symlink)
+github:aaronriekenberg/rust-parallel  1.23.0
+github:hadolint/hadolint              2.14.0
+github:mvdan/sh                       3.13.1
+github:vultr/vultr-cli                3.10.0
+hadolint                              2.14.0
+helm                                  4.2.2
+jq                                    1.8.2              ~/.config/mise/config.toml  latest
+k9s                                   0.51.0
+kubectl                               1.36.2
+lua                                   5.5.0
+node                                  22.22.3
+node                                  23.0.0
+node                                  24.17.0            ~/.config/mise/config.toml  lts
+npm:@anthropic-ai/claude-code         2.1.185            ~/.config/mise/config.toml  latest
+npm:@earendil-works/pi-coding-agent   0.79.9             ~/.config/mise/config.toml  latest
+npm:@opengsd/get-shit-done-redux      1.1.0              ~/.config/mise/config.toml  latest
+npm:@tobilu/qmd                       2.5.3 (missing)    ~/.config/mise/config.toml  latest
+npm:markdownlint-cli                  0.49.0
+ollama                                0.22.0
+opentofu                              1.12.3
+pipx:bandit                           1.9.4              ~/.config/mise/config.toml  latest
+pipx:doit                             0.37.0             ~/.config/mise/config.toml  latest
+pipx:httpie                           3.2.4
+pipx:ipython                          9.14.0
+pipx:ipython                          9.14.1             ~/.config/mise/config.toml  latest
+pipx:mypy                             2.1.0              ~/.config/mise/config.toml  latest
+pipx:neovim-remote                    2.5.1              ~/.config/mise/config.toml  latest
+pipx:pre-commit                       4.6.0
+pipx:s3cmd                            2.4.0
+pipx:yamllint                         1.38.0
+poetry                                2.4.1
+pre-commit                            4.6.0              ~/.config/mise/config.toml  latest
+python                                3.12-dev
+python                                3.12.7
+python                                3.12.11
+python                                3.13.14            ~/.config/mise/config.toml  3.13
+ruff                                  0.15.18            ~/.config/mise/config.toml  latest
+rust                                  stable (symlink)
+shellcheck                            0.11.0
+shfmt                                 3.13.1
+stylua                                2.5.2
+taplo                                 0.10.0
+trivy                                 0.71.2
+ubi:aaronriekenberg/rust-parallel     1.23.0
+uv                                    0.11.23            ~/.config/mise/config.toml  latest
