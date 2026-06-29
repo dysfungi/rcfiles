@@ -55,7 +55,7 @@ hook-blocked on the main checkout until inside a worktree.
      anything `gh` recognizes): push the branch and open a PR (`gh pr create`).
      When the PR is ready, self-review it per `my-code-review` before merging.
      Auto-merge (squash) ONLY if the repo owner is one of my own accounts
-     (dysfungi, dfrank, …) — `gh pr merge --squash --delete-branch`. Any other
+     ({{ .my.github_personal_owners | join ", " }}) — `gh pr merge --squash --delete-branch`. Any other
      owner (work/shared) → leave the PR open for review; do NOT auto-merge.
    - Non-GitHub / no remote, my own project (I work directly off main): squash-merge
      the branch into main — `git merge --squash <branch>` + single conventional

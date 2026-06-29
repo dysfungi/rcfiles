@@ -1,0 +1,7 @@
+my:
+  # GitHub owners that count as "my own accounts" — repos under these owners
+  # are eligible for PR auto-merge in the my-git skill's merge-back protocol.
+  # Any other owner (work/shared) leaves the PR open for review.
+  github_personal_owners:
+    - dysfungi
+    - dfrank
