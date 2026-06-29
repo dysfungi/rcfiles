@@ -130,7 +130,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - All chezmoi scripts must log start/end to stderr: sh scripts use `echo >&2 "INFO: Starting $0"` / `echo >&2 "INFO: Ending $0"`; PowerShell scripts use `Write-Host "INFO: Starting $PSCommandPath"` / `Write-Host "INFO: Ending $PSCommandPath"`.
 - **Vim filetype modeline for `.tmpl` files**: By default, no modeline is needed — `vim.filetype.add` in the Neovim config auto-reconstructs the chezmoi target basename (stripping attribute prefixes and `dot_` → `.`) and returns a compound `gotmpl.<lang>` type, so `{{ }}` directives highlight correctly and host-language Vim syntax applies automatically. **Only add a modeline when the filename lies about the body** (e.g. a `.json.tmpl` whose script body is Python, not JSON). In that case, use `# vim: ft=gotmpl.<lang>` on line 2 (after the shebang if present), and **only** in files where the comment won't leak into rendered output — `modify_*` scripts are safe (comment lives in the script, not its stdout); direct-render configs (`.toml.tmpl`, `.yml.tmpl`, etc.) and files without comment syntax (`.json.tmpl`, secrets, symlink targets) must rely on the centralized rule. Example: `# vim: ft=gotmpl.python` in `modify_config.json.tmpl` whose body is a Python script.
 - When adding, removing, or renaming script stages, bootstrap steps, or platform architecture (package management layers, machine detection variables), update the corresponding README sections in the same commit.
-- **pre-commit hooks are the contract; files must conform.** When a hook fails, fix the source file — do not exclude it from the hook, skip the hook, or add workarounds (e.g. `# noqa`, `# fmt: skip`, extending `exclude:` patterns). The only legitimate hook excludes are structural incompatibilities (binary-like JSON, vendored files). Silencing a hook without explicit user approval is a policy violation. If you're unsure whether a file change is correct, check the hook's documentation.
+- **Legitimate pre-commit excludes** in this repo are structural incompatibilities only (binary-like JSON, vendored files). The general hooks-are-the-contract rule (fix the source; never skip a hook or add `# noqa` / `# fmt: skip` / `exclude:` workarounds without explicit approval) lives in the `my-linting` skill.
 
 ## Programming & Engineering
 
@@ -169,8 +169,6 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - In chezmoi Go templates, use `index $pkg "key"` (not `$pkg.key`) to safely access optional fields in `.chezmoidata` maps. Dot-notation panics with `map has no entry for key` when the key is absent; `index` returns nil (falsy) for missing keys.
 
 ## Commit Semantics
-
-- **One logical change per commit** — each commit must touch only the files directly required for that single change. When a task spans multiple files with independent concerns (eg, fixing `aliases.xsh` and `prompt.xsh` are separate fixes), commit them separately. Resist the urge to bundle "all the Windows fixes" into one commit.
 
 - In this chezmoi repo, prefer conventional commit types to describe changes to the repo's managed desired state, not the downstream effect on the machine by default.
 - For package-manager inventory changes (eg, Brewfile additions, removals, taps, or version-management entries), prefer `chore(...)` unless the change fixes broken repo behavior or adds a new repo-managed capability.
