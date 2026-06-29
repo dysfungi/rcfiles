@@ -1,0 +1,28 @@
+---
+name: my-mise-en-place
+description: mise — per-project dev tool manager for language runtimes, environment
+  variables, and tasks, reproducibly. Use when running a project dependency, runtime,
+  CLI, or task that mise manages: resolve and run it through mise (mise x -- <cmd>, or
+  a mise task) so the pinned version and project env apply, instead of assuming bare
+  PATH. The canonical place other skills resolve how to invoke a tool. Keywords: mise,
+  mise-en-place, runtime, toolchain, version manager, env vars, tasks, mise x.
+---
+
+# mise
+
+`mise` manages language runtimes, environment variables, and tasks per project,
+reproducibly (successor to asdf-style version managers).
+
+## Running a managed dependency
+
+- A tool installed/pinned by `mise` may not be on bare `PATH`. To run it, prefix the
+  command with `mise x -- <command>`, or invoke the project's `mise` task, so the
+  correct version and project environment apply.
+- This is the canonical resolver for "how do I actually run this dependency?" — other
+  skills (`my-linting`, `my-testing`, `my-coding-python`) reference here instead of
+  hardcoding a `mise x --` prefix.
+
+## Tasks & env
+
+- Prefer a defined `mise` task (`mise run <task>`) when the project provides one.
+- mise supplies per-project env vars; don't replicate them with ad-hoc exports.

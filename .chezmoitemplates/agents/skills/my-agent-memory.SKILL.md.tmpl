@@ -1,0 +1,35 @@
+---
+name: my-agent-memory
+description: Learning-as-instructions discipline. Use when a stable, reusable workflow
+  preference, correction, or constraint surfaces mid-task — decide whether it's durable,
+  then capture it by updating or creating the relevant skill (preferred) rather than
+  growing the monolithic AGENTS.md. Route cross-tool/cross-repo learnings to shared
+  skills; keep repo-specific learnings repo-local. Keywords: memory, learning,
+  learning-as-instructions, skill, skills, SKILL.md, AGENTS.md, CLAUDE.md, GEMINI.md,
+  preference, correction, constraint, instructions.
+---
+
+# Learning as instructions
+
+- Treat learning-as-instructions as a continuous task.
+- When a stable, reusable preference, correction, or constraint surfaces during a turn,
+  capture it immediately — prefer updating or creating a **skill** over editing the
+  monolithic `AGENTS.md`.
+- Don't capture one-off task details, transient incidents, or speculative preferences.
+
+## Where it goes (skills-first)
+
+- Existing skill fits → update that skill's shared template
+  (`.chezmoitemplates/agents/skills/<name>.SKILL.md.tmpl`).
+- New durable domain → create a new `my-*` skill (shared body + per-tool wrappers).
+- Cross-tool/cross-repo guidance → shared skills (render into all tools), NOT
+  tool-specific files (`CLAUDE.md`, `GEMINI.md`, …).
+- Repo-specific delta → a repo-local skill or repo-local `AGENTS.md`; never duplicate
+  shared guidance there.
+- Keep the lean core `AGENTS.md` minimal — identity, communication, and guardrail
+  stubs only. Don't grow it with domain rules; those belong in skills.
+
+## Close the loop
+
+- Before ending a turn where a durable learning surfaced, either apply the concrete
+  skill (or `AGENTS.md`) delta or state explicitly why no change was made.

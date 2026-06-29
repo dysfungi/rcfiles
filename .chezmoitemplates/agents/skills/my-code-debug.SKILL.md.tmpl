@@ -1,0 +1,25 @@
+---
+name: my-code-debug
+description: Debugging and triage methodology. Use when triaging or diagnosing a
+  failing test, build, hang, crash, or wrong behavior to isolate a root cause.
+  Triage first (reproduce, characterize, scope), then change one hypothesis/variable
+  at a time — or a git bisect search. For running checks see my-linting and my-testing.
+---
+
+# Debugging & triage
+
+## Triage first
+
+- Reproduce the failure reliably, characterize the symptom, and scope the blast
+  radius before forming hypotheses. A bug you can't reproduce, you can't confirm fixed.
+
+## Method
+
+- Test one hypothesis/variable at a time — unless deliberately running a
+  `git bisect`-style search.
+- Form a hypothesis → change one thing → observe → repeat. Don't shotgun several
+  fixes at once and lose track of which one mattered.
+
+## Running checks
+
+- Linters/validators → `my-linting`. Tests → `my-testing`. Editor (Neovim) ops → `my-editor-neovim`.

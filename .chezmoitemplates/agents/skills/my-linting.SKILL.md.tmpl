@@ -1,0 +1,29 @@
+---
+name: my-linting
+description: Linting, formatting, and static program analysis discipline. Use when
+  running linters, formatters, or validators, or when a pre-commit hook fails. Invoke
+  checks via pre-commit run, not bare binaries; verify a change set with a single
+  pre-commit run --all-files; treat hooks as the contract — fix the source rather than
+  skipping or silencing. Keywords: lint, linter, format, formatter, static program
+  analysis, validator, pre-commit, shellcheck, ruff, prettier.
+---
+
+# Linting
+
+## Invoke via pre-commit
+
+- When a repo has `pre-commit` configured, run linters/validators via
+  `pre-commit run <hook-id> --all-files`, not the tool binary directly — the binary
+  may not be on `PATH` outside the pre-commit virtualenv.
+- To verify a change set, prefer a single `pre-commit run --all-files` (or scoped to
+  touched files) over hand-assembling equivalent checks.
+- If `pre-commit` (or any check tool) is a project-managed dependency, resolve how to
+  invoke it via `my-mise-en-place` rather than assuming it's on bare `PATH` — don't
+  hardcode a runner prefix here.
+
+## Hooks are the contract
+
+- When a hook fails, fix the source so it conforms. Do not skip the hook, add inline
+  silencers (`# noqa`, `# fmt: skip`), or extend `exclude:` patterns to dodge it.
+- The only legitimate excludes are structural incompatibilities (vendored files,
+  binary-like blobs). Silencing a hook otherwise needs explicit user approval.

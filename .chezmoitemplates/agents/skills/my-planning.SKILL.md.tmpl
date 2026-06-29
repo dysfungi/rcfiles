@@ -1,0 +1,82 @@
+---
+name: my-planning
+description: Planning and co-design discipline. Use when scoping any non-trivial task
+  or writing an implementation plan. Co-design with the user and align on key decisions
+  first; research existing/reusable solutions before building custom; prefer idiomatic,
+  declarative, maintainable designs; break work into independently verifiable phases
+  with self-feedback loops; keep plans concise and scannable. When a decision needs
+  alignment, compare the alternatives in a table. Keywords: plan, planning, co-design,
+  design, tech design doc, scope, approach, alternatives, idiomatic, declarative, reuse,
+  documentation, plan template, plan mode.
+---
+
+# Planning
+
+## Co-design with the user
+
+- All tasks are planned and co-designed with the user — align on every high-level and
+  important decision before substantial execution.
+- Get early feedback when the task is ambiguous, high-risk, or wide in scope; otherwise
+  proceed after just enough inspection to form a concrete plan.
+- When a specific decision needs your input, compare the alternatives in a trade-off
+  table — not a questionnaire — so they're easy to weigh side by side.
+
+## Research before building
+
+- Before planning a custom solution, research existing, reusable solutions and prioritize
+  them. Prefer adopting or extending over reinventing.
+
+## Solution preferences
+
+- Prefer solutions idiomatic to the problem space, framework, system, and technology.
+- Prefer general solutions that improve long-term maintainability over quick one-offs.
+- Prefer declarative design over imperative.
+
+## Documentation
+
+- Decide what documentation to create or update for the change (READMEs, design docs,
+  runbooks, inline comments) and plan it as work.
+
+## Break into testable phases
+
+- Break the implementation into concrete, usable functionality that can be programmatically
+  tested and verified at each step/phase — each phase is a complete definition including
+  its own validation (linting, tests, build/compile, manual checks).
+- Plan an automated, persistent test suite that validates the whole implemented
+  functionality and catches regressions over time — a hard requirement (see `my-testing`).
+
+## Format & template
+
+- Keep plans concise and scannable: clean Markdown hierarchy (headings, tables, bullet
+  lists), not dense prose or confusing sub-numbering (`1a`, `1b`).
+- Use this template (inspired by tech design docs):
+
+```markdown
+# <Title>
+
+## Context & Problem
+The problem/need, what prompted it, and the intended outcome.
+
+## Goals & non-goals
+What this addresses — and what it explicitly does not.
+
+## Approach
+The proposed design and why it fits (idiomatic, declarative, maintainable).
+
+## Alternatives considered
+Design alternatives weighed, each with the reasoning for rejecting it.
+
+## Implementation plan
+Ordered, concrete phases. Each phase is a complete definition including its own
+validation (linting, tests, build/compile, manual checks).
+
+## Documentation
+Docs to create or update for the change (READMEs, design docs, runbooks, inline comments).
+
+## Test Coverage
+Visualize the persistent, automated test coverage planned (e.g. a functionality × test-type
+matrix) and identify any gaps. Any missing or manual-only coverage must state explicit reasoning.
+
+## Risks & open decisions
+Known risks; decisions still needing alignment (compare each as a trade-off table when seeking input).
+```

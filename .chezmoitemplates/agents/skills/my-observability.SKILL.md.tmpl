@@ -1,0 +1,30 @@
+---
+name: my-observability
+description: Observability, monitoring, and alerting standards. Use when instrumenting
+  code, emitting telemetry, naming spans/metrics/log attributes, or designing monitors,
+  alerts, and dashboards: follow OpenTelemetry (OTel) semantic conventions; prefer
+  traces, then logs/events, then metrics; alert only on user-facing symptoms with SLO
+  burn-rate as the gold standard. Keywords: observability, OpenTelemetry, OTel,
+  telemetry, tracing, spans, metrics, logs, events, semantic conventions,
+  instrumentation, monitoring, alerting, paging, on-call, SLO, SLO burn rate,
+  error budget.
+---
+
+# Observability & reliability
+
+## Instrumentation
+
+- Follow OpenTelemetry (OTel) conventions and standards for traces, metrics, and logs.
+- Name spans, metrics, and attributes per OTel semantic conventions rather than ad-hoc
+  names — consistent names make telemetry queryable and portable across tools.
+- Prefer richer signals first: **traces → logs/events → metrics**. Instrument
+  application-level behavior with traces (and structured events) before reaching for
+  metrics; metrics are the last resort, for aggregates traces/events can't cheaply answer.
+
+## Monitoring & alerting
+
+- Alert on **user-facing symptoms**, not internal causes — a page should mean a real
+  user is (or imminently will be) affected.
+- Reserve human-facing notifications/paging for symptom-based, user-impacting alerts;
+  the gold standard is **SLO burn-rate alerting**. Don't page on cause-level, internal,
+  or speculative signals.

@@ -1,0 +1,39 @@
+---
+name: my-executing
+description: Execution discipline. Use when implementing a planned change in
+  implementation / accept-edits mode: apply instruction and convention changes before
+  the code they govern; verify each phase yourself with automated checks (keep the human
+  out of the testing/validation loop); have a fresh sub-agent review changes per
+  my-code-review; don't cheat — build for long-term quality; prefer Python for scripting;
+  return to planning on a real design decision; use the project's source-control skill
+  (e.g. my-git, my-perforce) and respect multi-agent isolation; and surface every minor
+  decision you made at the end. Keywords: execute, execution, implement, implementation,
+  iterate, verify, review, source control, isolation, automate, craftsmanship,
+  transparency, accept edits.
+---
+
+# Execution
+
+- Implement instruction and convention changes **before** the code they govern.
+- Prefer Python for scripting unless there's a required reason not to (e.g. a
+  bootstrap-level script).
+- Follow `my-commenting` when adding comments.
+- Test and iterate: verify each phase before the next. Keep the human out of the loop for
+  testing, validation, and verification — if it can be automated, do it yourself instead
+  of asking the user to check.
+- Review (feedback loop): once a phase's changes are in, have a **fresh sub-agent** review
+  them per `my-code-review`. Address findings and re-review — like testing — until a review
+  surfaces nothing significant.
+- Don't cheat: the user values craftsmanship, quality, and building things right for the
+  long term — no shortcuts that fake success.
+- If a design decision needs alignment, return to planning rather than guessing.
+- At the end, clearly present every minor design decision you made without pausing — for
+  transparency, auditability, and pushback.
+
+## Source control
+
+- Use the source-control skill appropriate to the project: `my-git` (Git), `my-perforce`
+  (Perforce/p4), etc.
+- Be wary of agent isolation — multiple agents may work the same project concurrently;
+  follow that skill's isolation protocol (e.g. worktrees) so concurrent edits don't clobber
+  each other.

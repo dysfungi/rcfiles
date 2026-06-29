@@ -1,0 +1,29 @@
+---
+name: my-testing
+description: Testing and validation discipline. Use when adding or changing
+  functionality, or deciding what and how to test: write automated tests that prevent
+  regressions and document supported behavior, prefer real inputs and outputs over
+  mocks, and treat tests as the durable spec. Add the test in the same commit as the
+  functionality it covers. Run the test runner via my-mise-en-place. Keywords: test,
+  tests, testing, regression, fixtures, mocks, pytest, validation.
+---
+
+# Testing
+
+## Tests are the spec
+
+- When adding or modifying functionality, write automated tests that prevent
+  regressions and document the supported features/workflows.
+- Tests are the durable spec — comments and docstrings supplement them, never replace.
+- Add the test in the same commit as the functionality (and its regression class).
+
+## Prefer real over mocked
+
+- Prefer real inputs and outputs over mocks — sit as close to actual user behavior as
+  possible. The harness adapts to the production shape; don't reshape production solely
+  to expose internals for testing.
+
+## Running tests
+
+- Invoke the test runner via `my-mise-en-place` (e.g. a mise-managed `pytest`), not a
+  bare binary. Lint/validate alongside via `my-linting`.

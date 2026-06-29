@@ -1,0 +1,36 @@
+---
+name: my-audit-trail
+description: Audit-trail conventions for durable, LLM-authored records. Use when
+  authoring a git commit body, pull request (PR) description, Jira comment, incident
+  note, or any change record: explicit agent attribution, per-change rationale, and compact
+  grep-friendly metadata (Co-Authored-By / Model / Model-Provider / Session-ID /
+  Username / Hostname) with each value's source recorded inline.
+---
+
+# Audit records
+
+For any durable, auditable body an LLM agent authors — git commit, PR description,
+Jira comment, incident note, change record — make authorship and rationale explicit.
+
+## Attribution & rationale
+
+- State agent authorship via an `Authored By` field naming the tool/agent used.
+- Include a concise summary explaining each material change and WHY.
+- If materially changing a Jira ticket's saved fields (title, description, acceptance
+  criteria, scope, status), add a Jira comment recording each change + rationale.
+
+## Compact metadata (keep it greppable)
+
+Include: `Co-Authored-By`, `Model`, `Model-Provider`, `Session-ID`, `Username`, `Hostname`.
+Record each value's source inline — e.g. `Model: claude-opus-4-8 (source: session)`.
+Terse source labels: `session` for live runtime values; the config filename for applied
+config (e.g. `~/.codex/config.toml`).
+
+## Resolution order (per attribute)
+
+1. Current live session / runtime context (incl. status/UI metadata).
+2. Active applied config — NOT repo templates or dotfile source.
+
+Never assume or guess a metadata value — if it cannot be dynamically read from a source
+of truth, default to `unknown (source: unavailable)`. Copy values exactly as shown — never
+infer from API base URLs, proxies, or assumed vendors.

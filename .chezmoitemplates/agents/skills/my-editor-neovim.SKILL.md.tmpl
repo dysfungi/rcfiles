@@ -1,0 +1,15 @@
+---
+name: my-editor-neovim
+description: Neovim operations. Use when running Neovim plugin or maintenance
+  commands — Lazy plugin update/sync, Mason / MasonInstall, TSInstall, checkhealth,
+  or any nvim config task. Prefer headless invocation over driving Neovim
+  interactively. Keywords: neovim, nvim, lazy, mason, treesitter, checkhealth.
+---
+
+# Neovim
+
+- For Neovim plugin/maintenance ops (Lazy update/sync, `Mason`/`MasonInstall`,
+  `TSInstall`, `checkhealth`, …), prefer `nvim --headless "<commands>" "+qa"` over
+  asking the user to run them interactively inside Neovim.
+- Headless runs are scriptable and deterministic — capture the output, assert success,
+  and don't leave an interactive session open.

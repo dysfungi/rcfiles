@@ -1,0 +1,31 @@
+---
+name: my-coding-python
+description: Python authoring conventions. Use when writing or editing Python —
+  especially standalone scripts: uv run shebangs (PEP 723 inline deps, --no-project
+  for hooks), comprehensive module-level docstrings, PEP 8 / Zen of Python style.
+  For tests see my-testing; to run project tools see my-mise-en-place. Keywords:
+  python, uv, PEP 723, PEP 8, shebang, script, docstring.
+---
+
+# Python
+
+## uv shebangs
+
+- Stdlib-only script: `#!/usr/bin/env -S uv run`.
+- Script with PEP 723 inline dependency metadata: `#!/usr/bin/env -S uv run --script`.
+- `uv` resolves the Python version and isolates deps — no `mise x`, virtualenv, or
+  `pip install` needed for the script itself.
+- For scripts that must not couple to a project's `pyproject.toml` (e.g. hooks that run
+  from the repo root), add `--no-project` so `uv` doesn't discover/parse project config.
+
+## Module docstrings
+
+- Every Python script includes a comprehensive module-level docstring covering intent,
+  architecture/design, and key decision trade-offs — a future reader should understand
+  WHY it exists without reading git history.
+
+## Style & adjacent skills
+
+- Follow PEP 8 and the Zen of Python (explicit, simple, flat, readable, loud on errors).
+- Tests → `my-testing`. Running project tools/runners → `my-mise-en-place`. General
+  principles → `my-engineering-principles`.

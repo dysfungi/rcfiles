@@ -1,0 +1,69 @@
+---
+name: my-git
+description: Git workflow conventions. Use for ANY Git-related action —
+  committing, branching, pushing, pulling, rebasing, resetting, stashing,
+  tagging, or starting file-modifying work that needs an isolated worktree.
+  Covers conventional-commit subjects, auto-commit/auto-push cadence,
+  read-only auto-proceed, pull --rebase before push, named stashes,
+  destructive-op guardrails, the multi-instance worktree protocol, and
+  PR-based merge-back on GitHub origins (auto-merge only for my own accounts).
+  For commit/PR audit trailers, see my-audit-trail.
+---
+
+# Git workflow
+
+## Commits
+
+- Conventional Commits: semantic subject + audit-useful rationale in the body.
+- One logical change per commit: touch only the files required for that change;
+  commit independent concerns separately.
+- Outside plan mode, auto-commit completed work without asking — commits flow
+  automatically in implementation mode. Pause and return to plan mode only if a
+  fundamental design issue surfaces, or when the user pushes back on a recent change.
+- Commit/PR audit trailers (Authored-By, Model, Session-ID, …) → my-audit-trail.
+
+## Push / pull
+
+- Push immediately after every commit, same turn — don't wait to be asked.
+- Pull-rebase-before-push: always `git pull --rebase` before `git push`; on a
+  non-fast-forward rejection, retry once with `git pull --rebase && git push`.
+- Auto-proceed on read-only ops (status, diff, log, show, branch, pull, push,
+  push --force-with-lease) without asking.
+
+## Destructive ops — pause first
+
+Pause before push --force, push --delete, rebase, reset, stash pop/drop, tag
+unless the user explicitly requested that exact action in the current message.
+
+## Stashes
+
+Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name.
+Multiple agents share the stash stack; unnamed stashes collide.
+
+## Multi-instance worktrees (mandatory before any file edit)
+
+Concurrent agents on one branch race (last write wins); Write/Edit/Bash are
+hook-blocked on the main checkout until inside a worktree.
+
+1. `git pull`, then check claims: `todo.sh list @worktree`.
+2. Create a worktree and work inside it.
+3. Record the claim in todo.txt and commit it in the worktree's first commit.
+   ← todo.txt format: my-task-tracking.
+4. On completion, inside the worktree: mark the task done and commit. Then merge
+   back by origin type:
+   - GitHub origin (github.com or an Enterprise/self-hosted GitHub host, e.g.
+     anything `gh` recognizes): push the branch and open a PR (`gh pr create`).
+     When the PR is ready, self-review it per `my-code-review` before merging.
+     Auto-merge (squash) ONLY if the repo owner is one of my own accounts
+     (dysfungi, dfrank, …) — `gh pr merge --squash --delete-branch`. Any other
+     owner (work/shared) → leave the PR open for review; do NOT auto-merge.
+   - Non-GitHub / no remote, my own project (I work directly off main): squash-merge
+     the branch into main — `git merge --squash <branch>` + single conventional
+     commit — `git branch -D <branch>` (squash leaves it "unmerged", so `-d` fails),
+     push.
+   - Any other case (e.g. a non-GitHub remote that isn't mine): default to STOP —
+     ask me how to proceed, and propose a concrete update to this skill so the
+     new use-case is covered next time (see `my-agent-memory`).
+
+(Tool-specific create/exit mechanics — Claude EnterWorktree/ExitWorktree, Pi's
+worktree-guard — render per-tool via the existing hasSuffix conditionals.)

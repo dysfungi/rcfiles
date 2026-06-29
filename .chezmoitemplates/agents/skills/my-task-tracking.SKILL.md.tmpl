@@ -1,0 +1,37 @@
+---
+name: my-task-tracking
+description: Task-tracking discipline. Use when planning or working any non-trivial
+  task: maintain an active session tasklist, and manage the repo todo.txt and done.txt
+  files. Covers todo-txt format, todo.txt, done.txt, todo.sh, priority markers, the
+  x YYYY-MM-DD archive convention, proactive task capture and completion, and tmux
+  pane labeling.
+---
+
+# Task tracking
+
+## Active tasklist (every session)
+
+- Maintain an active tasklist throughout the session using the tool's task mechanism.
+- Seed it at session start with known open items before beginning work.
+- Create tasks proactively as new work surfaces — yak-shaving and deferred items too,
+  not just the primary request.
+- Mark tasks completed promptly; never let the list go stale.
+
+## todo.txt / done.txt
+
+- If `todo.txt`/`done.txt` don't exist at the repo root, create them
+  (`touch todo.txt done.txt`).
+- Use `todo.sh` for all todo.txt/done.txt operations; fall back to direct file edits
+  only when the CLI isn't installed.
+- Priorities: `(A)` blocking · `(B)` important · `(C)` maintenance · none = nice-to-have.
+- Completing a deferred item → move it to done.txt with an `x YYYY-MM-DD` prefix
+  (`todo.sh archive` convention); never delete completed tasks.
+- Keep the session tasklist and todo.txt in sync.
+
+## Pane label (tmux)
+
+When running under tmux, once the task is identifiable set the pane title to a short task
+summary: `tmux select-pane -T "<label>"`, guarded by `[[ -n "${TMUX:-}" ]] &&`. Persist the
+label to the agent's task-label store (Claude reference: `~/.claude/task-labels/$TMUX_PANE`,
+read by the `UserPromptSubmit` hook) and sync it to the todo.txt task slug; refine as
+understanding improves.

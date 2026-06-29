@@ -1,0 +1,54 @@
+---
+name: my-engineering-principles
+description: Core software-engineering principles. Use when designing or writing
+  non-trivial code and choosing between approaches: less-is-more (simple over
+  simplistic), early-exit guard clauses, fail loud not silent, flat readable logic,
+  proven composable tools over hand-rolled scripts, self-documenting names, tracer-bullet
+  MVPs, systems thinking, and a preference ladder (YAGNI, SOLID/SRP, separation of
+  concerns, Unix philosophy, Pragmatic Programmer, functional pragmatism, Zen of Python).
+  Keywords: principles, design, simple, YAGNI, SOLID, SRP, separation of concerns, Unix
+  philosophy, tracer bullets, MVP, systems thinking, naming, snake_case.
+---
+
+# Engineering principles
+
+## Defaults
+
+- Less is more: prefer simple over simplistic; aim for concise, modular, elegant code.
+- Follow codebase and community conventions/style.
+- Prefer early-exit guard clauses over nested/spaghetti control flow.
+- Never fail silently — fail loud with a clear, actionable error.
+- Keep logic flat and readable; avoid unnecessary inner helper functions.
+- Prefer proven, lightweight, composable tools over hand-rolled scripts (e.g. logrotate
+  for log rotation).
+- No dead code.
+
+## Tracer bullets — close the loop
+
+- Build the quickest end-to-end, testable MVP that exercises the whole path start to
+  finish, then iterate toward the final, planned solution.
+- A thin slice working end to end beats a half-built perfect layer.
+
+## Systems thinking
+
+- Think about the whole. Weigh how a change interacts with the rest of the system —
+  upstream/downstream effects, interfaces, and second-order consequences — not just the
+  local edit.
+
+## Naming & style
+
+- Prefer self-documenting names over terse abbreviations (`p4_changelist` over `cl`);
+  stop before restating the type/implementation in the name.
+- Avoid Hungarian notation.
+- `snake_case` > `camelCase`.
+- Spaces > tabs.
+
+## When no clear convention applies, prefer
+
+- YAGNI.
+- SOLID — especially the Single Responsibility Principle.
+- Separation of Concerns.
+- Unix philosophy.
+- The Pragmatic Programmer — tracer bullets (above) and fixing broken windows.
+- Functional programming — the pragmatism of OCaml/F#.
+- The Zen of Python — explicit, simple, flat, readable, practical, loud on errors.

@@ -1,0 +1,32 @@
+---
+name: my-code-review
+description: Code review discipline. Use when reviewing a diff, pull request (PR),
+  commit, or code change — including self-review of my own PR before merging.
+  Validate the intended goal first, then design and trade-offs, then concrete
+  bugs / regressions / missing tests, then long-term maintainability and
+  simplification (ideally remove more lines than added), then conventions. Output
+  findings first, in severity order, with file:line references.
+---
+
+# Code review
+
+## What to check (in order)
+
+1. Right thing? Validate the intended goal/outcome first — does the change build
+   what was actually asked for?
+2. Thing right? Understand the design and trade-offs; challenge assumptions and rationale.
+3. Concrete defects. Surface bugs, regressions, risks, and missing tests.
+4. Maintainability. Prefer generalized, reusable approaches over one-offs; will this
+   age well, or is it a brittle special case?
+5. Simplicity & conciseness. Actively look for ways to simplify, tighten, and make
+   the change more concise — ideally it removes more lines than it adds (see
+   `my-engineering-principles`).
+6. Conventions. Adherence to codebase/community conventions and principles —
+   follow the rules until you know when to break them.
+
+## Output
+
+- Findings first, in severity order, each with a `file:line` reference.
+- Summary secondary.
+- If there are no findings, say so explicitly — and still note residual risks or
+  testing gaps.
