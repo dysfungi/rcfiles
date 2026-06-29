@@ -59,27 +59,32 @@ hook-blocked on the main checkout until inside a worktree.
      owner (work/shared) → leave the PR open for review; do NOT auto-merge.
    - Non-GitHub / no remote, my own project (I work directly off main): squash-merge
      the branch into main — `git merge --squash <branch>` + single conventional
-     commit — `git branch -D <branch>` (squash leaves it "unmerged", so `-d` fails),
-     push.
+     commit — then `git branch -D <branch>` (squash leaves it "unmerged", so `-d`
+     fails), push. `--squash` is blocked on the main checkout, so run the squash from
+     a subagent whose cwd is the worktree (all git is allowed there); see the
+     merge-back subsection below.
    - Any other case (e.g. a non-GitHub remote that isn't mine): default to STOP —
      ask me how to proceed, and propose a concrete update to this skill so the
      new use-case is covered next time (see `my-agent-memory`).
 
 ### Worktree merge-back — what's agent-gated
 
-The worktree guard blocks mutating git only on the **main checkout**, not in a
-linked worktree:
+The guard restricts mutating git **only on the main checkout**. Inside a linked
+worktree (cwd = the worktree) ALL git is allowed — the guard returns early there.
 
 - `git rebase main` to linearize the branch when main advanced runs **inside the
-  worktree** (cwd = the worktree) — this is a worktree-local mutation, so it is
-  **agent-allowed** and is NOT the gated step. Do it before integrating so the
-  branch fast-forwards cleanly.
-- Integrating into main is the gated boundary: a local `git merge` /
-  `git merge --ff-only` into the main checkout is **blocked** (a human, or a
-  `worktree-exempt` file, is required), whereas `gh pr merge` completes
-  server-side and never touches the local main checkout, so it is
-  **agent-allowed**. Prefer the PR path where available; otherwise hand the final
-  local merge to the human.
+  worktree** — worktree-local, so **agent-allowed**. Do it before integrating so
+  the branch fast-forwards cleanly.
+- `git merge --ff-only <branch>` into the main checkout is **agent-allowed** via an
+  explicit carve-out — it only advances the pointer and fails if it isn't a
+  fast-forward. This is the gated-but-allowed path, NOT human-gated.
+- A bare merge-commit or `git merge --squash` on the **main checkout** cwd is
+  **blocked**. Run it from a subagent whose cwd is the worktree (where all git is
+  allowed) — spawn the merge subagent with the worktree as cwd (see `my-agent-memory`).
+- `gh pr merge` completes **server-side** and never touches the local main
+  checkout — always **agent-allowed**.
+- The only human-only step is the `worktree-exempt` bypass file; agents never
+  create it.
 
 {{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
