@@ -44,6 +44,7 @@ my:
       }
     ack: { brew: ack }
     act: { brew: act, pacman: act }
+    antigravity-cli: { cask: antigravity-cli } # cask-delivered CLI; Gemini CLI successor (binary: agy)
     archey4: { brew: archey4 }
     ascii: { brew: ascii }
     asdf: { brew: asdf }
