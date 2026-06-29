@@ -65,5 +65,33 @@ hook-blocked on the main checkout until inside a worktree.
      ask me how to proceed, and propose a concrete update to this skill so the
      new use-case is covered next time (see `my-agent-memory`).
 
-(Tool-specific create/exit mechanics — Claude EnterWorktree/ExitWorktree, Pi's
-worktree-guard — render per-tool via the existing hasSuffix conditionals.)
+{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
+
+### Claude Code create / exit mechanics
+
+- Create: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`.
+- Worktree path: `.claude/worktrees/<session-id>.<task-slug>`.
+- Complete: `ExitWorktree action: remove`, then merge back per the origin-type rules
+  in step 4 above.
+- Auto-cleanup: the Stop hook removes merged worktrees for the current session and
+  archives their todo.txt entries; prefer explicit `ExitWorktree` — it's a safety net,
+  not a substitute.
+- Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID` — agents
+  must never create worktree exemption files.
+{{- end }}
+{{- if hasPrefix "dot_pi/" $.chezmoi.sourceFile }}
+
+### Pi create / exit mechanics
+
+- Create: call the `worktree_start` tool with a prompt or explicit branch name; the
+  `@rezamonangg/pi-worktree` package creates the worktree and routes subsequent
+  write/edit/bash calls into it via path rewriting.
+- Worktree path: `.worktree/<branch>`, branch inferred from task type
+  (feat/, fix/, docs/, refactor/, test/).
+- The `worktree-guard.ts` extension blocks mutations until `worktree_start` succeeds;
+  all `worktree_*` tools are always allowed.
+- Complete: call `worktree_stop` (optionally `remove: true`), then merge back per the
+  origin-type rules in step 4 above.
+- Human-only bypass: `touch .pi/worktree-exempt` — agents must never create worktree
+  exemption files.
+{{- end }}

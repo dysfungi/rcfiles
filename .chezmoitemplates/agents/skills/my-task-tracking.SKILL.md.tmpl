@@ -31,7 +31,9 @@ description: Task-tracking discipline. Use when planning or working any non-triv
 ## Pane label (tmux)
 
 When running under tmux, once the task is identifiable set the pane title to a short task
-summary: `tmux select-pane -T "<label>"`, guarded by `[[ -n "${TMUX:-}" ]] &&`. Persist the
-label to the agent's task-label store (Claude reference: `~/.claude/task-labels/$TMUX_PANE`,
-read by the `UserPromptSubmit` hook) and sync it to the todo.txt task slug; refine as
-understanding improves.
+summary: `tmux select-pane -T "<label>"`, guarded by `[[ -n "${TMUX:-}" ]] &&`. Sync it to
+the todo.txt task slug; refine as understanding improves.
+{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
+Persist the label to `~/.claude/task-labels/$TMUX_PANE` (read by the `UserPromptSubmit`
+hook) so agent refinements override the auto-label and persist across user messages.
+{{- end }}
