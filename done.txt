@@ -51,3 +51,4 @@ x 2026-06-26 Fix SSH key lifecycle: replace ENOSPC-fragile modify_ with idempote
 x 2026-06-27 Add github remote MCP server scoped to AI PAT +mcp @worktree:.claude/worktrees/8fd2e827-430a-4575-a7cc-cd1504d8758a.github-ai-mcp session:8fd2e827 agent:claude model:claude-opus-4-8
 x 2026-06-27 x 2026-06-27 fix(hooks) skip empty template renders in validator @worktree:.claude/worktrees/0e488018-b04d-4d73-8eca-7e29abc37890.validator-empty-render session:0e488018 agent:claude model:claude-opus-4-8
 x 2026-06-28 Refactor chezmoi identifiers to snake_case + add my-chezmoi skill +chezmoi @worktree:.claude/worktrees/862841d3-22d9-4769-bdae-90ea789f3792.snake-case-refactor session:862841d3 agent:claude model:claude-opus-4-8
+x 2026-06-28 Add regression test for validate-chezmoi-templates worktree --source refresh +chezmoi +testing @worktree:.claude/worktrees/862841d3-22d9-4769-bdae-90ea789f3792.validator-regression-test session:862841d3 agent:claude model:claude-opus-4-8

@@ -341,3 +341,58 @@ def test_empty_render_skip(
         assert result.returncode != 0, (
             f"expected FAIL: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Integration: config refresh reads from the worktree source
+# ---------------------------------------------------------------------------
+
+
+def test_refresh_config_uses_worktree_source(git_repo: Path) -> None:
+    """Regression: config refresh must read .chezmoi.toml.tmpl from the worktree
+    (`chezmoi init --source <worktree_root>`), not chezmoi's default/configured
+    source.
+
+    A template reads a [data] key defined only in the worktree's
+    .chezmoi.toml.tmpl. With the fix, `chezmoi init --source <worktree>`
+    populates the config with that key and the render succeeds. Without it, a
+    bare `chezmoi init` reads the (empty) default source under the isolated
+    HOME, the key is absent, and the render fails with "map has no entry".
+
+    Guards the --source flag on the chezmoi init call in
+    refresh_chezmoi_config_from_staged_template().
+    """
+    (git_repo / ".chezmoi.toml.tmpl").write_text(
+        '[data]\nworktree_only_key = "test-value"\n'
+    )
+    (git_repo / "dot_config").mkdir()
+    (git_repo / "dot_config" / "thing.toml.tmpl").write_text(
+        "value = {{ .worktree_only_key | quote }}\n"
+    )
+    # __MISE_* are mise's internal activation-state vars (we run under `mise x`).
+    # Once HOME is mutated below, mise's __MISE_DIFF reconciliation breaks the
+    # nested `mise exec -- <tool>` shim lookup ("not a valid shim"); strip them
+    # so the hook's validators still resolve. Same class of wrapper-env leak as
+    # GIT_* (see conftest).
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if not k.startswith(("GIT_", "CHEZMOI_", "__MISE"))
+    }
+    env["HOME"] = str(git_repo)  # isolate: chezmoi init writes to $HOME/.config/chezmoi
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(_hook_path),
+            ".chezmoi.toml.tmpl",
+            "dot_config/thing.toml.tmpl",
+        ],
+        cwd=git_repo,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    assert result.returncode == 0, (
+        "validator should pass when the key is defined in the worktree config; "
+        f"stderr:\n{result.stderr}"
+    )
