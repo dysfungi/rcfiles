@@ -60,9 +60,9 @@ def __rc_env_chezmoi():
     $CHEZMOI_SOURCE_DIR = data_chezmoi["sourceDir"]
     $CHEZMOI_WORKING_TREE = data_chezmoi["workingTree"]
 
-    $IS_MY_MACHINE = data["isMyMachine"]
-    $IS_WORK_MACHINE = data["isWorkMachine"]
-    $IS_RIOT_MACHINE = data["isRiotMachine"]
+    $IS_MY_MACHINE = data["is_my_machine"]
+    $IS_WORK_MACHINE = data["is_work_machine"]
+    $IS_RIOT_MACHINE = data["is_riot_machine"]
 
 
 @rc(interactive=True)

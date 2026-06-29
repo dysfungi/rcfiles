@@ -1,8 +1,8 @@
-{{ $fontsDir := ternary "Library/Fonts" (ternary "AppData/Local/Microsoft/Windows/Fonts" "TODO(linux)" .isWindows) .isMac }}
+{{ $fontsDir := ternary "Library/Fonts" (ternary "AppData/Local/Microsoft/Windows/Fonts" "TODO(linux)" .is_windows) .is_mac }}
 {{- /* Windows memory-maps loaded fonts; they can't be overwritten while in use.
        Disable refresh so chezmoi only extracts once (during init, before fonts load).
        Font updates on Windows require a logout/re-login regardless. */}}
-{{ $refreshPeriod := ternary "0" "168h" .isWindows }}
+{{ $refreshPeriod := ternary "0" "168h" .is_windows }}
 
 [fonts-iosevka]
 targetPath = {{ joinPath $fontsDir "Iosevka" | quote }}

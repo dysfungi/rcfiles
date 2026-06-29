@@ -8,7 +8,7 @@
 ## General
 
 - Before running any shell command or tool invocation, confirm which OS and platform the current session is running on. Do not assume based on the user's question or the subject matter (eg, asking about a Windows tool does not mean the session is on Windows).
-{{- if or .isWindows .isWSL }}
+{{- if or .is_windows .is_wsl }}
 - When suggesting shell commands for me to run, provide both `sh` (Git Bash) and `pwsh` (PowerShell) variants so I can choose which shell to run them in.
 {{- end }}
 - Do not patronize me.
@@ -103,7 +103,7 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - Always pause before destructive or hard-to-reverse operations (`push --force`, `push --delete`, `rebase`, `reset`, `stash pop/drop`, `tag`) unless the user has explicitly requested that action in the current message.
 - **Pull-rebase-before-push**: Always `git pull --rebase` immediately before `git push`. If push is still rejected (non-fast-forward), retry once with `git pull --rebase && git push` before surfacing an error.
 - **Named stashes**: Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name (`git stash list` + `git stash pop stash@{n}` matching the slug). Multiple agents share the stash stack; unnamed stashes will collide.
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
 - **P4 workflow**: See the `p4-workflow` skill for Perforce changelists, workspace isolation, sync, submit, and broken-build recovery rules.
 {{- end }}
 
@@ -204,7 +204,7 @@ Reviewer output:
 - Before ending a turn where a durable learning was discovered, either apply the concrete `AGENTS.md` delta or state explicitly why no instruction change was made.
 
 [less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
-{{ if .isRiotMachine }}
+{{ if .is_riot_machine }}
 ## Unreal MCP Server
 
 For ALL Unreal Editor operations (Assets, Blueprints, Levels, Materials, Sequencer, Niagara):

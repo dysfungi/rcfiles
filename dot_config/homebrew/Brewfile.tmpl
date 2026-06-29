@@ -5,7 +5,7 @@ cask_args appdir: "/Applications"
 {{- range $name, $pkg := .my.packages }}
   {{- if hasKey $pkg "tap" }}{{ $_ := set $taps $pkg.tap true }}{{ end }}
 {{- end }}
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
   {{- range $name, $pkg := .riot.packages }}
     {{- if hasKey $pkg "tap" }}{{ $_ := set $taps $pkg.tap true }}{{ end }}
   {{- end }}
@@ -28,11 +28,11 @@ cask {{ $pkg.cask | quote }}
   {{- end }}
 {{- end }}
 
-{{- if .isMyMachine }}
+{{- if .is_my_machine }}
 
 cask "protonvpn"
 
-{{- else if .isRiotMachine }}
+{{- else if .is_riot_machine }}
 
 # Work - Riot Games
 {{- range $name, $pkg := .riot.packages }}

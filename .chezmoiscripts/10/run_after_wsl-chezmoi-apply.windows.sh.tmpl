@@ -3,20 +3,20 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-if ! wsl.exe -d {{ .wslDistro }} -- command -v chezmoi >/dev/null 2>&1; then
-  echo >&2 "WARN: chezmoi not available in WSL {{ .wslDistro }}. Skipping."
+if ! wsl.exe -d {{ .wsl_distro }} -- command -v chezmoi >/dev/null 2>&1; then
+  echo >&2 "WARN: chezmoi not available in WSL {{ .wsl_distro }}. Skipping."
   echo >&2 "INFO: Ending $0"
   exit 0
 fi
 
-export OP_SERVICE_ACCOUNT_TOKEN={{ .opServiceAccountToken | quote }}
-export CHEZMOI_GITHUB_ACCESS_TOKEN={{ .githubToken | quote }}
+export OP_SERVICE_ACCOUNT_TOKEN={{ .op_service_account_token | quote }}
+export CHEZMOI_GITHUB_ACCESS_TOKEN={{ .github_token | quote }}
 export WSLENV="OP_SERVICE_ACCOUNT_TOKEN:CHEZMOI_GITHUB_ACCESS_TOKEN"
 
-if wsl.exe -d {{ .wslDistro }} -- bash -c 'test -d ~/.local/share/chezmoi'; then
+if wsl.exe -d {{ .wsl_distro }} -- bash -c 'test -d ~/.local/share/chezmoi'; then
   echo >&2 "INFO: Updating chezmoi in WSL..."
   # shellcheck disable=SC2016
-  wsl.exe -d {{ .wslDistro }} -- bash -c '
+  wsl.exe -d {{ .wsl_distro }} -- bash -c '
     git -C ~/.local/share/chezmoi -c credential.helper="" pull --ff-only \
       "https://x-token:$CHEZMOI_GITHUB_ACCESS_TOKEN@github.com/dysfungi/rcfiles.git" main
     mkdir -p "$HOME/.config/chezmoi"
@@ -30,7 +30,7 @@ else
   # chezmoi init needs onepassword.mode=service before the config template renders;
   # write bootstrap to the standard config path so chezmoi init persists the generated config there
   # shellcheck disable=SC2016
-  wsl.exe -d {{ .wslDistro }} -- bash -c '
+  wsl.exe -d {{ .wsl_distro }} -- bash -c '
     mkdir -p "$HOME/.config/chezmoi"
     printf "[onepassword]\nmode = \"service\"\n" > "$HOME/.config/chezmoi/chezmoi.toml"
     chmod 600 "$HOME/.config/chezmoi/chezmoi.toml"

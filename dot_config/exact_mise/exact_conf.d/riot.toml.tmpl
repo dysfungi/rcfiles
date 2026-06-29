@@ -1,9 +1,9 @@
-{{- if and .isRiotMachine (not .isWindows) -}}
+{{- if and .is_riot_machine (not .is_windows) -}}
 
 [plugins]
 # https://mise.jdx.dev/plugin-usage.html#configuration
 
-riot = "https://x-token:{{ .riotGithubToken }}@gh.riotgames.com/gkisel/mise-plugin-riot.git"
+riot = "https://x-token:{{ .riot_github_token }}@gh.riotgames.com/gkisel/mise-plugin-riot.git"
 
 [tools]
 # Generated from .chezmoidata/packages.yaml (riot mise entries)
@@ -11,9 +11,9 @@ riot = "https://x-token:{{ .riotGithubToken }}@gh.riotgames.com/gkisel/mise-plug
 {{ if not (hasKey $pkg "mise") }}{{ continue }}{{ end -}}
 {{ $skipList := list -}}
 {{ if hasKey $pkg "skip" }}{{ $skipList = $pkg.skip }}{{ end -}}
-{{ if and $.isDarwin (has "darwin" $skipList) }}{{ continue -}}
-{{ else if and $.isLinux (has "linux" $skipList) }}{{ continue -}}
-{{ else if and $.isWindows (has "windows" $skipList) }}{{ continue -}}
+{{ if and $.is_darwin (has "darwin" $skipList) }}{{ continue -}}
+{{ else if and $.is_linux (has "linux" $skipList) }}{{ continue -}}
+{{ else if and $.is_windows (has "windows" $skipList) }}{{ continue -}}
 {{ end -}}
 {{ $version := "latest" -}}
 {{ if hasKey $pkg "version" }}{{ $version = $pkg.version }}{{ end -}}

@@ -22,9 +22,9 @@ trusted_config_paths = [
   {{ if not (hasKey $pkg "mise") }}{{ continue }}{{ end -}}
   {{ $skipList := list -}}
   {{ if hasKey $pkg "skip" }}{{ $skipList = $pkg.skip }}{{ end -}}
-  {{ if and $.isDarwin (has "darwin" $skipList) }}{{ continue -}}
-  {{ else if and $.isLinux (has "linux" $skipList) }}{{ continue -}}
-  {{ else if and $.isWindows (has "windows" $skipList) }}{{ continue -}}
+  {{ if and $.is_darwin (has "darwin" $skipList) }}{{ continue -}}
+  {{ else if and $.is_linux (has "linux" $skipList) }}{{ continue -}}
+  {{ else if and $.is_windows (has "windows" $skipList) }}{{ continue -}}
   {{ end -}}
 {{ $version := "latest" -}}
   {{ if hasKey $pkg "version" }}{{ $version = $pkg.version }}{{ end -}}
@@ -43,13 +43,13 @@ _.file = ".env"
 
 # First-class, bootstrap-level creds.
 {{- if not (env "OP_SERVICE_ACCOUNT_TOKEN") }}
-OP_SERVICE_ACCOUNT_TOKEN = "{{ .opServiceAccountToken }}"
-{{- else if .isMyMachine }}
+OP_SERVICE_ACCOUNT_TOKEN = "{{ .op_service_account_token }}"
+{{- else if .is_my_machine }}
 OP_SERVICE_ACCOUNT_TOKEN = "{{ onepasswordRead "op://CLI/1Password Service Account - CLI - Personal/credential" }}"
-{{- else if .isWorkMachine }}
+{{- else if .is_work_machine }}
 OP_SERVICE_ACCOUNT_TOKEN = "{{ onepasswordRead "op://CLI/1Password Service Account - CLI - Work/credential" }}"
 {{- end }}
-CHEZMOI_GITHUB_ACCESS_TOKEN = "{{ .githubToken }}"
+CHEZMOI_GITHUB_ACCESS_TOKEN = "{{ .github_token }}"
 
 # Non-bootstrap
 TODOIST_API_TOKEN = "{{"{{"}} exec(command=\"op read 'op://CLI/Todoist API Token - CLI/credential'\", cache_key='todoist_api_token') {{"}}"}}"

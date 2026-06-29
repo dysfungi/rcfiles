@@ -3,83 +3,83 @@
   {{ fail (printf "username mismatch: homeDir base '%s' is not a suffix of chezmoi.username '%s'" $username .chezmoi.username) -}}
 {{ end -}}
 
-{{ $isMyMachine := eq $username "dmf" -}}
-{{ $isRiotMachine := eq $username "dfrank" -}}
-{{ $isWorkMachine := not $isMyMachine -}}
-{{ if or (eq $isMyMachine $isWorkMachine $isRiotMachine) (ne $isWorkMachine $isRiotMachine) -}}
+{{ $is_my_machine := eq $username "dmf" -}}
+{{ $is_riot_machine := eq $username "dfrank" -}}
+{{ $is_work_machine := not $is_my_machine -}}
+{{ if or (eq $is_my_machine $is_work_machine $is_riot_machine) (ne $is_work_machine $is_riot_machine) -}}
   {{ fail "Failed to determine machine ownership" -}}
 {{ end -}}
 
-{{ $defaultShell := "xonsh" -}}
-{{ $wslDistro := "archlinux" -}}
+{{ $default_shell := "xonsh" -}}
+{{ $wsl_distro := "archlinux" -}}
 
-{{ $isDarwin := eq .chezmoi.os "darwin" -}}
-{{ $isLinux := eq .chezmoi.os "linux" -}}
-{{ $isWindows := eq .chezmoi.os "windows" -}}
+{{ $is_darwin := eq .chezmoi.os "darwin" -}}
+{{ $is_linux := eq .chezmoi.os "linux" -}}
+{{ $is_windows := eq .chezmoi.os "windows" -}}
 
-{{- $pathsHome    := list (joinPath .chezmoi.homeDir ".local/xonsh-env/xbin") (joinPath .chezmoi.homeDir ".local/bin") (joinPath .chezmoi.homeDir ".local/share/mise/shims") -}}
-{{- $pathsDarwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
-{{- $pathsSystem  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
-{{- $pathsPlatform := $isDarwin | ternary $pathsDarwin (list) -}}
-{{- $pathAdditions := concat $pathsHome $pathsPlatform -}}
-{{- $managedPaths  := concat $pathAdditions $pathsSystem | mustUniq -}}
-{{- $pathsEnv := env "PATH" | splitList .chezmoi.pathListSeparator -}}
-{{- /* NOTE: $pathsEnv included in $allPaths only on native Windows ($isWindows),
+{{- $paths_home    := list (joinPath .chezmoi.homeDir ".local/xonsh-env/xbin") (joinPath .chezmoi.homeDir ".local/bin") (joinPath .chezmoi.homeDir ".local/share/mise/shims") -}}
+{{- $paths_darwin  := list "/opt/homebrew/bin" "/opt/homebrew/sbin" -}}
+{{- $paths_system  := list "/usr/local/bin" "/usr/local/sbin" "/usr/bin" "/usr/sbin" "/bin" "/sbin" -}}
+{{- $paths_platform := $is_darwin | ternary $paths_darwin (list) -}}
+{{- $path_additions := concat $paths_home $paths_platform -}}
+{{- $managed_paths  := concat $path_additions $paths_system | mustUniq -}}
+{{- $paths_env := env "PATH" | splitList .chezmoi.pathListSeparator -}}
+{{- /* NOTE: $paths_env included in $all_paths only on native Windows ($is_windows),
      where powershell/winget/wsl must be reachable from [scriptEnv] PATH.
-     Excluded on WSL ($isLinux) to avoid /mnt/c/... interop path leakage. */}}
-{{- $allPaths := without (concat $pathAdditions ($isWindows | ternary $pathsEnv (list)) $pathsSystem) "" | mustUniq -}}
+     Excluded on WSL ($is_linux) to avoid /mnt/c/... interop path leakage. */}}
+{{- $all_paths := without (concat $path_additions ($is_windows | ternary $paths_env (list)) $paths_system) "" | mustUniq -}}
 
-{{ $myGithubToken := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
-{{ $riotGithubToken := "" }}
-{{- if $isRiotMachine }}
-{{ $riotGithubToken = onepasswordRead "op://Riot/GitHub - Personal Access Token/password" }}
+{{ $my_github_token := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
+{{ $riot_github_token := "" }}
+{{- if $is_riot_machine }}
+{{ $riot_github_token = onepasswordRead "op://Riot/GitHub - Personal Access Token/password" }}
 {{- end }}
 
-{{ $opToken := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
-{{ if not $opToken -}}
-  {{ $opToken = promptString "1Password service account token" -}}
+{{ $op_token := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
+{{ if not $op_token -}}
+  {{ $op_token = promptString "1Password service account token" -}}
 {{ end -}}
 
 [data]
 name = "Derek M Frank"
-githubUsername = "dysfungi"
+github_username = "dysfungi"
 
-email = {{ $isRiotMachine | ternary "dfrank@riotgames.com" "derek@frank.sh" | quote }}
-isMyMachine = {{ $isMyMachine }}
-isWorkMachine = {{ $isWorkMachine }}
-isRiotMachine = {{ $isRiotMachine }}
+email = {{ $is_riot_machine | ternary "dfrank@riotgames.com" "derek@frank.sh" | quote }}
+is_my_machine = {{ $is_my_machine }}
+is_work_machine = {{ $is_work_machine }}
+is_riot_machine = {{ $is_riot_machine }}
 
-defaultShell = {{ $defaultShell | quote }}
-wslDistro = {{ $wslDistro | quote }}
+default_shell = {{ $default_shell | quote }}
+wsl_distro = {{ $wsl_distro | quote }}
 
 username = {{ $username | quote }}
 
-isBsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
-isDarwin = {{ $isDarwin }}
-isLinux = {{ $isLinux }}
-isMac = {{ $isDarwin }}
-isUnixLike = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
-isWindows = {{ $isWindows }}
+is_bsd = {{ eq .chezmoi.os "freebsd" "openbsd" }}
+is_darwin = {{ $is_darwin }}
+is_linux = {{ $is_linux }}
+is_mac = {{ $is_darwin }}
+is_unix_like = {{ eq .chezmoi.os "darwin" "freebsd" "linux" "openbsd" "unix" }}
+is_windows = {{ $is_windows }}
 
-{{ if $isLinux -}}
-linuxDistro = {{ .chezmoi.osRelease.id | quote }}
-isArchLinux = {{ eq .chezmoi.osRelease.id "arch" }}
-isWSL = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
+{{ if $is_linux -}}
+linux_distro = {{ .chezmoi.osRelease.id | quote }}
+is_arch_linux = {{ eq .chezmoi.osRelease.id "arch" }}
+is_wsl = {{ .chezmoi.kernel.osrelease | lower | contains "microsoft" }}
 {{- else -}}
-linuxDistro = {{ .chezmoi.os | quote }}
-isArchLinux = false
-isWSL = false
+linux_distro = {{ .chezmoi.os | quote }}
+is_arch_linux = false
+is_wsl = false
 {{- end }}
 
-pathList = {{ $managedPaths | toToml }}
-pathStr = {{ $managedPaths | join .chezmoi.pathListSeparator | replace "\\" "/" | quote }}
+path_list = {{ $managed_paths | toToml }}
+path_str = {{ $managed_paths | join .chezmoi.pathListSeparator | replace "\\" "/" | quote }}
 
-githubToken = {{ $myGithubToken | quote }}
-{{- if $isRiotMachine }}
-riotGithubToken = {{ $riotGithubToken | quote }}
+github_token = {{ $my_github_token | quote }}
+{{- if $is_riot_machine }}
+riot_github_token = {{ $riot_github_token | quote }}
 {{- end }}
 
-opServiceAccountToken = {{ $opToken | quote }}
+op_service_account_token = {{ $op_token | quote }}
 
 [cd]
 args = [
@@ -101,27 +101,27 @@ exclude = ["scripts"]
 # lose its .json extension on Windows → target ~/.claude → collision with dot_claude/.
 [interpreters]
 py = { command = "uv", args = ["run", "--script", "--no-project"] }
-{{- if $isWindows }}
+{{- if $is_windows }}
 sh = { command = 'C:\Program Files\Git\bin\bash.exe' }
 {{- end }}
 
 [hooks.read-source-state.pre]
-{{- if $isDarwin }}
+{{- if $is_darwin }}
 command = ".local/share/chezmoi/.bootstrap.darwin.sh"
-{{- else if $isLinux }}
+{{- else if $is_linux }}
 command = ".local/share/chezmoi/.bootstrap.linux.sh"
 args = [{{ .chezmoi.osRelease.id | quote }}]
-{{- else if $isWindows }}
+{{- else if $is_windows }}
 command = "powershell"
-args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wslDistro | quote }}]
+args = ["-NoProfile", ".local/share/chezmoi/.bootstrap.windows.ps1", {{ $wsl_distro | quote }}]
 {{- end }}
 
 [onepassword]
 mode = "service"
 
 [scriptEnv]
-PATH = "{{ $allPaths | join .chezmoi.pathListSeparator | replace "\\" "/" }}"
-MISE_GITHUB_TOKEN = {{ $myGithubToken | quote }}
-{{- if $isRiotMachine }}
-MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riotGithubToken | quote }}
+PATH = "{{ $all_paths | join .chezmoi.pathListSeparator | replace "\\" "/" }}"
+MISE_GITHUB_TOKEN = {{ $my_github_token | quote }}
+{{- if $is_riot_machine }}
+MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riot_github_token | quote }}
 {{- end }}

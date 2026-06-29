@@ -1,8 +1,8 @@
 # https://mise.jdx.dev/dev-tools/github-tokens.html
 [tokens."github.com"]
-token = {{ .githubToken | quote }}
-{{- if .isRiotMachine }}
+token = {{ .github_token | quote }}
+{{- if .is_riot_machine }}
 
 [tokens."gh.riotgames.com"]
-token = {{ .riotGithubToken | quote }}
+token = {{ .riot_github_token | quote }}
 {{- end }}

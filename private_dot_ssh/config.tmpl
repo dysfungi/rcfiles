@@ -1,14 +1,14 @@
 Host github.com
     StrictHostKeyChecking accept-new
-{{- if .isUnixLike }}
+{{- if .is_unix_like }}
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
 {{- end }}
 
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
 Host gh.riotgames.com
     StrictHostKeyChecking accept-new
-{{- if .isUnixLike }}
+{{- if .is_unix_like }}
     IdentityFile ~/.ssh/id_ed25519
     IdentitiesOnly yes
 {{- end }}

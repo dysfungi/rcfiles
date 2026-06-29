@@ -20,7 +20,7 @@
   not hand-managed. Map keys serialize sorted -> deterministic output.
 */ -}}
 {{- $mcpServersIn := .my.mcpServers -}}
-{{- if .isRiotMachine -}}
+{{- if .is_riot_machine -}}
   {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
 {{- end -}}
 {{- $servers := dict -}}

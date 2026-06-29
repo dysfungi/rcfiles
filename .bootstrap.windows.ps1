@@ -3,7 +3,7 @@
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 if (-not $isAdmin) { exit 0 }
 
-$wslDistro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
+$wsl_distro = if ($args.Count -gt 0) { $args[0] } else { "archlinux" }
 
 # Fast-path: skip if 1Password CLI, Git, mise, uv, and WSL distro are already installed
 $opOk   = (Get-Command op   -ErrorAction SilentlyContinue) -ne $null
@@ -11,7 +11,7 @@ $gitOk  = (Get-Command git  -ErrorAction SilentlyContinue) -ne $null
 $miseOk = (Get-Command mise -ErrorAction SilentlyContinue) -ne $null
 $uvOk   = (Get-Command uv   -ErrorAction SilentlyContinue) -ne $null
 $ErrorActionPreference = "Continue"
-wsl -d $wslDistro -- true 2>$null | Out-Null
+wsl -d $wsl_distro -- true 2>$null | Out-Null
 $wslOk = $LASTEXITCODE -eq 0
 $ErrorActionPreference = "Stop"
 if ($opOk -and $gitOk -and $miseOk -and $uvOk -and $wslOk) { exit 0 }
@@ -63,16 +63,16 @@ foreach ($package in $packages) {
 }
 
 # 4. Install WSL with desired Linux distribution (no interactive launch; user setup handled by chezmoi)
-Write-Host "Checking WSL $wslDistro distribution..."
+Write-Host "Checking WSL $wsl_distro distribution..."
 $ErrorActionPreference = "Continue"
-wsl -d $wslDistro -- true 2>$null
+wsl -d $wsl_distro -- true 2>$null
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Installing $wslDistro..."
-    wsl --install --distribution $wslDistro --no-launch
-    wsl --set-default $wslDistro
+    Write-Host "Installing $wsl_distro..."
+    wsl --install --distribution $wsl_distro --no-launch
+    wsl --set-default $wsl_distro
     Write-Host "Done. chezmoi will complete WSL user setup in a later script."
 } else {
-    Write-Host "$wslDistro already installed. Skipping."
+    Write-Host "$wsl_distro already installed. Skipping."
 }
 Write-Host "INFO: Ending $PSCommandPath"

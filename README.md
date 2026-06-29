@@ -46,8 +46,8 @@ Phase 3 — chezmoiscripts (run_after_ / run_once_after_ / run_onchange_after_)
 
 `.chezmoi.toml.tmpl` sets boolean variables consumed by all templates:
 
-- `isMyMachine` / `isWorkMachine` / `isRiotMachine` — ownership
-- `isDarwin` / `isLinux` / `isWindows` / `isUnixLike` / `isBsd` — platform
+- `is_my_machine` / `is_work_machine` / `is_riot_machine` — ownership
+- `is_darwin` / `is_linux` / `is_windows` / `is_unix_like` / `is_bsd` — platform
 - Credentials flow through 1Password service account mode
 
 ### Script Stages

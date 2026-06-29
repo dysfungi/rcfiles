@@ -275,7 +275,7 @@ def test_shebang_missing_file(tmp_path: Path) -> None:
 # `python3 .hooks/validate-chezmoi-templates.py <file>` against fixture *.tmpl
 # files inside a throwaway git repo, exactly as pre-commit would. This is the
 # executable spec for the empty-render guard: a template that renders empty on
-# the current host (a body wholly wrapped in `{{ if .isRiotMachine }}…{{ end }}`)
+# the current host (a body wholly wrapped in `{{ if .is_riot_machine }}…{{ end }}`)
 # must PASS without being handed to shellcheck (which would false-positive with
 # SC2148 on the empty buffer). The malformed-shell case guards against the skip
 # being too broad — a NON-empty render must still be linted and still fail.

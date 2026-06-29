@@ -1,10 +1,10 @@
 local wezterm = require "wezterm"
 local config = wezterm.config_builder and wezterm.config_builder() or {}
 
-local isDarwin = wezterm.target_triple:find "[-]apple[-]darwin" -- https://doc.rust-lang.org/nightly/rustc/platform-support/apple-darwin.html
-local isLinux = wezterm.target_triple:find "[-]linux[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/aarch64-unknown-linux-gnu.html
-local isWindows = wezterm.target_triple:find "[-]pc[-]windows[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/x86_64-pc-cygwin.html
-local isUnixLike = isDarwin or isLinux
+local is_darwin = wezterm.target_triple:find "[-]apple[-]darwin" -- https://doc.rust-lang.org/nightly/rustc/platform-support/apple-darwin.html
+local is_linux = wezterm.target_triple:find "[-]linux[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/aarch64-unknown-linux-gnu.html
+local is_windows = wezterm.target_triple:find "[-]pc[-]windows[-]" -- https://doc.rust-lang.org/nightly/rustc/platform-support/x86_64-pc-cygwin.html
+local is_unix_like = is_darwin or is_linux
 
 local modifierKey = "CTRL"
 
@@ -75,7 +75,7 @@ local function hasAnyFonts(dir)
   return false
 end
 
-if isUnixLike then
+if is_unix_like then
   local bin = "/bin"
   local sbin = "/sbin"
   local usrBin = "/usr/bin"
@@ -110,7 +110,7 @@ if isUnixLike then
     or firstFoundPathFor("zsh", myPaths)
     or firstFoundPathFor("bash", myPaths)
 
-  if isDarwin then
+  if is_darwin then
     modifierKey = "CMD"
 
     config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } or { shell }
@@ -129,7 +129,7 @@ if isUnixLike then
       SHELL = shell,
     }
   end
-elseif isWindows then
+elseif is_windows then
   modifierKey = "SUPER"
 
   local gitBin = "C:/Program Files/Git/bin"
@@ -140,7 +140,7 @@ elseif isWindows then
   config.default_prog = {
     gitBin .. "/bash.exe",
     "-c",
-    "wsl.exe --cd '~' -- bash -lc 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec {{ .defaultShell }} -l; fi' || exec tmux new-session -A -s main",
+    "wsl.exe --cd '~' -- bash -lc 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec {{ .default_shell }} -l; fi' || exec tmux new-session -A -s main",
   }
 
   config.set_environment_variables = {
@@ -154,16 +154,16 @@ elseif isWindows then
 
   config.launch_menu = {
     {
-      label = "WSL2 ({{ .wslDistro }}, {{ .defaultShell }})",
-      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~" },
+      label = "WSL2 ({{ .wsl_distro }}, {{ .default_shell }})",
+      args = { "wsl.exe", "-d", "{{ .wsl_distro }}", "--cd", "~" },
     },
     {
-      label = "WSL2 ({{ .wslDistro }}, xonsh)",
-      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~", "--", "xonsh", "--login" },
+      label = "WSL2 ({{ .wsl_distro }}, xonsh)",
+      args = { "wsl.exe", "-d", "{{ .wsl_distro }}", "--cd", "~", "--", "xonsh", "--login" },
     },
     {
-      label = "WSL2 ({{ .wslDistro }}, bash)",
-      args = { "wsl.exe", "-d", "{{ .wslDistro }}", "--cd", "~", "--", "bash", "--login" },
+      label = "WSL2 ({{ .wsl_distro }}, bash)",
+      args = { "wsl.exe", "-d", "{{ .wsl_distro }}", "--cd", "~", "--", "bash", "--login" },
     },
     {
       label = "Git Bash",
@@ -197,7 +197,7 @@ config.enable_tab_bar = true
 -- https://wezfurlong.org/wezterm/config/fonts.html
 -- Keep Windows on a conservative stack to avoid dwrote panics from
 -- unavailable/invalid family+variant combinations.
-if isWindows then
+if is_windows then
   local localAppData = os.getenv "LOCALAPPDATA"
   local iosevkaDir = localAppData
     and (localAppData:gsub("\\", "/") .. "/Microsoft/Windows/Fonts/Iosevka")

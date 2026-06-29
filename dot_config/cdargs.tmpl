@@ -19,7 +19,7 @@ playground {{ $codePlaygroundDir }}
 goground {{ joinPath $codePlaygroundDir "go" }}
 pyground {{ joinPath $codePlaygroundDir "python" }}
 
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
 
 jira {{ joinPath $localMyDir "jira" }}
 riot-slack {{ joinPath $localMyDir "riot-slack" }}
@@ -30,7 +30,7 @@ lime {{ joinPath $codeDir "lime-monorepo" }}
 
 lol {{ joinPath $codeDir "keystone-products.league-of-legends" }}
 
-{{- $perforceDir := .isWSL | ternary "/mnt/t/p4" (joinPath .chezmoi.homeDir "Perforce") }}
+{{- $perforceDir := .is_wsl | ternary "/mnt/t/p4" (joinPath .chezmoi.homeDir "Perforce") }}
 {{- $flxDir := joinPath $perforceDir "flyingfox" "dev-main" }}
 {{- $lionDir := joinPath $perforceDir "lion" "dev-main" }}
 
@@ -39,7 +39,7 @@ flyingfox {{ $flxDir }}
 flx {{ $flxDir }}
 lion {{ $lionDir }}
 2xko {{ $lionDir }}
-{{- if .isDarwin }}
+{{- if .is_darwin }}
 
 main /Users/shared/p4/depot/LoL/__MAIN__/
 devroot /Users/shared/p4/depot/LoL/__MAIN__/DevRoot

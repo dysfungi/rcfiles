@@ -31,7 +31,7 @@ set -euo pipefail
 
 # Mirror [scriptEnv] PATH from .chezmoi.toml.tmpl. Template variable substitution
 # makes this self-consistent when the file is rendered by chezmoi.
-export PATH="{{ .pathStr }}"
+export PATH="{{ .path_str }}"
 
 ASKPASS="${HOME}/.local/bin/chezmoi-askpass"
 export SUDO_ASKPASS="${ASKPASS}"

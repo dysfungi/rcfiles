@@ -15,7 +15,7 @@ $packages = @(
     {{ $pkg.winget | quote }},
   {{- end }}
 {{- end }}
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
   {{- range $name, $pkg := .riot.packages }}
     {{- if hasKey $pkg "winget" }}
     {{ $pkg.winget | quote }},

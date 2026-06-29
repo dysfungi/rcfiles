@@ -6,7 +6,7 @@ WHY THIS FILE EXISTS
       - `.chezmoiscripts/20/run_onchange_after_register-ssh-github.unix-like.sh.tmpl`
         (personal github.com, every unix-like machine)
       - `.chezmoiscripts/20/run_onchange_after_register-ssh-github-enterprise.unix-like.sh.tmpl`
-        (gh.riotgames.com, Riot machines only, gated on isRiotMachine)
+        (gh.riotgames.com, Riot machines only, gated on is_riot_machine)
 
     The helper's contract is safety-critical (it caused a github.com lockout on
     2026-06-26) and warrants an executable spec:
@@ -37,7 +37,7 @@ TRUTH TABLE
       5. github.com auth            → GH_TOKEN set, GH_HOST/GH_ENTERPRISE_TOKEN empty
       6. GHE auth                   → GH_HOST + GH_ENTERPRISE_TOKEN set, GH_TOKEN empty
     Structural template tests (static read):
-      7. enterprise .tmpl gated on isRiotMachine + targets GHE host/token
+      7. enterprise .tmpl gated on is_riot_machine + targets GHE host/token
       8. github .tmpl includes helper + MISE_GITHUB_TOKEN
       9. github .tmpl flips remote to SSH only behind an auth-verification guard
      10. both callers are run_onchange_ and keyed on the live public key
@@ -255,7 +255,7 @@ def test_helper_is_add_only() -> None:
 
 def test_enterprise_script_gated_and_targets_ghe() -> None:
     content = ENTERPRISE_SCRIPT.read_text()
-    assert "{{- if .isRiotMachine -}}" in content
+    assert "{{- if .is_riot_machine -}}" in content
     assert "{{ end -}}" in content
     assert "gh.riotgames.com" in content
     assert "MISE_GITHUB_ENTERPRISE_TOKEN" in content

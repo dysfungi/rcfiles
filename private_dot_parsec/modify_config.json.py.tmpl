@@ -19,7 +19,7 @@ MANAGED = {
     "client_macos_key_swap": {"value": False},
     "client_windowed": {"value": True},
     "encoder_bitrate": {"value": 50},
-    {{- if .isRiotMachine }}
+    {{- if .is_riot_machine }}
     "app_client_stun_address": {
         # WHY? Addresses "Peer-to-peer network connection between you and the other computer failed [-6023 / -11010]" error.
         # HOW? Access the machine by other means and get the IPv4 address from `ipconfig` output.

@@ -48,7 +48,7 @@ backup() {
     {{- $aurPkgs = append $aurPkgs $pkg.aur }}
   {{- end }}
 {{- end }}
-{{- if .isRiotMachine }}
+{{- if .is_riot_machine }}
   {{- range $name, $pkg := .riot.packages }}
     {{- if hasKey $pkg "aur" }}
       {{- $aurPkgs = append $aurPkgs $pkg.aur }}

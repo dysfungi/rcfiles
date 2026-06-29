@@ -18,12 +18,12 @@
   "autoScrollEnabled": true,
   "autoUpdatesChannel": "stable",
   "awaySummaryEnabled": true,
-  "defaultShell": "bash",
+  "default_shell": "bash",
   {{- /* "disableAutoMode": "disable", */}}
   "editorMode": "vim",
   "effortLevel": "high",
   "env": {
-    {{- if .isMyMachine }}
+    {{- if .is_my_machine }}
     {{/*
     "ANTHROPIC_API_KEY": "",
     "ANTHROPIC_AUTH_TOKEN": "ollama",
@@ -35,7 +35,7 @@
     "CLAUDE_CODE_USE_POWERSHELL_TOOL": "0",
     "ENABLE_TOOL_SEARCH": "true",
     "OTEL_METRICS_EXPORTER": "otlp"
-    {{- else if .isRiotMachine }} {{- /* https://docs.google.com/document/d/11tiv6iym5UBF3_fwMlFDqfWceDwVwaX3Gaejo5v9tus/edit?tab=t.0 */}}
+    {{- else if .is_riot_machine }} {{- /* https://docs.google.com/document/d/11tiv6iym5UBF3_fwMlFDqfWceDwVwaX3Gaejo5v9tus/edit?tab=t.0 */}}
     "ANTHROPIC_API_KEY": "",
     "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
     "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",

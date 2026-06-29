@@ -1,5 +1,5 @@
 { {{- /* https://pi.dev/docs/latest/settings */}}
-  {{- if .isRiotMachine }}
+  {{- if .is_riot_machine }}
   {{- /* Riot machines have no direct Anthropic access; route via the TrueFoundry
          gateway provider defined in private_models.json.tmpl. */}}
   "defaultModel": "claude-vertex/anthropic-claude-opus-4-8",
@@ -11,7 +11,7 @@
   {{- /* enabledModels: Ctrl+P cycling rotation — latest of each tier, base context only.
        Use /model to reach older versions or [1m] variants when needed. */}}
   "enabledModels": [
-    {{- if .isRiotMachine }}
+    {{- if .is_riot_machine }}
     "claude-vertex/anthropic-claude-opus-4-8",
     "claude-vertex/anthropic-claude-sonnet-4-6-default"
     {{- else }}

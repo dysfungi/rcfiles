@@ -1,11 +1,11 @@
-{{ if .isMyMachine -}}
+{{ if .is_my_machine -}}
 
 model_reasoning_effort = "high"
 personality = "pragmatic"
 cli_auth_credentials_store = "file"  # ~/.codex/auth.json
 mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 
-{{ else if .isRiotMachine -}}
+{{ else if .is_riot_machine -}}
 
 # https://www.notion.so/riotgames/Codex-CLI-2a77f9530fb28064ad81e4d1e6b19ea9?v=1eb7f9530fb2808cb97e000cd41c76b4&source=copy_link#2a77f9530fb28088967dcee527e752f6
 
@@ -33,7 +33,7 @@ source_type = "local"
 source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
 {{- $mcpServersIn := .my.mcpServers -}}
-{{- if .isRiotMachine -}}
+{{- if .is_riot_machine -}}
   {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
 {{- end -}}
 {{- range $mcpName, $mcp := $mcpServersIn }}
@@ -50,7 +50,7 @@ headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opP
 {{- end }}
 {{- end }}
 
-{{ if .isRiotMachine -}}
+{{ if .is_riot_machine -}}
 
 [model_providers.truefoundry]
 name = "TrueFoundry"
@@ -80,12 +80,12 @@ enabled = true
 enabled = true
 
 {{- $projectsIn := .my.projects -}}
-{{- if .isRiotMachine -}}
+{{- if .is_riot_machine -}}
   {{- $projectsIn = concat $projectsIn .riot.projects -}}
 {{- end -}}
 {{- range $index, $project := $projectsIn -}}
 {{- $only_on := dig "only_on" (list) $project -}}
-{{- if or (empty $only_on) (and (has "wsl" $only_on) $.isWSL) (and (has "linux" $only_on) $.isLinux) (and (has "darwin" $only_on) $.isDarwin) (and (has "windows" $only_on) $.isWindows) }}
+{{- if or (empty $only_on) (and (has "wsl" $only_on) $.is_wsl) (and (has "linux" $only_on) $.is_linux) (and (has "darwin" $only_on) $.is_darwin) (and (has "windows" $only_on) $.is_windows) }}
 
 {{ $projectKey := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
 [projects.{{ $projectKey | quote }}]

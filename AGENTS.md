@@ -86,10 +86,10 @@ Scripts under `.chezmoiscripts/` are staged by numeric subdirectory:
 
 `.chezmoi.toml.tmpl` sets boolean template variables consumed everywhere:
 
-- `isMyMachine` — username is `dmf`
-- `isRiotMachine` — username is `dfrank` or RIOTGAMES domain
-- `isWorkMachine` — any non-personal machine
-- OS booleans: `isDarwin`, `isLinux`, `isWindows`, `isUnixLike`, `isBsd`
+- `is_my_machine` — username is `dmf`
+- `is_riot_machine` — username is `dfrank` or RIOTGAMES domain
+- `is_work_machine` — any non-personal machine
+- OS booleans: `is_darwin`, `is_linux`, `is_windows`, `is_unix_like`, `is_bsd`
 
 Credentials flow through 1Password (`onepasswordRead()`). The `OP_SERVICE_ACCOUNT_TOKEN` is read from the environment or `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`.
 
@@ -143,6 +143,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
+
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
   - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators

@@ -47,7 +47,7 @@ uv.lock
 
 ##########################################
 
-{{ if .isWindows }}
+{{ if .is_windows }}
 
 .local/bin/*.sh
 
@@ -98,14 +98,14 @@ Documents/**
 
 ##########################################
 
-{{ if not .isDarwin }}
+{{ if not .is_darwin }}
 
 .chezmoiscripts/*.darwin.*
 .chezmoiscripts/**/*.darwin.*
 
 {{ end }}
 
-{{ if not .isLinux }}
+{{ if not .is_linux }}
 
 .chezmoiscripts/*.linux.*
 .chezmoiscripts/**/*.linux.*
@@ -138,14 +138,14 @@ Documents/**
 
 {{ end }}
 
-{{ if not .isUnixLike }}
+{{ if not .is_unix_like }}
 
 .chezmoiscripts/*.unix-like.*
 .chezmoiscripts/**/*.unix-like.*
 
 {{ end }}
 
-{{ if not .isWindows }}
+{{ if not .is_windows }}
 
 .chezmoiscripts/*.windows.*
 .chezmoiscripts/**/*.windows.*
@@ -161,14 +161,14 @@ Documents/**
 # P4 workflow is Riot-only; therapy is personal-only.
 # Filtering here (not in SKILL.md) keeps skill content clean and portable.
 
-{{- if not .isRiotMachine }}
+{{- if not .is_riot_machine }}
 .claude/skills/p4-workflow
 .gemini/extensions/p4-workflow
 .codex/skills/p4-workflow
 .pi/agent/skills/p4-workflow
 {{- end }}
 
-{{- if .isWorkMachine }}
+{{- if .is_work_machine }}
 .claude/skills/therapy
 .gemini/extensions/therapy
 .codex/skills/therapy

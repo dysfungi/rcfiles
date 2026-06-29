@@ -4,7 +4,7 @@
 #
 # Namespaces:
 #   my.packages   — personal + shared
-#   riot.packages — Riot Games work machine additions (merged when isRiotMachine)
+#   riot.packages — Riot Games work machine additions (merged when is_riot_machine)
 #
 # Each entry is a YAML map keyed by canonical package name. Values are objects
 # with one or more package manager fields. Templates filter on key presence

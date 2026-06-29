@@ -42,7 +42,7 @@ backup() {
 
 backup before install
 
-{{- if $.isMyMachine }}
+{{- if $.is_my_machine }}
 
 {{- range $modelNameWithTag, $model := .my.models }}
 {{- $_ := set $model "nameWithTag" $modelNameWithTag }}

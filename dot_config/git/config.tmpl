@@ -82,7 +82,7 @@
     excludesfile = ~/.config/git/ignore
     pager = less -FX
     whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-    {{ if .isWindows -}}
+    {{ if .is_windows -}}
     autocrlf = input
     eol = lf
     {{- end }}
@@ -124,7 +124,7 @@
 	defaultBranch = main
 [credential "https://dev.azure.com"]
 	useHttpPath = true
-{{- if and (not .isWindows) (not (.isWSL | default false)) }}
+{{- if and (not .is_windows) (not (.is_wsl | default false)) }}
 [url "git@github.com:"]
 	insteadOf = https://github.com/
 {{- end }}

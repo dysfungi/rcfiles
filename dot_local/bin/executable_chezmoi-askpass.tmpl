@@ -23,7 +23,7 @@
 #   Both are loud (stderr), never silent.
 set -euo pipefail
 
-OP_ITEM="{{ if .isRiotMachine }}op://Riot/sudo/password{{ else }}op://Private/sudo/password{{ end }}"
+OP_ITEM="{{ if .is_riot_machine }}op://Riot/sudo/password{{ else }}op://Private/sudo/password{{ end }}"
 
 if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
   echo >&2 "ERROR: chezmoi-askpass: OP_SERVICE_ACCOUNT_TOKEN is not set; cannot retrieve sudo password."

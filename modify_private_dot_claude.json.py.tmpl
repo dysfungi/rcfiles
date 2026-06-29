@@ -13,7 +13,7 @@ MCP env vars that require platform-conditional values (e.g. P4PORT differs by OS
 are resolved via named templates in .chezmoitemplates/env-files/ and injected as
 MCP_ENV_OVERRIDES, keyed by server name.
 """
-{{- $allMcpServers := mergeOverwrite .my.mcpServers (ternary .riot.mcpServers (dict) .isRiotMachine) -}}
+{{- $allMcpServers := mergeOverwrite .my.mcpServers (ternary .riot.mcpServers (dict) .is_riot_machine) -}}
 {{- $mcpEnvOverrides := dict -}}
 {{- range $name, $mcp := $allMcpServers -}}
   {{- if hasKey $mcp "env_tmpl" -}}
@@ -28,7 +28,7 @@ from pathlib import Path
 HOME_DIR = Path({{ .chezmoi.homeDir | quote }})
 MCP_SERVERS: dict = json.loads({{ $allMcpServers | mustToJson | quote }})
 MCP_ENV_OVERRIDES: dict = json.loads({{ $mcpEnvOverrides | mustToJson | quote }})
-PROJECTS: list = json.loads({{ concat .my.projects (ternary .riot.projects (list) .isRiotMachine) | mustToJson | quote }})
+PROJECTS: list = json.loads({{ concat .my.projects (ternary .riot.projects (list) .is_riot_machine) | mustToJson | quote }})
 
 
 def op_read(path: str) -> str:

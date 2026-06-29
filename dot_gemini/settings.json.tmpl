@@ -15,7 +15,7 @@
   },
   "mcpServers": {
     {{- $mcpServersIn := .my.mcpServers -}}
-    {{- if .isRiotMachine -}}
+    {{- if .is_riot_machine -}}
       {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
     {{- end -}}
 
@@ -41,9 +41,9 @@
   },
   "security": {
     "auth": {
-      {{ if .isMyMachine -}}
+      {{ if .is_my_machine -}}
       "selectedType": "gemini-api-key"
-      {{ else if .isRiotMachine -}}
+      {{ else if .is_riot_machine -}}
       "selectedType": "oauth-personal"
       {{- end }}
     }
