@@ -1,13 +1,13 @@
 my:
   projects:
     - path: ".local/share/chezmoi"
-      isHomeRelative: true
+      is_home_relative: true
     - path: "Code"
-      isHomeRelative: true
+      is_home_relative: true
 riot:
   projects:
     - path: ".local/my/riot-slack"
-      isHomeRelative: true
+      is_home_relative: true
     - path: "/mnt/t/p4/flyingfox/dev-main"
       perforce: true
       only_on: [wsl]

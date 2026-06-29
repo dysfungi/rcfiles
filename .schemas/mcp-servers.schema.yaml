@@ -15,25 +15,25 @@ $defs:
   namespace:
     type: object
     additionalProperties: false
-    required: [mcpServers]
+    required: [mcp_servers]
     properties:
-      mcpServers:
+      mcp_servers:
         type: object
         additionalProperties:
           $ref: "#/$defs/mcp_server"
 
   mcp_server:
     type: object
-    required: [docUrl]
+    required: [doc_url]
     oneOf:
       - title: http
-        required: [serverUrl]
+        required: [server_url]
         additionalProperties: false
         properties:
-          docUrl:
+          doc_url:
             type: string
             format: uri
-          serverUrl:
+          server_url:
             type: string
             format: uri
           auth:
@@ -46,7 +46,7 @@ $defs:
         required: [uvx]
         additionalProperties: false
         properties:
-          docUrl:
+          doc_url:
             type: string
             format: uri
           uvx:
@@ -99,11 +99,11 @@ $defs:
   auth:
     type: object
     additionalProperties: false
-    required: [type, opPath]
+    required: [type, op_path]
     properties:
       type:
         type: string
         enum: [bearer]
-      opPath:
+      op_path:
         type: string
         pattern: "^op://"

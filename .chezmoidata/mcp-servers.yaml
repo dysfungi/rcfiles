@@ -1,31 +1,31 @@
 my:
-  mcpServers:
+  mcp_servers:
     github:
-      serverUrl: "https://api.githubcopilot.com/mcp/"
-      docUrl: "https://github.com/github/github-mcp-server"
+      server_url: "https://api.githubcopilot.com/mcp/"
+      doc_url: "https://github.com/github/github-mcp-server"
       auth:
         type: bearer
-        opPath: "op://CLI/GitHub Token - AI/token"
+        op_path: "op://CLI/GitHub Token - AI/token"
     honeycomb:
-      serverUrl: "https://mcp.honeycomb.io/mcp"
-      docUrl: "https://docs.honeycomb.io/integrations/mcp"
+      server_url: "https://mcp.honeycomb.io/mcp"
+      doc_url: "https://docs.honeycomb.io/integrations/mcp"
     todoist:
-      serverUrl: "https://ai.todoist.net/mcp"
-      docUrl: |-
+      server_url: "https://ai.todoist.net/mcp"
+      doc_url: |-
         https://www.todoist.com/help/articles/use-todoist-with-claude-code-cli-and-mcp-b1USJ4HB3#h_01KMDC3NG1SJKTRNJ8F4NHKRHD
 riot:
-  mcpServers:
+  mcp_servers:
     atlassian-rovo:
-      serverUrl: "https://mcp.atlassian.com/v1/mcp"
-      docUrl: |-
+      server_url: "https://mcp.atlassian.com/v1/mcp"
+      doc_url: |-
         https://www.notion.so/riotgames/Atlassian-Rovo-Jira-MCP-2a37f9530fb2808a8bbcd4feef6824a7?v=1eb7f9530fb2808cb97e000cd41c76b4
     datadog:
-      serverUrl: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
-      docUrl: |-
+      server_url: "https://mcp.datadoghq.com/api/unstable/mcp-server/mcp"
+      doc_url: |-
         http://notion.so/riotgames/Datadog-MCP-2f17f9530fb2801aa246d6772418c003?v=1eb7f9530fb2808cb97e000cd41c76b4
     figma:
-      serverUrl: "https://mcp.figma.com/mcp"
-      docUrl: |-
+      server_url: "https://mcp.figma.com/mcp"
+      doc_url: |-
         https://app.notion.com/p/riotgames/Figma-MCP-2f77f9530fb2808eb9acdd2ab9df41ce
       # Figma gates MCP OAuth dynamic client registration
       # (POST https://api.figma.com/v1/oauth/mcp/register) on an EXACT
@@ -40,26 +40,26 @@ riot:
         - tools: [pi]
           oauth_client_name: "Claude Code"
     notion:
-      serverUrl: "https://mcp.notion.com/mcp"
-      docUrl: |-
+      server_url: "https://mcp.notion.com/mcp"
+      doc_url: |-
         https://www.notion.so/riotgames/Notion-MCP-28d7f9530fb280a9bb76efcffb92d161?v=1eb7f9530fb2808cb97e000cd41c76b4
     riot-lore:
-      serverUrl: "https://riot-lore-beta.rcluster.io/lore/v1/mcp"
-      docUrl: "https://gh.riotgames.com/clde/glue-lore"
+      server_url: "https://riot-lore-beta.rcluster.io/lore/v1/mcp"
+      doc_url: "https://gh.riotgames.com/clde/glue-lore"
     riot-slack:
-      serverUrl: "https://truefoundry.riotgames.io/api/llm/riotgames/mcp/slack-mcp-sandbox/server"
-      docUrl: |-
+      server_url: "https://truefoundry.riotgames.io/api/llm/riotgames/mcp/slack-mcp-sandbox/server"
+      doc_url: |-
         https://www.notion.so/riotgames/Slack-MCP-2f77f9530fb280488442c5f73a202022?v=26b7f9530fb280caa34a000c71d93783
       auth:
         type: bearer
-        opPath: "op://Riot/TrueFoundry - Personal Access Token/credential"
+        op_path: "op://Riot/TrueFoundry - Personal Access Token/credential"
     p4-mcp:
-      docUrl: "https://github.com/perforce/p4mcp-server"
+      doc_url: "https://github.com/perforce/p4mcp-server"
       uvx:
         package: "p4mcp-server"
         args:
           - "--allow-usage"
       env_tmpl: "env-files/p4.yaml.tmpl"
     unreal-engine:
-      serverUrl: "http://localhost:8765/mcp"
-      docUrl: "https://app.notion.com/p/riotgames/RGI-Unreal-MCP-Server-2e97f9530fb2806db19bc3d1ec036dec"
+      server_url: "http://localhost:8765/mcp"
+      doc_url: "https://app.notion.com/p/riotgames/RGI-Unreal-MCP-Server-2e97f9530fb2806db19bc3d1ec036dec"

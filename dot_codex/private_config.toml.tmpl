@@ -32,18 +32,18 @@ last_updated = "2026-04-23T19:25:37Z"
 source_type = "local"
 source = "{{ .chezmoi.homeDir }}/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
-{{- $mcpServersIn := .my.mcpServers -}}
+{{- $mcpServersIn := .my.mcp_servers -}}
 {{- if .is_riot_machine -}}
-  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
+  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcp_servers -}}
 {{- end -}}
 {{- range $mcpName, $mcp := $mcpServersIn }}
-{{- if hasKey $mcp "serverUrl" }}
+{{- if hasKey $mcp "server_url" }}
 
-[mcp_servers.{{ $mcpName }}] {{ $mcp.docUrl  | comment "# " }}
-url = {{ $mcp.serverUrl | quote }}
+[mcp_servers.{{ $mcpName }}] {{ $mcp.doc_url  | comment "# " }}
+url = {{ $mcp.server_url | quote }}
 {{- if hasKey $mcp "auth" -}}
   {{- if eq $mcp.auth.type "bearer" }}
-headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opPath) | quote }} }
+headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.op_path) | quote }} }
   {{- end -}}
 {{- end }}
 
@@ -87,7 +87,7 @@ enabled = true
 {{- $only_on := dig "only_on" (list) $project -}}
 {{- if or (empty $only_on) (and (has "wsl" $only_on) $.is_wsl) (and (has "linux" $only_on) $.is_linux) (and (has "darwin" $only_on) $.is_darwin) (and (has "windows" $only_on) $.is_windows) }}
 
-{{ $projectKey := (dig "isHomeRelative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
+{{ $projectKey := (dig "is_home_relative" false $project | ternary (joinPath $.chezmoi.homeDir $project.path) $project.path) -}}
 [projects.{{ $projectKey | quote }}]
 trust_level = "trusted"
 {{- end }}

@@ -15,7 +15,7 @@ $defs:
     additionalProperties: false
     required: [models]
     properties:
-      defaultModelParameters:
+      default_model_parameters:
         $ref: "#/$defs/modelParameters"
       models:
         type: object

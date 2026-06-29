@@ -29,7 +29,7 @@ $defs:
     properties:
       path:
         type: string
-      isHomeRelative:
+      is_home_relative:
         type: boolean
       perforce:
         type: boolean

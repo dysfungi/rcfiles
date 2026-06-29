@@ -5,7 +5,7 @@
 
   Generated from the central .chezmoidata/mcp-servers.yaml, the same source
   codex/gemini/claude render from. Unlike those (which only handle remote
-  `serverUrl` entries), the adapter also supports stdio servers, so this
+  `server_url` entries), the adapter also supports stdio servers, so this
   template additionally wires `uvx`-launched servers (e.g. p4-mcp) with env
   rendered from their referenced env_tmpl.
 
@@ -19,19 +19,19 @@
   Built as a dict + toPrettyJson so JSON validity/commas are structural,
   not hand-managed. Map keys serialize sorted -> deterministic output.
 */ -}}
-{{- $mcpServersIn := .my.mcpServers -}}
+{{- $mcpServersIn := .my.mcp_servers -}}
 {{- if .is_riot_machine -}}
-  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
+  {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcp_servers -}}
 {{- end -}}
 {{- $servers := dict -}}
 {{- range $name, $mcp := $mcpServersIn -}}
   {{- $entry := dict -}}
-  {{- if hasKey $mcp "serverUrl" -}}
-    {{- $_ := set $entry "url" $mcp.serverUrl -}}
+  {{- if hasKey $mcp "server_url" -}}
+    {{- $_ := set $entry "url" $mcp.server_url -}}
     {{- if hasKey $mcp "auth" -}}
       {{- if eq $mcp.auth.type "bearer" -}}
         {{- $_ := set $entry "auth" "bearer" -}}
-        {{- $_ := set $entry "bearerToken" (onepasswordRead $mcp.auth.opPath) -}}
+        {{- $_ := set $entry "bearerToken" (onepasswordRead $mcp.auth.op_path) -}}
       {{- end -}}
     {{- end -}}
     {{- range $spoof := (dig "spoofs" (list) $mcp) -}}

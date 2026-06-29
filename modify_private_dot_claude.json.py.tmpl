@@ -13,7 +13,7 @@ MCP env vars that require platform-conditional values (e.g. P4PORT differs by OS
 are resolved via named templates in .chezmoitemplates/env-files/ and injected as
 MCP_ENV_OVERRIDES, keyed by server name.
 """
-{{- $allMcpServers := mergeOverwrite .my.mcpServers (ternary .riot.mcpServers (dict) .is_riot_machine) -}}
+{{- $allMcpServers := mergeOverwrite .my.mcp_servers (ternary .riot.mcp_servers (dict) .is_riot_machine) -}}
 {{- $mcpEnvOverrides := dict -}}
 {{- range $name, $mcp := $allMcpServers -}}
   {{- if hasKey $mcp "env_tmpl" -}}
@@ -42,10 +42,10 @@ def build_mcp_entry(name: str, mcp: dict) -> dict:
         uvx = mcp["uvx"]
         entry: dict = {"type": "stdio", "command": "uvx", "args": [uvx["package"]] + uvx.get("args", [])}
     else:
-        entry = {"type": "http", "url": mcp["serverUrl"]}
+        entry = {"type": "http", "url": mcp["server_url"]}
         auth = mcp.get("auth", {})
         if auth.get("type") == "bearer":
-            entry["headers"] = {"Authorization": f"Bearer {op_read(auth['opPath'])}"}
+            entry["headers"] = {"Authorization": f"Bearer {op_read(auth['op_path'])}"}
 
     if "env" in mcp:
         entry["env"] = mcp["env"]
@@ -57,7 +57,7 @@ def build_mcp_entry(name: str, mcp: dict) -> dict:
 
 def resolve_project_key(project: dict) -> str:
     path = project["path"]
-    return str(HOME_DIR / path) if project.get("isHomeRelative") else path
+    return str(HOME_DIR / path) if project.get("is_home_relative") else path
 
 
 def main() -> None:

@@ -14,21 +14,21 @@
     "vimMode": true
   },
   "mcpServers": {
-    {{- $mcpServersIn := .my.mcpServers -}}
+    {{- $mcpServersIn := .my.mcp_servers -}}
     {{- if .is_riot_machine -}}
-      {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcpServers -}}
+      {{- $mcpServersIn = mergeOverwrite $mcpServersIn .riot.mcp_servers -}}
     {{- end -}}
 
     {{- $isFirstMcp := true -}}
     {{- range $mcpName, $mcp := $mcpServersIn }}
-    {{- if hasKey $mcp "serverUrl" }}
+    {{- if hasKey $mcp "server_url" }}
     {{- if not $isFirstMcp }},{{- else }}{{- $isFirstMcp = false -}}{{- end }}
     {{ $mcpName | quote -}}: {
-      "httpUrl": {{ $mcp.serverUrl | quote }}
+      "httpUrl": {{ $mcp.server_url | quote }}
       {{- if hasKey $mcp "auth" -}}
         {{- if eq $mcp.auth.type "bearer" }},
       "headers": {
-        "Authorization": {{ printf "Bearer %s" (onepasswordRead $mcp.auth.opPath) | quote }}
+        "Authorization": {{ printf "Bearer %s" (onepasswordRead $mcp.auth.op_path) | quote }}
       }
         {{- end -}}
       {{- end }}
