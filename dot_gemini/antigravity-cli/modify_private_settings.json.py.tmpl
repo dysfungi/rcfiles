@@ -19,28 +19,55 @@ WHY THESE KEYS (agy ignores the shared gemini-cli settings.json; native ports
       - toolPermission="proceed-in-sandbox" — auto-proceed for sandboxed tools,
         but still gate anything that escapes the sandbox.
 
-This body is pure stdlib Python with NO Go-template directives; the `.tmpl`
-suffix only keeps it consistent with the repo's other modify_ scripts (the `.py`
-interpreter extension is what chezmoi strips from the target name — see
-`[interpreters]` in .chezmoi.toml.tmpl). The `private_` attribute preserves
+The Go-template head injects raw chezmoidata (homeDir, projects) into Python
+constants; all transformation and merge logic below is plain stdlib Python. The
+`.py` interpreter extension is what chezmoi strips from the target name (see
+`[interpreters]` in .chezmoi.toml.tmpl); the `private_` attribute preserves
 agy's 0600 permissions on the target.
 """
 import json
 import sys
+from pathlib import Path
 
-stdin = sys.stdin.read().strip()
-if stdin:
-    try:
-        config = json.loads(stdin)
-    except json.JSONDecodeError as exc:
-        # Fail loudly: never silently discard the user's existing settings.
-        sys.exit(f"ERROR: {__file__}: existing settings.json is not valid JSON: {exc}")
-else:
-    # Fresh machine (agy not yet run) or absent/empty file: start from scratch.
-    config = {}
+HOME_DIR = Path({{ .chezmoi.homeDir | quote }})
+PROJECTS: list = json.loads({{ concat .my.projects (ternary .riot.projects (list) .is_riot_machine) | mustToJson | quote }})
 
-config["enableTelemetry"] = False
-config["enableTerminalSandbox"] = True
-config["toolPermission"] = "proceed-in-sandbox"
 
-print(json.dumps(config, indent=2, sort_keys=True))
+def resolve_project_path(project: dict) -> str:
+    path = project["path"]
+    return str(HOME_DIR / path) if project.get("is_home_relative") else path
+
+
+def update_trusted_workspaces(config: dict) -> None:
+    trusted_workspaces = set(config.setdefault("trustedWorkspaces", []))
+    trusted_workspaces.update(map(resolve_project_path, PROJECTS))
+    config["trustedWorkspaces"] = sorted(trusted_workspaces)
+
+
+def main() -> None:
+    stdin = sys.stdin.read().strip()
+    config = json.loads(stdin) if stdin else {}
+
+    update_trusted_workspaces(config)
+    config.update({
+        "allowNonWorkspaceAccess": True,
+        "enableTelemetry": False,
+        "enableTerminalSandbox": True,
+        "notifications": True,
+        "permissions": {
+            "deny": [
+                "command(git push -f)",
+                "command(git push --force)",
+                "command(rm -rf /)",
+            ],
+        },
+        "runningLightSpeed": "slow",
+        "showFeedbackSurvey": False,
+        "toolPermission": "always-proceed",  # "proceed-in-sandbox",
+    })
+
+    print(json.dumps(config, indent=2, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()

@@ -55,22 +55,29 @@ def build_mcp_entry(name: str, mcp: dict) -> dict:
     return entry
 
 
-def resolve_project_key(project: dict) -> str:
+def resolve_project_path(project: dict) -> str:
     path = project["path"]
     return str(HOME_DIR / path) if project.get("is_home_relative") else path
+
+
+def update_mcp_servers(config: dict) -> None:
+    mcp = config.setdefault("mcpServers", {})
+    for name, server in MCP_SERVERS.items():
+        mcp[name] = build_mcp_entry(name, server)
+
+
+def update_projects(config: dict) -> None:
+    projects = config.setdefault("projects", {})
+    for project in PROJECTS:
+        projects.setdefault(resolve_project_path(project), {})["hasTrustDialogAccepted"] = True
 
 
 def main() -> None:
     stdin = sys.stdin.read().strip()
     config = json.loads(stdin) if stdin else {}
 
-    mcp = config.setdefault("mcpServers", {})
-    for name, server in MCP_SERVERS.items():
-        mcp[name] = build_mcp_entry(name, server)
-
-    projects = config.setdefault("projects", {})
-    for project in PROJECTS:
-        projects.setdefault(resolve_project_key(project), {})["hasTrustDialogAccepted"] = True
+    update_mcp_servers(config)
+    update_projects(config)
 
     print(json.dumps(config, indent=2))
 
