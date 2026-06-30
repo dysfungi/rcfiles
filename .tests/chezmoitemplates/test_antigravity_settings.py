@@ -64,8 +64,11 @@ ENFORCED = {
 }
 
 
-@pytest.fixture(scope="session")
-def rendered_script(tmp_path_factory: pytest.TempPathFactory) -> Path:
+@pytest.fixture(scope="session", params=[False, True], ids=["personal", "riot"])
+def rendered_script(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> Path:
     """Render the Go-template modify_ script to a runnable Python file.
 
     Mirrors test_skill_frontmatter._render: cwd and --source are the repo root so
@@ -73,12 +76,32 @@ def rendered_script(tmp_path_factory: pytest.TempPathFactory) -> Path:
     pre-commit leaks GIT_DIR into the subprocess env (which would point chezmoi at
     the wrong tree). --file takes the absolute source path so chezmoi renders the
     working-tree body rather than chezmoi's configured default source.
+
+    The script body references `.is_riot_machine` — a machine-detection var that
+    `.chezmoi.toml.tmpl` defines under [data] during `chezmoi init`, NOT in
+    .chezmoidata/. `chezmoi execute-template` does not run the config template, so
+    on a fresh checkout (e.g. CI) the var is undefined and the render aborts with
+    `map has no entry for key "is_riot_machine"`. We supply it deterministically
+    via a throwaway --config whose [data] pins the var. This mirrors how the
+    validate-chezmoi-templates hook leans on the on-disk chezmoi config to carry
+    machine-detection data into renders, but without `chezmoi init`'s 1Password
+    reads / prompts (.chezmoi.toml.tmpl calls onepasswordRead + promptString),
+    which CI can't satisfy. --config also fully overrides any local user config,
+    so the result no longer depends on whether a prior `chezmoi init` ran here.
+
+    Parametrized over both machine types: is_riot_machine flips whether the repo's
+    riot.projects are concat'd into trustedWorkspaces, so each value exercises a
+    distinct merge branch while the enforced-pref contract holds for both.
     """
     clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    config = tmp_path_factory.mktemp("chezmoi-config") / "chezmoi.toml"
+    config.write_text(f"[data]\nis_riot_machine = {str(request.param).lower()}\n")
     proc = subprocess.run(
         [
             "chezmoi",
             "execute-template",
+            "--config",
+            str(config),
             "--source",
             str(REPO_ROOT),
             "--file",
