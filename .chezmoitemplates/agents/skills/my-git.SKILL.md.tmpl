@@ -6,6 +6,7 @@ description: >-
   tagging, or starting file-modifying work that needs an isolated worktree.
   Covers conventional-commit subjects, auto-commit/auto-push cadence,
   read-only auto-proceed, pull --rebase before push, named stashes,
+  stashing uncommitted main-branch edits into a worktree to commit them,
   destructive-op guardrails, the multi-instance worktree protocol, and
   PR-based merge-back on GitHub origins (auto-merge only for my own accounts).
   For commit/PR audit trailers, see my-audit-trail.
@@ -40,6 +41,26 @@ unless the user explicitly requested that exact action in the current message.
 
 Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name.
 Multiple agents share the stash stack; unnamed stashes collide.
+
+## Uncommitted edits already on main → stash into a worktree
+
+The user sometimes edits files directly on `main` and asks you to review and commit them.
+Commits on the main checkout are hook-blocked. **Do not** request a `worktree-exempt` file —
+move the changes into a worktree via the shared stash stack:
+
+1. **Create a worktree** (create mechanics below). cwd is now the worktree, so git against the
+   main checkout is allowed via `git -C <main>` (`<main>` = parent of `git rev-parse --git-common-dir`).
+2. **Stash main's changes:** `git -C <main> stash push -m "<slug>"` — named per `## Stashes`,
+   guard-inert because cwd is the worktree. Main's working tree is now clean.
+3. **Pull them into the worktree:** `git stash list` to find the `stash@{n}` matching `<slug>`,
+   then `git stash apply stash@{n}`. The stash stack is shared via the common git dir.
+4. **Review, commit in the worktree, and merge back** per the protocol below.
+5. **After the commit is verified,** `git -C <main> stash drop stash@{n}`. Apply-then-drop keeps
+   the stash as a backup until the commit lands; `pop` would discard it on the spot.
+
+- *Stash won't apply cleanly* (local main was ahead of origin and the worktree branched fresh):
+  resolve the conflicts, or recreate the worktree from local `HEAD` so the edits apply onto the
+  state they were made against.
 
 ## Multi-instance worktrees (mandatory before any file edit)
 

@@ -57,3 +57,4 @@ x 2026-06-29 Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8ca
 x 2026-06-29 Pi vim mode + Emacs keybinding consistency +pi @worktree:.claude/worktrees/29c0b4f9-0648-43be-bbc8-fd36f757be56.pi-keybindings-2 session:29c0b4f9-0648-43be-bbc8-fd36f757be56 agent:claude model:claude-opus-4-8
 x 2026-06-29 Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.antigravity-migration session:248a100a agent:claude model:claude-opus-4-8
 x 2026-06-29 Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.antigravity-migration session:248a100a agent:claude model:claude-opus-4-8
+x 2026-06-30 Document stash-to-worktree flow for uncommitted main edits +skills @worktree:.claude/worktrees/2e65c8f3-8bdb-46fa-b895-4461bbb94527.my-git-stash-wt session:2e65c8f3 agent:claude model:claude-opus-4-8
