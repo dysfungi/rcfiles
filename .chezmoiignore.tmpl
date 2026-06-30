@@ -103,6 +103,12 @@ Documents/**
 .chezmoiscripts/*.darwin.*
 .chezmoiscripts/**/*.darwin.*
 
+# antigravity-cli (Antigravity CLI) is a Homebrew cask (darwin-only), so agy
+# never runs elsewhere; skip its native config off-darwin to avoid creating
+# stray files: the modify_ settings.json and the MCP server config.
+.gemini/antigravity-cli/settings.json
+.gemini/config/mcp_config.json
+
 {{ end }}
 
 {{ if not .is_linux }}
