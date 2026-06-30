@@ -1,12 +1,12 @@
 #!/usr/bin/env -S uv run --no-project
-"""Stop hook: auto-removes worktrees belonging to the current session.
+"""SessionEnd hook: auto-removes worktrees belonging to the current session.
 
 WHY this hook exists:
   Agent sessions create git worktrees for file-edit isolation (see AGENTS.md,
   "Multi-instance worktrees"). When a session ends normally, the agent should
   call ExitWorktree — but crashes, interruptions, and forgetful agents leave
   orphaned worktrees that accumulate until someone cleans them manually. This
-  Stop hook is the safety net: it runs on every session exit and garbage-collects
+  SessionEnd hook is the safety net: it runs on every session exit and garbage-collects
   any worktrees the session left behind.
 
 HOW it identifies session worktrees:
@@ -23,10 +23,20 @@ WHAT it does for each match:
   - Archives matching @worktree: entries in todo.txt → done.txt
 
 WHY it always exits 0:
-  Stop hooks must not block session termination. A cleanup failure is annoying
+  SessionEnd hooks must not block session termination. A cleanup failure is annoying
   but not worth preventing the session from ending — the worktree will be
   caught by the next session's cleanup or manual intervention.
 """
+
+# WHY SessionEnd, not Stop:
+#   This was originally wired to the per-turn `Stop` event, which fires at EVERY
+#   turn boundary — not just at session exit. A worktree with 0 commits ahead of
+#   main reads as "merged" here, so a freshly-entered or still-in-use worktree got
+#   reaped out from under background subagents the moment a turn ended. The deleted
+#   CWD then cascaded into `posix_spawn '/bin/sh' ENOENT` errors as subsequent hooks
+#   tried to spawn from the now-missing directory. `SessionEnd` fires once, at root
+#   session end after all subagents have stopped, which is the correct lifecycle for
+#   garbage-collecting orphaned worktrees.
 
 import os
 import re
