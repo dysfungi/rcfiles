@@ -1,0 +1,46 @@
+#!/usr/bin/env -S uv run --script --no-project
+# vim: ft=gotmpl.python
+"""
+Manages ~/.gemini/antigravity-cli/settings.json (the Antigravity CLI's own config).
+
+WHY A modify_ SCRIPT (not a plain managed file):
+    agy mixes durable user preferences (enableTelemetry, enableTerminalSandbox,
+    toolPermission) with runtime state in the same file — notably
+    trustedWorkspaces, which agy rewrites whenever the user trusts a folder. A
+    plain managed file would clobber that runtime key on every `chezmoi apply`.
+    A modify_ script reads the current target on stdin and emits the merged
+    result on stdout, so it enforces our prefs while preserving everything agy
+    maintains there.
+
+WHY THESE KEYS (agy ignores the shared gemini-cli settings.json; native ports
+    go here — see Phase 3 of the Gemini->Antigravity migration):
+      - enableTelemetry=False        — opt out of usage telemetry.
+      - enableTerminalSandbox=True   — run shell tools inside agy's sandbox.
+      - toolPermission="proceed-in-sandbox" — auto-proceed for sandboxed tools,
+        but still gate anything that escapes the sandbox.
+
+This body is pure stdlib Python with NO Go-template directives; the `.tmpl`
+suffix only keeps it consistent with the repo's other modify_ scripts (the `.py`
+interpreter extension is what chezmoi strips from the target name — see
+`[interpreters]` in .chezmoi.toml.tmpl). The `private_` attribute preserves
+agy's 0600 permissions on the target.
+"""
+import json
+import sys
+
+stdin = sys.stdin.read().strip()
+if stdin:
+    try:
+        config = json.loads(stdin)
+    except json.JSONDecodeError as exc:
+        # Fail loudly: never silently discard the user's existing settings.
+        sys.exit(f"ERROR: {__file__}: existing settings.json is not valid JSON: {exc}")
+else:
+    # Fresh machine (agy not yet run) or absent/empty file: start from scratch.
+    config = {}
+
+config["enableTelemetry"] = False
+config["enableTerminalSandbox"] = True
+config["toolPermission"] = "proceed-in-sandbox"
+
+print(json.dumps(config, indent=2, sort_keys=True))
