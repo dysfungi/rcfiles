@@ -179,7 +179,7 @@ my:
     uv:
       { brew: uv, pacman: uv, mise: uv, winget: astral-sh.uv, bootstrap: true }
     vint: { brew: vint }
-    vultr: { brew: vultr }
+    vultr-cli: { mise: vultr-cli }
     watchexec: { brew: watchexec, pacman: watchexec }
     wget: { brew: wget, pacman: wget }
     xonsh: { mamba: "xonsh[full]==0.22.8", python: "3.14" }
