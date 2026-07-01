@@ -41,10 +41,10 @@ mise x -- pre-commit run shellcheck --all-files
 Run regression tests:
 
 ```sh
-mise x -- pytest .tests/
+mise run test
 ```
 
-The `mise x --` prefix is required for `pre-commit` and `pytest` because both are mise-managed (pre-commit via `mise: pre-commit`, pytest via `pip:` under mise-managed Python).
+The `mise x --` prefix is required for `pre-commit` because it is mise-managed (pre-commit via `mise: pre-commit`). Tests run via `mise run test`, which uses `uv run` to resolve the declared `test` dependency group (pytest + pyyaml) from `pyproject.toml`.
 
 ## Architecture
 
@@ -141,7 +141,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 ## Testing
 
-- Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise x -- pytest .tests/`. The `mise x --` prefix is required because pytest is `pip:`-installed under mise-managed Python.
+- Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise run test`, which invokes `uv run --group test` to resolve the declared `test` dependency group (pytest + pyyaml) from `pyproject.toml`.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
 
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`

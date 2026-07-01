@@ -16,6 +16,9 @@ One source tree serves multi-OS / multi-machine configs via templating + conditi
 - Pass **target paths** (`~/.config/nvim/init.lua`), NOT source paths (`dot_config/exact_nvim/...`) —
   source paths return a "not managed" error.
 - Preview: `chezmoi diff`. Subset re-run: `chezmoi apply --include scripts`.
+- From a **git worktree**, a bare `chezmoi apply` reads the *main* source tree and silently ignores
+  your worktree edits. Test worktree edits with `mise run worktree-apply <target>` (wraps
+  `chezmoi apply --source "$(git rev-parse --show-toplevel)" <target>`).
 - A config file created outside the source tree must be added to chezmoi management before finishing.
 
 ## File-name prefixes (decoded into $HOME)
@@ -87,8 +90,8 @@ run_after_ chezmoiscript in Phase 3). Sync scripts back up before+after to
 
 - `mise x -- pre-commit run --all-files` (shellcheck, shfmt, ruff, stylua, prettier, template
   validators). Single hook: `mise x -- pre-commit run <hook-id> --all-files`. The `mise x --` prefix is
-  required (pre-commit + pytest are mise-managed).
-- `mise x -- pytest .tests/` — regression harness, organized by subsystem under `.tests/<domain>/`.
+  required (pre-commit is mise-managed).
+- `mise run test` — regression harness, organized by subsystem under `.tests/<domain>/`.
 - pre-commit hooks are the contract: fix the source file when a hook fails; never add `# noqa`,
   extend `exclude:`, or skip a hook without approval.
 

@@ -14,7 +14,7 @@ WHY THIS FILE EXISTS
 THRESHOLD OVERRIDE
     Set NVIM_STARTUP_MAX_MS in the environment to tighten or loosen the limit without
     editing this file. Useful for stricter local enforcement or looser CI allowance:
-      NVIM_STARTUP_MAX_MS=250 mise x -- pytest .tests/nvim/test_startuptime.py
+      NVIM_STARTUP_MAX_MS=250 uv run --group test pytest .tests/nvim/test_startuptime.py
 
 METHODOLOGY: BEST-OF-N AFTER WARMUP
     1. A warmup spawn (discarded) ensures Lazy's compiled-loader cache is hot.
