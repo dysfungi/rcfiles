@@ -23,4 +23,4 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (A) Fix YAML colon-space breaking skill descriptions +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-desc-yaml-fix session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Rename therapy→my-therapy, p4-workflow→my-perforce +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-renames session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Enforce agy enableTelemetry via modify_ script +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.agy-telemetry session:248a100a agent:claude model:claude-opus-4-8
-(B) mise: declare test deps + worktree-apply task, reconcile docs +mise +skill
+(C) packages: decide keep-or-remove orphaned pytest {pip: pytest} in .chezmoidata/packages.yaml now that tests resolve via uv --group test +packages
