@@ -26,3 +26,4 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (C) packages: decide keep-or-remove orphaned pytest {pip: pytest} in .chezmoidata/packages.yaml now that tests resolve via uv --group test +packages
 (B) Make agent skills reliably source per mode + add ExitPlanMode self-review gate hook +skill-sourcing-fix @worktree:.claude/worktrees/1e216906-cf39-417b-a780-b0f19f06b0bb.skill-sourcing-fix
 (C) Add run_onchange_ drift check for ~/.claude/skills sync (currently manual-apply-only) +skill-sourcing-fix
+2026-07-01 my-planning template: rules + emoji + UPPERCASE section headings for terminal-plan-box scannability @my-planning +worktree-planning-heading-style
