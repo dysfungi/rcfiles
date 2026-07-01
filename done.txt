@@ -59,3 +59,4 @@ x 2026-06-29 Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @work
 x 2026-06-29 Migrate Gemini CLI to Antigravity CLI everywhere +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.antigravity-migration session:248a100a agent:claude model:claude-opus-4-8
 x 2026-06-30 Document stash-to-worktree flow for uncommitted main edits +skills @worktree:.claude/worktrees/2e65c8f3-8bdb-46fa-b895-4461bbb94527.my-git-stash-wt session:2e65c8f3 agent:claude model:claude-opus-4-8
 x 2026-06-30 fix(claude-hooks): wire worktree_stop_cleanup to SessionEnd so it stops reaping in-use worktrees +chezmoi @worktree:.claude/worktrees/2e65c8f3-8bdb-46fa-b895-4461bbb94527.reaper-sessionend-fix session:2e65c8f3-8bdb-46fa-b895-4461bbb94527 agent:claude model:claude-opus-4-8
+x 2026-07-01 (B) my-git: draft-PR handoff for human review, drop auto-merge +skill +chezmoi
