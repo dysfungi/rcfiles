@@ -24,7 +24,7 @@ DESIGN
     invalid in a YAML plain scalar — the real loader raised a ScannerError and
     the harness silently fell back to the H1 title. Parsing with the same loader
     the agent harness uses means any unparseable frontmatter fails here loudly.
-    PyYAML is supplied to both test runners via `uv run --with pyyaml` (the mise
+    PyYAML is supplied to both test runners via `uv run --group test` (the mise
     `test` task and the pre-commit pytest hooks).
 """
 

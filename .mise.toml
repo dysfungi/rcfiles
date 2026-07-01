@@ -45,9 +45,14 @@ run = "chezmoi apply --verbose"
 description = "Chezmoi execute-template"
 run = "chezmoi --verbose execute-template --file"
 
+[tasks.worktree-apply]
+description = "chezmoi apply a target using THIS worktree as the source (a bare `chezmoi apply` reads the main checkout and ignores worktree edits)"
+usage = 'arg "<target>" help="Chezmoi target path (e.g. ~/.config/nvim/init.lua) to apply from this worktree"'
+run = 'chezmoi apply --source "$(git rev-parse --show-toplevel)" "${usage_target}"'
+
 [tasks.test]
 description = "Run tests"
-run = "uv run --with pytest --with pyyaml pytest .tests/ -v"
+run = "uv run --group test pytest .tests/ -v"
 
 [tasks.lint]
 description = "Lint the code"
