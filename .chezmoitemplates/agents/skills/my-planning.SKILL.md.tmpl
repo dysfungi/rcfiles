@@ -59,44 +59,66 @@ description: >-
 - Keep plans concise and scannable: clean Markdown hierarchy (headings, tables, bullet
   lists), not dense prose or confusing sub-numbering (`1a`, `1b`). The terminal plan
   renderer flattens heading levels, so make sections stand out with a `---` rule before
-  each `##` and an emoji anchor + UPPERCASE label on the heading (keep a blank line before
-  every `---` so it renders as a thematic break, not a setext heading).
+  each `##` and an emoji anchor + UPPERCASE label on the heading. Surround every `---` and
+  every heading with blank lines (valid Markdown block separation) — without them the
+  renderer runs the rule and the heading together on one line.
 - Use this template (inspired by tech design docs):
 
 ```markdown
 # <Title>
 
 ---
+
 ## 📌 CONTEXT & PROBLEM
+
 The problem/need, what prompted it, and the intended outcome.
 
 ---
+
 ## 🎯 GOALS & NON-GOALS
+
 What this addresses — and what it explicitly does not.
 
 ---
+
 ## 🛠️ APPROACH
+
 The proposed design and why it fits (idiomatic, declarative, maintainable).
 
 ---
+
 ## 🔀 ALTERNATIVES CONSIDERED
+
 Design alternatives weighed, each with the reasoning for rejecting it.
 
 ---
+
 ## 🚧 IMPLEMENTATION PLAN
+
 Ordered, concrete phases. Each phase is a complete definition including its own
 validation (linting, tests, build/compile, manual checks).
 
 ---
+
 ## 📖 DOCUMENTATION
+
 Docs to create or update for the change (READMEs, design docs, runbooks, inline comments).
 
 ---
-## 🧪 TEST COVERAGE
-Visualize the persistent, automated test coverage planned (e.g. a functionality × test-type
-matrix) and identify any gaps. Any missing or manual-only coverage must state explicit reasoning.
+
+## 🧪 TESTING PLAN
+
+How will you validate and verify the success of this task/project?
+
+### TEST COVERAGE
+
+Visualize the test coverage planned (eg, a functionality × test-type matrix)
+as a table and identify any gaps. Any missing or manual-only coverage must
+state explicit reasoning.
 
 ---
+
 ## ⚠️ RISKS & OPEN DECISIONS
+
 Known risks; decisions still needing alignment (compare each as a trade-off table when seeking input).
 ```
