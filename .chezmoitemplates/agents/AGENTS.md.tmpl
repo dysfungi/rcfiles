@@ -50,13 +50,19 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - **Root-thread guard**: a `PreToolUse` hook uses an **allowlist model** — only orchestration tools (`Agent`/`Task`, `Write`/`Edit`, task-tracking, `Workflow`, `Skill`, etc.) are permitted in the root thread. Everything else is blocked by default: `Read`, `Grep`, `Glob`, `Bash`, `WebFetch`, `WebSearch`, all `mcp__*` tools, `ReadMcpResourceTool`, `TaskOutput`, and any future tool not explicitly on the list. This is intentional: the root thread is for decisions, not execution, and new tools are safe-by-default. Exception: `Read` of self-authored scratch files (`~/.claude/plans/` and `~/.claude/projects/*/memory/`) is allowed in root so that editing plan and memory files doesn't require the sentinel. To disable the guard entirely: **ask the user first**, then create `~/.claude/root-guard-exempt` via the Write tool. Never create the sentinel without explicit user approval — it bypasses a deliberate constraint.
 {{- end }}
 
+## Mode discipline
+
+- When planning (scoping a non-trivial task / "plan mode"): invoke the `my-planning` skill before producing the plan.
+- When implementing (accept-edits / execution): invoke the `my-executing` skill.
+- When reviewing a diff, PR, or commit — including self-review of your own work: invoke the `my-code-review` skill.
+- Before presenting any plan for approval, run the `my-code-review` self-review pass (a fresh sub-agent) and address its findings first.
+
 ## Always-on guardrails — details in skills
 
-- Push immediately after every commit — see `my-git`.
-- File edits require an isolated git worktree (hook-enforced) — see `my-git`.
-- Maintain an active tasklist every session — see `my-task-tracking`.
-- Treat learning-as-instructions as continuous; capture durable learnings as skills — see `my-agent-memory`.
-- Less is more applies to code — see `my-engineering-principles`.
+- Follow `my-git` for every git action: push immediately after every commit, and make file edits only inside an isolated git worktree (hook-enforced).
+- Follow `my-task-tracking`: maintain an active tasklist every session.
+- Follow `my-agent-memory`: treat learning-as-instructions as continuous, and capture durable learnings as skills.
+- Follow `my-engineering-principles`: less is more, and it applies to code.
 
 [less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
 {{ if .is_riot_machine }}

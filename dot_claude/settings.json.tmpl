@@ -100,6 +100,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "^ExitPlanMode$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/exit_plan_review_gate.py",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PermissionRequest": [],
@@ -124,6 +134,11 @@
           {
             "type": "command",
             "command": "rm -f \"$HOME/.claude/task-labels/${TMUX_PANE}\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/clear_plan_review_sentinel.py",
             "timeout": 5
           }
         ]
