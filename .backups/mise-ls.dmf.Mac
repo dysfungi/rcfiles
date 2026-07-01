@@ -2,6 +2,7 @@ actionlint                            1.7.12
 cargo:rust-parallel                   1.23.0
 chezmoi                               2.70.5
 dbmate                                2.33.0
+dotnet                                9.0.202 (symlink)
 dotnet                                9.0.315 (symlink)
 github:aaronriekenberg/rust-parallel  1.23.0
 github:hadolint/hadolint              2.14.0
