@@ -24,3 +24,5 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (C) Rename therapy→my-therapy, p4-workflow→my-perforce +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-renames session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Enforce agy enableTelemetry via modify_ script +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.agy-telemetry session:248a100a agent:claude model:claude-opus-4-8
 (C) packages: decide keep-or-remove orphaned pytest {pip: pytest} in .chezmoidata/packages.yaml now that tests resolve via uv --group test +packages
+(B) Make agent skills reliably source per mode + add ExitPlanMode self-review gate hook +skill-sourcing-fix @worktree:.claude/worktrees/1e216906-cf39-417b-a780-b0f19f06b0bb.skill-sourcing-fix
+(C) Add run_onchange_ drift check for ~/.claude/skills sync (currently manual-apply-only) +skill-sourcing-fix
