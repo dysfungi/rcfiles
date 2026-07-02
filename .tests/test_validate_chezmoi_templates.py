@@ -36,6 +36,7 @@ is_chezmoi_config_template = _mod.is_chezmoi_config_template
 is_hard_skip = _mod.is_hard_skip
 partition_into_config_and_other = _mod.partition_into_config_and_other
 suffix_for_output_type = _mod.suffix_for_output_type
+process_file = _mod.process_file
 
 
 # ---------------------------------------------------------------------------
@@ -397,6 +398,71 @@ def test_refresh_config_uses_worktree_source(git_repo: Path) -> None:
         "validator should pass when the key is defined in the worktree config; "
         f"stderr:\n{result.stderr}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Security: rendered secrets never persist in the scratch dir
+#
+# Rendered *.tmpl output can contain live 1Password secrets. The scratch dir
+# under .tmp/chezmoi-validate/ must therefore be empty (or gone) after every
+# hook run, on every exit path. These two tests pin the regression that a
+# format-failure or a raised exception used to leave secret-bearing temp dirs
+# behind. No real 1Password secret is needed — a secret-free template that
+# fails its formatter drives the identical cleanup code path.
+# ---------------------------------------------------------------------------
+
+
+def test_scratch_cleared_on_validation_failure(git_repo: Path) -> None:
+    """Format-failure path must leave no rendered temp dir behind.
+
+    Guards the reported secret-leak regression: a template that renders
+    non-empty but fails formatting (`if then fi`) used to have its temp dir —
+    with the rendered output — deliberately preserved on disk. run_hook's
+    finally now sweeps the scratch root entirely, so it is empty or absent.
+    """
+    result = _run_hook(git_repo, "bad.sh.tmpl", "if then fi\n")
+    assert result.returncode != 0, (
+        f"expected FAIL\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    scratch = git_repo / ".tmp" / "chezmoi-validate"
+    entries = list(scratch.iterdir()) if scratch.exists() else []
+    assert entries == [], f"scratch dir not cleaned: {entries}"
+
+
+def test_process_file_cleans_up_on_exception(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Exception path must clean up via the TemporaryDirectory context manager.
+
+    The pre-fix code had no try/finally, so any exception raised inside
+    process_file (here from validate_rendered_output) leaked its temp dir with
+    rendered secrets. TemporaryDirectory removes the tree on exception too;
+    this proves the leaking path is now clean.
+    """
+    scratch = tmp_path / "scratch"
+
+    # Mirror _scratch_root's own mkdir contract — TemporaryDirectory(dir=…)
+    # raises FileNotFoundError if the parent is absent, which would mask the
+    # RuntimeError we actually want to observe.
+    def _fake_scratch_root() -> Path:
+        scratch.mkdir(parents=True, exist_ok=True)
+        return scratch
+
+    def _fake_render(source: str, dest: Path) -> None:
+        dest.write_text("echo hi\n")
+        return None
+
+    def _boom(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("validation blew up")
+
+    monkeypatch.setattr(_mod, "_scratch_root", _fake_scratch_root)
+    monkeypatch.setattr(_mod, "render_template_to_file", _fake_render)
+    monkeypatch.setattr(_mod, "validate_rendered_output", _boom)
+
+    with pytest.raises(RuntimeError):
+        process_file("foo.sh.tmpl")
+
+    assert list(scratch.iterdir()) == [], "temp dir leaked on exception path"
 
 
 # ---------------------------------------------------------------------------

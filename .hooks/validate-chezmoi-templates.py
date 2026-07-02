@@ -19,20 +19,22 @@ Design decisions:
     never silently replaces format validation — which would defeat the purpose
     of this hook. Run `mise install` to set up the environment.
 
-  - Format-style validators (taplo, markdownlint, shfmt) produce three
-    artifacts in a temp directory on failure: the original rendered file,
-    the auto-fixed file, and a unified diff. Linter-only validators (jq,
-    yamllint, hadolint, luac) produce only their error output — no file is
-    preserved, because the error message with line/col is sufficient.
+  - Format-style validators (taplo, markdownlint, shfmt) compute an
+    auto-fixed copy and a unified diff during validation to drive the FAIL
+    message. Linter-only validators (jq, yamllint, hadolint, luac) surface
+    only their error output, whose line/col is sufficient. Neither kind
+    preserves anything on disk — see the temp-dir note below.
 
   - Temp directories live under .tmp/chezmoi-validate/ at the repo root
     (gitignored; auto-ignored by chezmoi via dot-prefix). Placing rendered
     output inside the repo lets every format tool discover repo config
     (editorconfig, .stylua.toml, taplo.toml) via the normal upward path
-    search — no per-tool flags. Mode 0o700; files within 0o600. On success
-    the directory is deleted. On failure it is left in place and its path
-    is printed with a secrets warning, since rendered output may contain
-    1Password secrets.
+    search — no per-tool flags. Mode 0o700; files within 0o600. Each temp
+    directory is ALWAYS removed once its file finishes validating — success,
+    failure, or exception — so rendered 1Password secrets never persist on
+    disk. The auto-fixed copy and its diff are computed transiently (in the
+    temp dir, read back into the printed FAIL message) but are never written
+    durably.
 
   - The Python script is a pure orchestrator — all validation logic lives in
     the external tools. No Python built-ins (json.load, tomllib) are used for
@@ -52,13 +54,13 @@ Output type detection (filename-based rules first, then extension):
     .md     ->  markdown
     (other) ->  render-only
 
-Format-style validators (auto-fixer + linter; produces 3 artifacts on failure):
+Format-style validators (auto-fixer + linter; diff computed transiently for the FAIL message):
   toml      auto-fix: taplo fmt <copy>          linter: taplo lint
   markdown  auto-fix: markdownlint --fix <copy> linter: markdownlint
   shell     auto-fix: shfmt -w <copy>               linter: bash -n + shellcheck
   lua       auto-fix: stylua <copy>                 linter: luac -p
 
-Linter-only validators (error output is the artifact; no files preserved):
+Linter-only validators (error output is the diagnostic; no auto-fix step):
   dockerfile  hadolint
   json        jq .    (not used as formatter -- reorders keys)
   yaml        yamllint
@@ -275,16 +277,8 @@ def refresh_chezmoi_config_from_staged_template() -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Format-style validation (autofix artifacts + diff)
+# Format-style validation (autofix + transient diff)
 # ---------------------------------------------------------------------------
-
-
-def _write_artifact(path: Path, content: bytes | str) -> None:
-    if isinstance(content, str):
-        path.write_text(content, encoding="utf-8")
-    else:
-        path.write_bytes(content)
-    os.chmod(path, 0o600)
 
 
 def _unified_diff(original: Path, fixed: Path) -> str:
@@ -295,9 +289,7 @@ def _unified_diff(original: Path, fixed: Path) -> str:
     return result.stdout.decode(errors="replace")
 
 
-def run_autofix_and_write_diff_artifacts(
-    output_type: str, rendered: Path, tmpdir: Path
-) -> str | None:
+def run_autofix_and_diff(output_type: str, rendered: Path, tmpdir: Path) -> str | None:
     suffix = suffix_for_output_type(output_type)
     fixed = tmpdir / f"fixed{suffix}"
     shutil.copy2(rendered, fixed)
@@ -316,7 +308,6 @@ def run_autofix_and_write_diff_artifacts(
     if not diff:
         return None
 
-    _write_artifact(tmpdir / "diff.patch", diff)
     return diff
 
 
@@ -372,7 +363,7 @@ def validate_rendered_output(
     failures: list[str] = []
 
     if output_type in FORMAT_STYLE_TYPES:
-        diff = run_autofix_and_write_diff_artifacts(output_type, rendered, tmpdir)
+        diff = run_autofix_and_diff(output_type, rendered, tmpdir)
         if diff:
             failures.append(f"formatting diff:\n{diff.rstrip()}")
 
@@ -383,58 +374,47 @@ def validate_rendered_output(
     return "\n".join(failures) if failures else None
 
 
-def _print_artifact_hint(tmpdir: Path) -> None:
-    print(f"hint: artifacts preserved at {tmpdir}/", file=sys.stderr)
-    for artifact in sorted(tmpdir.iterdir()):
-        print(f"      {artifact.name}", file=sys.stderr)
-    print(
-        f"      ⚠  may contain secrets — delete when done: rm -rf {tmpdir}",
-        file=sys.stderr,
-    )
-
-
 def process_file(source: str) -> bool:
     output_type = detect_output_type(source)
-    tmpdir = Path(tempfile.mkdtemp(dir=_scratch_root()))
-    os.chmod(tmpdir, 0o700)
-    rendered = tmpdir / f"rendered{suffix_for_output_type(output_type)}"
+    # TemporaryDirectory removes the tree on every exit path — normal return
+    # AND exception — so rendered 1Password secrets never outlive validation of
+    # this one file. It also creates the dir 0o700, so no explicit chmod needed.
+    with tempfile.TemporaryDirectory(dir=_scratch_root()) as td:
+        tmpdir = Path(td)
+        rendered = tmpdir / f"rendered{suffix_for_output_type(output_type)}"
 
-    render_err = render_template_to_file(source, rendered)
-    if render_err:
-        shutil.rmtree(tmpdir)
-        print(f"FAIL  {source}: render failed:\n{render_err}", file=sys.stderr)
-        return False
+        render_err = render_template_to_file(source, rendered)
+        if render_err:
+            print(f"FAIL  {source}: render failed:\n{render_err}", file=sys.stderr)
+            return False
 
-    # Whitespace-only render -> PASS without type detection or linting.
-    # Mirrors chezmoi's "empty render = no target file" semantics (the empty_
-    # attribute prefix opts OUT of that). A template wholly wrapped in a
-    # machine/platform conditional (e.g. {{ if .is_riot_machine }}…{{ end }})
-    # legitimately renders empty on the current host: there is no target file
-    # and thus nothing to format or lint. A successful render already validated
-    # the Go-template syntax, so short-circuit rather than feed an empty buffer
-    # to shellcheck (SC2148) or another linter that would false-positive on it.
-    if rendered.read_text(errors="replace").strip() == "":
-        shutil.rmtree(tmpdir)
+        # Whitespace-only render -> PASS without type detection or linting.
+        # Mirrors chezmoi's "empty render = no target file" semantics (the empty_
+        # attribute prefix opts OUT of that). A template wholly wrapped in a
+        # machine/platform conditional (e.g. {{ if .is_riot_machine }}…{{ end }})
+        # legitimately renders empty on the current host: there is no target file
+        # and thus nothing to format or lint. A successful render already validated
+        # the Go-template syntax, so short-circuit rather than feed an empty buffer
+        # to shellcheck (SC2148) or another linter that would false-positive on it.
+        if rendered.read_text(errors="replace").strip() == "":
+            return True
+
+        # Shebang overrides filename-based detection (e.g. modify_foo.json.tmpl
+        # that renders to a Python script).
+        shebang_type = detect_output_type_from_shebang(rendered)
+        if shebang_type and shebang_type != output_type:
+            new_rendered = rendered.rename(
+                tmpdir / f"rendered{suffix_for_output_type(shebang_type)}"
+            )
+            rendered = new_rendered
+            output_type = shebang_type
+
+        validation_err = validate_rendered_output(output_type, rendered, tmpdir)
+        if validation_err:
+            print(f"FAIL  {source}: {validation_err}", file=sys.stderr)
+            return False
+
         return True
-
-    # Shebang overrides filename-based detection (e.g. modify_foo.json.tmpl
-    # that renders to a Python script).
-    shebang_type = detect_output_type_from_shebang(rendered)
-    if shebang_type and shebang_type != output_type:
-        new_rendered = rendered.rename(
-            tmpdir / f"rendered{suffix_for_output_type(shebang_type)}"
-        )
-        rendered = new_rendered
-        output_type = shebang_type
-
-    validation_err = validate_rendered_output(output_type, rendered, tmpdir)
-    if validation_err:
-        print(f"FAIL  {source}: {validation_err}", file=sys.stderr)
-        _print_artifact_hint(tmpdir)
-        return False
-
-    shutil.rmtree(tmpdir)
-    return True
 
 
 def run_hook(files: list[str]) -> int:
@@ -456,7 +436,12 @@ def run_hook(files: list[str]) -> int:
             )
             config_templates_all_passed = False
 
-    other_results = [process_file(f) for f in other_templates]
+    try:
+        other_results = [process_file(f) for f in other_templates]
+    finally:
+        # Sweep the scratch root itself (and any stale secret-bearing subdirs
+        # left by the pre-fix behavior) so nothing accumulates across runs.
+        shutil.rmtree(_scratch_root(), ignore_errors=True)
     other_all_passed = all(other_results)
 
     return 0 if (config_templates_all_passed and other_all_passed) else 1
