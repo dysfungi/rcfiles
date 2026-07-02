@@ -19,7 +19,7 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (B) style(codex) pad inline comments to 2 spaces in private_config.toml.tmpl {{ else if .isRiotMachine }} branch (~L20-21); unverifiable on personal machine, would fail taplo on a riot machine
 (B) Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8caddfd6-7d62-4a1d-b0fa-218bf7a22704.pi-gemini session:8caddfd6-7d62-4a1d-b0fa-218bf7a22704 agent:claude model:claude-opus-4-8
 (B) Convert agent instructions into my-* skills +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.agents-to-skills session:0beb48b4 agent:claude model:claude-opus-4-8
-(C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — parallel chezmoi runs trip over sibling .tmp/chezmoi-validate dirs (lstat ENOENT on random file) +tooling
+(C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — renders with --source <worktree root> and scans .tmp/chezmoi-validate/ while parallel workers rmtree their temp dirs (lstat ENOENT on random file). Fix: exclude .tmp/ from the render scan or serialize temp-dir cleanup +tooling
 (A) Fix YAML colon-space breaking skill descriptions +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-desc-yaml-fix session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Rename therapy→my-therapy, p4-workflow→my-perforce +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-renames session:0beb48b4 agent:claude model:claude-opus-4-8
 (C) Enforce agy enableTelemetry via modify_ script +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.agy-telemetry session:248a100a agent:claude model:claude-opus-4-8
@@ -27,3 +27,6 @@ Refactor and migrate '~/.secrets' to be managed by Mise
 (B) Make agent skills reliably source per mode + add ExitPlanMode self-review gate hook +skill-sourcing-fix @worktree:.claude/worktrees/1e216906-cf39-417b-a780-b0f19f06b0bb.skill-sourcing-fix
 (C) Add run_onchange_ drift check for ~/.claude/skills sync (currently manual-apply-only) +skill-sourcing-fix
 2026-07-01 my-planning template: rules + emoji + UPPERCASE section headings for terminal-plan-box scannability @my-planning +worktree-planning-heading-style
+(B) 2026-07-01 feat(my-git): let agents tidy their own worktree without human handoff (rebase + force-with-lease carve-out) + harden force-push deny +chezmoi +skills @worktree:.claude/worktrees/67aba131-b2e6-4df2-ae26-9dd13d3a4e8c.worktree-git-tidy-exemption session:67aba131-b2e6-4df2-ae26-9dd13d3a4e8c agent:claude model:claude-opus-4-8
+(C) 2026-07-01 codex & gemini render the my-git worktree-tidy exemption but have no worktree guard hook (only Claude + Pi do); their protection against rewriting main is instruction-only — add a guard or a stricter default-approval policy +skills +security
+(C) 2026-07-01 Robust force-push-to-main protection needs a hook — glob deny rules are leaky against flag reordering (git push origin main -f, combined -fu); the deny list only covers leading --force/-f forms +security +tooling
