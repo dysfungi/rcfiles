@@ -19,7 +19,8 @@
 #   aur          — AUR package name; installed via yay (independent of pacman:)
 #   winget       — winget package ID
 #   bootstrap    — true if installed by the platform .bootstrap.* script before chezmoi runs (documentation only)
-#   mise         — mise tool spec: "tool@version" (eg, "jq@latest", "python@3.13")
+#   mise         — mise tool id: bare or backend-prefixed (eg, "jq", "python", "pipx:mypy", "github:owner/repo")
+#   version      — version string for the mise tool (defaults to "latest"); sibling to mise
 #   skip         — platforms to skip for mise: [darwin, linux, windows]
 #   pip          — pip/UV package name
 #   npm          — npm package name (future)
@@ -141,10 +142,10 @@ my:
     rsync: { brew: rsync, pacman: rsync }
     ruff: { brew: ruff, pacman: ruff, mise: ruff }
     ruff-lsp: { brew: ruff-lsp }
-    rust: { brew: rust } # pacman omitted: conflicts with rustup (both provide cargo)
-    rust-analyzer: { brew: rust-analyzer, pacman: rust-analyzer }
-    rust-parallel: { brew: rust-parallel }
-    rustup: { brew: rustup, pacman: rustup }
+    rust: { mise: rust, version: stable, skip: [windows] }
+    rust-analyzer: { mise: "aqua:rust-lang/rust-analyzer", skip: [windows] }
+    rust-parallel:
+      { mise: "github:aaronriekenberg/rust-parallel", skip: [windows] }
     s3cmd: { brew: s3cmd }
     shellcheck: { brew: shellcheck, pacman: shellcheck }
     shfmt: { brew: shfmt, pacman: shfmt }
