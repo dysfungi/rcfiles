@@ -50,6 +50,14 @@ Phase 3 — chezmoiscripts (run_after_ / run_once_after_ / run_onchange_after_)
 - `is_darwin` / `is_linux` / `is_windows` / `is_unix_like` / `is_bsd` — platform
 - Credentials flow through 1Password service account mode
 
+### Secrets
+
+- **Render-time only:** templates resolve 1Password items via `onepasswordRead()` during `chezmoi apply`; nothing reads 1Password at shell startup.
+- **Secret env vars** land in `~/.config/mise/conf.d/secrets.toml` (mode 0600) as a static `[env]` table — no exec templates, so mise can never abort on env resolution.
+- **Shells** pick them up through mise: zsh evals `mise env -s zsh` (`.zshenv`) and `mise activate zsh` (`.zshrc`); bash evals `mise env -s bash`; PowerShell evals `mise env -s pwsh`; xonsh evals `mise hook-env -s xonsh` (`dot_config/xonsh/exact_rc.d/20-environment.xsh`).
+- **Bootstrap:** `OP_SERVICE_ACCOUNT_TOKEN` must be exported before `chezmoi init` — `.chezmoi.toml.tmpl` fails loudly when it is absent (no prompt).
+- **Unattended updates** get the token via `mise x` (see Automatic Updates).
+
 ### Script Stages
 
 Scripts under `.chezmoiscripts/` run in numeric directory order during `chezmoi apply`:
@@ -69,15 +77,15 @@ Script naming encodes platform targeting: `.unix-like.sh`, `.darwin.sh`, `.windo
 
 ### Automatic Updates
 
-Each machine runs `chezmoi update --init --verbose` daily via a cron job registered by the stage-90 install script. `crontab` is the single interface on both macOS and Linux; the daemon implementation differs (macOS: built-in, Arch/WSL: `cronie`).
+Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron job registered by the stage-90 install script. `crontab` is the single interface on both macOS and Linux; the daemon implementation differs (macOS: built-in, Arch/WSL: `cronie`).
 
 **Components:**
 
-| File                               | Role                                                                                                                                                       |
-| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `~/.local/bin/chezmoi-update-cron` | Runner invoked by cron. Sets PATH, sources OP token, exports `SUDO_ASKPASS`, takes a lock, runs chezmoi, logs to `~/.local/state/chezmoi/update-cron.log`. |
-| `~/.local/bin/chezmoi-askpass`     | `SUDO_ASKPASS` helper. Reads the sudo password from 1Password: `op://Private/sudo/password` (personal) or `op://Riot/sudo/password` (Riot).                |
-| `~/.local/bin/chezmoi-sudo`        | `sudo` wrapper. Falls back: cached creds → interactive prompt → `sudo -A` (1Password) → WARN+skip (exit 0). Never blocks.                                  |
+| File                               | Role                                                                                                                                                                                                                                                                             |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `~/.local/bin/chezmoi-update-cron` | Runner invoked by cron. Sets PATH, exports `SUDO_ASKPASS`, takes a lock, runs `mise x -- chezmoi update` (mise injects `OP_SERVICE_ACCOUNT_TOKEN` from `~/.config/mise/conf.d/secrets.toml`), logs to `~/.local/state/chezmoi/update-cron.log`. Fails loudly if mise is missing. |
+| `~/.local/bin/chezmoi-askpass`     | `SUDO_ASKPASS` helper. Reads the sudo password from 1Password: `op://Private/sudo/password` (personal) or `op://Riot/sudo/password` (Riot).                                                                                                                                      |
+| `~/.local/bin/chezmoi-sudo`        | `sudo` wrapper. Falls back: cached creds → interactive prompt → `sudo -A` (1Password) → WARN+skip (exit 0). Never blocks.                                                                                                                                                        |
 
 **One-time setup (per machine):**
 
@@ -119,6 +127,16 @@ Bootstrapping requires installing a couple things manually, so follow the platfo
 
 Use one of the [Chezmoi one-line install methods](https://www.chezmoi.io/install/#one-line-binary-install) unless Homebrew is already installed.
 
+`chezmoi init` requires the 1Password service-account token in the environment — the config template fails loudly without it:
+
+```sh
+read -rs OP_SERVICE_ACCOUNT_TOKEN && export OP_SERVICE_ACCOUNT_TOKEN
+chezmoi init <repo>
+unset OP_SERVICE_ACCOUNT_TOKEN
+```
+
+After the first `chezmoi apply`, subsequent runs get the token from `~/.config/mise/conf.d/secrets.toml` via `mise x -- chezmoi ...` (see Secrets).
+
 ### Windows
 
 Open Powershell and run:
@@ -127,22 +145,12 @@ Open Powershell and run:
 winget install twpayne.chezmoi AgileBits.1Password
 ```
 
-For first-time bootstrapping with 1Password service mode, set the token in the
-PowerShell session before running `chezmoi init`:
+`chezmoi init` requires the 1Password service-account token in the environment — the config template fails loudly without it. Set it in the PowerShell session before running `chezmoi init`:
 
 ```ps1
 $env:OP_SERVICE_ACCOUNT_TOKEN = Read-Host "OP_SERVICE_ACCOUNT_TOKEN"
 chezmoi init <repo>
 Remove-Item Env:OP_SERVICE_ACCOUNT_TOKEN
-```
-
-Or write the token once to `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`:
-
-```ps1
-$token = Read-Host "OP_SERVICE_ACCOUNT_TOKEN"
-$secretDir = Join-Path $HOME ".secrets"
-New-Item -ItemType Directory -Path $secretDir -Force | Out-Null
-Set-Content -LiteralPath (Join-Path $secretDir "OP_SERVICE_ACCOUNT_TOKEN") -NoNewline -Value $token
 ```
 
 ## Also See

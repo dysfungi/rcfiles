@@ -91,7 +91,7 @@ Scripts under `.chezmoiscripts/` are staged by numeric subdirectory:
 - `is_work_machine` — any non-personal machine
 - OS booleans: `is_darwin`, `is_linux`, `is_windows`, `is_unix_like`, `is_bsd`
 
-Credentials flow through 1Password (`onepasswordRead()`). The `OP_SERVICE_ACCOUNT_TOKEN` is read from the environment or `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`.
+Credentials flow through 1Password (`onepasswordRead()`) at render time. `OP_SERVICE_ACCOUNT_TOKEN` must be exported before `chezmoi init` (the config template fails loudly without it); afterwards mise injects it from the rendered `~/.config/mise/conf.d/secrets.toml` (0600), so run chezmoi via `mise x -- chezmoi ...`.
 
 ### Templating
 

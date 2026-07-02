@@ -5,12 +5,13 @@
 #   Invoked by cron once per day (registered by the stage-90 install script).
 #   Cron provides a minimal environment with no interactive TTY and a stripped PATH.
 #   This script reconstructs the environment needed by chezmoi and its chezmoiscripts,
-#   then runs `chezmoi update --init --verbose`.
+#   then runs `mise x -- chezmoi update --init --verbose`.
 #
 #   Key behaviours:
 #     - PATH: mirrors [scriptEnv] PATH from .chezmoi.toml.tmpl so all tools are reachable.
-#     - 1Password token: sourced from ~/.secrets/OP_SERVICE_ACCOUNT_TOKEN (non-interactive).
-#       If absent, op calls inside chezmoiscripts will fail loudly (never silently).
+#     - 1Password token: injected by `mise x` from the static [env] table in
+#       ~/.config/mise/conf.d/secrets.toml (no exec templates, so mise can never
+#       abort on env resolution). If mise is missing, this script fails loudly.
 #     - SUDO_ASKPASS: set to chezmoi-askpass so privileged chezmoiscripts can call
 #       `chezmoi-sudo` which in turn uses `sudo -A` for unattended password supply.
 #       Homebrew's internal sudo ignores SUDO_ASKPASS; new privileged casks should
@@ -36,20 +37,18 @@ export PATH="{{ .path_str }}"
 ASKPASS="${HOME}/.local/bin/chezmoi-askpass"
 export SUDO_ASKPASS="${ASKPASS}"
 
-OP_TOKEN_FILE="${HOME}/.secrets/OP_SERVICE_ACCOUNT_TOKEN"
-if [ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
-  if [ -f "${OP_TOKEN_FILE}" ]; then
-    OP_SERVICE_ACCOUNT_TOKEN="$(cat "${OP_TOKEN_FILE}")"
-    export OP_SERVICE_ACCOUNT_TOKEN
-  else
-    echo >&2 "WARN: chezmoi-update-cron: ${OP_TOKEN_FILE} not found and OP_SERVICE_ACCOUNT_TOKEN not set."
-    echo >&2 "WARN: chezmoi-update-cron: 1Password reads inside chezmoiscripts will fail."
-  fi
-fi
+# OP_SERVICE_ACCOUNT_TOKEN is delivered by `mise x` (see run block) from the
+# static [env] table in ~/.config/mise/conf.d/secrets.toml. chezmoi-askpass
+# inherits it too: `sudo -A` execs the askpass helper as the invoking user
+# before env_reset strips the environment.
 
 # ── lock ─────────────────────────────────────────────────────────────────────
 
 LOCK_DIR="${HOME}/.local/state/chezmoi/update-cron.lock"
+# Ensure the parent state dir exists first: bare `mkdir` of the lock fails on
+# a missing parent too, which would masquerade as "another run in progress"
+# and silently skip the update forever on a fresh machine.
+mkdir -p "${LOCK_DIR%/*}"
 if ! mkdir "${LOCK_DIR}" 2>/dev/null; then
   echo >&2 "INFO: chezmoi-update-cron: another run is in progress (${LOCK_DIR}); exiting."
   exit 0
@@ -65,11 +64,21 @@ mkdir -p "${LOG_DIR}"
 
 exec >>"${LOG_FILE}" 2>&1
 
+# Guarded AFTER the log redirect so the ERROR lands in the log file — before
+# the redirect it would only reach cron mail, which is rarely read. Nothing
+# above this point needs mise (PATH/askpass exports, lock, log setup).
+if ! command -v mise >/dev/null 2>&1; then
+  echo >&2 "ERROR: chezmoi-update-cron: mise not on PATH; cannot deliver OP_SERVICE_ACCOUNT_TOKEN."
+  exit 1
+fi
+
 # ── run ──────────────────────────────────────────────────────────────────────
 
 echo "INFO: Starting chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 echo "INFO: hostname=$(hostname) user=$(whoami)"
 
-chezmoi update --init --verbose
+# mise x injects OP_SERVICE_ACCOUNT_TOKEN from the static conf.d/secrets.toml
+# [env]; --init then re-renders .chezmoi.toml.tmpl with the token present.
+mise x -- chezmoi update --init --verbose
 
 echo "INFO: Ending chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"

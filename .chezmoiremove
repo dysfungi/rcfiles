@@ -12,3 +12,11 @@
 #     replaced by owned source files in the same directory).
 .pi/agent/extensions/plan-mode-default.ts
 .pi/agent/extensions/plan-mode/utils.ts
+# Orphans from the secrets-to-mise migration: per-secret files formerly
+# rendered from exact_private_dot_secrets/, plus the shell loader scripts that
+# sourced them (load-secrets.sh / load-secrets.ps1 were the sole contents of
+# their dirs). Secrets now live in ~/.config/mise/conf.d/secrets.toml and are
+# delivered via mise env.
+.secrets
+.config/sh
+.config/powershell
