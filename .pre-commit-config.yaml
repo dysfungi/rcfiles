@@ -98,6 +98,10 @@ repos:
             |^\.chezmoitemplates/
           )
         pass_filenames: true
+        # Serialize: parallel chezmoi execute-template runs walk the repo tree while
+        # sibling workers churn temp dirs under .tmp/chezmoi-validate/ (readdir->lstat
+        # TOCTOU -> spurious "no such file or directory"). One process at a time avoids it.
+        require_serial: true
         stages: [pre-commit, pre-push]
         exclude: |-
           (?x)^(

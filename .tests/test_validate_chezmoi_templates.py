@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 _hook_path = (
     Path(__file__).resolve().parents[1] / ".hooks" / "validate-chezmoi-templates.py"
@@ -396,3 +397,32 @@ def test_refresh_config_uses_worktree_source(git_repo: Path) -> None:
         "validator should pass when the key is defined in the worktree config; "
         f"stderr:\n{result.stderr}"
     )
+
+
+# ---------------------------------------------------------------------------
+# Config: the hook must run serially
+# ---------------------------------------------------------------------------
+
+
+def test_validate_hook_is_require_serial() -> None:
+    """Regression: the validate-chezmoi-templates hook must set require_serial.
+
+    Without it, pre-commit fans the matched files across concurrent workers.
+    Each worker runs `chezmoi execute-template --source <repo-root>` (walking the
+    whole tree) while siblings mkdtemp/rmtree subdirs under the shared in-tree
+    scratch parent .tmp/chezmoi-validate/. That is a readdir->lstat TOCTOU: one
+    worker deletes tmpXXXX in the window between another worker's chezmoi listing
+    the dir and stat-ing that entry, yielding a spurious "no such file or
+    directory" on a random unrelated file. Serializing the hook keeps one chezmoi
+    process running at a time and closes the race.
+    """
+    config_path = Path(__file__).resolve().parents[1] / ".pre-commit-config.yaml"
+    config = yaml.safe_load(config_path.read_text())
+    hooks = [
+        hook
+        for repo in config["repos"]
+        for hook in repo["hooks"]
+        if hook["id"] == "validate-chezmoi-templates"
+    ]
+    assert len(hooks) == 1, "expected exactly one validate-chezmoi-templates hook"
+    assert hooks[0].get("require_serial") is True
