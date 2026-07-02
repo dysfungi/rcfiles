@@ -1,0 +1,4 @@
+{{/* Renders ~/.vultr-cli.yaml. vultr-cli reads `api-key` from this file directly, so no VULTR_API_KEY env var is needed; note that env var, when set (e.g. mise inside ~/Code/monorepo), OVERRIDES this file. Gated on is_my_machine because the personal Frankenstructure vault is not readable by a work service-account token — an ungated template would fail `chezmoi apply` on work machines. On non-personal machines this renders empty, so chezmoi removes the target. */ -}}
+{{- if .is_my_machine -}}
+api-key: {{ onepasswordRead "op://Frankenstructure/Vultr API Key/password" }}
+{{ end -}}
