@@ -17,7 +17,7 @@ lua                                   5.5.0
 node                                  22.22.3
 node                                  23.0.0
 node                                  24.18.0            ~/.config/mise/config.toml  lts
-npm:@anthropic-ai/claude-code         2.1.197            ~/.config/mise/config.toml  latest
+npm:@anthropic-ai/claude-code         2.1.198            ~/.config/mise/config.toml  latest
 npm:@earendil-works/pi-coding-agent   0.80.3             ~/.config/mise/config.toml  latest
 npm:@opengsd/get-shit-done-redux      1.1.0              ~/.config/mise/config.toml  latest
 npm:@tobilu/qmd                       2.5.3              ~/.config/mise/config.toml  latest
