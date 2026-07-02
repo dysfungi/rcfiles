@@ -14,12 +14,11 @@ pyperclip==1.11.0
 requests==2.34.2
 setuptools==82.0.1
 tstr==0.4.1
-typing-extensions==4.15.0
+typing-extensions==4.16.0
 ujson==5.12.1
 urllib3==2.7.0
 wcwidth==0.8.2
-xonsh==0.23.8
-xontrib-1password==0.3.2
+xonsh==0.24.0
 xontrib-dracula==0.1.1
 xontrib-sh==0.3.2
 xontrib-term-integrations==0.2.3

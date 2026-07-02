@@ -20,8 +20,6 @@ brew "sqlite"
 brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
-# Extendable version manager with support for Ruby, Node.js, Erlang & more
-brew "asdf"
 # GNU internationalization (i18n) and localization (l10n) library
 brew "gettext"
 # Bourne-Again SHell, a UNIX command interpreter
@@ -166,14 +164,6 @@ brew "ripgrep"
 brew "ruff"
 # Language Server Protocol implementation for Ruff
 brew "ruff-lsp"
-# Safe, concurrent, practical language
-brew "rust"
-# Experimental Rust compiler front-end for IDEs
-brew "rust-analyzer"
-# Run commands in parallel with Rust's Tokio framework
-brew "rust-parallel"
-# Rust toolchain installer
-brew "rustup"
 # Command-line tool for the Amazon S3 service
 brew "s3cmd"
 # Static analysis and lint tool, for (ba)sh scripts
@@ -224,8 +214,6 @@ brew "typescript-language-server"
 brew "uv"
 # Vim script Language Lint
 brew "vint"
-# Command-line tool for Vultr services
-brew "vultr-cli"
 # Execute commands when watched files change
 brew "watchexec"
 # Internet file retriever

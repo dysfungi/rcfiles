@@ -161,6 +161,14 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- tmux >=3.7 mishandles DEC 2026 synchronized output and withholds redraws
+-- (stale screen; see tmux/tmux#4744). Disable sync emission inside any tmux
+-- (deliberately version-agnostic — nvim can't read the tmux version) until
+-- fixed upstream — validated fix, 2026-07-02.
+if vim.env.TMUX then
+  vim.opt.termsync = false
+end
+
 -- Return to last edit position when opening files (You want this!)
 -- vim.api.nvim_create_autocmd('BufReadPost', {
 --   group = vim.api.nvim_create_augroup('file-history'),
