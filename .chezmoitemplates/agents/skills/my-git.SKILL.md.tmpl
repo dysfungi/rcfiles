@@ -40,6 +40,10 @@ description: >-
 Pause before push --force, push --delete, rebase, reset, stash pop/drop, tag
 unless the user explicitly requested that exact action in the current message.
 
+**Tidy your own worktree branch without pausing.** The pause-first rule above guards *shared* history. When you are inside your own isolated worktree, on a branch only you have touched, `git rebase` (onto / interactive) to reshape your commits and `git push --force-with-lease` to update your own PR only rewrite work you created — run them without pausing and never hand them to the user (e.g. rebasing onto `origin/main` to drop stray commits before review).
+
+This carve-out does **not** relax the main-branch rules: never advance or merge `main` without explicit approval, and never bare `push --force` / `-f` — `--force-with-lease` only.
+
 ## Stashes
 
 Always `git stash push -m "<unique-slug>"` — never bare `git stash`. Pop by name.
