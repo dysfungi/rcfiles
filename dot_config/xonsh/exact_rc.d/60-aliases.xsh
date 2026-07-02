@@ -294,7 +294,7 @@ def __rc_interactive_aliases_claude(aliases):
                 resume_model = "opus"
             argv = ["--model", resume_model, *argv]
 
-        argv = ["--allow-dangerously-skip-permissions", *argv]
+        argv = ["--debug", "--allow-dangerously-skip-permissions", *argv]
         return subprocess.run([real_claude, *argv]).returncode
 
     away_flag = Path.home() / ".claude" / "away"
