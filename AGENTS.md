@@ -152,6 +152,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Convention: parametrized tables with descriptive `ids=` per case. See `.tests/test_bash_worktree_guard.py` for the canonical shape — parametrized truth tables serve as the executable spec.
 - For shell scripts and non-Python artifacts, write subprocess-driven integration tests that invoke the artifact as a real user would. Build a tmp env (HOME tree, fake PATH stubs, tmp git repos for CHEZMOI\_\* vars). Do not refactor production code purely to expose internals for unit testing — the harness adapts to production shape, not vice versa.
+- Template render validation (does it render, does the content land) belongs to the `validate-chezmoi-templates` pre-commit linter and `chezmoi apply` — never write pytest tests that render templates and assert their contents. Pytest is for behavior of scripts, hooks, and tools (rendering a template as setup for exercising its script body is fine).
 - When adding new functionality with a regression class, add the test file in the same commit.
 
 ## Platform Conventions
