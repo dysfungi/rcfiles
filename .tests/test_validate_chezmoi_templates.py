@@ -4,7 +4,8 @@ Two layers:
   - Unit: pure classification functions that route each staged file — output
     type detection (extension, filename, shebang), hard-skip rules, config
     template identification, partitioning. Deterministic; no filesystem writes
-    (except detect_output_type_from_shebang, which reads a file).
+    (except detect_output_type_from_shebang and the private_+onepasswordRead
+    hard-skip rule, which read fixture files).
   - Integration: the whitespace-only skip guard, exercised by invoking the hook
     as a real subprocess against fixture *.tmpl files in a throwaway git repo
     (see the "empty-render skip" section at the bottom).
@@ -90,18 +91,18 @@ def test_detect_output_type(path: str, expected: str) -> None:
 # is_hard_skip
 # ---------------------------------------------------------------------------
 
+# Path-only cases: no file content is consulted (basename is not private_*).
 _HARD_SKIP_YES = [
-    ("exact_private_dot_secrets/token.txt", "secrets dir"),
-    ("exact_private_dot_secrets/nested/deep.json", "nested secrets"),
     ("symlink_dot_gitconfig", "symlink basename"),
     ("some/dir/symlink_foo", "symlink in subdirectory"),
 ]
 
 _HARD_SKIP_NO = [
     ("dot_config/foo.toml.tmpl", "normal template"),
-    ("exact_dot_config/foo.sh.tmpl", "exact prefix but not secrets"),
+    ("exact_dot_config/foo.sh.tmpl", "exact prefix, not private"),
     (".chezmoitemplates/partial.sh", "shared template"),
     ("dot_local/bin/script.py", "normal script"),
+    ("private_dir/config.toml.tmpl", "private dir but non-private basename"),
 ]
 
 
@@ -117,6 +118,71 @@ def test_hard_skip_yes(path: str, desc: str) -> None:
 )
 def test_hard_skip_no(path: str, desc: str) -> None:
     assert is_hard_skip(path) is False, f"should not skip: {desc}"
+
+
+# Content-based cases: a private_* basename is hard-skipped only when the
+# template resolves 1Password secrets (onepasswordRead). Executable spec for
+# the generalized rule that replaced the hardcoded exact_private_dot_secrets/
+# prefix after secrets moved to ~/.config/mise/conf.d/secrets.toml.
+# (relative_path, content, should_skip, description)
+_PRIVATE_CONTENT_CASES = [
+    (
+        "dot_config/exact_mise/exact_conf.d/private_secrets.toml.tmpl",
+        '[env]\nTOKEN = {{ onepasswordRead "op://Vault/item/field" | quote }}\n',
+        True,
+        "mise secrets fragment with onepasswordRead -> skip",
+    ),
+    (
+        "dot_codex/private_auth.json.tmpl",
+        '{"key": {{ onepasswordRead "op://Vault/item/field" | quote }}}\n',
+        True,
+        "private json template with onepasswordRead -> skip",
+    ),
+    (
+        "encrypted_private_dot_token.tmpl",
+        '{{ onepasswordRead "op://Vault/item/field" }}\n',
+        True,
+        "stacked encrypted_private_ prefix -> skip",
+    ),
+    (
+        "create_private_dot_token.tmpl",
+        '{{ onepasswordRead "op://Vault/item/field" }}\n',
+        True,
+        "stacked create_private_ prefix -> skip",
+    ),
+    (
+        "dot_config/private_plain.toml.tmpl",
+        '[section]\nkey = "no secrets here"\n',
+        False,
+        "private template WITHOUT onepasswordRead -> validated",
+    ),
+    (
+        "dot_config/dot_dogrc.tmpl",
+        'apikey = {{ onepasswordRead "op://Vault/item/field" }}\n',
+        False,
+        "onepasswordRead WITHOUT private_ basename -> validated",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("rel_path", "content", "should_skip", "desc"),
+    _PRIVATE_CONTENT_CASES,
+    ids=[c[3] for c in _PRIVATE_CONTENT_CASES],
+)
+def test_hard_skip_private_onepassword(
+    tmp_path: Path, rel_path: str, content: str, should_skip: bool, desc: str
+) -> None:
+    target = tmp_path / rel_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(content)
+    assert is_hard_skip(str(target)) is should_skip, desc
+
+
+def test_hard_skip_private_missing_file(tmp_path: Path) -> None:
+    """An unreadable private_ template is NOT skipped: the render fails loudly
+    downstream instead of the skip silently masking a bad path."""
+    assert is_hard_skip(str(tmp_path / "private_missing.toml.tmpl")) is False
 
 
 # ---------------------------------------------------------------------------

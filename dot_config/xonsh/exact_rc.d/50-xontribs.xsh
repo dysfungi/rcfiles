@@ -5,7 +5,6 @@ from _utils import rc
 def __rc_interactive_load_xontribs():
     $XONTRIBS_AUTOLOAD_DISABLED = True
 
-    # https://github.com/drmikecrowe/xontrib-1password#disabling
     # NOTE(https://github.com/xonsh/xonsh/issues/5872): $XONTRIBS_AUTOLOAD_DISABLED is not respected
     # Do NOT set $XONTRIBS_AUTOLOAD_DISABLED = False here — enabling autoload lets coconut
     # autoload via its entry point and patch xonsh's source transformer before we can stop it.

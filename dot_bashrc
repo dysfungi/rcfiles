@@ -1,6 +1,5 @@
-if [ -f "$HOME/.config/sh/load-secrets.sh" ]; then
-  . "$HOME/.config/sh/load-secrets.sh"
-fi
+# Deliver mise [env] vars (incl. ~/.config/mise/conf.d/secrets.toml) to bash.
+command -v mise >/dev/null 2>&1 && eval "$(mise env -s bash)"
 
 # https://mise.jdx.dev/shells.html#bash
 # MISE_SHELL is exported by mise activate; skip if .profile already ran it (login shells)

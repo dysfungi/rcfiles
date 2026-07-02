@@ -47,7 +47,9 @@ start/end to stderr (`echo >&2 "INFO: Starting $0"` / `Ending`).
 
 `is_my_machine` (dmf) · `is_riot_machine` (dfrank / RIOTGAMES) · `is_work_machine` ·
 OS: `is_darwin` `is_linux` `is_windows` `is_unix_like` `is_bsd`. Credentials flow through 1Password
-(`onepasswordRead()`); `op_service_account_token` from env or `~/.secrets/OP_SERVICE_ACCOUNT_TOKEN`.
+(`onepasswordRead()`) at render time; `OP_SERVICE_ACCOUNT_TOKEN` must be exported for `chezmoi init`
+(fail-loud), and mise injects it afterwards from `~/.config/mise/conf.d/secrets.toml` (0600) — run
+chezmoi via `mise x -- chezmoi ...`.
 
 ## Templating
 

@@ -48,7 +48,6 @@ my:
     antigravity-cli: { cask: antigravity-cli } # cask-delivered CLI; Gemini CLI successor (binary: agy)
     archey4: { brew: archey4 }
     ascii: { brew: ascii }
-    asdf: { brew: asdf }
     bash: { brew: bash, pacman: bash }
     cdargs: { brew: cdargs, aur: cdargs }
     cheat: { brew: cheat }
@@ -257,7 +256,6 @@ my:
     pytest: { pip: pytest }
     requests: { pip: requests, xontrib: requests }
     tenacity: { pip: tenacity }
-    xontrib-1password: { xontrib: xontrib-1password }
     xontrib-coconut: { xontrib: coconut }
     xontrib-dracula: { xontrib: xontrib-dracula }
     xontrib-sh: { xontrib: xontrib-sh }

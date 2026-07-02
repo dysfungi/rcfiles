@@ -63,3 +63,4 @@ x 2026-07-01 (B) my-git: draft-PR handoff for human review, drop auto-merge +ski
 x 2026-07-01 (B) mise: declare test deps + worktree-apply task, reconcile docs +mise +skill
 x 2026-07-01 (C) Fix concurrency race in .hooks/validate-chezmoi-templates.py — parallel chezmoi runs trip over sibling .tmp/chezmoi-validate dirs (lstat ENOENT on random file) +tooling
 x 2026-07-01 fix(pre-commit): validate-chezmoi-templates always removes rendered temp dirs so 1Password secrets never persist on validation failure +security +tooling
+x 2026-07-02 Refactor and migrate '~/.secrets' to be managed by Mise

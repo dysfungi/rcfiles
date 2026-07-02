@@ -29,16 +29,16 @@
      Excluded on WSL ($is_linux) to avoid /mnt/c/... interop path leakage. */}}
 {{- $all_paths := without (concat $path_additions ($is_windows | ternary $paths_env (list)) $paths_system) "" | mustUniq -}}
 
+{{ $op_token := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
+{{ if not $op_token -}}
+  {{ fail "OP_SERVICE_ACCOUNT_TOKEN must be exported before running `chezmoi init` (see README bootstrap section)" -}}
+{{ end -}}
+
 {{ $my_github_token := onepasswordRead "op://CLI/GitHub Token - Chezmoi/password" }}
 {{ $riot_github_token := "" }}
 {{- if $is_riot_machine }}
 {{ $riot_github_token = onepasswordRead "op://Riot/GitHub - Personal Access Token/password" }}
 {{- end }}
-
-{{ $op_token := env "OP_SERVICE_ACCOUNT_TOKEN" -}}
-{{ if not $op_token -}}
-  {{ $op_token = promptString "1Password service account token" -}}
-{{ end -}}
 
 [data]
 name = "Derek M Frank"

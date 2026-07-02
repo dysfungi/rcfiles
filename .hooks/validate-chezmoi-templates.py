@@ -72,8 +72,13 @@ overrides the filename-based type. This handles cases like modify_foo.json.tmpl
 that renders to a Python script rather than JSON.
 
 Hard skips (never rendered):
-  exact_private_dot_secrets/  renders to bare secret strings
-  symlink_* basenames         render to filesystem paths, not parseable formats
+  private_* basenames calling onepasswordRead   skipped so real secret values are never
+                                                rendered into validator temp files or CI
+                                                output (the cec755e-class leak). Trade-off:
+                                                structured private_ configs (codex/gemini/pi
+                                                JSON+TOML) lose format validation until
+                                                onepasswordRead can be stubbed at render time.
+  symlink_* basenames                           render to filesystem paths, not parseable formats
 
 Render-only (Go template syntax checked; no format validator):
   .ps1, .conf, no-extension, and any unrecognised extension
@@ -141,11 +146,61 @@ def is_chezmoi_config_template(path: str) -> bool:
     return bool(re.search(r"\.chezmoi\..+\.tmpl$", path))
 
 
+# Chezmoi file attribute prefixes that can precede `private_` in a basename.
+# Canonical chezmoi attribute order is type (create_/modify_/remove_) then
+# encrypted_ then private_, but the parser here is order-agnostic: strip any
+# known attribute prefix until `private_` is found or a non-attribute token
+# (e.g. dot_, literal_, the raw name) is reached.
+_ATTR_PREFIXES_BEFORE_PRIVATE = (
+    "create_",
+    "modify_",
+    "remove_",
+    "encrypted_",
+    "readonly_",
+    "empty_",
+    "executable_",
+    "once_",
+    "onchange_",
+)
+
+
+def has_private_attribute(name: str) -> bool:
+    rest = name
+    while True:
+        if rest.startswith("private_"):
+            return True
+        stripped = next(
+            (
+                rest.removeprefix(p)
+                for p in _ATTR_PREFIXES_BEFORE_PRIVATE
+                if rest.startswith(p)
+            ),
+            None,
+        )
+        if stripped is None:
+            return False
+        rest = stripped
+
+
 def is_hard_skip(path: str) -> bool:
-    rel = path.replace("\\", "/")
-    return rel.startswith("exact_private_dot_secrets/") or Path(path).name.startswith(
-        "symlink_"
-    )
+    name = Path(path).name
+    if name.startswith("symlink_"):
+        return True
+    # Any private_ template that resolves 1Password secrets is skipped
+    # entirely: rendering it would write real secret values into validator
+    # temp files and surface them in FAIL output / CI logs (the cec755e-class
+    # leak). Trade-off: structured private_ configs (codex/gemini/pi JSON+TOML)
+    # lose format validation until onepasswordRead can be stubbed at render
+    # time. Content check (not a hardcoded path) so future secret-bearing
+    # private_ templates are covered automatically
+    # (e.g. dot_config/exact_mise/exact_conf.d/private_secrets.toml.tmpl).
+    # A private_ template WITHOUT onepasswordRead still gets validated.
+    if has_private_attribute(name):
+        try:
+            return "onepasswordRead" in Path(path).read_text(errors="replace")
+        except OSError:
+            return False  # unreadable -> let the render fail loudly instead
+    return False
 
 
 def detect_output_type(path: str) -> str:
@@ -422,10 +477,12 @@ def run_hook(files: list[str]) -> int:
     config_templates, other_templates = partition_into_config_and_other(actionable)
     needs_config_refresh = bool(config_templates)
 
-    # Chezmoi config templates (e.g. .chezmoi.toml.tmpl) use promptString and
-    # onepasswordRead, which are registered only in chezmoi init's FuncMap —
-    # not in execute-template's. They fail at compile time (not runtime), so
-    # render_template_to_file always rejects them. Use chezmoi init instead.
+    # Chezmoi config templates (e.g. .chezmoi.toml.tmpl) define the data
+    # context itself, so they must be materialized via `chezmoi init` rather
+    # than rendered like ordinary templates. The template hard-fails (via
+    # `fail`) when OP_SERVICE_ACCOUNT_TOKEN is absent from the environment —
+    # run this hook under `mise x` so the token is injected from
+    # ~/.config/mise/conf.d/secrets.toml.
     config_templates_all_passed = True
     if needs_config_refresh:
         err = refresh_chezmoi_config_from_staged_template()
