@@ -13,10 +13,11 @@
   "enabledModels": [
     {{- if .is_riot_machine }}
     "claude-vertex/anthropic-claude-opus-4-8",
-    "claude-vertex/anthropic-claude-sonnet-4-6-default"
+    "claude-vertex/anthropic-claude-sonnet-5"
     {{- else }}
     "claude-opus-4-8",
-    "claude-sonnet-4-6",
+    "claude-sonnet-5",
+    "claude-fable-5",
     "gemini-3.1-pro-preview",
     "gemini-3.5-flash",
     "gemini-3.1-flash-lite"
