@@ -20,9 +20,9 @@ WHY WE RENDER EACH WRAPPER
     `.chezmoidata/git.yaml`. Rendering every wrapper exactly as chezmoi does
     (`chezmoi execute-template --source <repo> --file <abs path>`) proves the
     policy survives each real include path, not just the shared source text.
-    A throwaway --config pins is_my_machine=true / is_riot_machine=false,
-    mirroring test_settings_git_permissions: `.chezmoi.toml.tmpl` defines those
-    under [data] during `chezmoi init`, which execute-template does not run.
+    A throwaway empty --config keeps the render hermetic (isolated from the
+    user's real chezmoi config); the my-git template chain needs no [data]
+    variables, so none are pinned.
 """
 
 from __future__ import annotations
@@ -42,17 +42,26 @@ WRAPPERS = [
     pytest.param("dot_pi/agent/exact_skills/my-git/SKILL.md.tmpl", id="pi"),
 ]
 
-# (assertion id, exact text that must appear in every render)
+# (scope, exact text that must appear in every render). Scope selects the
+# region searched: "body" = the whole render, "frontmatter" = only the YAML
+# block between the first two `---` delimiter lines.
 POLICY_MARKERS = [
     pytest.param(
+        "body",
         "**Never resolve review threads** — the human resolves each thread",
         id="body-never-resolve-policy",
     ),
     pytest.param(
+        "frontmatter",
         "never resolve review threads",
         id="description-trigger-keyword",
     ),
 ]
+
+
+def _frontmatter(rendered: str) -> str:
+    """The YAML frontmatter block between the first two `---` delimiter lines."""
+    return rendered.split("---\n", 2)[1]
 
 
 @pytest.fixture(scope="module")
@@ -67,7 +76,7 @@ def render(tmp_path_factory: pytest.TempPathFactory):
     """
     clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     config = tmp_path_factory.mktemp("chezmoi-config") / "chezmoi.toml"
-    config.write_text("[data]\nis_my_machine = true\nis_riot_machine = false\n")
+    config.write_text("")
     cache: dict[str, str] = {}
 
     def _render(wrapper: str) -> str:
@@ -95,9 +104,12 @@ def render(tmp_path_factory: pytest.TempPathFactory):
     return _render
 
 
-@pytest.mark.parametrize("marker", POLICY_MARKERS)
+@pytest.mark.parametrize(("scope", "marker"), POLICY_MARKERS)
 @pytest.mark.parametrize("wrapper", WRAPPERS)
-def test_reviewer_feedback_policy_rendered(render, wrapper: str, marker: str) -> None:
+def test_reviewer_feedback_policy_rendered(
+    render, wrapper: str, scope: str, marker: str
+) -> None:
     """Every wrapper render carries the reviewer-feedback policy and trigger."""
     rendered = render(wrapper)
-    assert marker in rendered, f"{marker!r} missing from rendered {wrapper}"
+    haystack = _frontmatter(rendered) if scope == "frontmatter" else rendered
+    assert marker in haystack, f"{marker!r} missing from {scope} of rendered {wrapper}"
