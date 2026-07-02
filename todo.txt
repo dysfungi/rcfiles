@@ -34,4 +34,3 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-02 Add declarative removal to pip/xontrib sync scripts — stage-40 sync is install-only, so xontrib-1password stayed pip-installed after its removal from packages.yaml (uninstalled manually 2026-07-02) +packages +tooling
 (C) 2026-07-02 .zsh/system/path.zsh:1 puts relative ./bin at the head of PATH — security smell (directory-dependent binary resolution); scope it out and remove or justify +zsh +security
 (B) 2026-07-02 Remove nvim termsync-in-tmux workaround once tmux fixes DEC 2026 redraw deferral (>3.7b) +nvim +tmux
-(B) 2026-07-02 Fix nvim stale rendering under tmux 3.7b: disable termsync inside tmux +nvim +tmux @worktree:.claude/worktrees/1d229491-a800-4968-90ba-543fd927fbcc.nvim-termsync-tmux-fix session:1d229491-a800-4968-90ba-543fd927fbcc agent:claude model:claude-fable-5
