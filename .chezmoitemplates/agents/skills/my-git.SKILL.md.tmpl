@@ -9,7 +9,9 @@ description: >-
   stashing uncommitted main-branch edits into a worktree to commit them,
   destructive-op guardrails, the multi-instance worktree protocol, and
   a draft-then-ready PR handoff for human review on GitHub origins (mark ready
-  is the required finish line) — never auto-merge;
+  is the required finish line), a reviewer-feedback loop (reply to PR review
+  comments when addressed or to discuss first — never resolve review threads;
+  the human resolves) — never auto-merge;
   main always reflects prod, so it never advances without my explicit approval
   and only for changes expected to deploy.
   For commit/PR audit trailers, see my-audit-trail.
@@ -110,12 +112,18 @@ primary checkout (the parent of `git rev-parse --git-common-dir`).
    - *GitHub:* run `gh pr ready` to convert the draft to review-ready — **not optional** for a change
      you consider done and ready to ship. Don't end your turn on a draft you consider finished:
      either mark it ready, or say explicitly why it's still a draft (still WIP, or complete but
-     intentionally held from deploy per step 5). Leave the PR **open**; surface the PR URL and a
+     intentionally held from deploy per step 6). Leave the PR **open**; surface the PR URL and a
      short "what to review" note. Do **not** run `gh pr merge`.
    - *Local / no remote:* **stop** — do not advance main. Tell me the branch is ready and summarize
      what to review.
 
-5. **Merge only on my explicit approval, and only what's expected to deploy.** `main` reflects prod:
+5. **Reviewer feedback loop.** When the human leaves PR review comments: reply on each
+   thread once addressed (say what changed + the commit), or reply first when there are
+   important considerations to discuss before changing code. Resume work in the kept
+   worktree for fixes. **Never resolve review threads** — the human resolves each thread
+   after verifying it was addressed.
+
+6. **Merge only on my explicit approval, and only what's expected to deploy.** `main` reflects prod:
    never merge a change you don't expect to ship (here, to be `chezmoi apply`-ied). If it isn't
    deploy-ready, keep it a draft / on the branch.
    - *Repos I own ({{ .my.github_personal_owners | join ", " }}):* after I approve in-session,
@@ -128,9 +136,9 @@ primary checkout (the parent of `git rev-parse --git-common-dir`).
    - *Unrecognized origin:* gather the facts (remote URL, owner, is it yours?), ask me how to
      integrate, then propose a `my-git` update so it's covered next time (see `my-agent-memory`).
 
-6. **Cleanup — after an approved merge only.** Until the change is merged, **keep** the worktree (I may
+7. **Cleanup — after an approved merge only.** Until the change is merged, **keep** the worktree (I may
    request changes — resume in it) and leave the `todo.txt` claim open. After merging, delete the local
-   branch (step 5) and remove the worktree (`ExitWorktree action: remove`); the SessionEnd hook archives
+   branch (step 6) and remove the worktree (`ExitWorktree action: remove`); the SessionEnd hook archives
    the todo claim. (A squash-merge isn't a fast-forward, so the branch isn't auto-reaped — the explicit
    `git branch -D` is what clears it.)
 
@@ -157,7 +165,7 @@ this survives across turns.
 - Create: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`.
 - Worktree path: `.claude/worktrees/<session-id>.<task-slug>`.
 - Complete: `ExitWorktree action: remove` only after an approved merge; hand off per the
-  integration/handoff/merge rules in steps 2–5 above.
+  integration/handoff/merge rules in steps 2–6 above.
 - Auto-cleanup: the SessionEnd hook removes merged worktrees at session end and
   archives their todo.txt entries; prefer explicit `ExitWorktree` — it's a safety net,
   not a substitute.
@@ -176,7 +184,7 @@ this survives across turns.
 - The `worktree-guard.ts` extension blocks mutations until `worktree_start` succeeds;
   all `worktree_*` tools are always allowed.
 - Complete: call `worktree_stop` (optionally `remove: true`) only after an approved merge;
-  hand off per the integration/handoff/merge rules in steps 2–5 above.
+  hand off per the integration/handoff/merge rules in steps 2–6 above.
 - Human-only bypass: `touch .pi/worktree-exempt` — agents must never create worktree
   exemption files.
 {{- end }}
