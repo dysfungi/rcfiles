@@ -4,7 +4,7 @@ WHY THIS FILE EXISTS
     `~/.local/bin/chezmoi-update-cron` (source:
     `dot_local/bin/executable_chezmoi-update-cron.tmpl`) is the unattended
     daily updater. After the secrets-to-mise migration it must:
-      1. run `mise x -- chezmoi update --init --verbose` (mise injects
+      1. run `mise x -- chezmoi update --init --verbose --force` (mise injects
          OP_SERVICE_ACCOUNT_TOKEN from ~/.config/mise/conf.d/secrets.toml)
       2. fail loudly (ERROR + non-zero) when mise is absent from PATH
       3. never reference the retired ~/.secrets token file
@@ -110,7 +110,9 @@ def _run_script(tmp_path: Path) -> subprocess.CompletedProcess:
 
 def test_runs_chezmoi_update_via_mise_x(tmp_path: Path) -> None:
     """Happy path: the runner delegates to `mise x -- chezmoi update --init
-    --verbose` — token delivery is mise's job, not the script's."""
+    --verbose --force` — token delivery is mise's job, not the script's.
+    --force is required because the run has no TTY: the overwrite prompt for
+    perpetually-drifting modify_ targets would otherwise abort every run."""
     bin_dir = _make_bin(tmp_path)
     mise_log = tmp_path / "mise_calls.txt"
     mise_log.write_text("")
@@ -120,8 +122,8 @@ def test_runs_chezmoi_update_via_mise_x(tmp_path: Path) -> None:
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
 
     calls = mise_log.read_text()
-    assert "x -- chezmoi update --init --verbose" in calls, (
-        f"expected mise x -- chezmoi update --init --verbose, got:\n{calls}"
+    assert "x -- chezmoi update --init --verbose --force" in calls, (
+        f"expected mise x -- chezmoi update --init --verbose --force, got:\n{calls}"
     )
 
     log = (tmp_path / ".local/state/chezmoi/update-cron.log").read_text()

@@ -5,7 +5,7 @@
 #   Invoked by cron once per day (registered by the stage-90 install script).
 #   Cron provides a minimal environment with no interactive TTY and a stripped PATH.
 #   This script reconstructs the environment needed by chezmoi and its chezmoiscripts,
-#   then runs `mise x -- chezmoi update --init --verbose`.
+#   then runs `mise x -- chezmoi update --init --verbose --force`.
 #
 #   Key behaviours:
 #     - PATH: mirrors [scriptEnv] PATH from .chezmoi.toml.tmpl so all tools are reachable.
@@ -79,6 +79,12 @@ echo "INFO: hostname=$(hostname) user=$(whoami)"
 
 # mise x injects OP_SERVICE_ACCOUNT_TOKEN from the static conf.d/secrets.toml
 # [env]; --init then re-renders .chezmoi.toml.tmpl with the token present.
-mise x -- chezmoi update --init --verbose
+# --force: this run is unattended (no TTY), so chezmoi's overwrite prompt would
+# fail with "could not open a new TTY" and abort the apply mid-run. modify_-
+# script targets (e.g. ~/.claude/settings.json) drift perpetually by design —
+# the tool rewrites its own file — so the prompt would fire on every nightly
+# run, leaving alphabetically later targets stale. Overwriting is safe:
+# modify_ scripts re-derive their output from the live file's contents.
+mise x -- chezmoi update --init --verbose --force
 
 echo "INFO: Ending chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
