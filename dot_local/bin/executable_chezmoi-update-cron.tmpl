@@ -5,7 +5,7 @@
 #   Invoked by cron once per day (registered by the stage-90 install script).
 #   Cron provides a minimal environment with no interactive TTY and a stripped PATH.
 #   This script reconstructs the environment needed by chezmoi and its chezmoiscripts,
-#   then runs `mise x -- chezmoi update --init --verbose --force`.
+#   then runs `mise x -- chezmoi update --init --verbose --keep-going`.
 #
 #   Key behaviours:
 #     - PATH: mirrors [scriptEnv] PATH from .chezmoi.toml.tmpl so all tools are reachable.
@@ -18,6 +18,10 @@
 #       be installed via an interactive `chezmoi apply` instead.
 #     - Lock: mkdir-based (portable; macOS lacks flock). Prevents overlapping runs
 #       (e.g. machine wakes during a previous missed-run catch-up that never completed).
+#     - Two-channel output: everything goes to the log (full detail); nag-worthy
+#       drift/failure summaries additionally go to fd 3 — the saved original
+#       stderr — which cron captures and mails to the crontab owner
+#       (/var/mail/$USER). A clean run writes nothing to fd 3, so no mail.
 #     - Log: appended to ~/.local/state/chezmoi/update-cron.log, rotated weekly by
 #       the stage-65 logrotate config (dot_config/logrotate/chezmoi.conf).
 #
@@ -62,13 +66,21 @@ LOG_DIR="${HOME}/.local/state/chezmoi"
 LOG_FILE="${LOG_DIR}/update-cron.log"
 mkdir -p "${LOG_DIR}"
 
+# Save the original stderr as fd 3 — the mail channel: cron mails any job
+# output to the crontab owner, landing in /var/mail/$USER, which login(1)
+# and the shells' mail checks then surface as "You have (new) mail.". Write
+# ONLY nag-worthy summaries to >&3 — a clean run must stay silent there so
+# no mail is sent.
+exec 3>&2
 exec >>"${LOG_FILE}" 2>&1
 
-# Guarded AFTER the log redirect so the ERROR lands in the log file — before
-# the redirect it would only reach cron mail, which is rarely read. Nothing
-# above this point needs mise (PATH/askpass exports, lock, log setup).
+# Guarded AFTER the log redirect so the full ERROR lands in the log file;
+# a one-line summary also goes to the mail channel so the failure is nagged,
+# not buried. Nothing above this point needs mise (PATH/askpass exports,
+# lock, log setup).
 if ! command -v mise >/dev/null 2>&1; then
   echo >&2 "ERROR: chezmoi-update-cron: mise not on PATH; cannot deliver OP_SERVICE_ACCOUNT_TOKEN."
+  echo >&3 "chezmoi-update-cron: mise not on PATH; update did not run. See ${LOG_FILE}"
   exit 1
 fi
 
@@ -79,12 +91,48 @@ echo "INFO: hostname=$(hostname) user=$(whoami)"
 
 # mise x injects OP_SERVICE_ACCOUNT_TOKEN from the static conf.d/secrets.toml
 # [env]; --init then re-renders .chezmoi.toml.tmpl with the token present.
-# --force: this run is unattended (no TTY), so chezmoi's overwrite prompt would
-# fail with "could not open a new TTY" and abort the apply mid-run. modify_-
-# script targets (e.g. ~/.claude/settings.json) drift perpetually by design —
-# the tool rewrites its own file — so the prompt would fire on every nightly
-# run, leaving alphabetically later targets stale. Overwriting is safe:
-# modify_ scripts re-derive their output from the live file's contents.
-mise x -- chezmoi update --init --verbose --force
+# --keep-going: this run is unattended (no TTY), so chezmoi's overwrite prompt
+# would fail with "could not open a new TTY" and abort the apply mid-run.
+# Drift is EXPECTED here — Claude Code perpetually rewrites its own settings
+# files (modify_ targets like ~/.claude/settings.json) — so drifted targets
+# are skipped, letting the rest of the apply converge. Never force-overwrite
+# from this unattended path: out-of-band edits are deliberate and a human must
+# resolve them (drift is surfaced via cron mail in the report below).
+rc=0
+mise x -- chezmoi update --init --verbose --keep-going 3>&- || rc=$?
+
+# ── report ───────────────────────────────────────────────────────────────────
+
+# Failure notice FIRST, drift second, both set-e-guarded: a broken
+# `chezmoi status` (plausibly correlated with a broken update) must never
+# silently eat the failure notice.
+if ((rc != 0)); then
+  echo >&3 "chezmoi-update-cron: chezmoi update exited rc=${rc}; see ${LOG_FILE}"
+fi
+
+# Drift detection: `chezmoi status` is read-only and never prompts. An M in
+# either column ≈ the drift-class statuses; the pattern also matches
+# source-changed `M ` lines (harmless: an extra listing, never a false
+# prompt). substr($0, 4) keeps target paths containing spaces intact.
+# 3>&- closes the mail channel for the child (same hygiene as the run line).
+if ! drift="$(mise x -- chezmoi status 3>&- | awk '$1 ~ /M/ { print substr($0, 4) }')"; then
+  echo >&3 "chezmoi-update-cron: chezmoi status failed; see ${LOG_FILE}"
+elif [[ -n "${drift}" ]]; then
+  # Full detail to the log (stderr → log); concise summary to fd 3 → cron
+  # mail → /var/mail/$USER.
+  drift_count="$(awk 'END { print NR }' <<<"${drift}")"
+  echo >&2 "ERROR: chezmoi-update-cron: ${drift_count} drifted target(s) skipped by --keep-going:"
+  while IFS= read -r target; do
+    echo >&2 "ERROR:   ${target}"
+  done <<<"${drift}"
+  {
+    echo "chezmoi-update-cron: ${drift_count} drifted target(s) skipped (--keep-going):"
+    while IFS= read -r target; do
+      echo "  ${target}"
+    done <<<"${drift}"
+    echo "fix with: chezmoi diff <target> && chezmoi apply --force <target>"
+  } >&3
+fi
 
 echo "INFO: Ending chezmoi-update-cron at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+exit "${rc}"

@@ -59,8 +59,8 @@ BLOCK_END="# <<< chezmoi-update <<<"
 
 MANAGED_BLOCK="${BLOCK_BEGIN}
 # Installed by chezmoi. Do not edit this block manually — it is regenerated on
-# chezmoi apply. To change the schedule, edit the source template:
-#   .chezmoiscripts/90/run_after_install-update-cron.unix-like.sh.tmpl
+# chezmoi apply. To change the schedule, edit the source script:
+#   .chezmoiscripts/90/run_after_install-update-cron.unix-like.sh
 ${CRON_LINE}
 ${BLOCK_END}"
 
