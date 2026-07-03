@@ -58,6 +58,14 @@ Phase 3 — chezmoiscripts (run_after_ / run_once_after_ / run_onchange_after_)
 - **Bootstrap:** `OP_SERVICE_ACCOUNT_TOKEN` must be exported before `chezmoi init` — `.chezmoi.toml.tmpl` fails loudly when it is absent (no prompt).
 - **Unattended updates** get the token via `mise x` (see Automatic Updates).
 
+### Agent GitHub Identity
+
+Agent sessions act on github.com as a dedicated machine user instead of Derek:
+
+- **Token:** the agent PAT (`op://Agents/GitHub Personal Access Token - AI/credential`) renders as `GH_TOKEN` into the mise agent profile `~/.config/mise/config.agent.toml` (0600, all machines) — loaded only under `MISE_ENV=agent` or `mise -E agent`, never in Derek's own shells.
+- **Switch:** Claude Code sets `MISE_ENV=agent` in its settings env; codex/agy/pi are alias-wrapped as `mise x -E agent -- <binary>`.
+- **Attribution:** github.com `gh` + GitHub-MCP actions = the machine user (all machines); commits/pushes = Derek as author with the machine user as `Co-Authored-By`; the enterprise host (`gh.riotgames.com`, `GH_ENTERPRISE_TOKEN`) is untouched.
+
 ### Script Stages
 
 Scripts under `.chezmoiscripts/` run in numeric directory order during `chezmoi apply`:
