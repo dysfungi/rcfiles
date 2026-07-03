@@ -1,5 +1,13 @@
 alias gemini='agy'  # Gemini CLI migrated to Antigravity (agy)
 
+# Agent harness launchers run under the mise "agent" env so gh/GitHub actions
+# carry the agent machine-user identity (GH_TOKEN from config.agent.toml).
+# mise exec resolves the trailing binary via PATH — no alias recursion.
+# (claude sets MISE_ENV=agent via its settings env; gemini chains through agy.)
+alias agy='mise x -E agent -- agy'
+alias codex='mise x -E agent -- codex'
+alias pi='mise x -E agent -- pi'
+
 alias starwars="telnet towel.blinkenlights.nl"
 
 alias sitenamr="grep '^[a-z].*[^aeiou]er$' /usr/share/dict/words | shuf -n 1 | sed -r -e 's/er$/r/' -e 's/^(\w)/\1/'"

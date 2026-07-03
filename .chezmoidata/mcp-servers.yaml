@@ -5,7 +5,7 @@ my:
       doc_url: "https://github.com/github/github-mcp-server"
       auth:
         type: bearer
-        op_path: "op://CLI/GitHub Token - AI/token"
+        op_path: "op://Agents/GitHub Personal Access Token - AI/credential"
     honeycomb:
       server_url: "https://mcp.honeycomb.io/mcp"
       doc_url: "https://docs.honeycomb.io/integrations/mcp"

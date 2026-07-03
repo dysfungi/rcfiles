@@ -318,8 +318,17 @@ def __rc_interactive_aliases_claude(aliases):
 
 
 @rc(interactive=True)
-def __rc_interactive_aliases_gemini(aliases):
+def __rc_interactive_aliases_agents(aliases):
     aliases["gemini"] = "agy"  # Gemini CLI migrated to Antigravity (agy)
+
+    # Agent harness launchers run under the mise "agent" env so gh/GitHub
+    # actions carry the agent machine-user identity (GH_TOKEN from
+    # config.agent.toml). mise exec resolves the trailing binary via PATH — no
+    # alias recursion. (claude sets MISE_ENV=agent via its settings env;
+    # gemini chains through agy.)
+    aliases["agy"] = "mise x -E agent -- agy"
+    aliases["codex"] = "mise x -E agent -- codex"
+    aliases["pi"] = "mise x -E agent -- pi"
 
 
 @rc(interactive=True)
