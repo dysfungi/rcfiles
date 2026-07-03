@@ -23,7 +23,7 @@ import pytest
 import yaml
 
 _hook_path = (
-    Path(__file__).resolve().parents[1] / ".hooks" / "validate-chezmoi-templates.py"
+    Path(__file__).resolve().parents[2] / ".hooks" / "validate-chezmoi-templates.py"
 )
 _spec = importlib.util.spec_from_file_location("validate_chezmoi_templates", _hook_path)
 assert _spec and _spec.loader
@@ -548,7 +548,7 @@ def test_validate_hook_is_require_serial() -> None:
     directory" on a random unrelated file. Serializing the hook keeps one chezmoi
     process running at a time and closes the race.
     """
-    config_path = Path(__file__).resolve().parents[1] / ".pre-commit-config.yaml"
+    config_path = Path(__file__).resolve().parents[2] / ".pre-commit-config.yaml"
     config = yaml.safe_load(config_path.read_text())
     hooks = [
         hook
