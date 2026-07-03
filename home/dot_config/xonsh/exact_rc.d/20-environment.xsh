@@ -21,6 +21,11 @@ def _activate_mise(xsh):
         hook = $(@(_mise_bin) hook-env -s xonsh)
         if hook:
             execx(hook)
+            # mise's _.path prepends managed front-paths but doesn't remove a pre-existing
+            # copy that path_helper/inheritance left mid-$PATH; dedup keep-first (mise's
+            # front copy wins) so the managed paths appear exactly once.
+            _seen = set()
+            $PATH = [p for p in $PATH if not (p in _seen or _seen.add(p))]
         reset_current_job()
 
     def _mise(args):
