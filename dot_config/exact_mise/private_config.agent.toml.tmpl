@@ -1,0 +1,22 @@
+# mise config-environment "agent" (0600) — loaded ONLY when MISE_ENV=agent is
+# set or a command runs via `mise -E agent` / `mise x -E agent -- <cmd>`.
+# Agent harnesses opt in per session (Claude settings env, shell launcher
+# aliases); Derek's own shells never load it, so his gh identity is untouched.
+#
+# This is the agent-scoped counterpart of conf.d/secrets.toml: conf.d fragments
+# load UNCONDITIONALLY (no MISE_ENV participation), so any agent-only secret
+# must live HERE — the fixed basename config.agent.toml is what mise's
+# env-gated loading recognizes. Same render-time-static rule as secrets.toml:
+# no exec templates, values resolve at `chezmoi apply`.
+#
+# This file renders on ALL machines (the agent github.com identity is
+# machine-independent; GH_TOKEN only authenticates github.com — enterprise
+# gh.riotgames.com uses GH_ENTERPRISE_TOKEN and is unaffected). Future
+# machine-scoped vars go inside template conditionals within this file; the
+# file itself stays ungated.
+
+[env]
+
+# GitHub machine-user (frank-machine) PAT: gh and other GH_TOKEN-aware tools
+# in agent sessions act as the agent identity instead of Derek.
+GH_TOKEN = {{ onepasswordRead "op://Agents/GitHub Personal Access Token - AI/credential" | quote }}

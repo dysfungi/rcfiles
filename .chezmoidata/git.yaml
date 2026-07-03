@@ -5,3 +5,10 @@ my:
   github_personal_owners:
     - dysfungi
     - dfrank
+  # Dedicated GitHub machine-user account for agent sessions: gh/MCP actions on
+  # github.com run as this identity, and commits carry it as Co-Authored-By.
+  # The noreply email (<USERID>+<login>@users.noreply.github.com) makes GitHub
+  # render the machine user's avatar on co-authored commits.
+  github_agent:
+    username: frank-machine
+    email: 299332554+frank-machine@users.noreply.github.com

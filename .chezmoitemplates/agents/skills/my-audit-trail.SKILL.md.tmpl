@@ -20,6 +20,20 @@ Jira comment, incident note, change record — make authorship and rationale exp
 - If materially changing a Jira ticket's saved fields (title, description, acceptance
   criteria, scope, status), add a Jira comment recording each change + rationale.
 
+## Commit co-authorship (agent GitHub identity)
+
+The human is commit author and committer; the agent machine user is co-author.
+{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
+Claude Code appends this exact trailer automatically via the `attribution.commit`
+setting — do **not** add it manually:
+{{- else }}
+Append this exact trailer to every agent-authored commit:
+{{- end }}
+
+```text
+Co-Authored-By: {{ .my.github_agent.username }} <{{ .my.github_agent.email }}>
+```
+
 ## Compact metadata (keep it greppable)
 
 Include: `Co-Authored-By`, `Model`, `Model-Provider`, `Session-ID`, `Username`, `Hostname`.

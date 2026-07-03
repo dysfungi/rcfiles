@@ -19,6 +19,14 @@ description: >-
 
 # Git workflow
 
+## Agent GitHub identity
+
+Agent sessions run under the mise `agent` env (`MISE_ENV=agent` / launcher aliases), so
+`gh` and GitHub-MCP actions on github.com are attributed to the agent machine user
+({{ .my.github_agent.username }}); commit author stays the human. Escape hatches:
+`env -u GH_TOKEN <cmd>` acts as the human for one command; `mise x -E agent -- <cmd>`
+acts as the agent from an unswitched session.
+
 ## Commits
 
 - Conventional Commits: semantic subject + audit-useful rationale in the body.
