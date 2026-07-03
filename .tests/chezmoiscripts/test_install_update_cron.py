@@ -1,7 +1,7 @@
 """Integration tests for the stage-90 cron install script.
 
 WHY THIS FILE EXISTS
-    `.chezmoiscripts/90/run_after_install-update-cron.unix-like.sh.tmpl`
+    `.chezmoiscripts/90/run_after_install-update-cron.unix-like.sh`
     must register a managed cron block idempotently, never clobber unrelated entries,
     fail loudly when crontab is absent or the write did not persist, verify the cron
     daemon is running (via systemctl on Linux or launchctl on macOS), and fail loudly
@@ -22,11 +22,13 @@ TRUTH TABLE
     4.  idempotent with unrelated entries                → block replaced, rest preserved
     5.  crontab absent from PATH                         → ERROR + exit non-zero
     6.  crontab write did not persist                    → ERROR + exit non-zero
-    7.  Linux: systemctl, cronie not yet enabled         → systemctl enable --now cronie called
-    8.  Linux: cronie already enabled                    → systemctl enable NOT called again
-    9.  macOS: launchctl, com.vix.cron already known     → success
-    10. macOS: com.vix.cron not loadable after kickstart → ERROR + exit non-zero
-    11. no daemon manager (no systemctl, no launchctl)   → ERROR + exit non-zero
+    7.  macOS: launchctl, com.vix.cron already known     → success
+    8.  macOS: com.vix.cron not loadable after kickstart → ERROR + exit non-zero
+    9.  no daemon manager (no systemctl, no launchctl)   → ERROR + exit non-zero
+
+    (The Linux cronie enable/skip paths are deliberately untested: asserting
+    "systemctl was called with these args" only restates the script — mock
+    theater, no observable outcome to verify against a stub systemd.)
 
 HERMETIC PATH STRATEGY
     Tests run with PATH set to exactly tmp_path/bin — nothing else. This makes
@@ -63,10 +65,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = (
-    REPO_ROOT
-    / ".chezmoiscripts"
-    / "90"
-    / "run_after_install-update-cron.unix-like.sh.tmpl"
+    REPO_ROOT / ".chezmoiscripts" / "90" / "run_after_install-update-cron.unix-like.sh"
 )
 
 _BASH = shutil.which("bash") or "/bin/bash"
@@ -149,25 +148,6 @@ def _make_fake_crontab(
         else
             echo >&2 "crontab stub: unknown arg $1"; exit 1
         fi
-        """),
-    )
-
-
-def _make_recording_systemctl(
-    bin_dir: Path, calls_log: Path, initial_enabled: bool = False
-) -> None:
-    """Write a systemctl stub that records calls and simulates enabled state."""
-    calls_log.write_text("")
-    _make_stub(
-        bin_dir,
-        "systemctl",
-        textwrap.dedent(f"""\
-        LOG="{calls_log}"
-        echo "$@" >> "$LOG"
-        if [[ "$1" == "is-enabled" ]]; then
-            {"exit 0" if initial_enabled else "exit 1"}
-        fi
-        exit 0
         """),
     )
 
@@ -310,42 +290,6 @@ def test_fail_when_crontab_write_not_persisted(tmp_path: Path) -> None:
     result = _run_script(tmp_path)
     assert result.returncode != 0
     assert "ERROR" in result.stderr
-
-
-def test_enables_cronie_on_linux(tmp_path: Path) -> None:
-    """On Linux (systemctl available, cronie not yet enabled), script enables cronie."""
-    bin_dir = tmp_path / "bin"
-    _make_base_stubs(bin_dir)
-    crontab_state = tmp_path / "crontab_state.txt"
-    _make_fake_crontab(bin_dir, crontab_state)
-    calls_log = tmp_path / "systemctl_calls.txt"
-    _make_recording_systemctl(bin_dir, calls_log, initial_enabled=False)
-
-    result = _run_script(tmp_path)
-    assert result.returncode == 0, f"script failed:\n{result.stderr}"
-
-    calls = calls_log.read_text()
-    assert "enable --now cronie" in calls, (
-        f"expected systemctl enable --now cronie call, got:\n{calls}"
-    )
-
-
-def test_skips_cronie_when_already_enabled(tmp_path: Path) -> None:
-    """When cronie is already enabled, systemctl enable is not called again."""
-    bin_dir = tmp_path / "bin"
-    _make_base_stubs(bin_dir)
-    crontab_state = tmp_path / "crontab_state.txt"
-    _make_fake_crontab(bin_dir, crontab_state)
-    calls_log = tmp_path / "systemctl_calls.txt"
-    _make_recording_systemctl(bin_dir, calls_log, initial_enabled=True)
-
-    result = _run_script(tmp_path)
-    assert result.returncode == 0, f"script failed:\n{result.stderr}"
-
-    calls = calls_log.read_text()
-    assert "enable --now cronie" not in calls, (
-        "systemctl enable called when cronie was already enabled"
-    )
 
 
 def test_macos_daemon_already_loaded(tmp_path: Path) -> None:

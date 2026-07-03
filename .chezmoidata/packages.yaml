@@ -62,11 +62,11 @@ my:
     coconut: { brew: coconut }
     colordiff: { brew: colordiff, pacman: colordiff }
     coreutils: { brew: coreutils }
+    cowsay: { brew: cowsay }
     # cronie: Arch Linux cron daemon. Installed via pacman; enabled by the stage-90
     # install-update-cron script via `systemctl enable --now cronie`. macOS uses the
     # built-in cron daemon (managed by launchd), so no brew entry is needed.
     cronie: { pacman: cronie }
-    cowsay: { brew: cowsay }
     csvq: { brew: csvq }
     curl: { brew: curl, pacman: curl, bootstrap: true }
     dbmate: { brew: dbmate }
@@ -132,6 +132,12 @@ my:
     pandoc: { brew: pandoc }
     poetry: { brew: poetry }
     poppler: { brew: poppler, pacman: poppler }
+    # postfix: local-only MTA so cronie can mail chezmoi-update-cron's drift nag to
+    # /var/mail/$USER (without an MTA, cronie logs "No MTA installed, discarding
+    # output" and the nag vanishes). Configured loopback-only and enabled by the
+    # stage-90 setup-postfix script. pacman-only: macOS ships postfix built in, so
+    # no brew entry is needed.
+    postfix: { pacman: postfix }
     prettier: { brew: prettier }
     prettierd: { brew: prettierd }
     proselint: { brew: proselint }
@@ -145,6 +151,10 @@ my:
     rust-analyzer: { mise: "aqua:rust-lang/rust-analyzer", skip: [windows] }
     rust-parallel:
       { mise: "github:aaronriekenberg/rust-parallel", skip: [windows] }
+    # s-nail: provides /usr/bin/mail for reading the cron-mail spool — Arch ships no
+    # mail(1) reader in base. pacman-only: macOS ships mail(1) built in, so no brew
+    # entry is needed.
+    s-nail: { pacman: s-nail }
     s3cmd: { brew: s3cmd }
     shellcheck: { brew: shellcheck, pacman: shellcheck }
     shfmt: { brew: shfmt, pacman: shfmt }

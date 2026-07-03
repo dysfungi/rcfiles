@@ -4,11 +4,22 @@ WHY THIS FILE EXISTS
     `~/.local/bin/chezmoi-update-cron` (source:
     `dot_local/bin/executable_chezmoi-update-cron.tmpl`) is the unattended
     daily updater. After the secrets-to-mise migration it must:
-      1. run `mise x -- chezmoi update --init --verbose` (mise injects
-         OP_SERVICE_ACCOUNT_TOKEN from ~/.config/mise/conf.d/secrets.toml)
+      1. run the update via `mise x` (mise injects OP_SERVICE_ACCOUNT_TOKEN
+         from ~/.config/mise/conf.d/secrets.toml) with `--keep-going`, then
+         report drift/failure summaries on fd 3 — the saved original stderr,
+         which cron mails to /var/mail/$USER — while full detail stays in
+         the log; a clean run writes nothing to fd 3 (no mail)
       2. fail loudly (ERROR + non-zero) when mise is absent from PATH
       3. never reference the retired ~/.secrets token file
     Plus the pre-existing lock/log behavior it has always had.
+
+TESTING LENS — NO MOCK-THEATER
+    Assertions target observable outcomes only (files written/removed, exit
+    codes, output routed to log vs mail channel) — never "the script invoked
+    a stub with these args", which merely restates the script. The mise stub
+    is file-driven: marker files under $HOME select its behavior. The
+    subprocess harness captures the script's outer stderr (= the fd 3 mail
+    channel, since fd 3 dups the original stderr) separately from the log.
 
 WHY SUBPROCESS TESTS
     The script is a .tmpl whose only template input is `{{ .path_str }}`
@@ -48,7 +59,9 @@ _BASH = shutil.which("bash") or "/bin/bash"
 #   mkdir — lock dir + log dir creation
 #   rm    — lock removal in the EXIT trap
 #   date, hostname, whoami — log lines
-_REAL_TOOLS = ("mkdir", "rm", "date", "hostname", "whoami")
+#   awk   — drift-report parsing of `chezmoi status` output
+#   cat   — used inside the file-driven mise stub
+_REAL_TOOLS = ("mkdir", "rm", "date", "hostname", "whoami", "awk", "cat")
 
 
 def _clean_env() -> dict[str, str]:
@@ -92,6 +105,35 @@ def _make_bin(tmp_path: Path) -> Path:
     return bin_dir
 
 
+def _make_mise_stub(bin_dir: Path) -> None:
+    """File-driven mise stub — behavior selected by marker files under $HOME:
+
+      $HOME/update_rc   → `mise x -- chezmoi update …` exits with its contents
+      $HOME/status_rc   → `mise x -- chezmoi status` exits with its contents
+      $HOME/status.txt  → `mise x -- chezmoi status` prints its contents
+
+    Absent markers mean success with empty output (a clean run).
+    """
+    _make_stub(
+        bin_dir,
+        "mise",
+        "\n".join(
+            (
+                'case "$*" in',
+                '  *"chezmoi status"*)',
+                '    [[ -f "$HOME/status_rc" ]] && exit "$(cat "$HOME/status_rc")"',
+                '    [[ -f "$HOME/status.txt" ]] && cat "$HOME/status.txt"',
+                "    ;;",
+                '  *"chezmoi update"*)',
+                '    [[ -f "$HOME/update_rc" ]] && exit "$(cat "$HOME/update_rc")"',
+                "    ;;",
+                "esac",
+                "exit 0",
+            )
+        ),
+    )
+
+
 def _run_script(tmp_path: Path) -> subprocess.CompletedProcess:
     bin_dir = tmp_path / "bin"
     script = _render_script(tmp_path, str(bin_dir))
@@ -108,21 +150,17 @@ def _run_script(tmp_path: Path) -> subprocess.CompletedProcess:
 # ── stubbed-mise behavior ─────────────────────────────────────────────────────
 
 
-def test_runs_chezmoi_update_via_mise_x(tmp_path: Path) -> None:
-    """Happy path: the runner delegates to `mise x -- chezmoi update --init
-    --verbose` — token delivery is mise's job, not the script's."""
+def test_happy_path_logs_and_releases_lock(tmp_path: Path) -> None:
+    """Happy path on a FRESH HOME: exit 0, log has Starting/Ending, lock
+    released by the EXIT trap. (No arg-string assertions — what the script
+    passes to chezmoi is visible in the diff, not a behavior to restate.)
+    The fresh HOME is the regression pairing for the bare-`mkdir`-on-missing-
+    parent bug that masqueraded as lock contention."""
     bin_dir = _make_bin(tmp_path)
-    mise_log = tmp_path / "mise_calls.txt"
-    mise_log.write_text("")
-    _make_stub(bin_dir, "mise", f'echo "$@" >> "{mise_log}"')
+    _make_mise_stub(bin_dir)
 
     result = _run_script(tmp_path)
     assert result.returncode == 0, f"script failed:\n{result.stderr}"
-
-    calls = mise_log.read_text()
-    assert "x -- chezmoi update --init --verbose" in calls, (
-        f"expected mise x -- chezmoi update --init --verbose, got:\n{calls}"
-    )
 
     log = (tmp_path / ".local/state/chezmoi/update-cron.log").read_text()
     assert "Starting chezmoi-update-cron" in log
@@ -150,8 +188,8 @@ def test_existing_lock_skips_run(tmp_path: Path) -> None:
 
 def test_fails_loudly_when_mise_absent(tmp_path: Path) -> None:
     """Guard: without mise on PATH the token cannot be delivered — the script
-    must exit non-zero with an ERROR. The guard runs AFTER the log redirect,
-    so the ERROR must land in the log file (cron mail is rarely read)."""
+    must exit non-zero with an ERROR in the log AND a one-line notice on the
+    mail channel (fd 3 → outer stderr) so the failure is nagged, not buried."""
     _make_bin(tmp_path)  # hermetic PATH, deliberately no mise stub
 
     result = _run_script(tmp_path)
@@ -159,6 +197,7 @@ def test_fails_loudly_when_mise_absent(tmp_path: Path) -> None:
     log = (tmp_path / ".local/state/chezmoi/update-cron.log").read_text()
     assert "ERROR" in log
     assert "mise not on PATH" in log
+    assert "mise not on PATH" in result.stderr
     # Lock still released by the EXIT trap on the guard's early exit.
     assert not (tmp_path / ".local/state/chezmoi/update-cron.lock").exists()
 
@@ -170,6 +209,84 @@ def test_no_dot_secrets_references(tmp_path: Path) -> None:
     body = rendered.read_text()
     assert ".secrets" not in body
     assert "load-secrets" not in body
+
+
+# ── drift report (two-channel: log detail + fd 3 mail summary) ───────────────
+
+# `chezmoi status` fixture: MM (both columns) and ` M` (actual≠target) are
+# drift-class; ` A` is the non-M control that must never be reported.
+_DRIFTED_STATUS = "MM .claude/settings.json\n M .claude.json\n A control-target\n"
+_DRIFT_TARGETS = (".claude/settings.json", ".claude.json")
+
+
+@pytest.mark.parametrize(
+    ("status_body", "status_rc", "update_rc", "want_rc"),
+    [
+        pytest.param(_DRIFTED_STATUS, None, None, 0, id="drift-detected"),
+        pytest.param("", None, None, 0, id="clean-silent"),
+        pytest.param(_DRIFTED_STATUS, None, 1, 1, id="update-error-propagates"),
+        pytest.param(None, 2, None, 0, id="status-failure-still-notifies"),
+    ],
+)
+def test_drift_report(
+    tmp_path: Path,
+    status_body: str | None,
+    status_rc: int | None,
+    update_rc: int | None,
+    want_rc: int,
+) -> None:
+    """Two-channel drift/failure reporting:
+    - drift-detected: drifted targets land in the log (ERROR banner) AND on
+      the mail channel (outer stderr = fd 3); the non-M control line does
+      not; exit stays 0; no custom drift state file is written.
+    - clean-silent: empty status → mail channel EMPTY (⇒ cron sends no mail).
+    - update-error-propagates: a failed update still runs the report, puts
+      a failure notice on the mail channel, and the exit code propagates.
+    - status-failure-still-notifies: a broken `chezmoi status` cannot
+      silently eat the report — a notice reaches the mail channel and the
+      script still exits with the update's rc (guards the set -e trap).
+    """
+    bin_dir = _make_bin(tmp_path)
+    _make_mise_stub(bin_dir)
+    if status_body is not None:
+        (tmp_path / "status.txt").write_text(status_body)
+    if status_rc is not None:
+        (tmp_path / "status_rc").write_text(f"{status_rc}\n")
+    if update_rc is not None:
+        (tmp_path / "update_rc").write_text(f"{update_rc}\n")
+
+    result = _run_script(tmp_path)
+    assert result.returncode == want_rc, f"stderr:\n{result.stderr}"
+
+    log = (tmp_path / ".local/state/chezmoi/update-cron.log").read_text()
+    mail = result.stderr  # fd 3 dups the original stderr → the mail channel
+
+    if status_rc is not None:
+        assert "chezmoi status failed" in mail
+        return
+
+    if update_rc is not None:
+        assert f"chezmoi update exited rc={update_rc}" in mail
+        # Report still ran after the failure: drift summary also present.
+        assert "drifted target(s)" in mail
+
+    if status_body == _DRIFTED_STATUS:
+        assert "ERROR" in log and "2 drifted target(s)" in log
+        assert "2 drifted target(s)" in mail
+        for target in _DRIFT_TARGETS:
+            assert target in log
+            assert target in mail
+        assert "control-target" not in log
+        assert "control-target" not in mail
+        assert "chezmoi apply --force" in mail  # human fix-hint
+        # No custom drift state file — the mail spool IS the state.
+        state_files = {
+            p.name for p in (tmp_path / ".local/state").rglob("*") if p.is_file()
+        }
+        assert state_files == {"update-cron.log"}
+    else:  # clean run
+        assert "ERROR" not in log
+        assert mail == "", f"clean run must not produce cron mail, got:\n{mail}"
 
 
 # ── real-mise conf.d link ─────────────────────────────────────────────────────

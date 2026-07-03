@@ -119,6 +119,27 @@ if is_unix_like then
       PATH = table.concat(myPaths, ":"),
       SHELL = shell,
     }
+
+    -- Launch menu: non-default entries, each without tmux. The default
+    -- (default_prog above = xonsh-in-tmux) is unchanged.
+    config.launch_menu = {
+      {
+        -- login(1) execs the DS UserShell (xonsh) and prints the mail notice.
+        label = "Xonsh (login, no tmux)",
+        args = { "/usr/bin/login", "-pfl", os.getenv "USER" },
+      },
+      {
+        -- brew zsh (repo prefers brew shells); mail notice via the .zsh/mail/ module.
+        label = "Zsh (no tmux)",
+        args = { homebrewBin .. "/zsh", "-l" },
+      },
+      {
+        -- brew bash 5.x, not system 3.2. No mail notice on this path — accepted:
+        -- bash is rarely used and nothing in the repo wires bash mail checking.
+        label = "Bash (no tmux)",
+        args = { homebrewBin .. "/bash", "-l" },
+      },
+    }
   else -- Linux
     modifierKey = "SUPER"
 

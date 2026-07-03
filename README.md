@@ -81,11 +81,11 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 
 **Components:**
 
-| File                               | Role                                                                                                                                                                                                                                                                             |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `~/.local/bin/chezmoi-update-cron` | Runner invoked by cron. Sets PATH, exports `SUDO_ASKPASS`, takes a lock, runs `mise x -- chezmoi update` (mise injects `OP_SERVICE_ACCOUNT_TOKEN` from `~/.config/mise/conf.d/secrets.toml`), logs to `~/.local/state/chezmoi/update-cron.log`. Fails loudly if mise is missing. |
-| `~/.local/bin/chezmoi-askpass`     | `SUDO_ASKPASS` helper. Reads the sudo password from 1Password: `op://Private/sudo/password` (personal) or `op://Riot/sudo/password` (Riot).                                                                                                                                      |
-| `~/.local/bin/chezmoi-sudo`        | `sudo` wrapper. Falls back: cached creds → interactive prompt → `sudo -A` (1Password) → WARN+skip (exit 0). Never blocks.                                                                                                                                                        |
+| File                               | Role                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `~/.local/bin/chezmoi-update-cron` | Runner invoked by cron. Sets PATH, exports `SUDO_ASKPASS`, takes a lock, runs `mise x -- chezmoi update --keep-going` (mise injects `OP_SERVICE_ACCOUNT_TOKEN` from `~/.config/mise/conf.d/secrets.toml`), logs to `~/.local/state/chezmoi/update-cron.log`. Drift/failure summaries are mailed by cron to the local user (`/var/mail/$USER`) — read with `mail`. Fails loudly if mise is missing. |
+| `~/.local/bin/chezmoi-askpass`     | `SUDO_ASKPASS` helper. Reads the sudo password from 1Password: `op://Private/sudo/password` (personal) or `op://Riot/sudo/password` (Riot).                                                                                                                                                                                                                                                        |
+| `~/.local/bin/chezmoi-sudo`        | `sudo` wrapper. Falls back: cached creds → interactive prompt → `sudo -A` (1Password) → WARN+skip (exit 0). Never blocks.                                                                                                                                                                                                                                                                          |
 
 **One-time setup (per machine):**
 
@@ -106,6 +106,7 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 - Plain cron does not catch up missed runs (e.g. laptop was sleeping). The midday schedule mitigates this for laptops that are awake during the day.
 - New Homebrew casks that require privileged install should be applied interactively (`chezmoi apply`); `brew bundle`'s internal `sudo` calls bypass `chezmoi-sudo` and may be skipped unattended.
 - Skipped privileged steps emit a `WARN` to the log and are deferred to the next interactive apply — they never fail silently.
+- Targets modified out-of-band are skipped by `--keep-going` every night and re-nagged (cron mail) until fixed via `chezmoi diff <target> && chezmoi apply --force <target>`. The "you have mail" notice surfaces through `login(1)` (tmux panes + Terminal.app), zsh's `MAIL`/startup check, and xonsh's pre-prompt check.
 
 ### Key Subsystems
 
