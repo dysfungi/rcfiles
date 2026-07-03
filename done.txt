@@ -65,3 +65,4 @@ x 2026-07-01 (C) Fix concurrency race in .hooks/validate-chezmoi-templates.py â€
 x 2026-07-01 fix(pre-commit): validate-chezmoi-templates always removes rendered temp dirs so 1Password secrets never persist on validation failure +security +tooling
 x 2026-07-02 Refactor and migrate '~/.secrets' to be managed by Mise
 x 2026-07-02 2026-07-02 Fix nvim stale rendering under tmux 3.7b: disable termsync inside tmux +nvim +tmux @worktree:.claude/worktrees/1d229491-a800-4968-90ba-543fd927fbcc.nvim-termsync-tmux-fix session:1d229491-a800-4968-90ba-543fd927fbcc agent:claude model:claude-fable-5
+x 2026-07-02 (B) 2026-07-02 Wire dedicated GitHub machine-user agent identity: mise config.agent.toml GH_TOKEN profile, MCP token swap, MISE_ENV=agent switches, my-audit-trail co-author trailer â€” blocked on Phase 0 (Derek creates machine account + PAT + 1Password item); plan: ~/.claude/plans/i-want-to-update-reflective-hopcroft.md +skills +tooling
