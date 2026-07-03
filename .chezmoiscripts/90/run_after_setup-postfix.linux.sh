@@ -48,6 +48,15 @@ echo >&2 "INFO: Configuring postfix for local-only delivery..."
 chezmoi-sudo postconf -e "myhostname = localhost" "mydestination = localhost" "inet_interfaces = loopback-only"
 chezmoi-sudo newaliases
 
+# If postfix is already running with the old config, restart it: inet_interfaces
+# changes require a full stop/start (`postfix reload` is not sufficient per the
+# postfix docs). Without this, the config would be "healed" on disk while the
+# running daemon kept the stale settings.
+if systemctl is-active postfix >/dev/null 2>&1; then
+  echo >&2 "INFO: Restarting running postfix to pick up the new config..."
+  chezmoi-sudo systemctl restart postfix
+fi
+
 # WSL note (pattern copied from the cronie installer): `systemctl enable --now
 # postfix` may print "Cannot start unit with --now when systemd is not running"
 # if WSL2 launched without systemd (/etc/wsl.conf [boot] systemd=true not yet in
@@ -66,7 +75,13 @@ else
   # (First chezmoi apply is interactive, so the TTY branch fires; subsequent runs
   #  use the cached-creds or askpass branch.)
   chezmoi-sudo systemctl enable --now postfix
-  if systemctl is-active postfix >/dev/null 2>&1; then
+  # chezmoi-sudo exits 0 even when it has no credentials or TTY — the post-
+  # condition is the only reliable signal (same rationale as the cronie
+  # installer's macOS branch). Don't claim success without verifying.
+  if ! systemctl is-enabled postfix >/dev/null 2>&1; then
+    echo >&2 "WARN: postfix is still not enabled — chezmoi-sudo likely skipped (unattended)."
+    echo >&2 "WARN: It will self-heal on the next interactive chezmoi apply."
+  elif systemctl is-active postfix >/dev/null 2>&1; then
     echo >&2 "INFO: postfix enabled and running."
   else
     echo >&2 "INFO: postfix enabled (symlink created). Not yet running — systemd may not be"
