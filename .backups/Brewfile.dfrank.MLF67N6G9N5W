@@ -250,7 +250,7 @@ brew "uv"
 # Vim script Language Lint
 brew "vint"
 # Command-line tool for Vultr services
-brew "vultr"
+brew "vultr-cli"
 # Execute commands when watched files change
 brew "watchexec"
 # Internet file retriever
@@ -337,5 +337,6 @@ vscode "esbenp.prettier-vscode"
 vscode "mjcrouch.perforce"
 vscode "sysoev.language-stylus"
 vscode "vadimcn.vscode-lldb"
+uv "datadog"
 npm "@anthropic-ai/claude-code"
 npm "corepack"
