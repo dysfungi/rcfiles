@@ -23,8 +23,6 @@ brew "python@3.12"
 brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
-# Extendable version manager with support for Ruby, Node.js, Erlang & more
-brew "asdf"
 # Interpreted, interactive, object-oriented programming language
 brew "python@3.14"
 # Official Amazon AWS command-line interface
@@ -73,8 +71,6 @@ brew "fzf"
 brew "gawk"
 # Google Drive CLI Client
 brew "gdrive"
-# Interact with Google Gemini AI models from the command-line
-brew "gemini-cli"
 # GitHub command-line tool
 brew "gh"
 # OpenType text shaping engine
@@ -167,8 +163,6 @@ brew "openssh"
 brew "opentofu"
 # Swiss-army knife of markup format conversion
 brew "pandoc"
-# Package compiler and linker metadata toolkit
-brew "pkgconf"
 # Python package management tool
 brew "poetry"
 # PDF rendering library (based on the xpdf-3.0 code base)
@@ -187,14 +181,6 @@ brew "ripgrep"
 brew "ruff"
 # Language Server Protocol implementation for Ruff
 brew "ruff-lsp"
-# Safe, concurrent, practical language
-brew "rust"
-# Experimental Rust compiler front-end for IDEs
-brew "rust-analyzer"
-# Run commands in parallel with Rust's Tokio framework
-brew "rust-parallel"
-# Rust toolchain installer
-brew "rustup"
 # Command-line tool for the Amazon S3 service
 brew "s3cmd"
 # Static analysis and lint tool, for (ba)sh scripts
@@ -249,8 +235,6 @@ brew "typescript-language-server"
 brew "uv"
 # Vim script Language Lint
 brew "vint"
-# Command-line tool for Vultr services
-brew "vultr-cli"
 # Execute commands when watched files change
 brew "watchexec"
 # Internet file retriever
@@ -275,6 +259,8 @@ cask "1password", args: { appdir: "/Applications" }
 cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
+# Terminal interface for Antigravity agents
+cask "antigravity-cli", args: { appdir: "/Applications" }
 # OpenAI's coding agent that runs in your terminal
 cask "codex", args: { appdir: "/Applications" }
 # Voice and text chat software
