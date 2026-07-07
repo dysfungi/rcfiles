@@ -122,6 +122,7 @@ mode = "service"
 [scriptEnv]
 PATH = "{{ $all_paths | join .chezmoi.pathListSeparator | replace "\\" "/" }}"
 MISE_GITHUB_TOKEN = {{ $my_github_token | quote }}
+OP_SERVICE_ACCOUNT_TOKEN = {{ $op_token | quote }}
 {{- if $is_riot_machine }}
 MISE_GITHUB_ENTERPRISE_TOKEN = {{ $riot_github_token | quote }}
 {{- end }}
