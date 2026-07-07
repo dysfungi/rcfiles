@@ -36,11 +36,13 @@ opentofu
 p4
 pacman-contrib
 poppler
+postfix
 ripgrep
 rsync
 ruff
 rust-analyzer
 rustup
+s-nail
 shellcheck
 shfmt
 stylua
