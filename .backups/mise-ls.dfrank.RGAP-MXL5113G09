@@ -1,4 +1,5 @@
 aqua:rust-lang/rust-analyzer          2026-07-06          ~/.config/mise/config.toml       latest
+chezmoi                               2.70.5
 dotnet                                10.0.300 (symlink)
 gh                                    2.96.0              ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0              ~/.config/mise/config.toml       latest
