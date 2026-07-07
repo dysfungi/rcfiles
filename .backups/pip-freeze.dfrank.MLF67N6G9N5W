@@ -4,7 +4,7 @@ anyio==4.14.1
 bottle==0.13.4
 cachetools==7.1.4
 certifi==2026.6.17
-charset-normalizer==3.4.8
+charset-normalizer==3.4.9
 click==8.4.2
 datadog==0.52.2
 fancycompleter==0.11.1
