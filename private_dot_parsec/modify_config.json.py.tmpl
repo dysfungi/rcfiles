@@ -8,24 +8,61 @@ Element 1 is the config object where each key maps to {"value": ...}.
 This modify script merges managed keys into the existing config,
 preserving any keys Parsec adds at runtime.
 """
+import enum
 import json
 import sys
 
-THREADRIPPER_RGAP_MXL5113G09_IP = "10.202.44.39"
+
+THREADRIPPER_RGAP_MXL5113G09_IP = "10.202.44.45"
+YUBIKEY_USB_ID = "USB\\VID_1050&PID_0407\\8&7D777E4&0&15"
+
+
+class AppForceRelay(enum.IntEnum):
+    DEFAULT = 0
+    WAN = 1
+    WAN_OR_LAN = 2
+
+
+class VirtualGamepadType(enum.IntEnum):
+    # Windows-only
+    XBOX_360 = 1
+    SONY_DUALSHOCK_4 = 2
+    SONY_DUALSENSE = 3
+
+
 MANAGED = {
+    # https://support.parsec.app/hc/en-us/articles/32381443626516-All-Advanced-Configuration-Options
     "app_changelog_ver": {"value": 8},
     "app_flags": {"value": 1},
+    "app_log_level": {"value": 3},
     "client_automatic_displays": {"value": True},
     "client_macos_key_swap": {"value": False},
     "client_windowed": {"value": True},
     "encoder_bitrate": {"value": 50},
+    "host_idle_kick_time": {"value": 120},
     {{- if .is_riot_machine }}
+
+    "app_saml_team_id": {"value": "riotgames"},
+    {{- if .is_windows }}
+
+    # Windows host only:
+    "app_force_relay": {"value": AppForceRelay.WAN_OR_LAN},
+    "app_stun_address": {"value": THREADRIPPER_RGAP_MXL5113G09_IP},
+    "host_gamepad_type": {"value": SONY_DUALSHOCK_4},
+    "host_virtual_usb_passthrough": {"value": 1},
+    {{- else if .is_darwin }}
+
+    # Mac client only:
     "app_client_stun_address": {
         # WHY? Addresses "Peer-to-peer network connection between you and the other computer failed [-6023 / -11010]" error.
         # HOW? Access the machine by other means and get the IPv4 address from `ipconfig` output.
         "value": THREADRIPPER_RGAP_MXL5113G09_IP,
     },
-    "app_saml_team_id": {"value": "riotgames"},
+    "client_usb_passthrough": {"value": 1},
+    "client_usb_passthrough_id": {"value": YUBIKEY_USB_ID},
+
+    {{- end }}
+
     {{- end }}
 }
 
@@ -40,5 +77,7 @@ if stdin:
     config = arr[1] if len(arr) > 1 else {}
 else:
     config = {}
+
+config.update(MANAGED)
 
 print(json.dumps([DOC, config], indent="\t"))
