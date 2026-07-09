@@ -13,8 +13,12 @@ import json
 import sys
 
 
-THREADRIPPER_RGAP_MXL5113G09_IP = "10.202.44.45"
-YUBIKEY_USB_ID = "USB\\VID_1050&PID_0407\\8&7D777E4&0&15"
+class MachineIP(enum.StrEnum):
+    RGAP_MXL5113G09 = "10.202.44.45"  # Threadripper
+
+
+class USBID(enum.StrEnum):
+    YUBIKEY_ON_KEYCHAIN = "USB\\VID_1050&PID_0407\\8&7D777E4&0&15"
 
 
 class AppForceRelay(enum.IntEnum):
@@ -47,8 +51,8 @@ MANAGED = {
 
     # Windows host only:
     "app_force_relay": {"value": AppForceRelay.WAN_OR_LAN},
-    "app_stun_address": {"value": THREADRIPPER_RGAP_MXL5113G09_IP},
-    "host_gamepad_type": {"value": SONY_DUALSHOCK_4},
+    "app_stun_address": {"value": MachineIP.RGAP_MXL5113G09},
+    "host_gamepad_type": {"value": VirtualGamepadType.SONY_DUALSHOCK_4},
     "host_virtual_usb_passthrough": {"value": 1},
     {{- else if .is_darwin }}
 
@@ -56,10 +60,10 @@ MANAGED = {
     "app_client_stun_address": {
         # WHY? Addresses "Peer-to-peer network connection between you and the other computer failed [-6023 / -11010]" error.
         # HOW? Access the machine by other means and get the IPv4 address from `ipconfig` output.
-        "value": THREADRIPPER_RGAP_MXL5113G09_IP,
+        "value": MachineIP.RGAP_MXL5113G09,
     },
     "client_usb_passthrough": {"value": 1},
-    "client_usb_passthrough_id": {"value": YUBIKEY_USB_ID},
+    "client_usb_passthrough_id": {"value": USBID.YUBIKEY_ON_KEYCHAIN},
 
     {{- end }}
 
