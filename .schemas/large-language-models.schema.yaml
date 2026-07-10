@@ -95,7 +95,7 @@ $defs:
       base_url:
         type: string
       api:
-        enum: [anthropic-messages, openai-completions, google-generative-ai]
+        enum: [anthropic-messages, openai-completions, openai-responses, google-generative-ai]
       api_key_op:
         type: string
 
