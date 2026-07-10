@@ -94,8 +94,13 @@
     # See `git help config` (search for push.default)
     # for more information on different options of the below setting.
     #
-    # Setting to git 2.0 default to suppress warning message
-    default = upstream
+    # `simple` is the git 2.0+ default: push the current branch to a
+    # same-named branch on the remote, and refuse when the branch name
+    # differs from its upstream's name. This is deliberate: worktree
+    # branches created off origin/main inherit `main` as their upstream,
+    # so under the old `upstream` mode a bare `git push` silently
+    # fast-forwarded origin/main. `simple` turns that into a hard error.
+    default = simple
 [pull]
     rebase = true
 [merge]
