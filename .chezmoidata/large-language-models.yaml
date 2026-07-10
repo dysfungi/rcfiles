@@ -192,7 +192,9 @@ riot:
         max_tokens: 65536
         cost: { input: 0.25, output: 1.5, cache_read: 0.025, cache_write: 0 }
         enabled: true
-      # Dormant below (enabled: false): kept for quick re-enable / claude aliases.
+      # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
+      # thus unreachable via /model (re-enable by flipping the flag); haiku still
+      # feeds claude via its alias. Kept here for quick re-enable + id/spec record.
       - id: claude-vertex/anthropic-claude-haiku-4-5-20251001
         vendor: anthropic
         alias: haiku # feeds claude's HAIKU alias even while dormant in pi

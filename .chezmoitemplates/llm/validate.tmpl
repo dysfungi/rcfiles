@@ -21,6 +21,19 @@
     {{- fail (printf "large-language-models.yaml: %d models claim default_for %q (expected at most 1)" $seen.n $h) -}}
   {{- end -}}
 {{- end -}}
+{{- /* Each CLI alias (opus/sonnet/haiku/...) may map to at most one model,
+       else claude's alias derivation silently picks last-wins. */ -}}
+{{- $aliasCount := dict -}}
+{{- range $m := $ns.models -}}
+  {{- if hasKey $m "alias" -}}
+    {{- $_ := set $aliasCount $m.alias (add (dig $m.alias 0 $aliasCount) 1) -}}
+  {{- end -}}
+{{- end -}}
+{{- range $a, $n := $aliasCount -}}
+  {{- if gt $n 1 -}}
+    {{- fail (printf "large-language-models.yaml: %d models share alias %q (expected at most 1)" $n $a) -}}
+  {{- end -}}
+{{- end -}}
 {{- /* A default must be runnable by the harness it defaults for. */ -}}
 {{- range $m := $ns.models -}}
   {{- if hasKey $m "default_for" -}}
@@ -31,8 +44,11 @@
       {{- fail (printf "large-language-models.yaml: %s is default_for agy but vendor is %q (agy runs only google)" $m.id $m.vendor) -}}
     {{- end -}}
     {{- if has "codex" $m.default_for -}}
-      {{- if or (not (hasKey $m "gateway")) (ne $m.gateway.api "openai-completions") -}}
-        {{- fail (printf "large-language-models.yaml: %s is default_for codex but is not on an openai-completions gateway" $m.id) -}}
+      {{- /* Nested (not `or`) so we never read .gateway.api when gateway is absent. */ -}}
+      {{- if not (hasKey $m "gateway") -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but has no gateway (needs openai-completions)" $m.id) -}}
+      {{- else if ne $m.gateway.api "openai-completions" -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but gateway api is %q (needs openai-completions)" $m.id $m.gateway.api) -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}
