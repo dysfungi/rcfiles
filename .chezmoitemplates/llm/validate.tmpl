@@ -6,6 +6,9 @@
   Emits nothing on success; aborts `chezmoi apply` with a message on violation.
 */ -}}
 {{- $ns := . -}}
+{{- /* Skip when not called with a namespace (e.g. the template linter renders
+       this partial standalone against root data, which has no `models` key). */ -}}
+{{- if and (kindIs "map" $ns) (hasKey $ns "models") -}}
 {{- /* Each harness may be the default in at most one entry. */ -}}
 {{- range $h := (list "pi" "codex" "claude" "agy") -}}
   {{- $seen := dict "n" 0 -}}
@@ -33,4 +36,5 @@
       {{- end -}}
     {{- end -}}
   {{- end -}}
+{{- end -}}
 {{- end -}}

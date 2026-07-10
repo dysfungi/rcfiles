@@ -36,7 +36,8 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       base_url: &tf_base "https://truefoundry.riotgames.io/api/llm"
       api: anthropic-messages
       api_key_op: &tf_key "op://Riot/TrueFoundry - Personal Access Token/credential"
-    truefoundry-openai: &tf_openai # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
+    truefoundry-openai:
+      &tf_openai # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
       provider: truefoundry-openai
       name: TrueFoundry OpenAI (Riot)
       base_url: *tf_base
@@ -53,17 +54,30 @@ my:
   llm:
     ollama: # local runtime models (built by the modelfile-generation script)
       models:
-        "codestral:22b": { enabled: false, parameters: *default_model_parameters }
-        "deepseek-r1:14b": { enabled: false, parameters: *default_model_parameters }
+        "codestral:22b":
+          { enabled: false, parameters: *default_model_parameters }
+        "deepseek-r1:14b":
+          { enabled: false, parameters: *default_model_parameters }
         "gemma4:e4b": { enabled: false, parameters: *default_model_parameters }
         "phi4:14b": { enabled: false, parameters: *default_model_parameters }
-        "qwen2.5-coder:14b-instruct-q4_K_M": { enabled: false, parameters: *default_model_parameters }
-        "qwen3-coder-next:q4_K_M": { enabled: true, parameters: *default_model_parameters }
+        "qwen2.5-coder:14b-instruct-q4_K_M":
+          { enabled: false, parameters: *default_model_parameters }
+        "qwen3-coder-next:q4_K_M":
+          { enabled: true, parameters: *default_model_parameters }
         "qwen3.5:9b":
           enabled: false
-          parameters: { num_ctx: 24576, num_predict: *defaultNumPredict, temperature: 0.1 }
+          parameters:
+            {
+              num_ctx: 24576,
+              num_predict: *defaultNumPredict,
+              temperature: 0.1,
+            }
     models: # order = pi enabledModels cycling order
-      - { id: claude-opus-4-8, vendor: anthropic, alias: opus, enabled: true, default_for: [pi] }
+      - id: claude-opus-4-8
+        vendor: anthropic
+        alias: opus
+        enabled: true
+        default_for: [pi]
       - { id: claude-sonnet-5, vendor: anthropic, alias: sonnet, enabled: true }
       - { id: claude-fable-5, vendor: anthropic, enabled: true }
       - id: gemini-3.1-pro-preview
@@ -129,7 +143,13 @@ riot:
         max_tokens: 32000
         one_m: true
         adaptive: true # Vertex rejects legacy thinking for opus 4.7+; force adaptive
-        cost: &opus_cost { input: 15, output: 75, cache_read: 1.5, cache_write: 18.75 }
+        cost:
+          &opus_cost {
+            input: 15,
+            output: 75,
+            cache_read: 1.5,
+            cache_write: 18.75,
+          }
         enabled: true
         default_for: [pi, claude]
       - id: claude-vertex/anthropic-claude-sonnet-5
