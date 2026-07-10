@@ -1,0 +1,22 @@
+{{- if .is_riot_machine -}}
+# Register this machine's native-Windows SSH public key with Riot's GitHub
+# Enterprise Server (gh.riotgames.com). Scoped to Riot machines; no-op elsewhere.
+#
+# Native-Windows counterpart of
+# run_onchange_after_register-ssh-github-enterprise.unix-like.sh.
+#
+# run_onchange_ keyed on the live public key below so it re-registers whenever
+# the key rotates. The pubkey trigger is guarded to os == windows so the
+# Windows-only `output` command is skipped when rendered off-Windows.
+#
+# pubkey: {{ if eq .chezmoi.os "windows" }}{{ if stat (printf "%s/.ssh/id_ed25519.pub" .chezmoi.homeDir) }}{{ output "powershell" "-NoProfile" "-Command" (printf "Get-Content -Raw -LiteralPath '%s/.ssh/id_ed25519.pub'" .chezmoi.homeDir) }}{{ end }}{{ end }}
+$ErrorActionPreference = "Stop"
+Write-Host "INFO: Starting $PSCommandPath"
+
+{{ includeTemplate "github/register-ssh-key.ps1" }}
+
+# Token from chezmoi [scriptEnv] (never baked into the applied script).
+Register-SshKey -GhHost "gh.riotgames.com" -Token $env:MISE_GITHUB_ENTERPRISE_TOKEN
+
+Write-Host "INFO: Ending $PSCommandPath"
+{{ end -}}
