@@ -12,16 +12,22 @@
 # clone + periodic pull here; the companion `memory-git-sync.ts` extension
 # pushes runtime writes on session_shutdown.
 #
-# Enabled on every machine: clone relies on SSH access to the remote. The
-# companion extension self-gates (no-op unless the dir is a git work tree with
-# an origin), so deployment is uniform; a machine without SSH access to the
-# remote will fail loudly at `chezmoi apply` clone time.
+# Unix-like only: the clone authenticates over SSH, but SSH keypairs are
+# generated + registered on GitHub solely by the `*.unix-like.sh` provisioning
+# scripts (generate-ssh-key / register-ssh-github). Native Windows registers its
+# own key too (`*.windows.ps1`), but pi + its memory run in WSL there, so a
+# native-Windows clone is unwanted; gating it off also avoids the failed clone
+# aborting the whole `chezmoi apply`. On native Windows the `pi-memory`
+# extension just keeps a local, unsynced dir and `memory-git-sync.ts` self-gates
+# to a no-op (inert without a git work tree + origin).
+{{- if .is_unix_like }}
 [memory]
-    type = "git-repo"
-    url = "git@github.com:dysfungi/ai.memory.git"
-    refreshPeriod = "168h"
-    [memory.pull]
-        args = ["--rebase", "--autostash"]
+type = "git-repo"
+url = "git@github.com:dysfungi/ai.memory.git"
+refreshPeriod = "168h"
+[memory.pull]
+args = ["--rebase", "--autostash"]
+{{- end }}
 
 # shell-quote parser for the plan-mode extension's read-only bash analysis.
 #
@@ -36,6 +42,6 @@
 # relatively. The extension degrades to a regex fallback if this file is absent
 # (e.g. offline first apply). See extensions/plan-mode/{DESIGN.md,bash-safety.ts}.
 ["extensions/plan-mode/vendor/shell-quote-parse.cjs"]
-    type = "file"
-    url = "https://cdn.jsdelivr.net/npm/shell-quote@1/parse.js"
-    refreshPeriod = "720h"
+type = "file"
+url = "https://cdn.jsdelivr.net/npm/shell-quote@1/parse.js"
+refreshPeriod = "720h"
