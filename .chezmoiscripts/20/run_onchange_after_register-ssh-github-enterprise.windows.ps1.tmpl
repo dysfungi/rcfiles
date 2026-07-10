@@ -16,7 +16,14 @@ Write-Host "INFO: Starting $PSCommandPath"
 {{ includeTemplate "github/register-ssh-key.ps1" }}
 
 # Token from chezmoi [scriptEnv] (never baked into the applied script).
-Register-SshKey -GhHost "gh.riotgames.com" -Token $env:MISE_GITHUB_ENTERPRISE_TOKEN
+# try/catch keeps this best-effort: registration problems must WARN, never abort
+# `chezmoi apply` (an abort here would block later apply steps).
+try {
+    Register-SshKey -GhHost "gh.riotgames.com" -Token $env:MISE_GITHUB_ENTERPRISE_TOKEN
+}
+catch {
+    Write-Host "WARN: SSH key registration on gh.riotgames.com failed: $_" -ForegroundColor Yellow
+}
 
 Write-Host "INFO: Ending $PSCommandPath"
 {{ end -}}
