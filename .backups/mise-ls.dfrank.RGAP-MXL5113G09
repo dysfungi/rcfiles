@@ -9,15 +9,15 @@ hadolint                              2.14.0
 jq                                    1.8.2               ~/.config/mise/config.toml       latest
 lua                                   5.5.0
 node                                  24.18.0             ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code         2.1.205             ~/.config/mise/config.toml       latest
-npm:@earendil-works/pi-coding-agent   0.80.3              ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code         2.1.206             ~/.config/mise/config.toml       latest
+npm:@earendil-works/pi-coding-agent   0.80.5              ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0               ~/.config/mise/config.toml       latest
 npm:@tobilu/qmd                       2.5.3               ~/.config/mise/config.toml       latest
 npm:markdownlint-cli                  0.48.0
 pipx:bandit                           1.9.4               ~/.config/mise/config.toml       latest
 pipx:doit                             0.37.0              ~/.config/mise/config.toml       latest
 pipx:ipython                          9.15.0              ~/.config/mise/config.toml       latest
-pipx:mypy                             2.1.0               ~/.config/mise/config.toml       latest
+pipx:mypy                             2.2.0               ~/.config/mise/config.toml       latest
 pipx:neovim-remote                    2.5.1               ~/.config/mise/config.toml       latest
 pipx:pre-commit                       4.6.0
 pipx:yamllint                         1.38.0
