@@ -43,14 +43,27 @@
     "MISE_ENV": "agent", {{- /* mise agent profile: GH_TOKEN = machine-user PAT */}}
     "OTEL_METRICS_EXPORTER": "otlp"
     {{- else if .is_riot_machine }} {{- /* https://docs.google.com/document/d/11tiv6iym5UBF3_fwMlFDqfWceDwVwaX3Gaejo5v9tus/edit?tab=t.0 */}}
+    {{- /* Base URL, auth token, and the OPUS/SONNET/HAIKU model ids derive from
+           .chezmoidata/large-language-models.yaml: the anthropic gateway + the
+           entries carrying alias: opus|sonnet|haiku (haiku is dormant in pi but
+           still supplies claude's alias). */}}
+    {{- includeTemplate "llm/validate.tmpl" .riot.llm -}}
+    {{- $alias := dict -}}
+    {{- $anthropicGw := dict -}}
+    {{- range $m := .riot.llm.models -}}
+      {{- if hasKey $m "alias" -}}{{- $_ := set $alias $m.alias $m.id -}}{{- end -}}
+      {{- if and (eq $m.vendor "anthropic") (hasKey $m "gateway") -}}{{- $anthropicGw = $m.gateway -}}{{- end -}}
+    {{- end -}}
+    {{- if not (hasKey $anthropicGw "base_url") }}{{ fail "claude settings: no anthropic gateway in catalog" }}{{ end -}}
+    {{- range $a := (list "opus" "sonnet" "haiku") -}}{{- if not (hasKey $alias $a) -}}{{- fail (printf "claude settings: no catalog model has alias %q" $a) -}}{{- end -}}{{- end }}
     "ANTHROPIC_API_KEY": "",
-    "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote -}},
-    "ANTHROPIC_BASE_URL": "https://truefoundry.riotgames.io/api/llm",
+    "ANTHROPIC_AUTH_TOKEN": {{ onepasswordRead $anthropicGw.api_key_op | quote -}},
+    "ANTHROPIC_BASE_URL": {{ $anthropicGw.base_url | quote }},
     {{- /* NOTE: Also see @dot_config/xonsh/exact_rc.d/60-aliases.xsh for model renames! */}}
-    {{- /* "ANTHROPIC_DEFAULT_OPUSPLAN_MODEL": "claude-vertex/anthropic-claude-opus-4-8", */}}
-    "ANTHROPIC_DEFAULT_OPUS_MODEL": "claude-vertex/anthropic-claude-opus-4-8",
-    "ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-vertex/anthropic-claude-sonnet-5",
-    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "claude-vertex/anthropic-claude-haiku-4-5-20251001",
+    {{- /* "ANTHROPIC_DEFAULT_OPUSPLAN_MODEL": derive from alias opus if reintroduced */}}
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": {{ $alias.opus | quote }},
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": {{ $alias.sonnet | quote }},
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": {{ $alias.haiku | quote }},
     "DATADOG_API_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/API Key/api key" | quote }},
     "DATADOG_APP_KEY": {{ onepasswordRead "op://Riot/Datadog Access Keys - AI/Application Key/app key" | quote }},
     "CLAUDE_CODE_AUTOCOMPACT_PCT_OVERRIDE": "50",

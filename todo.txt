@@ -44,3 +44,5 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-02 Revisit full agent commit authorship (GIT_AUTHOR_*) if codex/agy/pi gain native env-injection support +skills +tooling
 (B) 2026-07-02 Implement agent GitHub machine-user identity wiring (Phases 2-4) +skills +tooling @worktree:.claude/worktrees/40b74e35-4a57-4eff-a86f-8230a6067e5b.agent-github-identity session:40b74e35-4a57-4eff-a86f-8230a6067e5b agent:claude model:claude-fable-5
 (C) 2026-07-02 Retire/revoke the old Derek AI PAT item op://CLI/GitHub Token - AI (orphaned once the agent machine-user PAT lands via PR #24) +security +tooling
+(B) 2026-07-10 Central LLM catalog (large-language-models.yaml) → pi/codex/claude/agy/ollama +chezmoi +pi @worktree:.worktree/feat/llm-catalog session:019f48e7-6508-7086-b9f7-bf8aa6f417cb agent:pi model:claude-vertex/anthropic-claude-opus-4-8
+(C) 2026-07-10 Wire agy (Antigravity CLI) default model from large-language-models.yaml default_for:[agy] once agy exposes a settings.json model key (today: only --model per-session flag + agy-managed LastSelectedModel; no config-file default) +antigravity +llm

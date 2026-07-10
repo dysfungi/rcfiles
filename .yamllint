@@ -12,7 +12,7 @@ rules:
   line-length:
     max: 120
     level: warning
-  # Single-space inline comments are used in models.yaml.
+  # Single-space inline comments are used in large-language-models.yaml.
   comments:
     min-spaces-from-content: 1
   # Flow mappings with single spaces { like: this } are allowed.

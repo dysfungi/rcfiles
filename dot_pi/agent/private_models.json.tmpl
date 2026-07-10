@@ -2,114 +2,78 @@
   {{- /*
     pi custom providers — https://pi.dev/docs/latest/providers (models.json reference: docs/models.md)
 
-    On Riot machines, pi has no direct Anthropic/OpenAI access; all traffic must route
-    through the TrueFoundry LLM gateway (same proxy Codex and Claude Code use):
-      - base:  https://truefoundry.riotgames.io/api/llm
-      - auth:  Personal Access Token (PAT) from 1Password
-      - wire:  anthropic-messages (parity with Claude Code's ANTHROPIC_BASE_URL path)
+    GENERATED from the central catalog .chezmoidata/large-language-models.yaml
+    (namespace .riot.llm on Riot, else .my.llm). Add/toggle a model there, not here.
 
-    The PAT is injected at `chezmoi apply` time via onepasswordRead and lands in a 0600
-    file (private_ prefix). We deliberately avoid pi's `!command` apiKey form (`!op read ...`):
-    pi applies no TTL/caching to command-based keys (docs/models.md), so it would shell out
-    to 1Password on every request.
+    One custom-provider block is emitted per distinct `gateway` referenced by an
+    ENABLED model in the active namespace; built-in models (no gateway, e.g. the
+    personal Anthropic models) are omitted here and resolved by pi's built-ins.
 
-    Thinking format is PER-MODEL on this Vertex-behind-TrueFoundry backend (empirically probed
-    against /v1/messages, 2026-06):
-      - opus-4-7, opus-4-8 : require adaptive thinking (thinking.type 'adaptive' +
-                             output_config.effort); they REJECT legacy with
-                             400 "thinking.type.enabled is not supported ... Use adaptive".
-      - opus-4-6, sonnet-4-6: accept BOTH.
-    pi's default path is legacy budget thinking; compat.forceAdaptiveThinking switches a model
-    to adaptive. We set it per-model ONLY where legacy is rejected (opus 4.7+), leaving every
-    model that works on the default path untouched. The adaptive flag in $bases drives this.
+    API keys are read via onepasswordRead ONLY for gateways actually used by
+    enabled models in the active namespace, so a personal machine never touches
+    the Riot vault. The key lands in this 0600 file (private_ prefix); we avoid
+    pi's `!command` apiKey form because pi caches no TTL for it (docs/models.md)
+    and would shell out to 1Password on every request.
 
-    Model IDs come from the gateway's own /v1/models catalog (the 5 claude-vertex ids) and the
-    live Claude Code config (dot_claude/settings.json.tmpl ANTHROPIC_DEFAULT_*_MODEL).
+    Thinking format is PER-MODEL on the Vertex-behind-TrueFoundry backend
+    (empirically probed against /v1/messages, 2026-06): opus 4.7+ REJECT legacy
+    budget thinking with 400 "... Use adaptive", so those carry adaptive: true in
+    the catalog, which emits compat.forceAdaptiveThinking here. Models that accept
+    the default legacy path are left untouched.
 
-    1M context: models with oneM=true also get a [1m]-suffixed 1-million-token variant. The variant list below is generated from
-    $bases so adding a new model/version stays a one-line change. Format is per Riot's
-    TrueFoundry onboarding doc, e.g. claude-vertex/anthropic-claude-sonnet-4-6-default[1m].
-    These [1m] ids are gated behind a separate 1M-tier access grant: as of setup this PAT
-    403s on every [1m] id ("not authorized ... or model does not exist") while the base ids
-    return 200. They are kept here so they work the moment access is granted (request via
-    @prod-ai in #tm-centraltech-all). Cost is the base (≤200K) tier because pi uses a flat
-    per-million rate and cannot model Anthropic's >200K premium tier.
+    1M context: catalog models with one_m: true also get a [1m]-suffixed
+    1-million-token variant (Riot TrueFoundry onboarding format). These [1m] ids
+    are gated behind a separate 1M-tier access grant (PAT 403s until granted;
+    request via @prod-ai in #tm-centraltech-all). Cost is the base (<=200K) tier
+    because pi uses a flat per-million rate.
   */ -}}
-  {{- $opusCost := dict "input" 15 "output" 75 "cacheRead" 1.5 "cacheWrite" 18.75 -}}
-  {{- $sonnetCost := dict "input" 3 "output" 15 "cacheRead" 0.3 "cacheWrite" 3.75 -}}
-  {{- $bases := list
-      (dict "id" "claude-vertex/anthropic-claude-opus-4-6"           "name" "Claude Opus 4.6"   "maxTokens" 32000 "oneM" true  "adaptive" false "cost" $opusCost)
-      (dict "id" "claude-vertex/anthropic-claude-opus-4-7"           "name" "Claude Opus 4.7"   "maxTokens" 32000 "oneM" true  "adaptive" true  "cost" $opusCost)
-      (dict "id" "claude-vertex/anthropic-claude-opus-4-8"           "name" "Claude Opus 4.8"   "maxTokens" 32000 "oneM" true  "adaptive" true  "cost" $opusCost)
-      (dict "id" "claude-vertex/anthropic-claude-sonnet-5"           "name" "Claude Sonnet 5"   "maxTokens" 64000 "oneM" true  "adaptive" true  "cost" $sonnetCost)
-
-  -}}
-  {{- $models := list -}}
-  {{- range $b := $bases -}}
-    {{- $models = append $models (dict "id" $b.id "name" (printf "%s (TrueFoundry)" $b.name) "ctx" 200000 "maxTokens" $b.maxTokens "adaptive" $b.adaptive "cost" $b.cost) -}}
-    {{- if $b.oneM -}}
-      {{- $models = append $models (dict "id" (printf "%s[1m]" $b.id) "name" (printf "%s 1M (TrueFoundry)" $b.name) "ctx" 1000000 "maxTokens" $b.maxTokens "adaptive" $b.adaptive "cost" $b.cost) -}}
+  {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+  {{ includeTemplate "llm/validate.tmpl" $ns -}}
+  {{- /* Distinct custom-provider gateways used by enabled models, first-seen order. */ -}}
+  {{- $providers := list -}}
+  {{- $seen := dict -}}
+  {{- range $m := $ns.models -}}
+    {{- if and $m.enabled (hasKey $m "gateway") -}}
+      {{- if not (hasKey $seen $m.gateway.provider) -}}
+        {{- $_ := set $seen $m.gateway.provider true -}}
+        {{- $providers = append $providers $m.gateway -}}
+      {{- end -}}
     {{- end -}}
   {{- end -}}
   "providers": {
-    {{- if .is_riot_machine }}
-    "truefoundry": {
-      "name": "TrueFoundry (Riot)",
-      "baseUrl": "https://truefoundry.riotgames.io/api/llm",
-      "api": "anthropic-messages",
-      "apiKey": {{ onepasswordRead "op://Riot/TrueFoundry - Personal Access Token/credential" | quote }},
+  {{- range $pi, $g := $providers }}
+    {{ $g.provider | quote }}: {
+      "name": {{ $g.name | quote }},
+      "baseUrl": {{ $g.base_url | quote }},
+      "api": {{ $g.api | quote }},
+      "apiKey": {{ onepasswordRead $g.api_key_op | quote }},
       "models": [
-      {{- range $i, $m := $models }}
+      {{- /* Render list for this provider: each enabled model, plus its [1m] variant. */ -}}
+      {{- $rendered := list -}}
+      {{- range $m := $ns.models -}}
+        {{- if and $m.enabled (hasKey $m "gateway") (eq $m.gateway.provider $g.provider) -}}
+          {{- $rendered = append $rendered (dict "m" $m "id" $m.id "ctx" $m.ctx "oneMVariant" false) -}}
+          {{- if dig "one_m" false $m -}}
+            {{- $rendered = append $rendered (dict "m" $m "id" (printf "%s[1m]" $m.id) "ctx" 1000000 "oneMVariant" true) -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end }}
+      {{- range $ri, $r := $rendered }}
+        {{- $m := $r.m }}
         {
-          "id": {{ $m.id | quote }},
-          "name": {{ $m.name | quote }},
-          "reasoning": true,
+          "id": {{ $r.id | quote }},
+          "name": {{ printf "%s%s" (default $m.id (dig "display_name" "" $m)) (ternary " 1M" "" $r.oneMVariant) | quote }},
+          "reasoning": {{ dig "reasoning" false $m }},
           "input": ["text", "image"],
-          "contextWindow": {{ $m.ctx }},
-          "maxTokens": {{ $m.maxTokens }},
-          "cost": { "input": {{ $m.cost.input }}, "output": {{ $m.cost.output }}, "cacheRead": {{ $m.cost.cacheRead }}, "cacheWrite": {{ $m.cost.cacheWrite }} }{{ if $m.adaptive }},
+          "contextWindow": {{ $r.ctx }},
+          "maxTokens": {{ $m.max_tokens }},
+          "cost": { "input": {{ $m.cost.input }}, "output": {{ $m.cost.output }}, "cacheRead": {{ dig "cost" "cache_read" 0 $m }}, "cacheWrite": {{ dig "cost" "cache_write" 0 $m }} }{{ if dig "adaptive" false $m }},
           {{- /* Vertex rejects legacy thinking for this model; force adaptive (thinking.type adaptive + output_config.effort). */}}
           "compat": { "forceAdaptiveThinking": true }{{ end }}
-        }{{ if lt (add1 $i) (len $models) }},{{ end }}
+        }{{ if lt (add1 $ri) (len $rendered) }},{{ end }}
       {{- end }}
       ]
-    }
-    {{- else if .is_my_machine }}
-    "google": {
-      "name": "Google Gemini",
-      "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
-      "api": "google-generative-ai",
-      "apiKey": {{ onepasswordRead "op://CLI/Gemini API Key - Frankish/credential" | quote }},
-      "models": [
-        {
-          "id": "gemini-3.1-pro-preview",
-          "name": "Gemini 3.1 Pro",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "cost": { "input": 2.0, "output": 12.0, "cacheRead": 0.2, "cacheWrite": 0 }
-        },
-        {
-          "id": "gemini-3.5-flash",
-          "name": "Gemini 3.5 Flash",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "cost": { "input": 1.5, "output": 9.0, "cacheRead": 0.15, "cacheWrite": 0 }
-        },
-        {
-          "id": "gemini-3.1-flash-lite",
-          "name": "Gemini 3.1 Flash-Lite",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "contextWindow": 1048576,
-          "maxTokens": 65536,
-          "cost": { "input": 0.25, "output": 1.5, "cacheRead": 0.025, "cacheWrite": 0 }
-        }
-      ]
-    }
-    {{- end }}
+    }{{ if lt (add1 $pi) (len $providers) }},{{ end }}
+  {{- end }}
   }
 }

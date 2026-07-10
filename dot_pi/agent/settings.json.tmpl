@@ -1,27 +1,29 @@
 { {{- /* https://pi.dev/docs/latest/settings */}}
-  {{- if .is_riot_machine }}
-  {{- /* Riot machines have no direct Anthropic access; route via the TrueFoundry
-         gateway provider defined in private_models.json.tmpl. */}}
-  "defaultModel": "claude-vertex/anthropic-claude-opus-4-8",
-  "defaultProvider": "truefoundry",
-  {{- else }}
-  "defaultModel": "claude-opus-4-8",
-  "defaultProvider": "anthropic",
-  {{- end }}
-  {{- /* enabledModels: Ctrl+P cycling rotation — latest of each tier, base context only.
-       Use /model to reach older versions or [1m] variants when needed. */}}
+  {{- /* defaultModel/defaultProvider/enabledModels are DERIVED from the central
+         catalog .chezmoidata/large-language-models.yaml (see private_models.json.tmpl).
+         defaultModel = the entry with `pi` in default_for; defaultProvider = its
+         gateway.provider (or vendor for a built-in). enabledModels = every enabled
+         entry, in catalog list order (= Ctrl+P cycling order). Older/[1m] models
+         stay reachable via /model. */}}
+  {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+  {{ includeTemplate "llm/validate.tmpl" $ns -}}
+  {{- $default := "" -}}
+  {{- $defaultProvider := "" -}}
+  {{- $enabled := list -}}
+  {{- range $m := $ns.models -}}
+    {{- if and (hasKey $m "default_for") (has "pi" $m.default_for) -}}
+      {{- $default = $m.id -}}
+      {{- $defaultProvider = (hasKey $m "gateway") | ternary (dig "gateway" "provider" "" $m) $m.vendor -}}
+    {{- end -}}
+    {{- if $m.enabled -}}{{- $enabled = append $enabled $m.id -}}{{- end -}}
+  {{- end -}}
+  {{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
+  "defaultModel": {{ $default | quote }},
+  "defaultProvider": {{ $defaultProvider | quote }},
   "enabledModels": [
-    {{- if .is_riot_machine }}
-    "claude-vertex/anthropic-claude-opus-4-8",
-    "claude-vertex/anthropic-claude-sonnet-5"
-    {{- else }}
-    "claude-opus-4-8",
-    "claude-sonnet-5",
-    "claude-fable-5",
-    "gemini-3.1-pro-preview",
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite"
-    {{- end }}
+  {{- range $i, $id := $enabled }}
+    {{ $id | quote }}{{ if lt (add1 $i) (len $enabled) }},{{ end }}
+  {{- end }}
   ],
   "packages": [
     "npm:@rezamonangg/pi-worktree",

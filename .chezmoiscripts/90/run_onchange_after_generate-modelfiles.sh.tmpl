@@ -44,7 +44,7 @@ backup before install
 
 {{- if $.is_my_machine }}
 
-{{- range $modelNameWithTag, $model := .my.models }}
+{{- range $modelNameWithTag, $model := .my.llm.ollama.models }}
 {{- $_ := set $model "nameWithTag" $modelNameWithTag }}
 {{- $_ := set $model "safeName" ($modelNameWithTag | replace ":" "__") }}
 {{- $_ := set $model "nameParts" (splitn ":" 2 $modelNameWithTag) }}

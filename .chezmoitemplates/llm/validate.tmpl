@@ -1,0 +1,56 @@
+{{- /*
+  Fail-loud guard for the LLM catalog. Include from each harness template:
+    {{ includeTemplate "llm/validate.tmpl" $ns }}
+  where $ns is the active `.my.llm` or `.riot.llm` object. Enforces invariants
+  that JSON Schema cannot express (cross-entry uniqueness + vendor/wire compat).
+  Emits nothing on success; aborts `chezmoi apply` with a message on violation.
+*/ -}}
+{{- $ns := . -}}
+{{- /* Skip when not called with a namespace (e.g. the template linter renders
+       this partial standalone against root data, which has no `models` key). */ -}}
+{{- if and (kindIs "map" $ns) (hasKey $ns "models") -}}
+{{- /* Each harness may be the default in at most one entry. */ -}}
+{{- range $h := (list "pi" "codex" "claude" "agy") -}}
+  {{- $seen := dict "n" 0 -}}
+  {{- range $m := $ns.models -}}
+    {{- if and (hasKey $m "default_for") (has $h $m.default_for) -}}
+      {{- $_ := set $seen "n" (add $seen.n 1) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if gt $seen.n 1 -}}
+    {{- fail (printf "large-language-models.yaml: %d models claim default_for %q (expected at most 1)" $seen.n $h) -}}
+  {{- end -}}
+{{- end -}}
+{{- /* Each CLI alias (opus/sonnet/haiku/...) may map to at most one model,
+       else claude's alias derivation silently picks last-wins. */ -}}
+{{- $aliasCount := dict -}}
+{{- range $m := $ns.models -}}
+  {{- if hasKey $m "alias" -}}
+    {{- $_ := set $aliasCount $m.alias (add (dig $m.alias 0 $aliasCount) 1) -}}
+  {{- end -}}
+{{- end -}}
+{{- range $a, $n := $aliasCount -}}
+  {{- if gt $n 1 -}}
+    {{- fail (printf "large-language-models.yaml: %d models share alias %q (expected at most 1)" $n $a) -}}
+  {{- end -}}
+{{- end -}}
+{{- /* A default must be runnable by the harness it defaults for. */ -}}
+{{- range $m := $ns.models -}}
+  {{- if hasKey $m "default_for" -}}
+    {{- if and (has "claude" $m.default_for) (ne $m.vendor "anthropic") -}}
+      {{- fail (printf "large-language-models.yaml: %s is default_for claude but vendor is %q (claude runs only anthropic)" $m.id $m.vendor) -}}
+    {{- end -}}
+    {{- if and (has "agy" $m.default_for) (ne $m.vendor "google") -}}
+      {{- fail (printf "large-language-models.yaml: %s is default_for agy but vendor is %q (agy runs only google)" $m.id $m.vendor) -}}
+    {{- end -}}
+    {{- if has "codex" $m.default_for -}}
+      {{- /* Nested (not `or`) so we never read .gateway.api when gateway is absent. */ -}}
+      {{- if not (hasKey $m "gateway") -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but has no gateway (needs openai-completions)" $m.id) -}}
+      {{- else if ne $m.gateway.api "openai-completions" -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but gateway api is %q (needs openai-completions)" $m.id $m.gateway.api) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- end -}}

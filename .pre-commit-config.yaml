@@ -63,9 +63,9 @@ repos:
         files: ^\.chezmoidata/mcp-servers\.yaml$
         args: ["--schemafile", ".schemas/mcp-servers.schema.yaml"]
       - id: check-jsonschema
-        name: validate models.yaml
-        files: ^\.chezmoidata/models\.yaml$
-        args: ["--schemafile", ".schemas/models.schema.yaml"]
+        name: validate large-language-models.yaml
+        files: ^\.chezmoidata/large-language-models\.yaml$
+        args: ["--schemafile", ".schemas/large-language-models.schema.yaml"]
       - id: check-jsonschema
         name: validate packages.yaml
         files: ^\.chezmoidata/packages\.yaml$

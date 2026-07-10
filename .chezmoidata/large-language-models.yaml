@@ -1,0 +1,224 @@
+---
+# Central source of truth for every LLM this repo configures. All harnesses
+# (pi, codex, claude, agy, ollama) DERIVE their native config from this catalog
+# so a model is declared once and funnels everywhere.
+#
+# Per-model fields (generic — no tool-prefixed keys):
+#   id           canonical model id (as the gateway/provider expects it)
+#   vendor       maker: anthropic | openai | google  (harness-compat filter)
+#   alias        optional CLI handle; claude reads opus/sonnet/haiku
+#   display_name optional pi picker label; else derived from id
+#   gateway      *anchor (provider/name/base_url/api/api_key_op); omit for
+#                built-ins (pi provider then = vendor)
+#   reasoning,ctx,max_tokens,cost,one_m,adaptive   pi catalog facts
+#                (ctx/max_tokens/cost required by pi for ENABLED gateway models)
+#   enabled      appears in pi's catalog + rotation (list order = cycling order)
+#   default_for  subset of [pi, codex, claude, agy] this model is the default for
+#                (each harness may appear in at most one entry — guarded at render)
+#
+# default_for: [agy] is DECLARED intent only — validated by the guard but not yet
+# consumed: Antigravity CLI exposes no settings.json default-model key (only the
+# per-session --model flag / agy-managed LastSelectedModel state), so there is
+# nothing to render. Wire it once agy gains a config key. See todo.txt.
+#
+# Note: claude reads alias mappings regardless of `enabled`, so a dormant model
+# (e.g. haiku) can still back claude's HAIKU alias while staying out of pi.
+
+x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
+  default_model_parameters: &default_model_parameters
+    num_ctx: &defaultNumCtx 16384 # Force the context window to 16k tokens (leaves safe overhead for your 18GB RAM)
+    num_predict: &defaultNumPredict 2048 # Dictate output budget per individual turn
+    temperature: &defaultTemperature 0.2 # Lower temperature slightly for strict, deterministic code syntax generation
+  gateways:
+    truefoundry-anthropic: &tf_anthropic
+      provider: truefoundry
+      name: TrueFoundry (Riot)
+      base_url: &tf_base "https://truefoundry.riotgames.io/api/llm"
+      api: anthropic-messages
+      api_key_op: &tf_key "op://Riot/TrueFoundry - Personal Access Token/credential"
+    truefoundry-openai:
+      &tf_openai # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
+      provider: truefoundry-openai
+      name: TrueFoundry OpenAI (Riot)
+      base_url: *tf_base
+      api: openai-completions
+      api_key_op: *tf_key
+    google: &google # personal, direct to Google
+      provider: google
+      name: Google Gemini
+      base_url: "https://generativelanguage.googleapis.com/v1beta"
+      api: google-generative-ai
+      api_key_op: "op://CLI/Gemini API Key - Frankish/credential"
+
+my:
+  llm:
+    ollama: # local runtime models (built by the modelfile-generation script)
+      models:
+        "codestral:22b":
+          { enabled: false, parameters: *default_model_parameters }
+        "deepseek-r1:14b":
+          { enabled: false, parameters: *default_model_parameters }
+        "gemma4:e4b": { enabled: false, parameters: *default_model_parameters }
+        "phi4:14b": { enabled: false, parameters: *default_model_parameters }
+        "qwen2.5-coder:14b-instruct-q4_K_M":
+          { enabled: false, parameters: *default_model_parameters }
+        "qwen3-coder-next:q4_K_M":
+          { enabled: true, parameters: *default_model_parameters }
+        "qwen3.5:9b":
+          enabled: false
+          parameters:
+            {
+              num_ctx: 24576,
+              num_predict: *defaultNumPredict,
+              temperature: 0.1,
+            }
+    models: # order = pi enabledModels cycling order
+      - id: claude-opus-4-8
+        vendor: anthropic
+        alias: opus
+        enabled: true
+        default_for: [pi]
+      - { id: claude-sonnet-5, vendor: anthropic, alias: sonnet, enabled: true }
+      - { id: claude-fable-5, vendor: anthropic, enabled: true }
+      - id: gemini-3.1-pro-preview
+        vendor: google
+        gateway: *google
+        display_name: Gemini 3.1 Pro
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 2.0, output: 12.0, cache_read: 0.2, cache_write: 0 }
+        enabled: true
+        default_for: [agy]
+      - id: gemini-3.5-flash
+        vendor: google
+        gateway: *google
+        display_name: Gemini 3.5 Flash
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 1.5, output: 9.0, cache_read: 0.15, cache_write: 0 }
+        enabled: true
+      - id: gemini-3.1-flash-lite # personal: no -preview suffix
+        vendor: google
+        gateway: *google
+        display_name: Gemini 3.1 Flash-Lite
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 0.25, output: 1.5, cache_read: 0.025, cache_write: 0 }
+        enabled: true
+
+riot:
+  llm:
+    models: # order = pi enabledModels cycling order
+      # NOTE: gpt-5.6 ctx/max_tokens/cost are ESTIMATES (GPT-5-class) — TF /v1/models
+      # exposes no specs and there is no published price sheet. Confirm and correct.
+      - id: openai/gpt-5.6-terra
+        vendor: openai
+        gateway: *tf_openai
+        display_name: GPT-5.6 Terra
+        reasoning: true
+        ctx: 400000
+        max_tokens: 128000
+        cost: { input: 1.25, output: 10.0, cache_read: 0.125, cache_write: 0 }
+        enabled: true
+        default_for: [codex]
+      - id: openai/gpt-5.6-luna
+        vendor: openai
+        gateway: *tf_openai
+        display_name: GPT-5.6 Luna
+        reasoning: true
+        ctx: 400000
+        max_tokens: 128000
+        cost: { input: 0.25, output: 2.0, cache_read: 0.025, cache_write: 0 }
+        enabled: true
+      - id: claude-vertex/anthropic-claude-opus-4-8
+        vendor: anthropic
+        alias: opus
+        gateway: *tf_anthropic
+        display_name: Claude Opus 4.8
+        reasoning: true
+        ctx: 200000
+        max_tokens: 32000
+        one_m: true
+        adaptive: true # Vertex rejects legacy thinking for opus 4.7+; force adaptive
+        cost:
+          &opus_cost {
+            input: 15,
+            output: 75,
+            cache_read: 1.5,
+            cache_write: 18.75,
+          }
+        enabled: true
+        default_for: [pi, claude]
+      - id: claude-vertex/anthropic-claude-sonnet-5
+        vendor: anthropic
+        alias: sonnet
+        gateway: *tf_anthropic
+        display_name: Claude Sonnet 5
+        reasoning: true
+        ctx: 200000
+        max_tokens: 64000
+        one_m: true
+        adaptive: true
+        cost: { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 }
+        enabled: true
+      - id: google-vertexai/gemini-3.1-pro-preview
+        vendor: google
+        gateway: *tf_openai
+        display_name: Gemini 3.1 Pro
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 2.0, output: 12.0, cache_read: 0.2, cache_write: 0 }
+        enabled: true
+        default_for: [agy]
+      - id: google-vertexai/gemini-3.5-flash
+        vendor: google
+        gateway: *tf_openai
+        display_name: Gemini 3.5 Flash
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 1.5, output: 9.0, cache_read: 0.15, cache_write: 0 }
+        enabled: true
+      - id: google-vertexai/gemini-3.1-flash-lite-preview
+        vendor: google
+        gateway: *tf_openai
+        display_name: Gemini 3.1 Flash-Lite
+        reasoning: true
+        ctx: 1048576
+        max_tokens: 65536
+        cost: { input: 0.25, output: 1.5, cache_read: 0.025, cache_write: 0 }
+        enabled: true
+      # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
+      # thus unreachable via /model (re-enable by flipping the flag); haiku still
+      # feeds claude via its alias. Kept here for quick re-enable + id/spec record.
+      - id: claude-vertex/anthropic-claude-haiku-4-5-20251001
+        vendor: anthropic
+        alias: haiku # feeds claude's HAIKU alias even while dormant in pi
+        gateway: *tf_anthropic
+        enabled: false
+      - id: claude-vertex/anthropic-claude-opus-4-6
+        vendor: anthropic
+        gateway: *tf_anthropic
+        display_name: Claude Opus 4.6
+        reasoning: true
+        ctx: 200000
+        max_tokens: 32000
+        one_m: true
+        adaptive: false # opus 4.6 accepts both legacy and adaptive thinking
+        cost: *opus_cost
+        enabled: false
+      - id: claude-vertex/anthropic-claude-opus-4-7
+        vendor: anthropic
+        gateway: *tf_anthropic
+        display_name: Claude Opus 4.7
+        reasoning: true
+        ctx: 200000
+        max_tokens: 32000
+        one_m: true
+        adaptive: true
+        cost: *opus_cost
+        enabled: false
