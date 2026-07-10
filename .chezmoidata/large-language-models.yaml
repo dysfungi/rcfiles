@@ -16,6 +16,11 @@
 #   default_for  subset of [pi, codex, claude, agy] this model is the default for
 #                (each harness may appear in at most one entry — guarded at render)
 #
+# default_for: [agy] is DECLARED intent only — validated by the guard but not yet
+# consumed: Antigravity CLI exposes no settings.json default-model key (only the
+# per-session --model flag / agy-managed LastSelectedModel state), so there is
+# nothing to render. Wire it once agy gains a config key. See todo.txt.
+#
 # Note: claude reads alias mappings regardless of `enabled`, so a dormant model
 # (e.g. haiku) can still back claude's HAIKU alias while staying out of pi.
 
