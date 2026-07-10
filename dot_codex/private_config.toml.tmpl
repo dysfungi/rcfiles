@@ -1,3 +1,18 @@
+{{- /* codex model + provider base_url derive from .chezmoidata/large-language-models.yaml
+       (the entry with `codex` in default_for). Declared at top level so both the
+       model block and [model_providers.truefoundry] below can read them. */ -}}
+{{- $codexModel := "" -}}
+{{- $codexBaseUrl := "" -}}
+{{- if .is_riot_machine -}}
+  {{- includeTemplate "llm/validate.tmpl" .riot.llm -}}
+  {{- range $m := .riot.llm.models -}}
+    {{- if and (hasKey $m "default_for") (has "codex" $m.default_for) -}}
+      {{- $codexModel = $m.id -}}
+      {{- $codexBaseUrl = $m.gateway.base_url -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if eq $codexModel "" }}{{ fail "codex config: no catalog model has default_for codex" }}{{ end -}}
+{{- end -}}
 {{ if .is_my_machine -}}
 
 model_reasoning_effort = "high"
@@ -10,7 +25,7 @@ mcp_oauth_credentials_store = "file" # ~/.codex/.credentials.json
 # https://www.notion.so/riotgames/Codex-CLI-2a77f9530fb28064ad81e4d1e6b19ea9?v=1eb7f9530fb2808cb97e000cd41c76b4&source=copy_link#2a77f9530fb28088967dcee527e752f6
 
 model_provider = "truefoundry" # must be first line in doc
-model = "gpt-5.4" # "gpt-5.3-codex"
+model = {{ $codexModel | quote }}
 model_reasoning_effort = "xhigh"
 personality = "pragmatic"
 notify = [
@@ -54,15 +69,12 @@ headers = { Authorization = {{ printf "Bearer %s" (onepasswordRead $mcp.auth.op_
 
 [model_providers.truefoundry]
 name = "TrueFoundry"
-base_url = "https://truefoundry.riotgames.io/api/llm"
+base_url = {{ $codexBaseUrl | quote }}
 env_key = "OPENAI_API_KEY"
 wire_api = "responses"
 supports_websockets = false
 
 {{ end -}}
-
-[notice.model_migrations]
-"gpt-5.3-codex" = "gpt-5.4"
 
 [plugins."browser-use@openai-bundled"]
 enabled = true
@@ -112,9 +124,6 @@ status_line = [
   "task-progress",
   "fast-mode",
 ]
-
-[tui.model_availability_nux]
-"gpt-5.5" = 4
 
 [windows]
 sandbox = "elevated"
