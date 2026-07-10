@@ -1,0 +1,25 @@
+# Register this machine's native-Windows SSH public key with github.com.
+#
+# Native-Windows counterpart of run_onchange_after_register-ssh-github.unix-like.sh,
+# MINUS the HTTPS->SSH chezmoi remote flip: native Windows keeps its chezmoi
+# source on HTTPS for `chezmoi update` reliability (soft decision — the guarded
+# flip can be ported here later behind the same auth check if wanted).
+#
+# WHY run_onchange_ (not run_once_): keyed on the live public key below so it
+# re-registers exactly when the key rotates; a stale run_once_ never re-ran.
+#
+# The pubkey trigger is guarded to os == windows so the Windows-only `output`
+# command is skipped when this template is rendered off-Windows (e.g. the
+# validate-chezmoi-templates hook on Linux); it still drives change-detection on
+# a real Windows apply.
+#
+# pubkey: {{ if eq .chezmoi.os "windows" }}{{ if stat (printf "%s/.ssh/id_ed25519.pub" .chezmoi.homeDir) }}{{ output "powershell" "-NoProfile" "-Command" (printf "Get-Content -Raw -LiteralPath '%s/.ssh/id_ed25519.pub'" .chezmoi.homeDir) }}{{ end }}{{ end }}
+$ErrorActionPreference = "Stop"
+Write-Host "INFO: Starting $PSCommandPath"
+
+{{ includeTemplate "github/register-ssh-key.ps1" }}
+
+# Token from chezmoi [scriptEnv] (never baked into the applied script).
+Register-SshKey -GhHost "" -Token $env:MISE_GITHUB_TOKEN
+
+Write-Host "INFO: Ending $PSCommandPath"
