@@ -41,8 +41,14 @@ function Register-SshKey {
     }
 
     # Source of truth: derive the public half from the private key.
-    $pubLine = ssh-keygen -y -f $key 2>$null
-    if (-not $pubLine) {
+    # `2>&1 | Out-String`, not `2>$null`: native-command stderr under
+    # $ErrorActionPreference='Stop' is raised as a terminating NativeCommandError,
+    # and `2>$null` does NOT suppress it in Windows PowerShell 5.1. Merging stderr
+    # into the output stream keeps it off the error stream (no throw) and yields a
+    # clean string; we judge success by $LASTEXITCODE. This matters below because
+    # gh prints even SUCCESS ("Public key added") to stderr.
+    $pubLine = (ssh-keygen -y -f $key 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $pubLine) {
         Write-Host "WARN: $key is not a usable private key; skipping $label registration." -ForegroundColor Yellow
         return
     }
@@ -63,7 +69,7 @@ function Register-SshKey {
     try {
         foreach ($name in $ghEnv.Keys) { Set-Item "env:$name" $ghEnv[$name] }
 
-        $listed = gh ssh-key list 2>$null
+        $listed = gh ssh-key list 2>&1 | Out-String
         if ($LASTEXITCODE -ne 0) {
             Write-Host "WARN: cannot reach $label (network/token); skipping SSH key registration." -ForegroundColor Yellow
             return
@@ -72,12 +78,12 @@ function Register-SshKey {
             Write-Host "INFO: SSH public key already registered on $label; skipping."
             return
         }
-        gh ssh-key add $pub --title $keyTitle --type authentication 2>$null
+        $addOut = (gh ssh-key add $pub --title $keyTitle --type authentication 2>&1 | Out-String).Trim()
         if ($LASTEXITCODE -eq 0) {
             Write-Host "INFO: SSH public key added to $label as '$keyTitle'."
         }
         else {
-            Write-Host "WARN: failed to add SSH key to $label; existing keys left untouched." -ForegroundColor Yellow
+            Write-Host "WARN: failed to add SSH key to $label ($addOut); existing keys left untouched." -ForegroundColor Yellow
         }
     }
     finally {
