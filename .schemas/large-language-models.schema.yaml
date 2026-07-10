@@ -1,0 +1,145 @@
+# JSON Schema for .chezmoidata/large-language-models.yaml
+# Validated via pre-commit hook: check-jsonschema (runs AFTER YAML anchor
+# expansion, so `gateway: *anchor` is seen as a full inlined mapping).
+$schema: https://json-schema.org/draft/2020-12/schema
+
+type: object
+additionalProperties: false
+required: [my]
+properties:
+  x:
+    type: object
+    additionalProperties: false
+    properties:
+      default_model_parameters:
+        $ref: "#/$defs/modelParameters"
+      gateways:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/gateway"
+  my:
+    $ref: "#/$defs/namespace"
+  riot:
+    $ref: "#/$defs/namespace"
+
+$defs:
+  namespace:
+    type: object
+    additionalProperties: false
+    required: [llm]
+    properties:
+      llm:
+        type: object
+        additionalProperties: false
+        required: [models]
+        properties:
+          ollama:
+            type: object
+            additionalProperties: false
+            properties:
+              models:
+                type: object
+                additionalProperties:
+                  $ref: "#/$defs/ollamaModel"
+          models:
+            type: array
+            items:
+              $ref: "#/$defs/model"
+
+  model:
+    type: object
+    additionalProperties: false
+    required: [id, vendor, enabled]
+    properties:
+      id:
+        type: string
+      vendor:
+        enum: [anthropic, openai, google]
+      alias:
+        type: string
+      display_name:
+        type: string
+      gateway:
+        $ref: "#/$defs/gateway"
+      reasoning:
+        type: boolean
+      ctx:
+        type: integer
+        minimum: 1
+      max_tokens:
+        type: integer
+        minimum: 1
+      one_m:
+        type: boolean
+      adaptive:
+        type: boolean
+      cost:
+        $ref: "#/$defs/cost"
+      enabled:
+        type: boolean
+      default_for:
+        type: array
+        uniqueItems: true
+        items:
+          enum: [pi, codex, claude, agy]
+
+  gateway:
+    type: object
+    additionalProperties: false
+    required: [provider, name, base_url, api, api_key_op]
+    properties:
+      provider:
+        type: string
+      name:
+        type: string
+      base_url:
+        type: string
+      api:
+        enum: [anthropic-messages, openai-completions, google-generative-ai]
+      api_key_op:
+        type: string
+
+  cost:
+    type: object
+    additionalProperties: false
+    required: [input, output]
+    properties:
+      input:
+        type: number
+        minimum: 0
+      output:
+        type: number
+        minimum: 0
+      cache_read:
+        type: number
+        minimum: 0
+      cache_write:
+        type: number
+        minimum: 0
+
+  ollamaModel:
+    type: object
+    additionalProperties: false
+    required: [enabled]
+    properties:
+      enabled:
+        type: boolean
+      tag:
+        type: string
+      parameters:
+        $ref: "#/$defs/modelParameters"
+
+  modelParameters:
+    type: object
+    additionalProperties: false
+    properties:
+      num_ctx:
+        type: integer
+        minimum: 1
+      num_predict:
+        type: integer
+        minimum: -1
+      temperature:
+        type: number
+        minimum: 0
+        maximum: 2
