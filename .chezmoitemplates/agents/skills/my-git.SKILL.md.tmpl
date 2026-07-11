@@ -33,8 +33,9 @@ acts as the agent from an unswitched session.
 - One logical change per commit: touch only the files required for that change;
   commit independent concerns separately.
 - Outside plan mode, auto-commit completed work without asking — commits flow
-  automatically in implementation mode. Pause and return to plan mode only if a
-  fundamental design issue surfaces, or when the user pushes back on a recent change.
+  automatically in implementation mode. **Never ask the user to approve a routine
+  worktree commit**, including after a correction; incorporate it and commit. Return to
+  plan mode only when a fundamental design decision requires user alignment.
 - Commit/PR audit trailers (Authored-By, Model, Session-ID, …) → my-audit-trail.
 
 ## Push / pull

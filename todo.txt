@@ -1,3 +1,4 @@
+2026-07-10 Strengthen my-git rule: do not ask permission for routine worktree commits +chezmoi +skills @worktree:.worktree/fix/my-git-auto-commit session:019f4e90-06b6-7b3f-8b47-800e956bc4b1 agent:pi model:claude-opus-4-8
 (A) 2026-07-09 Fix Windows chezmoi apply crash (gate memory SSH external) + add native-Windows SSH keygen/registration +chezmoi @worktree:.worktree/fix/windows-chezmoi-ssh session:019f48e6-b4d9-79b0-b516-e7366aa4dc88 agent:pi model:claude-opus-4
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
 (B) Add skills lazy-loading + compact instructions +context @worktree:.claude/worktrees/5e6a8e0d-838d-432c-87a4-8c1634e2098e.context-skills session:5e6a8e0d-838d-432c-87a4-8c1634e2098e agent:claude model:claude-vertex/anthropic-claude-opus-4-6

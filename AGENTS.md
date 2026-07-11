@@ -143,7 +143,6 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 
 - Pytest harness lives at `.tests/` (shared `conftest.py` at the root + tests organized by domain/scope underneath). Run from the repo root via `mise run test`, which invokes `uv run --group test` to resolve the declared `test` dependency group (pytest + pyyaml) from `pyproject.toml`.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
-
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
   - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators
