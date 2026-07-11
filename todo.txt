@@ -49,3 +49,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-10 Wire agy (Antigravity CLI) default model from large-language-models.yaml default_for:[agy] once agy exposes a settings.json model key (today: only --model per-session flag + agy-managed LastSelectedModel; no config-file default) +antigravity +llm
 (C) 2026-07-10 Add a full-screen pager for pi plan-mode plans +pi @worktree:.worktree/feat/pi-plan-pager session:019f4e82-454b-7c42-8206-ae465e1033f0 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
 Downgrade pre-commit Prettier to latest v3; run all hooks and fix formatting +chezmoi +pre-commit @worktree:.worktree/fix/prettier-v3 session:019f4eac-c391-72cc-982e-bb89153cead4 agent:pi
+Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
