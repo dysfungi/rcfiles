@@ -15,7 +15,8 @@ rules:
   # Single-space inline comments are used in large-language-models.yaml.
   comments:
     min-spaces-from-content: 1
-  # Flow mappings with single spaces { like: this } are allowed.
+  # Other catalog maps intentionally retain compact flow-style entries; the LLM
+  # catalog itself uses block mappings for all model data.
   braces:
     min-spaces-inside: 0
     max-spaces-inside: 1

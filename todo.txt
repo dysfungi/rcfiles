@@ -50,3 +50,9 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-10 Add a full-screen pager for pi plan-mode plans +pi @worktree:.worktree/feat/pi-plan-pager session:019f4e82-454b-7c42-8206-ae465e1033f0 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
 Downgrade pre-commit Prettier to latest v3; run all hooks and fix formatting +chezmoi +pre-commit @worktree:.worktree/fix/prettier-v3 session:019f4eac-c391-72cc-982e-bb89153cead4 agent:pi
 Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
+(B) Implement pi context-discipline root-thread guard, catalog-driven official subagents, and plan-mode JSON gating +chezmoi +pi @worktree:.worktree/feat/pi-context-discipline session:019f4dd5-bcd1-727c-ad9f-89567055dcd5 agent:pi model:unknown
+(B) Evaluate cross-harness reusable subagent-definition Markdown: separate pi frontmatter from shared role prompts and document the boundary versus skills (PR #36 review thread) +pi +skills @follow-up
+(B) Fix pi settings.json.tmpl app-state drift: lastChangelogVersion changes on pi upgrades and blocks noninteractive chezmoi apply +pi +chezmoi @follow-up
+(B) Investigate @rezamonangg/pi-worktree linked-worktree startup EEXIST: attempts mkdir on worktree .git file despite successful execution +pi +worktree @bug
+(B) Fix pi worktree-guard false positive when a read-only Python command contains literal > in a regex +pi +worktree @bug
+(B) Refactor skill/subagent templating: extract reusable bodies from my-planning and my-code-review into shared partials; compose pi planner/reviewer agent definitions from them plus pi-specific frontmatter and delegation contracts +pi +skills @follow-up

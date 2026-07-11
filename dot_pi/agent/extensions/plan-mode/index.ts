@@ -1,17 +1,18 @@
 /**
  * Plan Mode Extension (owned)
  *
- * Read-only exploration mode, ON BY DEFAULT for every new session.
+ * Read-only exploration mode, ON BY DEFAULT for interactive root sessions.
  *
  * See DESIGN.md (same directory) for the full requirements, the options
  * evaluated, and why each decision was made. Summary of the load-bearing ones:
  *
- *   - Default-on, clean: the `plan` flag defaults to `true` and `session_start`
- *     enables plan mode whenever the flag is true with NO `reason` gate, so both
+ *   - Interactive-root-only, clean: the `plan` flag defaults to `true` and
+ *     `session_start` enables plan mode only in `tui`/`rpc` root sessions. Both
  *     fresh processes (`reason:"startup"`) and in-session `/new` (`reason:"new"`)
- *     start in plan mode. No injected `/plan` message, no startup turn, no
- *     session rename (those were the problems with the previous approach).
- *     `--no-plan` opts out; `/plan` toggles.
+ *     start in plan mode there. Spawned `json` workers and one-shot `print`
+ *     invocations stay inert so delegated workers retain write/edit capability.
+ *     No injected `/plan` message, startup turn, or session rename; `--no-plan`
+ *     opts out and `/plan` toggles.
  *
  *   - Tool preservation: plan mode = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
@@ -51,6 +52,7 @@ import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } from "./bash-safety.ts";
+import { isInteractiveRootMode } from "./mode.mjs";
 
 const PLAN_WRITE_TOOL = "plan_write";
 // Read-only tools ensured active in plan mode, plus the scoped plan writer.
@@ -329,7 +331,16 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	// Default-on (startup + /new) and restore persisted state (resume/fork).
+	// JSON subagents and print-mode one-shots must stay writable: their parent
+	// delegates execution precisely to keep that tool work out of root context.
 	pi.on("session_start", async (_event, ctx) => {
+		if (!isInteractiveRootMode(ctx.mode)) {
+			planModeEnabled = false;
+			toolsBeforePlanMode = undefined;
+			updateStatus(ctx);
+			return;
+		}
+
 		void ensureParserLoaded(); // warm the parser; don't block startup
 		if (pi.getFlag("plan") === true) planModeEnabled = true;
 

@@ -15,6 +15,9 @@
 #   enabled      appears in pi's catalog + rotation (list order = cycling order)
 #   default_for  subset of [pi, codex, claude, agy] this model is the default for
 #                (each harness may appear in at most one entry — guarded at render)
+#   subagent_roles pi-only subset of [scout, planner, reviewer, worker] this
+#                model backs; every role appears exactly once per namespace
+#                and must be enabled (guarded at render)
 #
 # default_for: [agy] is DECLARED intent only — validated by the guard but not yet
 # consumed: Antigravity CLI exposes no settings.json default-model key (only the
@@ -63,31 +66,44 @@ my:
     ollama: # local runtime models (built by the modelfile-generation script)
       models:
         "codestral:22b":
-          { enabled: false, parameters: *default_model_parameters }
+          enabled: false
+          parameters: *default_model_parameters
         "deepseek-r1:14b":
-          { enabled: false, parameters: *default_model_parameters }
-        "gemma4:e4b": { enabled: false, parameters: *default_model_parameters }
-        "phi4:14b": { enabled: false, parameters: *default_model_parameters }
+          enabled: false
+          parameters: *default_model_parameters
+        "gemma4:e4b":
+          enabled: false
+          parameters: *default_model_parameters
+        "phi4:14b":
+          enabled: false
+          parameters: *default_model_parameters
         "qwen2.5-coder:14b-instruct-q4_K_M":
-          { enabled: false, parameters: *default_model_parameters }
+          enabled: false
+          parameters: *default_model_parameters
         "qwen3-coder-next:q4_K_M":
-          { enabled: true, parameters: *default_model_parameters }
+          enabled: true
+          parameters: *default_model_parameters
         "qwen3.5:9b":
           enabled: false
           parameters:
-            {
-              num_ctx: 24576,
-              num_predict: *defaultNumPredict,
-              temperature: 0.1,
-            }
+            num_ctx: 24576
+            num_predict: *defaultNumPredict
+            temperature: 0.1
     models: # order = pi enabledModels cycling order
       - id: claude-opus-4-8
         vendor: anthropic
         alias: opus
         enabled: true
         default_for: [pi]
-      - { id: claude-sonnet-5, vendor: anthropic, alias: sonnet, enabled: true }
-      - { id: claude-fable-5, vendor: anthropic, enabled: true }
+        subagent_roles: [planner, worker]
+      - id: claude-sonnet-5
+        vendor: anthropic
+        alias: sonnet
+        enabled: true
+        subagent_roles: [scout, reviewer]
+      - id: claude-fable-5
+        vendor: anthropic
+        enabled: true
       - id: gemini-3.1-pro-preview
         vendor: google
         gateway: *google
@@ -95,7 +111,11 @@ my:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 2.0, output: 12.0, cache_read: 0.2, cache_write: 0 }
+        cost:
+          input: 2.0
+          output: 12.0
+          cache_read: 0.2
+          cache_write: 0
         enabled: true
         default_for: [agy]
       - id: gemini-3.5-flash
@@ -105,7 +125,11 @@ my:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 1.5, output: 9.0, cache_read: 0.15, cache_write: 0 }
+        cost:
+          input: 1.5
+          output: 9.0
+          cache_read: 0.15
+          cache_write: 0
         enabled: true
       - id: gemini-3.1-flash-lite # personal: no -preview suffix
         vendor: google
@@ -114,7 +138,11 @@ my:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 0.25, output: 1.5, cache_read: 0.025, cache_write: 0 }
+        cost:
+          input: 0.25
+          output: 1.5
+          cache_read: 0.025
+          cache_write: 0
         enabled: true
 
 riot:
@@ -129,9 +157,14 @@ riot:
         reasoning: true
         ctx: 400000
         max_tokens: 128000
-        cost: { input: 1.25, output: 10.0, cache_read: 0.125, cache_write: 0 }
+        cost:
+          input: 1.25
+          output: 10.0
+          cache_read: 0.125
+          cache_write: 0
         enabled: true
-        default_for: [codex]
+        default_for: [codex, pi]
+        subagent_roles: [planner, worker]
       - id: openai/gpt-5.6-luna
         vendor: openai
         gateway: *tf_openai
@@ -139,8 +172,13 @@ riot:
         reasoning: true
         ctx: 400000
         max_tokens: 128000
-        cost: { input: 0.25, output: 2.0, cache_read: 0.025, cache_write: 0 }
+        cost:
+          input: 0.25
+          output: 2.0
+          cache_read: 0.025
+          cache_write: 0
         enabled: true
+        subagent_roles: [scout, reviewer]
       - id: claude-vertex/anthropic-claude-opus-4-8
         vendor: anthropic
         alias: opus
@@ -151,15 +189,13 @@ riot:
         max_tokens: 32000
         one_m: true
         adaptive: true # Vertex rejects legacy thinking for opus 4.7+; force adaptive
-        cost:
-          &opus_cost {
-            input: 15,
-            output: 75,
-            cache_read: 1.5,
-            cache_write: 18.75,
-          }
+        cost: &opus_cost
+          input: 15
+          output: 75
+          cache_read: 1.5
+          cache_write: 18.75
         enabled: true
-        default_for: [pi, claude]
+        default_for: [claude]
       - id: claude-vertex/anthropic-claude-sonnet-5
         vendor: anthropic
         alias: sonnet
@@ -170,7 +206,11 @@ riot:
         max_tokens: 64000
         one_m: true
         adaptive: true
-        cost: { input: 3, output: 15, cache_read: 0.3, cache_write: 3.75 }
+        cost:
+          input: 3
+          output: 15
+          cache_read: 0.3
+          cache_write: 3.75
         enabled: true
       - id: google-vertexai/gemini-3.1-pro-preview
         vendor: google
@@ -179,7 +219,11 @@ riot:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 2.0, output: 12.0, cache_read: 0.2, cache_write: 0 }
+        cost:
+          input: 2.0
+          output: 12.0
+          cache_read: 0.2
+          cache_write: 0
         enabled: true
         default_for: [agy]
       - id: google-vertexai/gemini-3.5-flash
@@ -189,7 +233,11 @@ riot:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 1.5, output: 9.0, cache_read: 0.15, cache_write: 0 }
+        cost:
+          input: 1.5
+          output: 9.0
+          cache_read: 0.15
+          cache_write: 0
         enabled: true
       - id: google-vertexai/gemini-3.1-flash-lite-preview
         vendor: google
@@ -198,7 +246,11 @@ riot:
         reasoning: true
         ctx: 1048576
         max_tokens: 65536
-        cost: { input: 0.25, output: 1.5, cache_read: 0.025, cache_write: 0 }
+        cost:
+          input: 0.25
+          output: 1.5
+          cache_read: 0.025
+          cache_write: 0
         enabled: true
       # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
       # thus unreachable via /model (re-enable by flipping the flag); haiku still
