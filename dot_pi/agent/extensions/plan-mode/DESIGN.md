@@ -27,6 +27,10 @@ evaluated, and why each decision was made, so the context lives next to the code
    `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
    is unaffected (`memory_*` tools are preserved).
 8. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
+9. **Surface the plan in the TUI.** The plan must be shown to me automatically
+   when written (no manual `cat`/open), and it must cost **no extra LLM
+   context** to do so. I must also be able to **re-view it on demand** later,
+   likewise context-free.
 
 ## Decisions
 
@@ -75,6 +79,40 @@ Why home dir and not the project root:
 
 The path is a one-line constant (`resolvePlanFile`), trivial to change.
 
+### Plan display — `renderResult` renders Markdown, zero context cost
+
+Writing the plan to disk isn't enough; the default `plan_write` result only
+printed `Plan saved to <path>`, so the plan was never actually shown (Req 9).
+The tool now defines a `renderResult` slot that renders the plan as Markdown
+inline via pi-tui's `Markdown` component + `getMarkdownTheme()` (the pattern in
+`docs/tui.md`).
+
+**Why this adds no LLM context** — the load-bearing point:
+
+- The plan `content` is a tool-call **argument the model generated**, so it is
+  already in context exactly once, unavoidably.
+- `renderResult` is **display-only**; it is never sent to the model. It renders
+  `context.args.content` (already in context), so there is **no** second copy in
+  the transcript and no added tokens.
+- `execute()` still returns the short `Plan saved to <path>` as the model-facing
+  result — unchanged.
+
+Rendered from `context.args` (not copied into `details`) per pi's documented
+best practice, which also avoids duplicating the plan into the session file.
+Full render is intentional (not gated behind `expanded`): the whole point is to
+see the plan without a manual step; `plan_write` is called deliberately, so
+inline full render is not noisy. A partial/empty-args guard shows `Saving plan…`.
+
+**Re-view on demand — `/plan-show` (Ctrl+Alt+V).** Renders the current session's
+plan file into the transcript via a custom entry (`pi.appendEntry("plan-view")` +
+`registerEntryRenderer`). Custom entries do **not** participate in LLM context,
+so re-viewing is also free. It reuses the same `Markdown` rendering, snapshots
+the plan as it was when shown, works in any mode (it just reads the file), and
+relies on the transcript's own scrolling rather than a bespoke pager. Missing/
+empty plan → a `notify` warning instead of an empty entry. A `ctx.ui.custom()`
+overlay pager was considered but rejected: more code (scroll + key handling) for
+no real gain over transcript scrollback.
+
 ### Bash read-only enforcement — shell-quote tokenizer, regex fallback
 
 Bash stays available for inspection but is gated. The check **tokenizes with
@@ -121,4 +159,7 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 - `--no-plan` → starts off; `/plan` → toggles.
 - In plan mode: `edit`/`write` absent; `worktree_*`/`memory_*`/`mcp` present;
   mutating bash blocked, read-only bash allowed; `plan_write` writes
-  `~/.pi/agent/plans/<sessionId>.md`.
+  `~/.pi/agent/plans/<sessionId>.md` **and** renders the plan as Markdown inline
+  (model-facing result stays `Plan saved to <path>`).
+- `/plan-show` (Ctrl+Alt+V) renders the saved plan into the transcript as
+  Markdown (out of context); missing/empty plan → a warning notification.
