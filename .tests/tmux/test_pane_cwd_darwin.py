@@ -298,25 +298,37 @@ class TmuxServer:
         return descendants
 
     @staticmethod
-    def _process_commands(pids: set[int]) -> dict[int, str]:
-        """Return executable names only for already-scoped PIDs."""
-        if not pids:
-            return {}
+    def _ps_output(*args: str) -> str:
+        """Return ``ps`` output, accepting only its silent no-process result."""
         process = subprocess.run(
-            [
-                "ps",
-                "-p",
-                ",".join(str(pid) for pid in sorted(pids)),
-                "-o",
-                "pid=,comm=",
-            ],
+            ["ps", *args],
             check=False,
             capture_output=True,
             text=True,
             timeout=_TIMEOUT_SECONDS,
         )
+        if process.returncode == 0:
+            return process.stdout
+        if process.returncode == 1 and not process.stdout and not process.stderr:
+            return ""
+        raise AssertionError(
+            f"ps inspection failed for {args!r} (exit {process.returncode})\n"
+            f"stdout:\n{process.stdout}\nstderr:\n{process.stderr}"
+        )
+
+    @staticmethod
+    def _process_commands(pids: set[int]) -> dict[int, str]:
+        """Return executable names only for already-scoped PIDs."""
+        if not pids:
+            return {}
+        output = TmuxServer._ps_output(
+            "-p",
+            ",".join(str(pid) for pid in sorted(pids)),
+            "-o",
+            "pid=,comm=",
+        )
         commands: dict[int, str] = {}
-        for line in process.stdout.splitlines():
+        for line in output.splitlines():
             fields = line.split(maxsplit=1)
             if len(fields) == 2:
                 pid, command = fields
@@ -553,21 +565,14 @@ class TmuxServer:
         """Return surviving observed processes with sanitized fields only."""
         if not observed:
             return []
-        result = subprocess.run(
-            [
-                "ps",
-                "-p",
-                ",".join(str(pid) for pid in sorted(observed)),
-                "-o",
-                "pid=,lstart=,comm=",
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=_TIMEOUT_SECONDS,
+        output = self._ps_output(
+            "-p",
+            ",".join(str(pid) for pid in sorted(observed)),
+            "-o",
+            "pid=,lstart=,comm=",
         )
         residuals: list[ResidualProcess] = []
-        for line in result.stdout.splitlines():
+        for line in output.splitlines():
             fields = line.split(maxsplit=6)
             if len(fields) != 7:
                 continue
@@ -888,6 +893,38 @@ def test_process_topology_uses_no_environment_columns(
     assert calls == [["ps", "-axo", "pid=,ppid=,lstart="]]
 
 
+def test_process_commands_treats_vanished_candidates_as_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Readiness may race a process exit, but only a silent ``ps`` absence is clean."""
+    calls: list[list[str]] = []
+
+    def process_run(args: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 1, "", "")
+
+    monkeypatch.setattr(subprocess, "run", process_run)
+
+    assert TmuxServer._process_commands({101}) == {}
+    assert calls == [["ps", "-p", "101", "-o", "pid=,comm="]]
+
+
+def test_process_commands_surface_ps_inspection_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Readiness cannot mistake a failed ``ps`` command for a vanished process."""
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda args, **_: subprocess.CompletedProcess(
+            args, 1, "", "ps: process ID list syntax error"
+        ),
+    )
+
+    with pytest.raises(AssertionError, match="ps inspection failed"):
+        TmuxServer._process_commands({101})
+
+
 def test_snapshot_server_descendants_uses_pid_ppid_topology(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -934,6 +971,39 @@ def test_observed_residuals_include_full_start_year_and_query_only_candidates(
         ResidualProcess(101, "Mon Jul 11 12:00:00 2026", "xonsh")
     ]
     assert calls == [["ps", "-p", "101,102", "-o", "pid=,lstart=,comm="]]
+
+
+def test_observed_residuals_treat_vanished_candidates_as_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Shutdown inspection accepts a candidate that exited before its ``ps`` query."""
+    server = object.__new__(TmuxServer)
+    observed = {101: ProcessSnapshot(100, "Mon Jul 11 12:00:00 2026")}
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda args, **_: subprocess.CompletedProcess(args, 1, "", ""),
+    )
+
+    assert server._observed_residuals(observed) == []
+
+
+def test_observed_residuals_surface_ps_inspection_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Cleanup reports command failures instead of claiming no residual processes."""
+    server = object.__new__(TmuxServer)
+    observed = {101: ProcessSnapshot(100, "Mon Jul 11 12:00:00 2026")}
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda args, **_: subprocess.CompletedProcess(
+            args, 1, "", "ps: cannot access process table"
+        ),
+    )
+
+    with pytest.raises(AssertionError, match="ps inspection failed"):
+        server._observed_residuals(observed)
 
 
 def test_close_exits_known_panes_before_tmux_fallback(
@@ -1052,6 +1122,7 @@ def _emit_experiment_evidence(
         print(f"tmux-login-cwd prototype {name}: {evidence}")
 
 
+@pytest.mark.slow
 @pytest.mark.skipif(
     _INTEGRATION_SKIP_REASON is not None, reason=_INTEGRATION_SKIP_REASON or ""
 )
