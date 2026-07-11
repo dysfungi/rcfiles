@@ -9,10 +9,13 @@
  *   - Interactive-root-only, clean: the `plan` flag defaults to `true` and
  *     `session_start` enables plan mode only in `tui`/`rpc` root sessions. Both
  *     fresh processes (`reason:"startup"`) and in-session `/new` (`reason:"new"`)
- *     start in plan mode there. Spawned `json` workers and one-shot `print`
- *     invocations stay inert so delegated workers retain write/edit capability.
- *     No injected `/plan` message, startup turn, or session rename; `--no-plan`
- *     opts out and `/plan` toggles.
+ *     start in plan mode there. Spawned `json` workers, one-shot `print`
+ *     invocations, and processes marked `PI_SUBAGENT=1` stay inert so delegated
+ *     workers retain write/edit capability. No injected `/plan` message, startup
+ *     turn, or session rename; `--no-plan` opts out. `/plan` selects plan mode,
+ *     `/normal` selects normal mode, and `/mode [plan|normal]` selects or cycles
+ *     modes. `/execute` and `/implement` select normal mode and send one
+ *     implementation kickoff.
  *
  *   - Tool preservation: plan mode = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
@@ -72,12 +75,17 @@ Restrictions:
 Investigate, then produce a clear, concise plan. Ask clarifying questions with
 the questionnaire tool. Persist or update your plan to disk with the ${PLAN_WRITE_TOOL}
 tool (it writes this session's plan file). Do NOT attempt to make changes or run
-mutating commands; run /plan to exit plan mode when ready to execute.`;
+mutating commands; run /normal to leave plan mode or /execute to begin implementation.`;
 
 interface PlanModeState {
 	enabled: boolean;
 	toolsBeforePlanMode?: string[];
 }
+
+type ModeName = "plan" | "normal";
+
+const MODE_NAMES: readonly ModeName[] = ["plan", "normal"];
+const IMPLEMENTATION_KICKOFF = "Implement the approved plan now.";
 
 /** Resolve this session's plan file: ~/.pi/agent/plans/<sessionId>.md.
  * Derived from the session dir (~/.pi/agent/sessions/<encoded-cwd>) so it honors
@@ -249,7 +257,10 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	}
 
 	function restoreNormalModeTools(): void {
-		pi.setActiveTools(toolsBeforePlanMode ?? getNormalModeTools(pi.getActiveTools()));
+		const activeTools = pi.getActiveTools();
+		const restoredTools = toolsBeforePlanMode ?? getNormalModeTools(activeTools);
+		const toolsAddedDuringPlanMode = activeTools.filter((name) => !PLAN_MANAGED_TOOLS.has(name));
+		pi.setActiveTools(uniqueToolNames([...restoredTools, ...toolsAddedDuringPlanMode]));
 		toolsBeforePlanMode = undefined;
 	}
 
@@ -257,23 +268,104 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		pi.appendEntry("plan-mode", { enabled: planModeEnabled, toolsBeforePlanMode } satisfies PlanModeState);
 	}
 
-	function togglePlanMode(ctx: ExtensionContext): void {
-		planModeEnabled = !planModeEnabled;
+	/** Select a mode without ever treating an explicit selection as a toggle. */
+	function selectMode(mode: ModeName, ctx: ExtensionContext): void {
+		const enablePlanMode = mode === "plan";
+		// Do not rewrite another extension's tool state or append duplicate context
+		// when an explicit selector repeats the already active mode.
+		if (planModeEnabled === enablePlanMode) return;
+
+		planModeEnabled = enablePlanMode;
 		if (planModeEnabled) {
 			enablePlanModeTools();
 			ctx.ui.notify("Plan mode enabled. Write tools disabled; bash restricted to read-only.");
 		} else {
 			restoreNormalModeTools();
-			ctx.ui.notify("Plan mode disabled. Full access restored.");
+			ctx.ui.notify("Normal mode enabled. Full access restored.");
 		}
 		updateStatus(ctx);
 		persistState();
 	}
 
+	function requireIdle(ctx: ExtensionContext, command: string): boolean {
+		if (ctx.isIdle()) return true;
+		ctx.ui.notify(`/${command} requires an idle agent. Wait for the current run to finish.`, "warning");
+		return false;
+	}
+
+	function parseModeArgument(args: string): ModeName | "cycle" | undefined {
+		const tokens = args.trim().split(/\s+/).filter(Boolean);
+		if (tokens.length === 0) return "cycle";
+		if (tokens.length !== 1) return undefined;
+		const mode = tokens[0].toLowerCase();
+		return MODE_NAMES.find((name) => name === mode);
+	}
+
+	function cycleMode(ctx: ExtensionContext): void {
+		selectMode(planModeEnabled ? "normal" : "plan", ctx);
+	}
+
+	function buildImplementationKickoff(args: string): string {
+		const additionalInstructions = args.trim();
+		return additionalInstructions
+			? `${IMPLEMENTATION_KICKOFF}\n\n--- Additional implementation instructions ---\n${additionalInstructions}`
+			: IMPLEMENTATION_KICKOFF;
+	}
+
+	function startImplementation(command: string, args: string, ctx: ExtensionContext): void {
+		if (!requireIdle(ctx, command)) return;
+
+		// Transition first and never roll it back: even a failed kickoff must leave
+		// full tools visible and plan-mode context disabled for the next attempt.
+		selectMode("normal", ctx);
+		try {
+			pi.sendUserMessage(buildImplementationKickoff(args));
+		} catch (error) {
+			const detail = error instanceof Error ? `: ${error.message}` : "";
+			ctx.ui.notify(`Could not start implementation${detail}. Normal mode remains active.`, "error");
+		}
+	}
+
 	pi.registerCommand("plan", {
-		description: "Toggle plan mode (read-only exploration)",
-		handler: async (_args, ctx) => togglePlanMode(ctx),
+		description: "Select plan mode (read-only exploration)",
+		handler: async (_args, ctx) => {
+			if (requireIdle(ctx, "plan")) selectMode("plan", ctx);
+		},
 	});
+
+	pi.registerCommand("normal", {
+		description: "Select normal mode (full tool access)",
+		handler: async (_args, ctx) => {
+			if (requireIdle(ctx, "normal")) selectMode("normal", ctx);
+		},
+	});
+
+	pi.registerCommand("mode", {
+		description: "Select plan or normal mode; omit the argument to cycle",
+		getArgumentCompletions: (argumentPrefix) => {
+			const prefix = argumentPrefix.trim().toLowerCase();
+			if (/\s/.test(argumentPrefix.trim())) return null;
+			const matches = MODE_NAMES.filter((name) => name.startsWith(prefix));
+			return matches.length > 0 ? matches.map((value) => ({ value, label: value })) : null;
+		},
+		handler: async (args, ctx) => {
+			const requestedMode = parseModeArgument(args);
+			if (!requestedMode) {
+				ctx.ui.notify("Usage: /mode [plan|normal] (use an exact full mode name).", "warning");
+				return;
+			}
+			if (!requireIdle(ctx, "mode")) return;
+			if (requestedMode === "cycle") cycleMode(ctx);
+			else selectMode(requestedMode, ctx);
+		},
+	});
+
+	for (const command of ["execute", "implement"]) {
+		pi.registerCommand(command, {
+			description: "Leave plan mode and start implementing the approved plan",
+			handler: async (args, ctx) => startImplementation(command, args, ctx),
+		});
+	}
 
 	pi.registerCommand("plan-show", {
 		description: "Open this session's saved plan in a full-screen pager (out of context)",
@@ -281,8 +373,10 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.registerShortcut(Key.ctrlAlt("p"), {
-		description: "Toggle plan mode",
-		handler: async (ctx) => togglePlanMode(ctx),
+		description: "Cycle plan and normal modes",
+		handler: async (ctx) => {
+			if (requireIdle(ctx, "mode")) cycleMode(ctx);
+		},
 	});
 
 	pi.registerShortcut(Key.ctrlAlt("v"), {
@@ -301,27 +395,33 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		if (reason) {
 			return {
 				block: true,
-				reason: `Plan mode: command blocked (${reason}). Run /plan to exit plan mode first.\nCommand: ${command}`,
+				reason: `Plan mode: command blocked (${reason}). Run /normal to leave plan mode first.\nCommand: ${command}`,
 			};
 		}
 	});
 
-	// Drop stale plan-mode context from history when plan mode is off.
+	// Context may include legacy user-text injections from older extension
+	// versions. Treat them exactly like the structured injection so a mode
+	// round-trip cannot send conflicting instructions to the provider.
 	pi.on("context", async (event) => {
-		if (planModeEnabled) return;
-		return {
-			messages: event.messages.filter((m) => {
-				const msg = m as AgentMessage & { customType?: string };
-				if (msg.customType === "plan-mode-context") return false;
-				if (msg.role !== "user") return true;
-				const content = msg.content;
-				if (typeof content === "string") return !content.includes("[PLAN MODE ACTIVE]");
-				if (Array.isArray(content)) {
-					return !content.some((c) => c.type === "text" && (c as TextContent).text?.includes("[PLAN MODE ACTIVE]"));
-				}
-				return true;
-			}),
+		const isPlanModeContext = (message: AgentMessage): boolean => {
+			const msg = message as AgentMessage & { customType?: string };
+			if (msg.customType === "plan-mode-context") return true;
+			if (msg.role !== "user") return false;
+			const content = msg.content;
+			if (typeof content === "string") return content.includes("[PLAN MODE ACTIVE]");
+			return Array.isArray(content) && content.some((item) => item.type === "text" && (item as TextContent).text?.includes("[PLAN MODE ACTIVE]"));
 		};
+
+		if (planModeEnabled) {
+			const newestPlanContext = event.messages.findLastIndex(isPlanModeContext);
+			if (newestPlanContext === -1) return;
+			return {
+				messages: event.messages.filter((message, index) => !isPlanModeContext(message) || index === newestPlanContext),
+			};
+		}
+
+		return { messages: event.messages.filter((message) => !isPlanModeContext(message)) };
 	});
 
 	// Inject plan-mode instructions before each turn while active.

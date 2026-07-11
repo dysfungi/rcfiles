@@ -15,24 +15,35 @@ evaluated, and why each decision was made, so the context lives next to the code
    the root cause of all four problems and is gone.)
 2. **First message is the user's task.** The user types their own first message,
    which becomes the session name — not a synthetic `/plan`.
-3. **Overrides still work.** `--no-plan` opts out; `--plan` is redundant but
-   harmless; `/plan` toggles in-session.
-4. **Delegated workers stay writable.** `json` subagents and `print` one-shots
-   never enable plan mode, so a worker can read and edit without a parent-side
-   `--no-plan` escape hatch.
-5. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
+3. **Overrides and explicit modes still work.** `--no-plan` opts out; `--plan`
+   is redundant but harmless. `/plan` idempotently selects read-only plan mode,
+   `/normal` idempotently selects full-access normal mode, and neither command
+   sends a prompt or starts an agent turn.
+4. **Mode changes are deliberate.** `/mode` with no argument cycles the modes;
+   `/mode plan` and `/mode normal` accept only exact, case-insensitive full
+   names. Malformed or extra arguments leave state unchanged and report usage.
+   Valid mode-changing commands require an idle agent; malformed `/mode` input
+   reports its parse error before the idle check.
+5. **Implementation is explicit.** `/execute` and `/implement` require an idle
+   agent, select normal mode, then send exactly one user-message kickoff. An
+   optional argument is appended once below an explicit delimiter. If kickoff
+   delivery fails, normal mode remains selected and the failure is reported.
+6. **Delegated workers stay writable.** `json` subagents, `print` one-shots,
+   and processes marked `PI_SUBAGENT=1` never enable plan mode, so workers can
+   read and edit without a parent-side `--no-plan` escape hatch.
+7. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
    simply restore persisted state.
-6. **Hard read-only.** `edit`/`write` are _physically removed_ from the tool set
+8. **Hard read-only.** `edit`/`write` are _physically removed_ from the tool set
    (a guarantee, not advice), and `bash` is gated to read-only commands.
-7. **Auto tool-preservation.** Plan mode must keep `worktree_*`/`memory_*`/`mcp`/
+9. **Auto tool-preservation.** Plan mode must keep `worktree_*`/`memory_*`/`mcp`/
    `scratchpad` available **without per-session reconfiguration** (the worktree
    workflow is mandatory). Tools are preserved by _subtracting_ `edit`/`write`,
    never by replacing the set with a hardcoded list.
-8. **Plans synced to disk.** The model can persist its plan even though
-   `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
-   is unaffected (`memory_*` tools are preserved).
-9. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
-10. **Surface the plan in the TUI.** The plan must be shown to me automatically
+10. **Plans synced to disk.** The model can persist its plan even though
+    `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
+    is unaffected (`memory_*` tools are preserved).
+11. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
+12. **Surface the plan in the TUI.** The plan must be shown to me automatically
     when written (no manual `cat`/open), and it must cost **no extra LLM
     context** to do so. I must also be able to **re-view it on demand** later,
     likewise context-free.
@@ -55,6 +66,26 @@ types first.
 > defaults to a curated allowlist needing per-session re-selection. `pi-plan-modus`
 > gates its flag on `reason:"startup"` only → misses `/new`. So this is an owned
 > extension rather than a dependency.
+
+### Commands — select, cycle, then explicitly execute
+
+`/plan` and `/normal` are idempotent selectors, not toggles: repeated use leaves
+both state and tool snapshots intact. `/mode` is the only slash-command cycle;
+its argument parser accepts no abbreviation or fuzzy matching, so an accidental
+`/mode p` cannot leave a safe read-only session. Its autocomplete offers the two
+exact names only.
+
+All valid mode changes check `ctx.isIdle()` before changing tools or persisted
+state. `/mode` parses before that check so malformed input always has a useful
+answer, including while another run is active. Ctrl+Alt+P retains a convenient
+cycle shortcut but follows the same idle guard.
+
+`/execute` and `/implement` share one handler. It first selects normal mode, then
+calls `pi.sendUserMessage()` exactly once with `Implement the approved plan now.`
+and, if supplied, one trimmed `--- Additional implementation instructions ---`
+section. The transition is deliberately not rolled back if pi cannot start the
+turn: full tools and the absence of plan context must remain observable for a
+retry.
 
 ### Tool model — subtract, don't replace
 
@@ -157,22 +188,40 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 
 ## Files
 
-| File                           | Role                                                                                                                                               |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`                     | Extension entry: flag, tool preservation, `plan_write`, `/plan` toggle + shortcut, status widget, context injection, bash gating, session restore. |
-| `bash-safety.ts`               | Read-only bash analysis: shell-quote token check + regex fallback.                                                                                 |
-| `vendor/shell-quote-parse.cjs` | Vendored parser, fetched by chezmoi external (not committed).                                                                                      |
-| `../.chezmoiexternal.toml`     | Declares the shell-quote external (TTL refresh).                                                                                                   |
+| File                           | Role                                                                                                                                                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`                     | Extension entry: flag, idempotent mode transitions, `/plan`/`/normal`/`/mode`/`/execute`/`/implement`, tool preservation, `plan_write`, status, context injection, bash gating, and session restore. |
+| `bash-safety.ts`               | Read-only bash analysis: shell-quote token check + regex fallback.                                                                                                                                   |
+| `vendor/shell-quote-parse.cjs` | Vendored parser, fetched by chezmoi external (not committed).                                                                                                                                        |
+| `../.chezmoiexternal.toml`     | Declares the shell-quote external (TTL refresh).                                                                                                                                                     |
 
 ## Verification matrix
 
 - Fresh `tui`/`rpc` start, `/new` → plan mode on; first user message becomes session name.
 - `json` subagent and `print` one-shot → plan mode inert; write/edit stay available.
 - `/resume` → state restored, no injected `/plan`.
-- `--no-plan` → starts off; `/plan` → toggles.
+- `--no-plan` → starts off; `/plan` enters plan mode and remains there when repeated; `/normal` enters normal mode and remains there when repeated. Neither starts an agent turn.
+- `/mode` → cycles; `/mode PLAN` and `/mode normal` select explicitly; `/mode p`, `/mode plan extra`, and other malformed inputs preserve state and report exact-name usage. Completion offers only `plan` and `normal`.
+- Valid `/plan`, `/normal`, `/mode`, `/execute`, and `/implement` while busy preserve state and warn. Invalid `/mode` arguments warn about parsing before checking busy state.
+- `/execute [instructions]` and `/implement [instructions]` select normal mode and emit exactly one `pi.sendUserMessage` kickoff. Optional instructions appear once under `--- Additional implementation instructions ---`; a kickoff failure reports an error and leaves normal mode selected.
 - In plan mode: `edit`/`write` absent; `worktree_*`/`memory_*`/`mcp` present;
   mutating bash blocked, read-only bash allowed; `plan_write` writes
   `~/.pi/agent/plans/<sessionId>.md` **and** renders the plan as Markdown inline
   (model-facing result stays `Plan saved to <path>`).
 - `/plan-show` (Ctrl+Alt+V) opens the saved plan in a full-screen, scrollable
   Markdown pager (out of context); missing/empty plan → a warning notification.
+
+## Automated coverage and harness boundary
+
+`.tests/pi/plan_mode_runtime_harness.mjs` loads the real TypeScript extension
+through Pi's bundled Jiti loader. It records the public `ExtensionAPI`
+registrations, then invokes command and context handlers with controlled mode,
+tool, persistence, and message-delivery state. The pytest wrapper runs it
+without an LLM turn.
+
+The harness verifies idempotent `/plan` and `/normal` selection, preservation
+of tools added by another extension, exact `/mode` parsing and completions,
+busy-agent rejection, `/execute`/`/implement` ordering and error behavior, and
+structured plus legacy plan-context de-duplication. It is intentionally a small
+API mock: Pi's interactive/RPC modes cannot reliably hold an agent busy or
+intercept `sendUserMessage()` without starting a real provider request.

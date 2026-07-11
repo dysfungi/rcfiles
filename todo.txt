@@ -34,3 +34,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (B) Investigate @rezamonangg/pi-worktree linked-worktree startup EEXIST: attempts mkdir on worktree .git file despite successful execution +pi +worktree @bug
 (B) Fix pi worktree-guard false positive when a read-only Python command contains literal > in a regex +pi +worktree @bug
 (B) Refactor skill/subagent templating: extract reusable bodies from my-planning and my-code-review into shared partials; compose pi planner/reviewer agent definitions from them plus pi-specific frontmatter and delegation contracts +pi +skills @follow-up
+(B) 2026-07-10 Implement Pi plan-mode command redesign +pi @worktree:feat/pi-mode-commands
