@@ -35,18 +35,18 @@
  *     model already generated (it's in context exactly once regardless), while
  *     the model-facing tool result stays the short `Plan saved to <path>`.
  *
- *   - Re-view on demand: `/plan-show` (and Ctrl+Alt+V) renders the current
- *     session's plan file into the transcript as Markdown via a custom entry
- *     (`pi.appendEntry` + `registerEntryRenderer`). Custom entries do NOT
- *     participate in LLM context, so re-viewing is also free. Works in any
- *     mode; snapshots the plan as it was when shown.
+ *   - Re-view on demand: `/plan-show` (and Ctrl+Alt+V) opens a full-screen,
+ *     scrollable Markdown pager for the current session's plan. The pager is
+ *     TUI-only and never enters LLM context. Non-TUI modes retain a custom
+ *     transcript entry (`pi.appendEntry` + `registerEntryRenderer`), which also
+ *     does NOT participate in LLM context.
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { defineTool, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
-import { Box, Key, Markdown, Text } from "@earendil-works/pi-tui";
+import { Box, Key, Markdown, Text, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -140,7 +140,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	// Show the current session's plan file on demand, out of LLM context.
-	function showPlan(ctx: ExtensionContext): void {
+	async function showPlan(ctx: ExtensionContext): Promise<void> {
 		const planFile = resolvePlanFile(ctx);
 		let content: string;
 		try {
@@ -153,7 +153,76 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			ctx.ui.notify("Plan file is empty.", "warning");
 			return;
 		}
-		pi.appendEntry("plan-view", { content, path: planFile });
+
+		// Custom UI is only available in the interactive TUI. Preserve the prior
+		// context-free transcript entry as a useful fallback for other modes.
+		if (ctx.mode !== "tui") {
+			pi.appendEntry("plan-view", { content, path: planFile });
+			return;
+		}
+
+		await ctx.ui.custom<void>(
+			(tui, theme, _keybindings, done) => {
+				const markdown = new Markdown(content, 0, 0, getMarkdownTheme());
+				let offset = 0;
+				let width = tui.terminal.columns;
+
+				function pageHeight(): number {
+					return Math.max(1, tui.terminal.rows - 2); // Header + footer.
+				}
+
+				function lines(): string[] {
+					return markdown.render(width);
+				}
+
+				function clampOffset(renderedLines = lines()): void {
+					offset = Math.max(0, Math.min(offset, renderedLines.length - pageHeight()));
+				}
+
+				function surface(line: string): string {
+					const truncated = truncateToWidth(line, width);
+					return theme.bg("customMessageBg", `${truncated}${" ".repeat(Math.max(0, width - visibleWidth(truncated)))}`);
+				}
+
+				return {
+					render(nextWidth: number): string[] {
+						width = nextWidth;
+						const renderedLines = lines();
+						const visibleLines = pageHeight();
+						clampOffset(renderedLines);
+						const end = Math.min(offset + visibleLines, renderedLines.length);
+						const progress = `${offset + 1}-${end} / ${renderedLines.length}`;
+						const header = `${theme.bold(theme.fg("accent", "📋 Plan"))} ${theme.fg("muted", planFile)} ${theme.fg("dim", progress)}`;
+						const footer = theme.fg("dim", "↑↓/j/k scroll • PgUp/PgDn page • Home/End jump • Esc/q close");
+						const body = renderedLines.slice(offset, end);
+						while (body.length < visibleLines) body.push("");
+						return [surface(header), ...body.map(surface), surface(footer)];
+					},
+					invalidate(): void {
+						markdown.invalidate();
+					},
+					handleInput(data: string): void {
+						const renderedLines = lines();
+						const previousOffset = offset;
+						const page = pageHeight();
+						if (matchesKey(data, Key.escape) || matchesKey(data, "q")) {
+							done(undefined);
+							return;
+						}
+						if (matchesKey(data, Key.up) || matchesKey(data, "k")) offset -= 1;
+						else if (matchesKey(data, Key.down) || matchesKey(data, "j")) offset += 1;
+						else if (matchesKey(data, Key.pageUp)) offset -= page;
+						else if (matchesKey(data, Key.pageDown)) offset += page;
+						else if (matchesKey(data, Key.home)) offset = 0;
+						else if (matchesKey(data, Key.end)) offset = renderedLines.length;
+						else return;
+						clampOffset(renderedLines);
+						if (offset !== previousOffset) tui.requestRender();
+					},
+				};
+			},
+			{ overlay: true, overlayOptions: { width: "100%", maxHeight: "100%", margin: 0 } },
+		);
 	}
 
 	function updateStatus(ctx: ExtensionContext): void {
@@ -205,7 +274,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.registerCommand("plan-show", {
-		description: "Show this session's saved plan in the transcript (out of context)",
+		description: "Open this session's saved plan in a full-screen pager (out of context)",
 		handler: async (_args, ctx) => showPlan(ctx),
 	});
 
@@ -215,7 +284,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.registerShortcut(Key.ctrlAlt("v"), {
-		description: "Show this session's saved plan",
+		description: "Open this session's saved plan in a full-screen pager",
 		handler: async (ctx) => showPlan(ctx),
 	});
 
