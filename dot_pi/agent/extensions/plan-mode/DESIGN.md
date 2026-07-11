@@ -42,7 +42,7 @@ evaluated, and why each decision was made, so the context lives next to the code
 ### Default-on mechanism — interactive-root mode gate
 
 The `plan` flag is registered with `default: true`. `session_start` enables plan
-mode only when `ctx.mode` is `tui` or `rpc`; `json` workers and `print` one-shots
+mode only when `ctx.mode` is `tui` or `rpc`; `json` workers, `print` one-shots, and children marked `PI_SUBAGENT=1`
 return before parser loading, state restoration, or tool-set mutation. In root
 modes, both `reason:"startup"` (fresh) and `reason:"new"` (`/new`) start in
 plan mode. CLI argv is applied after registration, so `--no-plan` wins. No

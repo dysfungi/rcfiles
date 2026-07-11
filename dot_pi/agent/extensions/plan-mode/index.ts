@@ -52,7 +52,7 @@ import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } from "./bash-safety.ts";
-import { isInteractiveRootMode } from "./mode.mjs";
+import { isPlanModeEnabled } from "./mode.mjs";
 
 const PLAN_WRITE_TOOL = "plan_write";
 // Read-only tools ensured active in plan mode, plus the scoped plan writer.
@@ -334,7 +334,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	// JSON subagents and print-mode one-shots must stay writable: their parent
 	// delegates execution precisely to keep that tool work out of root context.
 	pi.on("session_start", async (_event, ctx) => {
-		if (!isInteractiveRootMode(ctx.mode)) {
+		if (!isPlanModeEnabled(ctx.mode)) {
 			planModeEnabled = false;
 			toolsBeforePlanMode = undefined;
 			updateStatus(ctx);
