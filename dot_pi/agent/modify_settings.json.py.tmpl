@@ -1,0 +1,251 @@
+#!/usr/bin/env -S uv run --script --no-project
+# vim: ft=gotmpl.python
+{{- /* https://pi.dev/docs/latest/settings */}}
+{{- /* defaultModel/defaultProvider/enabledModels are DERIVED from the central
+       catalog .chezmoidata/large-language-models.yaml (see private_models.json.tmpl).
+       defaultModel = the entry with `pi` in default_for; defaultProvider = its
+       gateway.provider (or vendor for a built-in). enabledModels = every enabled
+       entry, in catalog list order (= Ctrl+P cycling order). Older/[1m] models
+       stay reachable via /model. */}}
+{{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+{{ includeTemplate "llm/validate.tmpl" $ns -}}
+{{- $default := "" -}}
+{{- $defaultProvider := "" -}}
+{{- $enabled := list -}}
+{{- range $m := $ns.models -}}
+  {{- if and (hasKey $m "default_for") (has "pi" $m.default_for) -}}
+    {{- $default = $m.id -}}
+    {{- $defaultProvider = (hasKey $m "gateway") | ternary (dig "gateway" "provider" "" $m) $m.vendor -}}
+  {{- end -}}
+  {{- if $m.enabled -}}{{- $enabled = append $enabled $m.id -}}{{- end -}}
+{{- end -}}
+{{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
+{{- /* pi stores a provider-qualified model in enabledModels, but defaultModel
+       must be the bare id because defaultProvider is emitted separately. */ -}}
+{{- $defaultModel := trimPrefix (printf "%s/" $defaultProvider) $default }}
+
+"""Merge managed Pi preferences into Pi-owned runtime settings state.
+
+Pi updates ``lastChangelogVersion`` and may add other runtime state to this
+file. This narrow ``modify_`` script preserves that state while overwriting
+only the durable preferences declared below. Chezmoi supplies the existing
+target file on stdin and installs stdout at the same target path.
+
+Every decoded JSON number becomes a finite IEEE-754 double so output follows
+JavaScript ``Number`` and ``JSON.stringify`` semantics. Non-finite values fail
+rather than following Pi's lossy ``Infinity → null`` serialization: preserving
+runtime state must never silently change a numeric value to ``null``.
+"""
+import json
+import math
+import sys
+from typing import Any, NoReturn
+
+MAX_ARRAY_INDEX = 2**32 - 2
+
+MANAGED: dict[str, Any] = {
+    "defaultModel": {{ $defaultModel | quote }},
+    "defaultProvider": {{ $defaultProvider | quote }},
+    "enabledModels": {{ $enabled | mustToJson }},
+    "packages": [
+        "npm:@rezamonangg/pi-worktree",
+        "npm:pi-mcp-adapter",
+        "npm:pi-memory",
+        "npm:pi-vimmode",
+    ],
+    "defaultProjectTrust": "always",
+    "defaultThinkingLevel": "high",
+    "hideThinkingBlock": False,
+    "showCacheMissNotices": True,
+    "theme": "dark",
+}
+
+
+def reject_nonstandard_constant(constant: str) -> NoReturn:
+    """Reject JavaScript-incompatible values accepted by Python's JSON decoder."""
+    raise ValueError(f"non-standard JSON constant {constant!r}")
+
+
+def parse_json_number(token: str) -> float:
+    """Decode a JSON number as a finite ECMAScript ``Number`` value."""
+    value = float(token)
+    if not math.isfinite(value):
+        raise ValueError(f"non-finite JSON number {token!r}")
+    return value
+
+
+def read_settings(stdin: str) -> dict[str, Any]:
+    """Decode Pi settings, rejecting malformed data rather than discarding it."""
+    if not stdin.strip():
+        return {}
+
+    try:
+        settings = json.loads(
+            stdin,
+            parse_constant=reject_nonstandard_constant,
+            parse_float=parse_json_number,
+            parse_int=parse_json_number,
+        )
+    except json.JSONDecodeError as error:
+        raise SystemExit(f"pi settings: invalid JSON: {error.msg}") from error
+    except ValueError as error:
+        raise SystemExit(f"pi settings: invalid JSON: {error}") from error
+
+    if not isinstance(settings, dict):
+        raise SystemExit("pi settings: JSON root must be an object")
+    return settings
+
+
+def array_index(key: str) -> int | None:
+    """Return a canonical ECMAScript array-index property name, if applicable."""
+    if not key.isascii() or not key.isdecimal():
+        return None
+
+    index = int(key)
+    if index > MAX_ARRAY_INDEX or str(index) != key:
+        return None
+    return index
+
+
+def reorder_for_javascript(value: Any) -> Any:
+    """Match ``JSON.stringify`` property order without changing JSON values."""
+    if isinstance(value, list):
+        return [reorder_for_javascript(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+
+    array_indices: list[tuple[int, str, Any]] = []
+    string_keys: list[tuple[str, Any]] = []
+    for key, item in value.items():
+        item = reorder_for_javascript(item)
+        index = array_index(key)
+        if index is None:
+            string_keys.append((key, item))
+        else:
+            array_indices.append((index, key, item))
+
+    ordered_items = [
+        (key, item)
+        for _, key, item in sorted(
+            array_indices, key=lambda indexed_item: indexed_item[0]
+        )
+    ]
+    ordered_items.extend(string_keys)
+    return dict(ordered_items)
+
+
+def serialize_string(value: str) -> str:
+    """Serialize a string like JavaScript, escaping only lone UTF-16 halves."""
+    escaped: list[str] = ['"']
+    for character in value:
+        code_point = ord(character)
+        if character == '"':
+            escaped.append('\\"')
+        elif character == "\\":
+            escaped.append("\\\\")
+        elif character == "\b":
+            escaped.append("\\b")
+        elif character == "\t":
+            escaped.append("\\t")
+        elif character == "\n":
+            escaped.append("\\n")
+        elif character == "\f":
+            escaped.append("\\f")
+        elif character == "\r":
+            escaped.append("\\r")
+        elif code_point < 0x20 or 0xD800 <= code_point <= 0xDFFF:
+            escaped.append(f"\\u{code_point:04x}")
+        else:
+            escaped.append(character)
+    escaped.append('"')
+    return "".join(escaped)
+
+
+def expand_scientific(coefficient: str, exponent: int) -> str:
+    """Expand a Python float repr into JavaScript's decimal-number range."""
+    negative = coefficient.startswith("-")
+    coefficient = coefficient.removeprefix("-")
+    whole, _, fractional = coefficient.partition(".")
+    digits = whole + fractional
+    decimal_position = len(whole) + exponent
+
+    if decimal_position <= 0:
+        rendered = "0." + "0" * -decimal_position + digits
+    elif decimal_position >= len(digits):
+        rendered = digits + "0" * (decimal_position - len(digits))
+    else:
+        rendered = digits[:decimal_position] + "." + digits[decimal_position:]
+    return "-" + rendered if negative else rendered
+
+
+def serialize_float(value: float) -> str:
+    """Serialize finite floats using JSON.stringify's decimal/exponent cutoffs."""
+    if not math.isfinite(value):
+        raise ValueError("non-finite JSON number")
+    if value == 0:
+        return "0"
+
+    rendered = repr(value)
+    if "e" not in rendered:
+        return rendered.removesuffix(".0")
+
+    coefficient, exponent = rendered.split("e")
+    exponent_value = int(exponent)
+    if 1e-6 <= abs(value) < 1e21:
+        return expand_scientific(coefficient, exponent_value)
+
+    coefficient = coefficient.removesuffix(".0")
+    exponent_sign = "+" if exponent_value >= 0 else "-"
+    return f"{coefficient}e{exponent_sign}{abs(exponent_value)}"
+
+
+def serialize_json(value: Any, level: int = 0) -> str:
+    """Serialize valid Pi JSON with two-space indentation and no final newline."""
+    if value is None:
+        return "null"
+    if value is True:
+        return "true"
+    if value is False:
+        return "false"
+    if isinstance(value, str):
+        return serialize_string(value)
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return serialize_float(value)
+    if isinstance(value, list):
+        if not value:
+            return "[]"
+        indentation = "  " * level
+        child_indentation = "  " * (level + 1)
+        items = [
+            child_indentation + serialize_json(item, level + 1) for item in value
+        ]
+        return "[\n" + ",\n".join(items) + "\n" + indentation + "]"
+    if isinstance(value, dict):
+        if not value:
+            return "{}"
+        indentation = "  " * level
+        child_indentation = "  " * (level + 1)
+        items = [
+            f"{child_indentation}{serialize_string(key)}: "
+            f"{serialize_json(item, level + 1)}"
+            for key, item in value.items()
+        ]
+        return "{\n" + ",\n".join(items) + "\n" + indentation + "}"
+    raise TypeError(f"unsupported JSON value: {type(value).__name__}")
+
+
+def main() -> None:
+    settings = read_settings(sys.stdin.read())
+    settings.update(MANAGED)
+    settings = reorder_for_javascript(settings)
+    try:
+        rendered = serialize_json(settings)
+    except (TypeError, ValueError) as error:
+        raise SystemExit(f"pi settings: cannot serialize JSON: {error}") from error
+    sys.stdout.write(rendered)
+
+
+if __name__ == "__main__":
+    main()
