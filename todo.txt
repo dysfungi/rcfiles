@@ -1,10 +1,6 @@
-2026-07-10 Strengthen my-git rule: do not ask permission for routine worktree commits +chezmoi +skills @worktree:.worktree/fix/my-git-auto-commit session:019f4e90-06b6-7b3f-8b47-800e956bc4b1 agent:pi model:claude-opus-4-8
-(A) 2026-07-09 Fix Windows chezmoi apply crash (gate memory SSH external) + add native-Windows SSH keygen/registration +chezmoi @worktree:.worktree/fix/windows-chezmoi-ssh session:019f48e6-b4d9-79b0-b516-e7366aa4dc88 agent:pi model:claude-opus-4
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
 (B) Add skills lazy-loading + compact instructions +context @worktree:.claude/worktrees/5e6a8e0d-838d-432c-87a4-8c1634e2098e.context-skills session:5e6a8e0d-838d-432c-87a4-8c1634e2098e agent:claude model:claude-vertex/anthropic-claude-opus-4-6
-(A) Fix brew bundle force-cleanup flag +chezmoi @worktree:.claude/worktrees/2296fd15-3227-4451-ac45-b1e45a291b20.brew-bundle-force-cleanup session:2296fd15-3227-4451-ac45-b1e45a291b20 agent:claude-code model:claude-opus-4-7
 (B) Harden worktree_check.py: use CLAUDE_PROJECT_DIR fallback when git rev-parse --show-toplevel fails (transient core.bare race blocks all writes) +chezmoi @bug
-(B) 2026-05-19 Investigate GITHUB_TOKEN not being read from [github] config for gitHubLatestReleaseAssetURL externals — must set env var manually for now +chezmoi @bug
 (B) 2026-05-19 Two-repo situation (Windows /mnt/c/ source + WSL ~/  source) causes rebase friction; evaluate making WSL source canonical for this machine +chezmoi @architecture
 (D) Explore codecompanion.nvim with Slack MCP for in-editor triage view +riot-slack +neovim
 (D) Explore mcpchat.nvim as lightweight MCP chat interface in Neovim +riot-slack +neovim
@@ -14,30 +10,17 @@
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
 (C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
-(B) Fix parsec chezmoi update on Windows: uv bootstrap + interpreter config +chezmoi @worktree:.claude/worktrees/64a8bd55-c321-4f6c-9551-af22b4547f43.parsec-uv-fix session:64a8bd55-c321-4f6c-9551-af22b4547f43 agent:claude model:claude-vertex/anthropic-claude-sonnet-4-6-default
 Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cleanup Stop hooks, make todo.txt tracking optional, relax   ff-only requirement +chezmoi +backlog
-2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
 (B) style(codex) private_config.toml.tmpl inline-comment padding (~L20-21) is now unvalidatable: private_+onepasswordRead templates are hard-skipped by validate-chezmoi-templates, so taplo never runs on that file; fix path is stub-onepasswordRead rendering so structured private configs get format validation without real secrets +tooling
-(B) Add Gemini models to pi harness +pi @worktree:.claude/worktrees/8caddfd6-7d62-4a1d-b0fa-218bf7a22704.pi-gemini session:8caddfd6-7d62-4a1d-b0fa-218bf7a22704 agent:claude model:claude-opus-4-8
-(B) Convert agent instructions into my-* skills +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.agents-to-skills session:0beb48b4 agent:claude model:claude-opus-4-8
-(A) Fix YAML colon-space breaking skill descriptions +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-desc-yaml-fix session:0beb48b4 agent:claude model:claude-opus-4-8
-(C) Rename therapy→my-therapy, p4-workflow→my-perforce +skills @worktree:.claude/worktrees/0beb48b4-c83c-4325-99da-c42831e558ad.skill-renames session:0beb48b4 agent:claude model:claude-opus-4-8
-(C) Enforce agy enableTelemetry via modify_ script +antigravity @worktree:.claude/worktrees/248a100a-9879-4cff-8732-eea60a43ca12.agy-telemetry session:248a100a agent:claude model:claude-opus-4-8
 (C) packages: decide keep-or-remove orphaned pytest {pip: pytest} in .chezmoidata/packages.yaml now that tests resolve via uv --group test +packages
-(B) Make agent skills reliably source per mode + add ExitPlanMode self-review gate hook +skill-sourcing-fix @worktree:.claude/worktrees/1e216906-cf39-417b-a780-b0f19f06b0bb.skill-sourcing-fix
 (C) Add run_onchange_ drift check for ~/.claude/skills sync (currently manual-apply-only) +skill-sourcing-fix
-2026-07-01 my-planning template: rules + emoji + UPPERCASE section headings for terminal-plan-box scannability @my-planning +worktree-planning-heading-style
-(B) 2026-07-01 feat(my-git): let agents tidy their own worktree without human handoff (rebase + force-with-lease carve-out) + harden force-push deny +chezmoi +skills @worktree:.claude/worktrees/67aba131-b2e6-4df2-ae26-9dd13d3a4e8c.worktree-git-tidy-exemption session:67aba131-b2e6-4df2-ae26-9dd13d3a4e8c agent:claude model:claude-opus-4-8
 (C) 2026-07-01 codex & gemini render the my-git worktree-tidy exemption but have no worktree guard hook (only Claude + Pi do); their protection against rewriting main is instruction-only — add a guard or a stricter default-approval policy +skills +security
 (C) 2026-07-01 Robust force-push-to-main protection needs a hook — glob deny rules are leaky against flag reordering (git push origin main -f, combined -fu); the deny list only covers leading --force/-f forms +security +tooling
 (B) 2026-07-01 validate-chezmoi-templates still renders non-private_ onepasswordRead-bearing templates (dot_dogrc, dot_claude/settings.json, ...) transiently during validation — private_ + onepasswordRead basenames are now hard-skipped; stub onepasswordRead at render time so real secrets are never rendered +security +tooling
 (C) 2026-07-01 validate-chezmoi-templates config path runs chezmoi init, which writes resolved 1Password tokens in cleartext to the real chezmoi config (outside .tmp/, uncontrolled by this hook); investigate whether validation should mutate the real config at all +security +tooling
-(C) 2026-07-01 rename my-executing skill → my-execution + reword description (lead with onset verb + both mode phrases) + my-planning plan-exit pointer to my-execution +skills +worktree-rename-my-execution
 (C) 2026-07-02 Add declarative removal to pip/xontrib sync scripts — stage-40 sync is install-only, so xontrib-1password stayed pip-installed after its removal from packages.yaml (uninstalled manually 2026-07-02) +packages +tooling
 (C) 2026-07-02 .zsh/system/path.zsh:1 puts relative ./bin at the head of PATH — security smell (directory-dependent binary resolution); scope it out and remove or justify +zsh +security
 (B) 2026-07-02 Remove nvim termsync-in-tmux workaround once tmux fixes DEC 2026 redraw deferral (>3.7b) +nvim +tmux
-(B) 2026-07-02 Fix nvim stale rendering under tmux 3.7b: disable termsync inside tmux +nvim +tmux @worktree:.claude/worktrees/1d229491-a800-4968-90ba-543fd927fbcc.nvim-termsync-tmux-fix session:1d229491-a800-4968-90ba-543fd927fbcc agent:claude model:claude-fable-5
-(B) 2026-07-02 my-git skill: PR reviewer-feedback reply/never-resolve policy +skills @worktree:.claude/worktrees/40b74e35-4a57-4eff-a86f-8230a6067e5b.my-git-pr-feedback session:40b74e35-4a57-4eff-a86f-8230a6067e5b agent:claude model:claude-fable-5
 (B) 2026-07-02 Fix bash_worktree_guard.py redirect-regex false positive: fires on literal >/< anywhere in the command string (e.g. inside quoted --body "a > b" or quoted help text), not just real shell redirects +chezmoi @bug
 (C) 2026-07-02 Move skill-frontmatter contract check (.tests/chezmoitemplates/test_skill_frontmatter.py) out of pytest into a pure linter — extend validate-chezmoi-templates or add a dedicated pre-commit hook, then drop the pytest file +skills +tooling
 (C) 2026-07-02 Namespace remaining flat .tests files: test_bash_worktree_guard.py, test_worktree_check.py, test_worktree_create_validate.py → claude-hooks/; test_todo_config_discovery.py → todo/; test_no_stale_secret_refs.py → repo/ (cross-cutting) +testing +tooling
@@ -45,12 +28,7 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-02 Revisit full agent commit authorship (GIT_AUTHOR_*) if codex/agy/pi gain native env-injection support +skills +tooling
 (B) 2026-07-02 Implement agent GitHub machine-user identity wiring (Phases 2-4) +skills +tooling @worktree:.claude/worktrees/40b74e35-4a57-4eff-a86f-8230a6067e5b.agent-github-identity session:40b74e35-4a57-4eff-a86f-8230a6067e5b agent:claude model:claude-fable-5
 (C) 2026-07-02 Retire/revoke the old Derek AI PAT item op://CLI/GitHub Token - AI (orphaned once the agent machine-user PAT lands via PR #24) +security +tooling
-(B) 2026-07-10 Central LLM catalog (large-language-models.yaml) → pi/codex/claude/agy/ollama +chezmoi +pi @worktree:.worktree/feat/llm-catalog session:019f48e7-6508-7086-b9f7-bf8aa6f417cb agent:pi model:claude-vertex/anthropic-claude-opus-4-8
 (C) 2026-07-10 Wire agy (Antigravity CLI) default model from large-language-models.yaml default_for:[agy] once agy exposes a settings.json model key (today: only --model per-session flag + agy-managed LastSelectedModel; no config-file default) +antigravity +llm
-(C) 2026-07-10 Add a full-screen pager for pi plan-mode plans +pi @worktree:.worktree/feat/pi-plan-pager session:019f4e82-454b-7c42-8206-ae465e1033f0 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
-Downgrade pre-commit Prettier to latest v3; run all hooks and fix formatting +chezmoi +pre-commit @worktree:.worktree/fix/prettier-v3 session:019f4eac-c391-72cc-982e-bb89153cead4 agent:pi
-Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
-(B) Implement pi context-discipline root-thread guard, catalog-driven official subagents, and plan-mode JSON gating +chezmoi +pi @worktree:.worktree/feat/pi-context-discipline session:019f4dd5-bcd1-727c-ad9f-89567055dcd5 agent:pi model:unknown
 (B) Evaluate cross-harness reusable subagent-definition Markdown: separate pi frontmatter from shared role prompts and document the boundary versus skills (PR #36 review thread) +pi +skills @follow-up
 (B) Fix pi settings.json.tmpl app-state drift: lastChangelogVersion changes on pi upgrades and blocks noninteractive chezmoi apply +pi +chezmoi @follow-up
 (B) Investigate @rezamonangg/pi-worktree linked-worktree startup EEXIST: attempts mkdir on worktree .git file despite successful execution +pi +worktree @bug
