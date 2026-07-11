@@ -1,3 +1,4 @@
+x 2026-07-11 Fix pi settings app-state drift: preserve lastChangelogVersion during noninteractive chezmoi apply +pi +chezmoi @worktree:.worktree/fix/pi-settings-state-ownership
 x 2026-06-26 Default-on plan mode for pi via owned extension: shell-quote bash safety + scoped plan_write +pi @worktree:.worktree/fix/pi-plan-mode-default agent:pi model:claude-opus-4
 x 2026-07-10 Render plan_write plan as Markdown in the TUI (zero context) +pi @worktree:.worktree/feat/pi-plan-render session:019f4e82-454b-7c42-8206-ae465e1033f0 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
 x 2026-05-19 2026-05-19 (B) Fix GITHUB_TOKEN not being used by chezmoi GitHub template functions — renamed to CHEZMOI_GITHUB_ACCESS_TOKEN via WSLENV +chezmoi @bug
