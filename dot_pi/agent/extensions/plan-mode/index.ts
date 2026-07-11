@@ -34,15 +34,21 @@
  *     ZERO extra LLM context — it renders `context.args.content`, which the
  *     model already generated (it's in context exactly once regardless), while
  *     the model-facing tool result stays the short `Plan saved to <path>`.
+ *
+ *   - Re-view on demand: `/plan-show` (and Ctrl+Alt+V) renders the current
+ *     session's plan file into the transcript as Markdown via a custom entry
+ *     (`pi.appendEntry` + `registerEntryRenderer`). Custom entries do NOT
+ *     participate in LLM context, so re-viewing is also free. Works in any
+ *     mode; snapshots the plan as it was when shown.
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { defineTool, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
-import { Key, Markdown, Text } from "@earendil-works/pi-tui";
+import { Box, Key, Markdown, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } from "./bash-safety.ts";
 
@@ -123,6 +129,33 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		}),
 	);
 
+	// Renders a `/plan-show` snapshot into the transcript. Custom entries do NOT
+	// participate in LLM context, so re-viewing the plan is also context-free.
+	pi.registerEntryRenderer("plan-view", (entry, _opts, theme) => {
+		const data = entry.data as { content?: string; path?: string } | undefined;
+		const box = new Box(0, 0);
+		box.addChild(new Text(theme.fg("muted", `📋 plan: ${data?.path ?? "(unknown)"}`)));
+		box.addChild(new Markdown(data?.content ?? "(empty)", 0, 0, getMarkdownTheme()));
+		return box;
+	});
+
+	// Show the current session's plan file on demand, out of LLM context.
+	function showPlan(ctx: ExtensionContext): void {
+		const planFile = resolvePlanFile(ctx);
+		let content: string;
+		try {
+			content = readFileSync(planFile, "utf8");
+		} catch {
+			ctx.ui.notify("No plan saved yet for this session (use plan_write first).", "warning");
+			return;
+		}
+		if (!content.trim()) {
+			ctx.ui.notify("Plan file is empty.", "warning");
+			return;
+		}
+		pi.appendEntry("plan-view", { content, path: planFile });
+	}
+
 	function updateStatus(ctx: ExtensionContext): void {
 		ctx.ui.setStatus("plan-mode", planModeEnabled ? ctx.ui.theme.fg("warning", "⏸ plan") : undefined);
 	}
@@ -171,9 +204,19 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		handler: async (_args, ctx) => togglePlanMode(ctx),
 	});
 
+	pi.registerCommand("plan-show", {
+		description: "Show this session's saved plan in the transcript (out of context)",
+		handler: async (_args, ctx) => showPlan(ctx),
+	});
+
 	pi.registerShortcut(Key.ctrlAlt("p"), {
 		description: "Toggle plan mode",
 		handler: async (ctx) => togglePlanMode(ctx),
+	});
+
+	pi.registerShortcut(Key.ctrlAlt("v"), {
+		description: "Show this session's saved plan",
+		handler: async (ctx) => showPlan(ctx),
 	});
 
 	// Block mutating bash commands while plan mode is active.

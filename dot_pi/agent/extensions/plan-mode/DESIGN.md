@@ -29,7 +29,8 @@ evaluated, and why each decision was made, so the context lives next to the code
 8. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
 9. **Surface the plan in the TUI.** The plan must be shown to me automatically
    when written (no manual `cat`/open), and it must cost **no extra LLM
-   context** to do so.
+   context** to do so. I must also be able to **re-view it on demand** later,
+   likewise context-free.
 
 ## Decisions
 
@@ -102,6 +103,16 @@ Full render is intentional (not gated behind `expanded`): the whole point is to
 see the plan without a manual step; `plan_write` is called deliberately, so
 inline full render is not noisy. A partial/empty-args guard shows `Saving plan…`.
 
+**Re-view on demand — `/plan-show` (Ctrl+Alt+V).** Renders the current session's
+plan file into the transcript via a custom entry (`pi.appendEntry("plan-view")` +
+`registerEntryRenderer`). Custom entries do **not** participate in LLM context,
+so re-viewing is also free. It reuses the same `Markdown` rendering, snapshots
+the plan as it was when shown, works in any mode (it just reads the file), and
+relies on the transcript's own scrolling rather than a bespoke pager. Missing/
+empty plan → a `notify` warning instead of an empty entry. A `ctx.ui.custom()`
+overlay pager was considered but rejected: more code (scroll + key handling) for
+no real gain over transcript scrollback.
+
 ### Bash read-only enforcement — shell-quote tokenizer, regex fallback
 
 Bash stays available for inspection but is gated. The check **tokenizes with
@@ -150,3 +161,5 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
   mutating bash blocked, read-only bash allowed; `plan_write` writes
   `~/.pi/agent/plans/<sessionId>.md` **and** renders the plan as Markdown inline
   (model-facing result stays `Plan saved to <path>`).
+- `/plan-show` (Ctrl+Alt+V) renders the saved plan into the transcript as
+  Markdown (out of context); missing/empty plan → a warning notification.
