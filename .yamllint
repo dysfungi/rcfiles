@@ -15,8 +15,4 @@ rules:
   # Single-space inline comments are used in large-language-models.yaml.
   comments:
     min-spaces-from-content: 1
-  # Flow mappings with single spaces { like: this } are allowed.
-  braces:
-    min-spaces-inside: 0
-    max-spaces-inside: 1
   comments-indentation: disable
