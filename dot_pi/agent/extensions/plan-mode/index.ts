@@ -12,10 +12,12 @@
  *     start in plan mode there. Spawned `json` workers, one-shot `print`
  *     invocations, and processes marked `PI_SUBAGENT=1` stay inert so delegated
  *     workers retain write/edit capability. No injected `/plan` message, startup
- *     turn, or session rename; `--no-plan` opts out. `/plan` selects plan mode,
+ *     turn, or session rename; the internal default starts eligible sessions in
+ *     plan mode. `/plan` selects plan mode,
  *     `/normal` selects normal mode, and `/mode [plan|normal]` selects or cycles
- *     modes. `/execute` and `/implement` select normal mode and send one
- *     implementation kickoff.
+ *     modes. `/execute` selects normal mode and sends one implementation kickoff.
+ *     `/implement` is intentionally unregistered here: its prompt template owns
+ *     the scout → planner → worker implementation workflow.
  *
  *   - Tool preservation: plan mode = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
@@ -46,8 +48,6 @@
  *     does NOT participate in LLM context.
  */
 
-import type { AgentMessage } from "@earendil-works/pi-agent-core";
-import type { TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { defineTool, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
 import { Box, Key, Markdown, Text, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
@@ -102,7 +102,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	let toolsBeforePlanMode: string[] | undefined;
 
 	pi.registerFlag("plan", {
-		description: "Start in plan mode (read-only exploration). Default: on; use --no-plan to opt out.",
+		description: "Internal default: eligible interactive root sessions start in read-only plan mode.",
 		type: "boolean",
 		default: true,
 	});
@@ -312,8 +312,8 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			: IMPLEMENTATION_KICKOFF;
 	}
 
-	function startImplementation(command: string, args: string, ctx: ExtensionContext): void {
-		if (!requireIdle(ctx, command)) return;
+	function startImplementation(args: string, ctx: ExtensionContext): void {
+		if (!requireIdle(ctx, "execute")) return;
 
 		// Transition first and never roll it back: even a failed kickoff must leave
 		// full tools visible and plan-mode context disabled for the next attempt.
@@ -360,12 +360,10 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		},
 	});
 
-	for (const command of ["execute", "implement"]) {
-		pi.registerCommand(command, {
-			description: "Leave plan mode and start implementing the approved plan",
-			handler: async (args, ctx) => startImplementation(command, args, ctx),
-		});
-	}
+	pi.registerCommand("execute", {
+		description: "Leave plan mode and start implementing the approved plan",
+		handler: async (args, ctx) => startImplementation(args, ctx),
+	});
 
 	pi.registerCommand("plan-show", {
 		description: "Open this session's saved plan in a full-screen pager (out of context)",
@@ -400,18 +398,21 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		}
 	});
 
-	// Context may include legacy user-text injections from older extension
-	// versions. Treat them exactly like the structured injection so a mode
-	// round-trip cannot send conflicting instructions to the provider.
+	// Structured context is extension-owned. Older sessions may contain the
+	// exact unstructured injection that preceded customType; preserve its cleanup
+	// without treating an ordinary user quote of the marker as extension context.
 	pi.on("context", async (event) => {
-		const isPlanModeContext = (message: AgentMessage): boolean => {
-			const msg = message as AgentMessage & { customType?: string };
-			if (msg.customType === "plan-mode-context") return true;
-			if (msg.role !== "user") return false;
-			const content = msg.content;
-			if (typeof content === "string") return content.includes("[PLAN MODE ACTIVE]");
-			return Array.isArray(content) && content.some((item) => item.type === "text" && (item as TextContent).text?.includes("[PLAN MODE ACTIVE]"));
-		};
+		const isPlanModeContext = (message: {
+			customType?: unknown;
+			role?: unknown;
+			content?: unknown;
+			display?: unknown;
+		}): boolean =>
+			message.customType === "plan-mode-context" ||
+			(message.customType === undefined &&
+				message.role === "user" &&
+				message.content === PLAN_CONTEXT &&
+				message.display === false);
 
 		if (planModeEnabled) {
 			const newestPlanContext = event.messages.findLastIndex(isPlanModeContext);
@@ -445,7 +446,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		if (pi.getFlag("plan") === true) planModeEnabled = true;
 
 		const planModeEntry = ctx.sessionManager
-			.getEntries()
+			.getBranch()
 			.filter((e: { type: string; customType?: string }) => e.type === "custom" && e.customType === "plan-mode")
 			.pop() as { data?: PlanModeState } | undefined;
 		if (planModeEntry?.data) {

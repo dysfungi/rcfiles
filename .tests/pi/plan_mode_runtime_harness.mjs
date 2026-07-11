@@ -31,7 +31,7 @@ const jiti = createJiti(import.meta.url, {
 });
 const { default: planModeExtension } = await jiti.import(resolve(extensionPath));
 
-function createHarness({ entries = [], idle = true, sendFailure } = {}) {
+function createHarness({ entries = [], branchEntries = entries, idle = true, mode = "rpc", plan = true, sendFailure } = {}) {
 	const commands = new Map();
 	const events = new Map();
 	const notifications = [];
@@ -49,7 +49,7 @@ function createHarness({ entries = [], idle = true, sendFailure } = {}) {
 			return [...state.activeTools];
 		},
 		getFlag(name) {
-			return name === "plan";
+			return name === "plan" && plan;
 		},
 		on(name, handler) {
 			events.set(name, handler);
@@ -73,8 +73,9 @@ function createHarness({ entries = [], idle = true, sendFailure } = {}) {
 	const ctx = {
 		cwd: process.cwd(),
 		isIdle: () => state.idle,
-		mode: "rpc",
+		mode,
 		sessionManager: {
+			getBranch: () => branchEntries,
 			getEntries: () => entries,
 			getSessionDir: () => join(process.cwd(), ".tmp", "pi", "sessions", "test"),
 			getSessionId: () => "test",
@@ -105,6 +106,12 @@ function contextMessage(customType, content = "[PLAN MODE ACTIVE]\ncontext") {
 	return { role: "user", customType, content };
 }
 
+function testCommandRegistration() {
+	const harness = createHarness();
+	assert.ok(harness.commands.has("execute"), "/execute must be registered for the one-step implementation kickoff");
+	assert.equal(harness.commands.has("implement"), false, "/implement must remain available to its prompt template");
+}
+
 async function testSelectorsAndToolSnapshots() {
 	const harness = createHarness();
 	await startPlanMode(harness);
@@ -132,17 +139,56 @@ async function testSelectorsAndToolSnapshots() {
 	assert.equal(harness.persistedEntries.length, entriesBeforeRepeatedNormal);
 }
 
-async function testSubagentGate() {
+async function testSessionStartGates() {
+	for (const mode of ["tui", "rpc"]) {
+		const harness = createHarness({ mode });
+		await startPlanMode(harness);
+		assert.notDeepEqual(harness.state.activeTools, harness.initialTools, `${mode} roots enable plan mode`);
+	}
+
+	for (const mode of ["json", "print"]) {
+		const harness = createHarness({ mode });
+		await startPlanMode(harness);
+		assert.deepEqual(harness.state.activeTools, harness.initialTools, `${mode} workers stay writable`);
+	}
+
 	const previous = process.env.PI_SUBAGENT;
 	process.env.PI_SUBAGENT = "1";
 	try {
-		const harness = createHarness();
+		const harness = createHarness({ mode: "tui" });
 		await startPlanMode(harness);
-		assert.deepEqual(harness.state.activeTools, harness.initialTools);
+		assert.deepEqual(harness.state.activeTools, harness.initialTools, "PI_SUBAGENT root stays writable");
 	} finally {
 		if (previous === undefined) delete process.env.PI_SUBAGENT;
 		else process.env.PI_SUBAGENT = previous;
 	}
+}
+
+async function testBranchLocalSessionRestore() {
+	const branchWithPlanMode = createHarness({
+		plan: false,
+		entries: [{ type: "custom", customType: "plan-mode", data: { enabled: false } }],
+		branchEntries: [{ type: "custom", customType: "plan-mode", data: { enabled: true } }],
+	});
+	await startPlanMode(branchWithPlanMode);
+	assert.deepEqual(branchWithPlanMode.state.activeTools, [
+		"read",
+		"bash",
+		"external_tool",
+		"grep",
+		"find",
+		"ls",
+		"questionnaire",
+		"plan_write",
+	]);
+
+	const branchWithNormalMode = createHarness({
+		plan: false,
+		entries: [{ type: "custom", customType: "plan-mode", data: { enabled: true } }],
+		branchEntries: [{ type: "custom", customType: "plan-mode", data: { enabled: false } }],
+	});
+	await startPlanMode(branchWithNormalMode);
+	assert.deepEqual(branchWithNormalMode.state.activeTools, branchWithNormalMode.initialTools);
 }
 
 async function testModeParsingAndIdleGuards() {
@@ -162,23 +208,28 @@ async function testModeParsingAndIdleGuards() {
 	assert.equal(harness.persistedEntries.at(-1).data.enabled, true);
 
 	const entriesBeforeInvalid = harness.persistedEntries.length;
-	await runCommand(harness, "mode", "p");
-	assert.equal(harness.persistedEntries.length, entriesBeforeInvalid);
-	assert.equal(harness.notifications.at(-1).type, "warning");
+	for (const args of ["p", "plan extra"]) {
+		await runCommand(harness, "mode", args);
+		assert.equal(harness.persistedEntries.length, entriesBeforeInvalid);
+		assert.deepEqual(harness.notifications.at(-1), {
+			message: "Usage: /mode [plan|normal] (use an exact full mode name).",
+			type: "warning",
+		});
+	}
 
 	harness.state.idle = false;
 	const stateBeforeBusy = {
 		entries: harness.persistedEntries.length,
 		tools: [...harness.state.activeTools],
 	};
-	for (const command of ["plan", "normal", "mode", "execute", "implement"]) {
+	for (const command of ["plan", "normal", "mode", "execute"]) {
 		await runCommand(harness, command, command === "mode" ? "normal" : "");
 	}
 	assert.equal(harness.persistedEntries.length, stateBeforeBusy.entries);
 	assert.deepEqual(harness.state.activeTools, stateBeforeBusy.tools);
 	assert.deepEqual(
-		harness.notifications.slice(-5).map(({ message, type }) => ({ message, type })),
-		["plan", "normal", "mode", "execute", "implement"].map((command) => ({
+		harness.notifications.slice(-4).map(({ message, type }) => ({ message, type })),
+		["plan", "normal", "mode", "execute"].map((command) => ({
 			message: `/${command} requires an idle agent. Wait for the current run to finish.`,
 			type: "warning",
 		})),
@@ -199,7 +250,7 @@ async function testImplementationKickoffAndFailure() {
 
 	const failed = createHarness({ sendFailure: new Error("offline") });
 	await startPlanMode(failed);
-	await runCommand(failed, "implement");
+	await runCommand(failed, "execute");
 	assert.deepEqual(failed.state.activeTools, failed.initialTools);
 	assert.deepEqual(failed.sentMessages, []);
 	assert.deepEqual(failed.notifications.at(-1), {
@@ -212,19 +263,25 @@ async function testContextDeduplication() {
 	const harness = createHarness();
 	await startPlanMode(harness);
 	const first = contextMessage("plan-mode-context", "[PLAN MODE ACTIVE]\nold structured context");
-	const legacy = contextMessage(undefined, "[PLAN MODE ACTIVE]\nold user-text context");
+	const quotedMarker = contextMessage(undefined, "Please explain [PLAN MODE ACTIVE] to me.");
+	const injected = await harness.events.get("before_agent_start")({}, harness.ctx);
+	const legacy = { role: "user", ...injected.message };
+	delete legacy.customType;
 	const newest = contextMessage("plan-mode-context", "[PLAN MODE ACTIVE]\nnew structured context");
 	const ordinary = { role: "user", content: "keep me" };
-	const activeResult = await harness.events.get("context")({ messages: [first, ordinary, legacy, newest] }, harness.ctx);
-	assert.deepEqual(activeResult.messages, [ordinary, newest]);
+	const messages = [first, ordinary, quotedMarker, legacy, newest];
+	const activeResult = await harness.events.get("context")({ messages }, harness.ctx);
+	assert.deepEqual(activeResult.messages, [ordinary, quotedMarker, newest]);
 
 	await runCommand(harness, "normal");
-	const normalResult = await harness.events.get("context")({ messages: [first, ordinary, legacy, newest] }, harness.ctx);
-	assert.deepEqual(normalResult.messages, [ordinary]);
+	const normalResult = await harness.events.get("context")({ messages }, harness.ctx);
+	assert.deepEqual(normalResult.messages, [ordinary, quotedMarker]);
 }
 
+testCommandRegistration();
 await testSelectorsAndToolSnapshots();
-await testSubagentGate();
+await testSessionStartGates();
+await testBranchLocalSessionRestore();
 await testModeParsingAndIdleGuards();
 await testImplementationKickoffAndFailure();
 await testContextDeduplication();
