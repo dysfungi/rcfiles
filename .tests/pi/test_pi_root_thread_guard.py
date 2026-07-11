@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -102,23 +103,57 @@ def test_read_is_limited_to_scratch_paths(
 
 
 @pytest.mark.parametrize(
-    ("mode", "expected"),
-    [("tui", True), ("rpc", True), ("json", False), ("print", False)],
+    ("mode", "subagent", "expected"),
+    [
+        ("tui", False, True),
+        ("rpc", False, True),
+        ("json", False, False),
+        ("print", False, False),
+        ("tui", True, False),
+    ],
 )
-def test_plan_mode_is_interactive_root_only(mode: str, expected: bool) -> None:
-    """JSON workers and print one-shots must never enter read-only plan mode."""
+def test_plan_mode_excludes_workers(mode: str, subagent: bool, expected: bool) -> None:
+    """JSON/print workers and explicitly spawned children cannot enable plan mode."""
     runner = """
 import { pathToFileURL } from "node:url";
 const module = await import(pathToFileURL(process.argv[1]).href);
-console.log(JSON.stringify(module.isInteractiveRootMode(process.argv[2])));
+console.log(JSON.stringify(module.isPlanModeEnabled(process.argv[2])));
 """
     mode_module = (
         REPO_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "mode.mjs"
     )
+    environment = {**os.environ}
+    if subagent:
+        environment["PI_SUBAGENT"] = "1"
+    else:
+        environment.pop("PI_SUBAGENT", None)
     result = subprocess.run(
         ["node", "--input-type=module", "--eval", runner, str(mode_module), mode],
         check=True,
         capture_output=True,
         text=True,
+        env=environment,
     )
     assert json.loads(result.stdout) is expected
+
+
+def test_subagent_child_environment_marks_worker_non_interactive() -> None:
+    """The spawn helper used by the extension adds the delegated-child marker."""
+    runner = """
+import { pathToFileURL } from "node:url";
+const module = await import(pathToFileURL(process.argv[1]).href);
+console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
+"""
+    child_env_module = (
+        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
+    )
+    result = subprocess.run(
+        ["node", "--input-type=module", "--eval", runner, str(child_env_module)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert json.loads(result.stdout) == {"EXISTING": "value", "PI_SUBAGENT": "1"}
+
+    extension = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
+    assert "env: childEnvironment()," in extension.read_text()
