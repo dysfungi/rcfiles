@@ -85,3 +85,4 @@ x 2026-07-11 Downgrade pre-commit Prettier to latest v3; run all hooks and fix f
 x 2026-07-11 Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
 x 2026-07-11 (B) Implement pi context-discipline root-thread guard, catalog-driven official subagents, and plan-mode JSON gating +chezmoi +pi @worktree:.worktree/feat/pi-context-discipline session:019f4dd5-bcd1-727c-ad9f-89567055dcd5 agent:pi model:unknown
 x 2026-07-11 (B) 2026-07-10 Implement Pi plan-mode command redesign +pi @worktree:feat/pi-mode-commands
+x 2026-07-11 Implement Pi per-model thinking maps and max default +pi +chezmoi @worktree:.worktree/feat/pi-per-model-thinking-levels session:019f526c-54c4-78d2-abd9-4430a8e2f7c1 agent:pi
