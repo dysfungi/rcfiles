@@ -44,11 +44,12 @@
       {{- fail (printf "large-language-models.yaml: %s is default_for agy but vendor is %q (agy runs only google)" $m.id $m.vendor) -}}
     {{- end -}}
     {{- if has "codex" $m.default_for -}}
-      {{- /* Nested (not `or`) so we never read .gateway.api when gateway is absent. */ -}}
+      {{- /* Nested (not `or`) so we never read .gateway.api when gateway is absent.
+             codex speaks the OpenAI wire (completions or responses). */ -}}
       {{- if not (hasKey $m "gateway") -}}
-        {{- fail (printf "large-language-models.yaml: %s is default_for codex but has no gateway (needs openai-completions)" $m.id) -}}
-      {{- else if ne $m.gateway.api "openai-completions" -}}
-        {{- fail (printf "large-language-models.yaml: %s is default_for codex but gateway api is %q (needs openai-completions)" $m.id $m.gateway.api) -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but has no gateway (needs an openai-* wire)" $m.id) -}}
+      {{- else if not (hasPrefix "openai-" $m.gateway.api) -}}
+        {{- fail (printf "large-language-models.yaml: %s is default_for codex but gateway api is %q (needs openai-completions or openai-responses)" $m.id $m.gateway.api) -}}
       {{- end -}}
     {{- end -}}
   {{- end -}}

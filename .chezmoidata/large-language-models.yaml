@@ -36,12 +36,20 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       base_url: &tf_base "https://truefoundry.riotgames.io/api/llm"
       api: anthropic-messages
       api_key_op: &tf_key "op://Riot/TrueFoundry - Personal Access Token/credential"
-    truefoundry-openai:
-      &tf_openai # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
-      provider: truefoundry-openai
+    truefoundry-openai: &tf_openai
+      # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
+      # provider MUST be the built-in id `openai`, not a custom name: pi's
+      # `OPENAI_API_KEY` env var (set globally for codex) auto-activates the
+      # built-in `openai` provider @ api.openai.com and OUTRANKS custom providers
+      # (env > models.json in pi's resolution order), so a custom name gets
+      # shadowed → 401 invalid_issuer. Keying it `openai` overrides the built-in
+      # provider to point at TF instead (pi's built-in-provider override).
+      provider: openai
       name: TrueFoundry OpenAI (Riot)
       base_url: *tf_base
-      api: openai-completions
+      # openai-responses (not -completions): gpt-5.6 rejects tools+reasoning on
+      # /v1/chat/completions (needs /v1/responses); gemini works on it too.
+      api: openai-responses
       api_key_op: *tf_key
     google: &google # personal, direct to Google
       provider: google
