@@ -51,3 +51,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 Downgrade pre-commit Prettier to latest v3; run all hooks and fix formatting +chezmoi +pre-commit @worktree:.worktree/fix/prettier-v3 session:019f4eac-c391-72cc-982e-bb89153cead4 agent:pi
 Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
 (B) Implement pi context-discipline root-thread guard, catalog-driven official subagents, and plan-mode JSON gating +chezmoi +pi @worktree:.worktree/feat/pi-context-discipline session:019f4dd5-bcd1-727c-ad9f-89567055dcd5 agent:pi model:unknown
+(B) Evaluate cross-harness reusable subagent-definition Markdown: separate pi frontmatter from shared role prompts and document the boundary versus skills (PR #36 review thread) +pi +skills @follow-up
