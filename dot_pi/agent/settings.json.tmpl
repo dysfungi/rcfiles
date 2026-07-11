@@ -18,7 +18,10 @@
     {{- if $m.enabled -}}{{- $enabled = append $enabled $m.id -}}{{- end -}}
   {{- end -}}
   {{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
-  "defaultModel": {{ $default | quote }},
+  {{- /* pi stores a provider-qualified model in enabledModels, but defaultModel
+         must be the bare id because defaultProvider is emitted separately. */ -}}
+  {{- $defaultModel := trimPrefix (printf "%s/" $defaultProvider) $default -}}
+  "defaultModel": {{ $defaultModel | quote }},
   "defaultProvider": {{ $defaultProvider | quote }},
   "enabledModels": [
   {{- range $i, $id := $enabled }}

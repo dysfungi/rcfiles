@@ -35,6 +35,7 @@ detect_output_type = _mod.detect_output_type
 detect_output_type_from_shebang = _mod.detect_output_type_from_shebang
 is_chezmoi_config_template = _mod.is_chezmoi_config_template
 is_hard_skip = _mod.is_hard_skip
+markdownlint_args = _mod.markdownlint_args
 partition_into_config_and_other = _mod.partition_into_config_and_other
 suffix_for_output_type = _mod.suffix_for_output_type
 process_file = _mod.process_file
@@ -278,6 +279,28 @@ _SUFFIX_CASES = [
 )
 def test_suffix_for_output_type(output_type: str, expected: str) -> None:
     assert suffix_for_output_type(output_type) == expected
+
+
+# ---------------------------------------------------------------------------
+# markdownlint_args
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("content", "expected"),
+    [
+        ("---\nname: scout\n---\n", ("--disable", "MD041")),
+        ("# Heading\n", ()),
+    ],
+    ids=["yaml-frontmatter", "ordinary-markdown"],
+)
+def test_markdownlint_args(
+    tmp_path: Path, content: str, expected: tuple[str, ...]
+) -> None:
+    """Only YAML-frontmatter Markdown receives the structural MD041 exception."""
+    rendered = tmp_path / "rendered.md"
+    rendered.write_text(content)
+    assert markdownlint_args(rendered) == expected
 
 
 # ---------------------------------------------------------------------------

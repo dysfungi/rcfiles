@@ -128,6 +128,12 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 - **Mise** — `dot_config/exact_mise/` + `.mise.toml`
 - **WSL** — `dot_wslconfig` → `%USERPROFILE%\.wslconfig` (Windows-only; gated in `.chezmoiignore.tmpl`). Sets `networkingMode=mirrored` so `localhost` inside WSL reaches Windows-host services (e.g. the in-editor Unreal MCP server); requires Windows 11 22H2+ and `wsl --shutdown` to take effect.
 
+### Pi Extensions
+
+`dot_pi/agent/extensions/subagent/` vendors the complete upstream pi subagent example. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; prompts render into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace.
+
+`root-thread-guard.ts` hard-blocks exploratory tools in root TUI/RPC sessions and directs work to `subagent`; JSON workers and print one-shots remain exempt. `plan-mode/` likewise applies only to interactive roots, so delegated workers retain write/edit capability. No root-guard bypass sentinel exists.
+
 ## Setting Up a New Machine
 
 Bootstrapping requires installing a couple things manually, so follow the platform-specific instructions and then follow [setup new machine][chez-new-machine].

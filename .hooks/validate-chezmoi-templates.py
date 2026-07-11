@@ -344,6 +344,16 @@ def _unified_diff(original: Path, fixed: Path) -> str:
     return result.stdout.decode(errors="replace")
 
 
+def markdownlint_args(rendered: Path) -> tuple[str, ...]:
+    """Return structural Markdown-lint exceptions for a rendered file.
+
+    Pi agent definitions require YAML frontmatter as their first bytes. Markdownlint
+    otherwise reports MD041 because it treats that delimiter as ordinary Markdown;
+    all other rules remain enabled.
+    """
+    return ("--disable", "MD041") if rendered.read_text().startswith("---\n") else ()
+
+
 def run_autofix_and_diff(output_type: str, rendered: Path, tmpdir: Path) -> str | None:
     suffix = suffix_for_output_type(output_type)
     fixed = tmpdir / f"fixed{suffix}"
@@ -353,7 +363,7 @@ def run_autofix_and_diff(output_type: str, rendered: Path, tmpdir: Path) -> str 
     if output_type == "toml":
         _mise("taplo", "fmt", str(fixed))
     elif output_type == "markdown":
-        _mise("markdownlint", "--fix", str(fixed))
+        _mise("markdownlint", "--fix", *markdownlint_args(fixed), str(fixed))
     elif output_type == "shell":
         _mise("shfmt", "-w", str(fixed))
     elif output_type == "lua":
@@ -376,7 +386,9 @@ def run_linter(output_type: str, rendered: Path) -> str | None:
         return _output_if_failed(_mise("taplo", "lint", str(rendered)))
 
     if output_type == "markdown":
-        return _output_if_failed(_mise("markdownlint", str(rendered)))
+        return _output_if_failed(
+            _mise("markdownlint", *markdownlint_args(rendered), str(rendered))
+        )
 
     if output_type == "shell":
         bash_err = _output_if_failed(

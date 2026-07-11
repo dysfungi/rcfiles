@@ -15,6 +15,9 @@
 #   enabled      appears in pi's catalog + rotation (list order = cycling order)
 #   default_for  subset of [pi, codex, claude, agy] this model is the default for
 #                (each harness may appear in at most one entry — guarded at render)
+#   subagent_roles pi-only subset of [scout, planner, reviewer, worker] this
+#                model backs; every role appears exactly once per namespace
+#                and must be enabled (guarded at render)
 #
 # default_for: [agy] is DECLARED intent only — validated by the guard but not yet
 # consumed: Antigravity CLI exposes no settings.json default-model key (only the
@@ -92,10 +95,12 @@ my:
         alias: opus
         enabled: true
         default_for: [pi]
+        subagent_roles: [planner, worker]
       - id: claude-sonnet-5
         vendor: anthropic
         alias: sonnet
         enabled: true
+        subagent_roles: [scout, reviewer]
       - id: claude-fable-5
         vendor: anthropic
         enabled: true
@@ -158,7 +163,8 @@ riot:
           cache_read: 0.125
           cache_write: 0
         enabled: true
-        default_for: [codex]
+        default_for: [codex, pi]
+        subagent_roles: [planner, worker]
       - id: openai/gpt-5.6-luna
         vendor: openai
         gateway: *tf_openai
@@ -172,6 +178,7 @@ riot:
           cache_read: 0.025
           cache_write: 0
         enabled: true
+        subagent_roles: [scout, reviewer]
       - id: claude-vertex/anthropic-claude-opus-4-8
         vendor: anthropic
         alias: opus
@@ -188,7 +195,7 @@ riot:
           cache_read: 1.5
           cache_write: 18.75
         enabled: true
-        default_for: [pi, claude]
+        default_for: [claude]
       - id: claude-vertex/anthropic-claude-sonnet-5
         vendor: anthropic
         alias: sonnet

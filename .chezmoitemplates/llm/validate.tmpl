@@ -34,6 +34,23 @@
     {{- fail (printf "large-language-models.yaml: %d models share alias %q (expected at most 1)" $n $a) -}}
   {{- end -}}
 {{- end -}}
+{{- /* Each pi subagent role must select exactly one enabled model. The rendered
+       agent frontmatter passes this id to `pi --model`, so dormant or missing
+       mappings fail at apply time rather than failing a delegated task. */ -}}
+{{- range $role := (list "scout" "planner" "reviewer" "worker") -}}
+  {{- $seen := dict "n" 0 -}}
+  {{- range $m := $ns.models -}}
+    {{- if and (hasKey $m "subagent_roles") (has $role $m.subagent_roles) -}}
+      {{- if not $m.enabled -}}
+        {{- fail (printf "large-language-models.yaml: %s has subagent_roles %q but is disabled" $m.id $role) -}}
+      {{- end -}}
+      {{- $_ := set $seen "n" (add $seen.n 1) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if ne $seen.n 1 -}}
+    {{- fail (printf "large-language-models.yaml: %d models claim subagent_roles %q (expected exactly 1)" $seen.n $role) -}}
+  {{- end -}}
+{{- end -}}
 {{- /* A default must be runnable by the harness it defaults for. */ -}}
 {{- range $m := $ns.models -}}
   {{- if hasKey $m "default_for" -}}

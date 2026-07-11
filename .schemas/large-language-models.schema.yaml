@@ -82,6 +82,11 @@ $defs:
         uniqueItems: true
         items:
           enum: [pi, codex, claude, agy]
+      subagent_roles:
+        type: array
+        uniqueItems: true
+        items:
+          enum: [scout, planner, reviewer, worker]
 
   gateway:
     type: object

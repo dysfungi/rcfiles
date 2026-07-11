@@ -1,13 +1,15 @@
 # Plan Mode — Design & Rationale
 
 Owned pi extension providing a **read-only exploration mode that is ON BY DEFAULT
-for every new session**. This document records the requirements, the options
+for interactive root sessions** (`tui`/`rpc`). JSON subagents and print one-shots
+are deliberately inert. This document records the requirements, the options
 evaluated, and why each decision was made, so the context lives next to the code.
 
 ## Requirements
 
-1. **Default-on, cleanly.** Plan mode is active for _all_ new sessions — fresh
-   process **and** in-session `/new` — with **no startup turn, no injected
+1. **Default-on, interactive-root-only.** Plan mode is active for all new `tui`
+   and `rpc` root sessions — fresh process **and** in-session `/new` — with
+   **no startup turn, no injected
    `/plan` message, no token waste, no session renamed `/plan`**. (The previous
    approach injected `pi.sendUserMessage("/plan")` at `session_start`; that was
    the root cause of all four problems and is gone.)
@@ -15,34 +17,39 @@ evaluated, and why each decision was made, so the context lives next to the code
    which becomes the session name — not a synthetic `/plan`.
 3. **Overrides still work.** `--no-plan` opts out; `--plan` is redundant but
    harmless; `/plan` toggles in-session.
-4. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
+4. **Delegated workers stay writable.** `json` subagents and `print` one-shots
+   never enable plan mode, so a worker can read and edit without a parent-side
+   `--no-plan` escape hatch.
+5. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
    simply restore persisted state.
-5. **Hard read-only.** `edit`/`write` are _physically removed_ from the tool set
+6. **Hard read-only.** `edit`/`write` are _physically removed_ from the tool set
    (a guarantee, not advice), and `bash` is gated to read-only commands.
-6. **Auto tool-preservation.** Plan mode must keep `worktree_*`/`memory_*`/`mcp`/
+7. **Auto tool-preservation.** Plan mode must keep `worktree_*`/`memory_*`/`mcp`/
    `scratchpad` available **without per-session reconfiguration** (the worktree
    workflow is mandatory). Tools are preserved by _subtracting_ `edit`/`write`,
    never by replacing the set with a hardcoded list.
-7. **Plans synced to disk.** The model can persist its plan even though
+8. **Plans synced to disk.** The model can persist its plan even though
    `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
    is unaffected (`memory_*` tools are preserved).
-8. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
-9. **Surface the plan in the TUI.** The plan must be shown to me automatically
-   when written (no manual `cat`/open), and it must cost **no extra LLM
-   context** to do so. I must also be able to **re-view it on demand** later,
-   likewise context-free.
+9. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
+10. **Surface the plan in the TUI.** The plan must be shown to me automatically
+    when written (no manual `cat`/open), and it must cost **no extra LLM
+    context** to do so. I must also be able to **re-view it on demand** later,
+    likewise context-free.
 
 ## Decisions
 
-### Default-on mechanism — flag `default: true`, no reason gate
+### Default-on mechanism — interactive-root mode gate
 
 The `plan` flag is registered with `default: true`. `session_start` enables plan
-mode whenever the flag is true **with no `reason` gate**, so both
-`reason:"startup"` (fresh) and `reason:"new"` (`/new`) start in plan mode. CLI
-argv is applied after registration, so `--no-plan` wins. No message is sent, no
-turn is taken, the session name is whatever the user types first.
+mode only when `ctx.mode` is `tui` or `rpc`; `json` workers and `print` one-shots
+return before parser loading, state restoration, or tool-set mutation. In root
+modes, both `reason:"startup"` (fresh) and `reason:"new"` (`/new`) start in
+plan mode. CLI argv is applied after registration, so `--no-plan` wins. No
+message is sent, no turn is taken, and the session name is whatever the user
+types first.
 
-> Surveyed published packages: none met requirements 5–7 simultaneously.
+> Surveyed published packages: none met requirements 6–8 simultaneously.
 > Tool-strippers (`@juanibiapina/pi-plan`, qmx, openplan, …) replace the tool set
 > with a constant list → break tool-preservation. `@narumitw/pi-plan-mode`
 > defaults to a curated allowlist needing per-session re-selection. `pi-plan-modus`
@@ -159,7 +166,8 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 
 ## Verification matrix
 
-- Fresh start, `/new` → plan mode on; first user message becomes session name.
+- Fresh `tui`/`rpc` start, `/new` → plan mode on; first user message becomes session name.
+- `json` subagent and `print` one-shot → plan mode inert; write/edit stay available.
 - `/resume` → state restored, no injected `/plan`.
 - `--no-plan` → starts off; `/plan` → toggles.
 - In plan mode: `edit`/`write` absent; `worktree_*`/`memory_*`/`mcp` present;
