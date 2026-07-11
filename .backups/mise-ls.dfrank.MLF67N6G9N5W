@@ -1,6 +1,7 @@
 aqua:rust-lang/rust-analyzer          2026-06-29
 aqua:rust-lang/rust-analyzer          2026-07-06        ~/.config/mise/config.toml       latest
 asdf:luizm/asdf-shfmt                 3.13.1
+chezmoi                               2.71.0
 gh                                    2.96.0            ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0            ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
