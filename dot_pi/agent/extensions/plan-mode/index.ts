@@ -27,13 +27,20 @@
  *     plan file at `~/.pi/agent/plans/<sessionId>.md` (one flat, browsable
  *     location; the path is derived from the session manager, not hardcoded).
  *     Memory persistence is unaffected — `memory_*` tools are preserved.
+ *
+ *   - Plan shown in the TUI, for free: `plan_write` has a `renderResult` slot
+ *     that renders the plan as Markdown inline, so I see it automatically
+ *     instead of having to `cat`/open the file. This is DISPLAY-ONLY and costs
+ *     ZERO extra LLM context — it renders `context.args.content`, which the
+ *     model already generated (it's in context exactly once regardless), while
+ *     the model-facing tool result stays the short `Plan saved to <path>`.
  */
 
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 import type { TextContent } from "@earendil-works/pi-ai";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { defineTool } from "@earendil-works/pi-coding-agent";
-import { Key } from "@earendil-works/pi-tui";
+import { defineTool, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { Key, Markdown, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -105,6 +112,13 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 					content: [{ type: "text", text: `Plan saved to ${planFile}` }],
 					details: { path: planFile },
 				};
+			},
+			// Show the plan inline as Markdown (display-only, no LLM-context cost).
+			// Rendered from context.args.content — already in context, never re-sent.
+			renderResult(_result, { isPartial }, theme, context) {
+				const content = (context.args as { content?: string } | undefined)?.content;
+				if (isPartial || !content) return new Text(theme.fg("muted", "Saving plan…"), 0, 0);
+				return new Markdown(content, 0, 0, getMarkdownTheme());
 			},
 		}),
 	);
