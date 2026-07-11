@@ -55,3 +55,4 @@ Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices s
 (B) Fix pi settings.json.tmpl app-state drift: lastChangelogVersion changes on pi upgrades and blocks noninteractive chezmoi apply +pi +chezmoi @follow-up
 (B) Investigate @rezamonangg/pi-worktree linked-worktree startup EEXIST: attempts mkdir on worktree .git file despite successful execution +pi +worktree @bug
 (B) Fix pi worktree-guard false positive when a read-only Python command contains literal > in a regex +pi +worktree @bug
+(B) Refactor skill/subagent templating: extract reusable bodies from my-planning and my-code-review into shared partials; compose pi planner/reviewer agent definitions from them plus pi-specific frontmatter and delegation contracts +pi +skills @follow-up
