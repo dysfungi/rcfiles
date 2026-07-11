@@ -83,3 +83,4 @@ x 2026-07-11 (C) 2026-07-10 Add a full-screen pager for pi plan-mode plans +pi @
 x 2026-07-11 Downgrade pre-commit Prettier to latest v3; run all hooks and fix formatting +chezmoi +pre-commit @worktree:.worktree/fix/prettier-v3 session:019f4eac-c391-72cc-982e-bb89153cead4 agent:pi
 x 2026-07-11 Enable Pi cache-miss notices +pi @worktree:.worktree/fix/pi-cache-miss-notices session:019f4eb1-b0c6-7c19-9402-c5c4a0f8928f agent:pi model:unknown
 x 2026-07-11 (B) Implement pi context-discipline root-thread guard, catalog-driven official subagents, and plan-mode JSON gating +chezmoi +pi @worktree:.worktree/feat/pi-context-discipline session:019f4dd5-bcd1-727c-ad9f-89567055dcd5 agent:pi model:unknown
+x 2026-07-11 (B) 2026-07-10 Implement Pi plan-mode command redesign +pi @worktree:feat/pi-mode-commands
