@@ -34,6 +34,26 @@
     {{- fail (printf "large-language-models.yaml: %d models share alias %q (expected at most 1)" $n $a) -}}
   {{- end -}}
 {{- end -}}
+{{- /* Reasoning models must declare every Pi logical thinking level. Explicit
+       nulls hide unsupported levels; omitting a key would silently advertise it.
+       Non-reasoning models must not carry a misleading map. JSON Schema closes
+       the keys and validates value types; this guard enforces the conditional
+       reasoning contract when templates render independently of the schema hook. */ -}}
+{{- range $m := $ns.models -}}
+  {{- $has_map := hasKey $m "thinking_level_map" -}}
+  {{- if dig "reasoning" false $m -}}
+    {{- if not $has_map -}}
+      {{- fail (printf "large-language-models.yaml: reasoning model %s needs thinking_level_map" $m.id) -}}
+    {{- end -}}
+    {{- range $level := (list "off" "minimal" "low" "medium" "high" "xhigh" "max") -}}
+      {{- if not (hasKey $m.thinking_level_map $level) -}}
+        {{- fail (printf "large-language-models.yaml: reasoning model %s thinking_level_map is missing %q" $m.id $level) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else if $has_map -}}
+    {{- fail (printf "large-language-models.yaml: non-reasoning model %s must not declare thinking_level_map" $m.id) -}}
+  {{- end -}}
+{{- end -}}
 {{- /* Each pi subagent role must select exactly one enabled model. The rendered
        agent frontmatter passes this id to `pi --model`, so dormant or missing
        mappings fail at apply time rather than failing a delegated task. */ -}}
