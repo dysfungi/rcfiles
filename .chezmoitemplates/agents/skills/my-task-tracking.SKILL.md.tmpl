@@ -25,8 +25,11 @@ description: >-
 - Use `todo.sh` for all todo.txt/done.txt operations; fall back to direct file edits
   only when the CLI isn't installed.
 - Priorities: `(A)` blocking · `(B)` important · `(C)` maintenance · none = nice-to-have.
-- Completing a deferred item → move it to done.txt with an `x YYYY-MM-DD` prefix
-  (`todo.sh archive` convention); never delete completed tasks.
+- The owning agent archives a completed deferred item by moving its **exact** todo.txt record
+  (all text and metadata preserved) to done.txt with an `x YYYY-MM-DD` prefix (`todo.sh archive`
+  convention) before PR-ready/final handoff; never delete completed tasks.
+- Non-owning subagents report completion to the owning agent only; they never archive task records.
+- Never archive a task merely because a shared PR, session, worktree, or commit completed.
 - Keep the session tasklist and todo.txt in sync.
 
 ## Pane label (tmux)

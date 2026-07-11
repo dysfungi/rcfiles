@@ -72,8 +72,7 @@ move the changes into a worktree via the shared stash stack:
    guard-inert because cwd is the worktree. Main's working tree is now clean.
 3. **Pull them into the worktree:** `git stash list` to find the `stash@{n}` matching `<slug>`,
    then `git stash apply stash@{n}`. The stash stack is shared via the common git dir.
-4. **Review, commit in the worktree, and merge back** per the protocol below. If the root thread
-   can't run Bash to commit, see *Committing from a worktree when the root thread can't run Bash*.
+4. **Review, commit in the worktree, and merge back** per the protocol below.
 5. **After the commit is verified,** `git -C <main> stash drop stash@{n}`. Apply-then-drop keeps
    the stash as a backup until the commit lands; `pop` would discard it on the spot.
 
@@ -99,40 +98,39 @@ below from **inside the worktree** (where all git is allowed) and advance main v
 human-only action is creating a `worktree-exempt` file; never create one. `<main>` = the
 primary checkout (the parent of `git rev-parse --git-common-dir`).
 
-1. **Finish & verify.** Commit your work. Run the project's automated gates (e.g.
-   `mise run lint && mise run test`, or the repo's equivalents) and fix failures — see
-   `my-linting`, `my-testing`.
+1. **Test.** Run the project's automated gates (e.g. `mise run lint && mise run test`, or the
+   repo's equivalents) and fix failures — see `my-linting`, `my-testing`.
 
-2. **Open the PR as a draft, early.** Draft is the *not-yet-ready* state, not the finish line —
-   you'll mark it ready in step 4. As soon as you have a commit to push:
-   - *GitHub (any owner):* `git push -u origin <branch>`; `gh pr create --draft --fill`. Further
-     commits update the PR. (`gh` is server-side; `git -C <main> …` from the worktree cwd is
-     guard-inert.)
-   - *Local / no remote:* there's no PR — keep committing on the branch.
+2. **Fresh self-review.** Have a fresh sub-agent review the implementation per `my-code-review`.
+   Address findings and repeat until no significant findings remain (`my-execution` owns this loop).
 
-3. **Self-review to convergence.** Self-review per `my-code-review` (a fresh sub-agent), address
-   findings, and iterate — pushing fixes to the open draft — until a review surfaces nothing
-   significant and you're confident it's ready for human review (`my-execution` owns this loop).
+3. **Implementation commit and push.** Commit only the reviewed implementation, then pull-rebase and
+   push it. This is distinct from the task-record bookkeeping commit that follows.
 
-4. **Mark ready — the required finish line for any change you consider done and intend to ship;
-   never auto-merge.** First freshen: `git -C <main> pull --rebase`, then rebase your branch onto
-   latest main and resolve conflicts. (If a push is rejected non-fast-forward, retry the rebase
-   once, then surface.) Then:
-   - *GitHub:* run `gh pr ready` to convert the draft to review-ready — **not optional** for a change
-     you consider done and ready to ship. Don't end your turn on a draft you consider finished:
-     either mark it ready, or say explicitly why it's still a draft (still WIP, or complete but
-     intentionally held from deploy per step 6). Leave the PR **open**; surface the PR URL and a
-     short "what to review" note. Do **not** run `gh pr merge`.
+4. **Archive the exact completed task.** Before PR-ready/final handoff, the owning agent moves the
+   exact completed todo.txt record (including all metadata) to done.txt with an `x YYYY-MM-DD` prefix.
+   Non-owning subagents report completion only. Never infer completion from a shared PR, session,
+   worktree, or commit.
+
+5. **Bookkeeping commit and push.** Commit and push the task-record move separately from the
+   implementation commit.
+
+6. **PR-ready/final handoff — before any merge.** First freshen: `git -C <main> pull --rebase`, then
+   rebase your branch onto latest main and resolve conflicts. (If a push is rejected non-fast-forward,
+   retry the rebase once, then surface.) Then:
+   - *GitHub:* create or update the draft (`gh pr create --draft --fill` if needed), then run
+     `gh pr ready`. This is **not optional** for a completed, deploy-ready change. Leave the PR **open**;
+     surface its URL and a short "what to review" note. Do **not** run `gh pr merge`.
    - *Local / no remote:* **stop** — do not advance main. Tell me the branch is ready and summarize
      what to review.
 
-5. **Reviewer feedback loop.** When the human leaves PR review comments: reply on each
+7. **Reviewer feedback loop.** When the human leaves PR review comments: reply on each
    thread once addressed (say what changed + the commit), or reply first when there are
    important considerations to discuss before changing code. Resume work in the kept
    worktree for fixes. **Never resolve review threads** — the human resolves each thread
    after verifying it was addressed.
 
-6. **Merge only on my explicit approval, and only what's expected to deploy.** `main` reflects prod:
+8. **Merge only on my explicit approval, and only what's expected to deploy.** `main` reflects prod:
    never merge a change you don't expect to ship (here, to be `chezmoi apply`-ied). If it isn't
    deploy-ready, keep it a draft / on the branch.
    - *Repos I own ({{ .my.github_personal_owners | join ", " }}):* after I approve in-session,
@@ -145,11 +143,14 @@ primary checkout (the parent of `git rev-parse --git-common-dir`).
    - *Unrecognized origin:* gather the facts (remote URL, owner, is it yours?), ask me how to
      integrate, then propose a `my-git` update so it's covered next time (see `my-agent-memory`).
 
-7. **Cleanup — after an approved merge only.** Until the change is merged, **keep** the worktree (I may
-   request changes — resume in it) and leave the `todo.txt` claim open. After merging, delete the local
-   branch (step 6) and remove the worktree (`ExitWorktree action: remove`); the SessionEnd hook archives
-   the todo claim. (A squash-merge isn't a fast-forward, so the branch isn't auto-reaped — the explicit
-   `git branch -D` is what clears it.)
+9. **Cleanup — after an approved merge only.** Keep the worktree until the change is merged (I may
+   request changes — resume in it). Then delete the local branch (step 8) and remove the worktree with
+   the harness-specific mechanism below. Automatic cleanup is harness-specific and not available in every
+   harness; no agent may treat it as authoritative task completion. The owner must archive the exact task
+   in step 4 before PR-ready/final handoff. (A squash-merge isn't a fast-forward, so the explicit
+   `git branch -D` is what clears the branch.)
+
+{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
 ### Committing from a worktree when the root thread can't run Bash
 
@@ -164,20 +165,18 @@ that works:
 3. **Spawn a commit subagent** — it inherits the worktree cwd, so the bash guard goes inert and it
    can commit + merge back per the protocol above.
 
-The `SessionEnd` cleanup (below) means the entered worktree is no longer reaped mid-session, so
-this survives across turns.
+The entered worktree persists across turns.
 
-{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
 ### Claude Code create / exit mechanics
 
 - Create: `EnterWorktree name: "$CLAUDE_CODE_SESSION_ID.<task-slug>"`.
 - Worktree path: `.claude/worktrees/<session-id>.<task-slug>`.
 - Complete: `ExitWorktree action: remove` only after an approved merge; hand off per the
-  integration/handoff/merge rules in steps 2–6 above.
-- Auto-cleanup: the SessionEnd hook removes merged worktrees at session end and
-  archives their todo.txt entries; prefer explicit `ExitWorktree` — it's a safety net,
-  not a substitute.
+  integration/handoff/merge rules in steps 2–8 above.
+- Legacy SessionEnd cleanup: it removes merged worktrees at session end and may also attempt matching
+  `@worktree` archival. This legacy behavior is out of scope for this change and never authoritative; the owner archives
+  first in step 4. Prefer explicit `ExitWorktree`.
 - Human-only bypass: `touch .claude/worktree-exempt.$CLAUDE_CODE_SESSION_ID` — agents
   must never create worktree exemption files.
 {{- end }}
@@ -193,7 +192,7 @@ this survives across turns.
 - The `worktree-guard.ts` extension blocks mutations until `worktree_start` succeeds;
   all `worktree_*` tools are always allowed.
 - Complete: call `worktree_stop` (optionally `remove: true`) only after an approved merge;
-  hand off per the integration/handoff/merge rules in steps 2–6 above.
+  hand off per the integration/handoff/merge rules in steps 2–8 above.
 - Human-only bypass: `touch .pi/worktree-exempt` — agents must never create worktree
   exemption files.
 {{- end }}
