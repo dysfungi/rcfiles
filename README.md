@@ -120,6 +120,8 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 
 Managed tmux and WezTerm launch their configured shell directly on every platform; they deliberately do not invoke account-level `/usr/bin/login`. This restores tmux's native `pane_current_path` behavior and intentionally forgoes managed login banners, utmpx records, and login-provided mail notices. Shell-level login modes remain allowed (for example, the Windows WSL `xonsh --login` and `bash --login` launch-menu entries); direct WezTerm, SSH, and bare-shell mail checks remain independently configured.
 
+After applying `~/.config/tmux/tmux.conf`, an existing tmux server must reload it (`tmux source-file ~/.config/tmux/tmux.conf`) or restart before _new_ panes receive the reset `default-command`; existing panes are not replaced. The current session/window bootstrap declarations can report duplicate-resource errors on reload, but the global-option reset happens before them. CI executes the direct-shell tmux harness natively on macOS, Linux, and MSYS2. Its Windows coverage renders and inspects the WSL launcher only: the Linux job validates the shared Linux tmux configuration, not WSL process, PTY, environment, or cwd behavior.
+
 ### Key Subsystems
 
 - **Xonsh** — primary shell (`dot_config/xonsh/`)

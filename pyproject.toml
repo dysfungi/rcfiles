@@ -4,7 +4,7 @@ version = "0.0.0"
 requires-python = ">=3.12"
 
 [dependency-groups]
-test = ["pytest", "pyyaml", "xonsh"]
+test = ["pytest", "pyyaml", "xonsh==0.24.0"]
 
 [tool.pytest.ini_options]
 testpaths = [".tests"]

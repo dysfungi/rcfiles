@@ -142,6 +142,7 @@ def _write_rc(
     platform_name: str,
     *,
     mock_getsize_failure: bool = False,
+    mock_second_spool_stat_failure: bool = False,
     prompt_marker: bool = True,
 ) -> Path:
     """Create a minimal RC file that sources the actual managed mail module."""
@@ -152,6 +153,21 @@ def _mail_test_getsize_failure(_path):
     raise OSError("forced unreadable mail spool")
 
 os.path.getsize = _mail_test_getsize_failure
+"""
+    mock_second_spool_stat = ""
+    if mock_second_spool_stat_failure:
+        mock_second_spool_stat = """
+_mail_test_original_stat = os.stat
+_mail_test_spool_stat_calls = [0]
+
+def _mail_test_second_spool_stat_failure(path, *args, **kwargs):
+    if path == os.environ["MAIL"]:
+        _mail_test_spool_stat_calls[0] += 1
+        if _mail_test_spool_stat_calls[0] == 2:
+            raise OSError("forced unreadable mail spool")
+    return _mail_test_original_stat(path, *args, **kwargs)
+
+os.stat = _mail_test_second_spool_stat_failure
 """
     marker = ""
     if prompt_marker:
@@ -172,6 +188,7 @@ sys.path.insert(0, {str(RC_DIRECTORY)!r})
 sys.platform = {platform_name!r}
 {mock_getsize}
 exec(compile(open({str(MAIL_MODULE)!r}).read(), {str(MAIL_MODULE)!r}, "exec"), globals(), globals())
+{mock_second_spool_stat}
 {marker}
 """
     )
@@ -184,6 +201,7 @@ def _start_interactive_xonsh(
     platform_name: str,
     *,
     mock_getsize_failure: bool = False,
+    mock_second_spool_stat_failure: bool = False,
 ) -> tuple[InteractiveXonsh, str]:
     """Start real interactive xonsh and return its startup/pre-prompt output."""
     home = tmp_path / "home"
@@ -192,6 +210,7 @@ def _start_interactive_xonsh(
         tmp_path,
         platform_name,
         mock_getsize_failure=mock_getsize_failure,
+        mock_second_spool_stat_failure=mock_second_spool_stat_failure,
     )
     shell = InteractiveXonsh(_xonsh_binary(), rc_file, _environment(home, spool))
     return shell, shell.read_until(PROMPT_MARKER)
@@ -257,6 +276,50 @@ def test_spool_growth_is_throttled_without_real_time_sleep(tmp_path: Path) -> No
 
         repeated = shell.run_until_prompt("_mail_test_clock[0] = 120.0")
         assert "You have new mail." not in repeated
+
+
+@pytest.mark.parametrize("platform_name", ("darwin", "linux"))
+def test_missing_spool_then_created_emits_one_new_mail_notice(
+    tmp_path: Path, platform_name: str
+) -> None:
+    """A spool created after an observed absence is new mail, not a baseline."""
+    spool = tmp_path / "spool"
+
+    shell, startup = _start_interactive_xonsh(tmp_path, spool, platform_name)
+    with shell:
+        assert "You have mail." not in startup
+        assert "You have new mail." not in startup
+
+        spool.write_text("delivered after shell startup\n")
+        announced = shell.run_until_prompt("_mail_test_clock[0] = 120.0")
+        assert announced.count("You have new mail.") == 1
+
+        repeated = shell.run_until_prompt("_mail_test_clock[0] = 180.0")
+        assert "You have new mail." not in repeated
+
+
+def test_unreadable_probe_after_missing_spool_does_not_infer_new_mail(
+    tmp_path: Path,
+) -> None:
+    """A transient metadata failure clears an old missing-spool observation."""
+    spool = tmp_path / "spool"
+
+    shell, startup = _start_interactive_xonsh(
+        tmp_path,
+        spool,
+        "darwin",
+        mock_second_spool_stat_failure=True,
+    )
+    with shell:
+        assert "You have mail." not in startup
+        assert "You have new mail." not in startup
+
+        unreadable = shell.run_until_prompt("_mail_test_clock[0] = 120.0")
+        assert "You have new mail." not in unreadable
+
+        spool.write_text("mail delivered after an unreadable probe\n")
+        recovered = shell.run_until_prompt("_mail_test_clock[0] = 180.0")
+        assert "You have new mail." not in recovered
 
 
 def test_spool_shrink_rebaselines_without_a_false_new_mail_notice(

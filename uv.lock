@@ -20,7 +20,7 @@ test = [
 test = [
     { name = "pytest" },
     { name = "pyyaml" },
-    { name = "xonsh" },
+    { name = "xonsh", specifier = "==0.24.0" },
 ]
 
 [[package]]
