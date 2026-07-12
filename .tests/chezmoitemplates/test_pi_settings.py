@@ -28,6 +28,8 @@ PACKAGES = [
     "npm:pi-vimmode",
 ]
 
+PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
+
 EXPECTED = {
     "personal": {
         "defaultModel": "claude-opus-4-8",
@@ -42,7 +44,7 @@ EXPECTED = {
         ],
     },
     "riot": {
-        "defaultModel": "gpt-5.6-terra",
+        "defaultModel": "openai/gpt-5.6-terra",
         "defaultProvider": "openai",
         "enabledModels": [
             "openai/gpt-5.6-terra",
@@ -63,7 +65,7 @@ def _managed(machine: str) -> dict[str, Any]:
         **EXPECTED[machine],
         "packages": PACKAGES,
         "defaultProjectTrust": "always",
-        "defaultThinkingLevel": "high",
+        "defaultThinkingLevel": "max",
         "hideThinkingBlock": False,
         "showCacheMissNotices": True,
         "theme": "dark",
@@ -154,6 +156,25 @@ def test_rendered_catalog_preferences(
     result = _run(script, "")
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout) == _managed(machine)
+
+
+def test_default_model_uses_its_provider_identity(
+    rendered_script: tuple[Path, str],
+) -> None:
+    """Built-ins keep their native IDs; Riot custom models keep their full IDs."""
+    script, machine = rendered_script
+    result = _run(script, "")
+    assert result.returncode == 0, result.stderr
+    settings = json.loads(result.stdout)
+
+    if machine == "personal":
+        # Anthropic is Pi's bundled provider, not an entry in generated models.json.
+        assert settings["defaultProvider"] == "anthropic"
+        assert settings["defaultModel"] == PI_BUILTIN_ANTHROPIC_DEFAULT
+    else:
+        assert settings["defaultProvider"] == "openai"
+        assert settings["defaultModel"] == "openai/gpt-5.6-terra"
+        assert settings["defaultModel"] in settings["enabledModels"]
 
 
 @pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])

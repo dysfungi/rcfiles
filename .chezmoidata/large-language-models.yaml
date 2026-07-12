@@ -12,6 +12,11 @@
 #                built-ins (pi provider then = vendor)
 #   reasoning,ctx,max_tokens,cost,one_m,adaptive   pi catalog facts
 #                (ctx/max_tokens/cost required by pi for ENABLED gateway models)
+#   thinking_level_map complete Pi logical-level map for reasoning models:
+#                all seven keys (off/minimal/low/medium/high/xhigh/max) are
+#                required; null hides an unsupported level. Values are native
+#                provider control values. Direct Google maps are capability-only:
+#                Pi translates their selected logical level to Google's value.
 #   enabled      appears in pi's catalog + rotation (list order = cycling order)
 #   default_for  subset of [pi, codex, claude, agy] this model is the default for
 #                (each harness may appear in at most one entry — guarded at render)
@@ -32,6 +37,72 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
     num_ctx: &defaultNumCtx 16384 # Force the context window to 16k tokens (leaves safe overhead for your 18GB RAM)
     num_predict: &defaultNumPredict 2048 # Dictate output budget per individual turn
     temperature: &defaultTemperature 0.2 # Lower temperature slightly for strict, deterministic code syntax generation
+  thinking_level_maps:
+    # All maps are complete so missing keys cannot silently advertise support.
+    openai_gpt_5_6: &thinking_openai_gpt_5_6
+      "off": none
+      minimal: minimal
+      low: low
+      medium: medium
+      high: high
+      xhigh: xhigh
+      max: max
+    anthropic_standard: &thinking_anthropic_standard
+      "off": disabled
+      minimal: low
+      low: low
+      medium: medium
+      high: high
+      xhigh: null
+      max: null
+    anthropic_opus_4_6: &thinking_anthropic_opus_4_6
+      "off": disabled
+      minimal: low
+      low: low
+      medium: medium
+      high: high
+      xhigh: null
+      max: max
+    anthropic_premium: &thinking_anthropic_premium
+      "off": disabled
+      minimal: low
+      low: low
+      medium: medium
+      high: high
+      xhigh: xhigh
+      max: max
+    google_pro: &thinking_google_pro
+      "off": null
+      minimal: null
+      low: LOW
+      medium: null
+      high: HIGH
+      xhigh: null
+      max: null
+    google_flash: &thinking_google_flash
+      "off": null
+      minimal: MINIMAL
+      low: LOW
+      medium: MEDIUM
+      high: HIGH
+      xhigh: null
+      max: null
+    google_pro_openai: &thinking_google_pro_openai
+      "off": null
+      minimal: null
+      low: low
+      medium: null
+      high: high
+      xhigh: null
+      max: null
+    google_flash_openai: &thinking_google_flash_openai
+      "off": null
+      minimal: minimal
+      low: low
+      medium: medium
+      high: high
+      xhigh: null
+      max: null
   gateways:
     truefoundry-anthropic: &tf_anthropic
       provider: truefoundry
@@ -109,6 +180,7 @@ my:
         gateway: *google
         display_name: Gemini 3.1 Pro
         reasoning: true
+        thinking_level_map: *thinking_google_pro
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -123,6 +195,7 @@ my:
         gateway: *google
         display_name: Gemini 3.5 Flash
         reasoning: true
+        thinking_level_map: *thinking_google_flash
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -136,6 +209,7 @@ my:
         gateway: *google
         display_name: Gemini 3.1 Flash-Lite
         reasoning: true
+        thinking_level_map: *thinking_google_flash
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -155,6 +229,7 @@ riot:
         gateway: *tf_openai
         display_name: GPT-5.6 Terra
         reasoning: true
+        thinking_level_map: *thinking_openai_gpt_5_6
         ctx: 400000
         max_tokens: 128000
         cost:
@@ -170,6 +245,7 @@ riot:
         gateway: *tf_openai
         display_name: GPT-5.6 Luna
         reasoning: true
+        thinking_level_map: *thinking_openai_gpt_5_6
         ctx: 400000
         max_tokens: 128000
         cost:
@@ -185,6 +261,7 @@ riot:
         gateway: *tf_anthropic
         display_name: Claude Opus 4.8
         reasoning: true
+        thinking_level_map: *thinking_anthropic_premium
         ctx: 200000
         max_tokens: 32000
         one_m: true
@@ -202,6 +279,7 @@ riot:
         gateway: *tf_anthropic
         display_name: Claude Sonnet 5
         reasoning: true
+        thinking_level_map: *thinking_anthropic_premium
         ctx: 200000
         max_tokens: 64000
         one_m: true
@@ -217,6 +295,7 @@ riot:
         gateway: *tf_openai
         display_name: Gemini 3.1 Pro
         reasoning: true
+        thinking_level_map: *thinking_google_pro_openai
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -231,6 +310,7 @@ riot:
         gateway: *tf_openai
         display_name: Gemini 3.5 Flash
         reasoning: true
+        thinking_level_map: *thinking_google_flash_openai
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -244,6 +324,7 @@ riot:
         gateway: *tf_openai
         display_name: Gemini 3.1 Flash-Lite
         reasoning: true
+        thinking_level_map: *thinking_google_flash_openai
         ctx: 1048576
         max_tokens: 65536
         cost:
@@ -259,12 +340,22 @@ riot:
         vendor: anthropic
         alias: haiku # feeds claude's HAIKU alias even while dormant in pi
         gateway: *tf_anthropic
+        reasoning: true
+        thinking_level_map: *thinking_anthropic_standard
+        ctx: 200000
+        max_tokens: 64000
+        cost:
+          input: 1
+          output: 5
+          cache_read: 0.1
+          cache_write: 1.25
         enabled: false
       - id: claude-vertex/anthropic-claude-opus-4-6
         vendor: anthropic
         gateway: *tf_anthropic
         display_name: Claude Opus 4.6
         reasoning: true
+        thinking_level_map: *thinking_anthropic_opus_4_6
         ctx: 200000
         max_tokens: 32000
         one_m: true
@@ -276,6 +367,7 @@ riot:
         gateway: *tf_anthropic
         display_name: Claude Opus 4.7
         reasoning: true
+        thinking_level_map: *thinking_anthropic_premium
         ctx: 200000
         max_tokens: 32000
         one_m: true

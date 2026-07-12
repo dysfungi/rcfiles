@@ -63,7 +63,8 @@
         {
           "id": {{ $r.id | quote }},
           "name": {{ printf "%s%s" (default $m.id (dig "display_name" "" $m)) (ternary " 1M" "" $r.oneMVariant) | quote }},
-          "reasoning": {{ dig "reasoning" false $m }},
+          "reasoning": {{ dig "reasoning" false $m }},{{ if dig "reasoning" false $m }}
+          "thinkingLevelMap": {{ $m.thinking_level_map | mustToJson }},{{ end }}
           "input": ["text", "image"],
           "contextWindow": {{ $r.ctx }},
           "maxTokens": {{ $m.max_tokens }},

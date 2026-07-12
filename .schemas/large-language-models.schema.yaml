@@ -13,6 +13,10 @@ properties:
     properties:
       default_model_parameters:
         $ref: "#/$defs/modelParameters"
+      thinking_level_maps:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/thinkingLevelMap"
       gateways:
         type: object
         additionalProperties:
@@ -63,6 +67,8 @@ $defs:
         $ref: "#/$defs/gateway"
       reasoning:
         type: boolean
+      thinking_level_map:
+        $ref: "#/$defs/thinkingLevelMap"
       ctx:
         type: integer
         minimum: 1
@@ -87,6 +93,26 @@ $defs:
         uniqueItems: true
         items:
           enum: [scout, planner, reviewer, worker]
+
+  thinkingLevelMap:
+    type: object
+    additionalProperties: false
+    required: ["off", minimal, low, medium, high, xhigh, max]
+    properties:
+      "off":
+        type: [string, "null"]
+      minimal:
+        type: [string, "null"]
+      low:
+        type: [string, "null"]
+      medium:
+        type: [string, "null"]
+      high:
+        type: [string, "null"]
+      xhigh:
+        type: [string, "null"]
+      max:
+        type: [string, "null"]
 
   gateway:
     type: object

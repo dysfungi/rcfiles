@@ -20,9 +20,10 @@
   {{- if $m.enabled -}}{{- $enabled = append $enabled $m.id -}}{{- end -}}
 {{- end -}}
 {{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
-{{- /* pi stores a provider-qualified model in enabledModels, but defaultModel
-       must be the bare id because defaultProvider is emitted separately. */ -}}
-{{- $defaultModel := trimPrefix (printf "%s/" $defaultProvider) $default }}
+{{- /* Custom-model lookup is provider-qualified. Keep the catalog's canonical
+       id intact even though defaultProvider is emitted separately; trimming the
+       provider prefix makes Riot's default fail Pi's exact resolution. */ -}}
+{{- $defaultModel := $default }}
 
 """Merge managed Pi preferences into Pi-owned runtime settings state.
 
@@ -54,7 +55,7 @@ MANAGED: dict[str, Any] = {
         "npm:pi-vimmode",
     ],
     "defaultProjectTrust": "always",
-    "defaultThinkingLevel": "high",
+    "defaultThinkingLevel": "max",
     "hideThinkingBlock": False,
     "showCacheMissNotices": True,
     "theme": "dark",
