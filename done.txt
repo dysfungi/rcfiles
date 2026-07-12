@@ -87,3 +87,4 @@ x 2026-07-11 (B) Implement pi context-discipline root-thread guard, catalog-driv
 x 2026-07-11 (B) 2026-07-10 Implement Pi plan-mode command redesign +pi @worktree:feat/pi-mode-commands
 x 2026-07-11 Implement Pi per-model thinking maps and max default +pi +chezmoi @worktree:.worktree/feat/pi-per-model-thinking-levels session:019f526c-54c4-78d2-abd9-4430a8e2f7c1 agent:pi
 x 2026-07-11 Implement marker-first root-worktree/direct-worker-Git Pi workflow +pi +worktree @worktree:.worktree/feat/pi-marker-worktree-subagents session:019f5
+x 2026-07-11 Implement direct-shell tmux startup, xonsh mail, and cross-platform regression coverage +tmux +chezmoi @worktree:.worktree/fix/tmux-direct-shell-cwd agent:pi
