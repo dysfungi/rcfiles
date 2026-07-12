@@ -41,6 +41,7 @@ WEZTERM_TEMPLATE = REPO_ROOT / "dot_wezterm.lua.tmpl"
 _TIMEOUT_SECONDS = 15
 _POLL_SECONDS = 0.05
 _SESSION = "main"
+_TEST_MAILCHECK_SECONDS = str(24 * 60 * 60)
 _EXPECTED_TMUX_DEFAULT_COMMAND_SURFACES = (
     'set-option -g default-shell "$SHELL"',
     "set-option -gu default-command",
@@ -111,6 +112,9 @@ class PaneProbe:
     argv0: str
     cwd: str
     login: str
+    mail: str
+    mailcheck: str
+    mailpath: str
     path: str
     shell: str
     term: str
@@ -145,17 +149,29 @@ class IsolatedTmuxServer:
         (self.home / ".local" / "share" / "chezmoi").mkdir(parents=True)
         self.path_sentinel = tmp_path / "inherited-path"
         self.path_sentinel.mkdir()
+        self.mailbox = tmp_path / "empty-mailbox"
+        self.mailbox.touch()
         self.clients: list[AttachedTmuxClient] = []
         self.closed = False
         inherited_path = os.environ.get("PATH", "")
+        excluded_environment = {
+            "MAIL",
+            "MAILCHECK",
+            "MAILPATH",
+            "TMUX",
+            "TMUX_PANE",
+        }
         self.environment = {
             key: value
             for key, value in os.environ.items()
-            if not key.startswith("GIT_") and key not in {"TMUX", "TMUX_PANE"}
+            if not key.startswith("GIT_") and key not in excluded_environment
         }
         self.environment.update(
             {
                 "HOME": str(self.home),
+                "MAIL": str(self.mailbox),
+                "MAILCHECK": _TEST_MAILCHECK_SECONDS,
+                "MAILPATH": "",
                 "PATH": os.pathsep.join((str(self.path_sentinel), inherited_path)),
                 "SHELL": str(self.shell),
                 # A known POSIX terminal keeps detached-server startup independent of
@@ -277,6 +293,9 @@ Path(sys.argv[1]).write_text(
             "argv0": os.environ.get("TMUX_DIRECT_ARGV0", ""),
             "cwd": os.getcwd(),
             "login": os.environ.get("TMUX_DIRECT_LOGIN", ""),
+            "mail": os.environ.get("MAIL", ""),
+            "mailcheck": os.environ.get("MAILCHECK", ""),
+            "mailpath": os.environ.get("MAILPATH", ""),
             "path": os.environ.get("PATH", ""),
             "shell": os.environ.get("SHELL", ""),
             "term": os.environ.get("TERM", ""),
@@ -340,6 +359,9 @@ Path(sys.argv[1]).write_text(
         assert probe.login == "true", f"{pane_id} is not a login shell: {probe!r}"
         assert probe.argv0.lstrip("-").startswith(expected_name), probe.argv0
         assert Path(probe.cwd).resolve() == expected_cwd.resolve()
+        assert Path(probe.mail).resolve() == self.mailbox.resolve()
+        assert probe.mailcheck == _TEST_MAILCHECK_SECONDS
+        assert probe.mailpath == ""
         assert self.path_sentinel.as_posix() in probe.path.replace("\\", "/").split(
             os.pathsep
         )
@@ -584,8 +606,13 @@ def test_tmux_and_rendered_wezterm_commands_match_explicit_allowlist(
 @pytest.mark.slow
 def test_managed_tmux_config_resets_stale_login_and_preserves_pane_cwd(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Source the actual config, then exercise all standard bindings after reattach."""
+    monkeypatch.setenv("MAIL", str(tmp_path / "inherited-mailbox"))
+    monkeypatch.setenv("MAILCHECK", "0")
+    monkeypatch.setenv("MAILPATH", str(tmp_path / "inherited-mailpath"))
+
     nested_directory = tmp_path / "home" / "nested" / "directory"
     nested_directory.mkdir(parents=True)
 
