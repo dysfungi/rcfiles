@@ -1,16 +1,15 @@
-"""Generic mail-spool notices for xonsh — login(1) parity, nothing chezmoi-specific.
+"""Generic mail-spool notices for interactive xonsh shells.
 
 xonsh has no built-in mail check (zsh gets one for free once MAIL is set —
-see .zsh/mail/), so this module replicates the two standard notices:
+see .zsh/mail/), so this module supplies the two standard notices on every
+platform now that managed tmux and WezTerm launch configured shells directly:
 
-  1. Startup notice ("You have mail.") — NON-DARWIN ONLY: on macOS every new
-     tmux pane / Terminal tab is spawned via login(1), which already prints
-     it (a second startup check would double-print); Linux has no login(1)
-     on that path, so the shell prints it instead.
-  2. Throttled pre-prompt check ("You have new mail.") — covers long-lived
-     panes where mail (e.g. the noon chezmoi-update-cron drift summary)
-     arrives mid-session.
+  1. Startup notice ("You have mail.") for a populated spool.
+  2. Throttled pre-prompt check ("You have new mail.") for mail that arrives
+     while a pane remains open.
 """
+
+from time import monotonic as _mail_clock
 
 from _utils import rc
 
@@ -19,29 +18,30 @@ from _utils import rc
 def __rc_mail(xsh):
     import os
     import sys
-    import time
 
     xsh.env.setdefault("MAIL", "/var/mail/" + xsh.env.get("USER", ""))
     spool = str(xsh.env.get("MAIL"))
 
-    # (1) Startup notice — see module docstring for the platform gate.
-    if sys.platform != "darwin":
-        try:
-            if os.path.getsize(spool) > 0:
-                print("You have mail.", file=sys.stderr)
-        except OSError:
-            pass  # No spool yet (or unreadable) — silence, like login(1).
+    # (1) Startup notice. "Unreadable" means getsize cannot read metadata;
+    # a mode-000 spool that remains stat-able is still a populated spool.
+    try:
+        if os.path.getsize(spool) > 0:
+            print("You have mail.", file=sys.stderr)
+    except OSError:
+        pass  # No spool yet (or metadata unreadable) — remain silent.
 
     # (2) Pre-prompt check, at most once per 60s (zsh MAILCHECK parity).
     # Announce only on spool GROWTH since the last check: size increase, or
-    # mtime advance at non-shrinking size (a shrink means the spool was read,
-    # not new mail). Baseline is taken at the first prompt so pre-existing
-    # mail is never re-announced — that is the startup notice's job.
+    # mtime advance at non-shrinking size. A shrink deliberately rebaselines:
+    # between polls it is indistinguishable from user-driven read/compaction,
+    # so treating it as mail would create a false notice. Baseline is taken at
+    # the first prompt so pre-existing mail is never re-announced — that is the
+    # startup notice's job.
     state = {"last_check": 0.0, "stat": None}
 
     @events.on_pre_prompt
     def _mail_check_hook(**kwargs):
-        now = time.monotonic()
+        now = _mail_clock()
         if now - state["last_check"] < 60.0:
             return
         state["last_check"] = now

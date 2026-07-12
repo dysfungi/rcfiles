@@ -114,7 +114,11 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 - Plain cron does not catch up missed runs (e.g. laptop was sleeping). The midday schedule mitigates this for laptops that are awake during the day.
 - New Homebrew casks that require privileged install should be applied interactively (`chezmoi apply`); `brew bundle`'s internal `sudo` calls bypass `chezmoi-sudo` and may be skipped unattended.
 - Skipped privileged steps emit a `WARN` to the log and are deferred to the next interactive apply — they never fail silently.
-- Targets modified out-of-band are skipped by `--keep-going` every night and re-nagged (cron mail) until fixed via `chezmoi diff <target> && chezmoi apply --force <target>`. The "you have mail" notice surfaces through `login(1)` (tmux panes + Terminal.app), zsh's `MAIL`/startup check, and xonsh's pre-prompt check.
+- Targets modified out-of-band are skipped by `--keep-going` every night and re-nagged (cron mail) until fixed via `chezmoi diff <target> && chezmoi apply --force <target>`. The "you have mail" notice surfaces through zsh's `MAIL`/startup check and xonsh's startup/pre-prompt check.
+
+### Terminal Startup
+
+Managed tmux and WezTerm launch their configured shell directly on every platform; they deliberately do not invoke account-level `/usr/bin/login`. This restores tmux's native `pane_current_path` behavior and intentionally forgoes managed login banners, utmpx records, and login-provided mail notices. Shell-level login modes remain allowed (for example, the Windows WSL `xonsh --login` and `bash --login` launch-menu entries); direct WezTerm, SSH, and bare-shell mail checks remain independently configured.
 
 ### Key Subsystems
 
