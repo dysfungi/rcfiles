@@ -56,7 +56,17 @@ def test_root_allowlist(tool_name: str, tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "tool_name", ["grep", "find", "ls", "bash", "mcp", "future_tool"]
+    "tool_name",
+    [
+        "grep",
+        "find",
+        "ls",
+        "bash",
+        "mcp",
+        "worktree_commit",
+        "worktree_sync",
+        "future_tool",
+    ],
 )
 def test_root_blocks_exploration_and_unknown_tools(
     tool_name: str, tmp_path: Path
@@ -156,4 +166,6 @@ console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
     assert json.loads(result.stdout) == {"EXISTING": "value", "PI_SUBAGENT": "1"}
 
     extension = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
-    assert "env: childEnvironment()," in extension.read_text()
+    source = extension.read_text()
+    assert "execution: agent.execution" in source
+    assert "approval: lease" in source

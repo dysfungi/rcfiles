@@ -13,13 +13,14 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { isInteractiveRoot } from "./child-policy.mjs";
 import { decideToolCall } from "./root-thread-guard-core.mjs";
 
 export default function rootThreadGuard(pi: ExtensionAPI): void {
 	let active = false;
 
 	pi.on("session_start", async (_event, ctx) => {
-		active = ctx.mode === "tui" || ctx.mode === "rpc";
+		active = isInteractiveRoot(ctx.mode);
 		ctx.ui.setStatus("root-thread-guard", active ? ctx.ui.theme.fg("warning", "🧭 root") : undefined);
 	});
 

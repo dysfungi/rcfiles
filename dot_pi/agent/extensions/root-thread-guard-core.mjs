@@ -2,8 +2,8 @@ import { homedir } from "node:os";
 import { isAbsolute, relative, resolve } from "node:path";
 
 const ROOT_MODES = new Set(["tui", "rpc"]);
-const EXACTLY_ALLOWED_TOOLS = new Set(["subagent", "write", "edit", "questionnaire", "plan_write", "scratchpad"]);
-const PREFIX_ALLOWED_TOOLS = ["worktree_", "memory_"];
+const EXACTLY_ALLOWED_TOOLS = new Set(["subagent", "write", "edit", "questionnaire", "plan_write", "scratchpad", "worktree_start", "worktree_status", "worktree_stop"]);
+const PREFIX_ALLOWED_TOOLS = ["memory_"];
 
 function expandHome(path, home) {
 	return path === "~" || path.startsWith("~/") ? `${home}${path.slice(1)}` : path;

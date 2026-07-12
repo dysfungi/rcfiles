@@ -61,7 +61,12 @@ MANAGED: dict[str, Any] = {
     "defaultProvider": {{ $defaultProvider | quote }},
     "enabledModels": {{ $enabled | mustToJson }},
     "packages": [
-        "npm:@rezamonangg/pi-worktree",
+        {
+            "source": "git:github.com/frank-machine/pi-worktree@626f7bd76abec16578838a0966a39e4472e80aa8",
+            "autoload": False,
+            "extensions": ["+extensions/index.ts"],
+            "skills": [],
+        },
         "npm:pi-mcp-adapter",
         "npm:pi-memory",
         "npm:pi-vimmode",

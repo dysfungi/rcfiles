@@ -12,7 +12,7 @@
  * Uses JSON mode to capture structured output from subagents.
  */
 
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -30,11 +30,13 @@ import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
 import { childEnvironment } from "./child-env.mjs";
+import { acquireWorktreeLease, releaseWorktreeLease, resolveApprovedWorktree } from "../worktree-approval-registry.mjs";
 
 const MAX_PARALLEL_TASKS = 8;
 const MAX_CONCURRENCY = 4;
 const COLLAPSED_ITEM_COUNT = 10;
 const PER_TASK_OUTPUT_CAP = 50 * 1024;
+const TERMINATION_GRACE_MS = 5_000;
 
 function formatTokens(count: number): string {
 	if (count < 1000) return count.toString();
@@ -265,31 +267,84 @@ function getPiInvocation(args: string[]): { command: string; args: string[] } {
 
 type OnUpdateCallback = (partial: AgentToolResult<SubagentDetails>) => void;
 
+function repoRoot(cwd: string): string | null {
+	try {
+		return execFileSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], { encoding: "utf8" }).trim() || null;
+	} catch {
+		return null;
+	}
+}
+
+interface PreparedAgent {
+	agent: AgentConfig;
+	effectiveCwd: string;
+	leaseRepoRoot?: string;
+}
+
+function prepareAgent(defaultCwd: string, sessionId: string, agents: AgentConfig[], agentName: string, cwd: string | undefined): PreparedAgent | string {
+	const agent = agents.find((candidate) => candidate.name === agentName);
+	if (!agent) {
+		const available = agents.map((candidate) => `"${candidate.name}"`).join(", ") || "none";
+		return `Unknown agent: "${agentName}". Available agents: ${available}.`;
+	}
+	if (agent.executionError || !agent.execution) return `Agent "${agentName}" rejected: ${agent.executionError ?? "missing execution class"}.`;
+	const root = repoRoot(defaultCwd);
+	if (agent.execution === "read-only") {
+		if (!root) return { agent, effectiveCwd: cwd ?? defaultCwd };
+		// An active approval defines the workflow snapshot, including uncommitted worker edits.
+		const approved = resolveApprovedWorktree({ sessionId, repoRoot: root });
+		if (approved.ok) return { agent, effectiveCwd: approved.approval.worktreeRoot };
+		if (approved.noApproval) return { agent, effectiveCwd: cwd ?? defaultCwd };
+		return `Read-only agent launch rejected: ${approved.reason}`;
+	}
+	if (!root) return "Writable agent requires a Git repository with a root-approved worktree.";
+	if (cwd && !path.isAbsolute(cwd)) return "Writable agent cwd must be an absolute path.";
+	const approved = resolveApprovedWorktree({ sessionId, repoRoot: root, cwd });
+	if (!approved.ok) return `Writable agent launch rejected: ${approved.reason}`;
+	return { agent, effectiveCwd: approved.approval.worktreeRoot, leaseRepoRoot: approved.approval.repoRoot };
+}
+
+function prepareRequests(defaultCwd: string, sessionId: string, agents: AgentConfig[], requests: Array<{ agent: string; cwd?: string }>, allowMultipleWritable = false): { prepared?: PreparedAgent[]; reason?: string } {
+	const prepared: PreparedAgent[] = [];
+	for (const request of requests) {
+		const candidate = prepareAgent(defaultCwd, sessionId, agents, request.agent, request.cwd);
+		if (typeof candidate === "string") return { reason: candidate };
+		prepared.push(candidate);
+	}
+	const writable = prepared.filter((candidate) => candidate.agent.execution === "worktree-write");
+	if (!allowMultipleWritable && writable.length > 1) return { reason: "Parallel writable workers require distinct root-owned worktrees; run them sequentially." };
+	return { prepared };
+}
+
 async function runSingleAgent(
-	defaultCwd: string,
-	agents: AgentConfig[],
+	sessionId: string,
+	prepared: PreparedAgent,
 	agentName: string,
 	task: string,
-	cwd: string | undefined,
 	step: number | undefined,
 	signal: AbortSignal | undefined,
 	onUpdate: OnUpdateCallback | undefined,
 	makeDetails: (results: SingleResult[]) => SubagentDetails,
 ): Promise<SingleResult> {
-	const agent = agents.find((a) => a.name === agentName);
-
-	if (!agent) {
-		const available = agents.map((a) => `"${a.name}"`).join(", ") || "none";
-		return {
-			agent: agentName,
-			agentSource: "unknown",
-			task,
-			exitCode: 1,
-			messages: [],
-			stderr: `Unknown agent: "${agentName}". Available agents: ${available}.`,
-			usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
-			step,
-		};
+	const { agent } = prepared;
+	const effectiveCwd = prepared.effectiveCwd;
+	let lease: { repoRoot: string; worktreeRoot: string; generation: number; leaseId: number } | undefined;
+	if (agent.execution === "worktree-write") {
+		const leased = acquireWorktreeLease({ sessionId, repoRoot: prepared.leaseRepoRoot!, cwd: effectiveCwd });
+		if (!leased.ok) {
+			return {
+				agent: agentName,
+				agentSource: agent.source,
+				task,
+				exitCode: 1,
+				messages: [],
+				stderr: `Writable agent launch rejected: ${leased.reason}`,
+				usage: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, contextTokens: 0, turns: 0 },
+				model: agent.model,
+				step,
+			};
+		}
+		lease = leased.lease;
 	}
 
 	const args: string[] = ["--mode", "json", "-p", "--no-session"];
@@ -331,15 +386,26 @@ async function runSingleAgent(
 		args.push(`Task: ${task}`);
 		let wasAborted = false;
 
-		const exitCode = await new Promise<number>((resolve) => {
+		const exit = await new Promise<{ code: number; signal?: string }>((resolve) => {
 			const invocation = getPiInvocation(args);
 			const proc = spawn(invocation.command, invocation.args, {
-				cwd: cwd ?? defaultCwd,
-				env: childEnvironment(),
+				cwd: effectiveCwd,
+				env: childEnvironment(process.env, { execution: agent.execution, approval: lease }),
 				shell: false,
 				stdio: ["ignore", "pipe", "pipe"],
 			});
 			let buffer = "";
+			let settled = false;
+			let abortListener: (() => void) | undefined;
+			let terminationTimer: ReturnType<typeof setTimeout> | undefined;
+
+			const settle = (code: number, exitSignal?: string) => {
+				if (settled) return;
+				settled = true;
+				if (terminationTimer) clearTimeout(terminationTimer);
+				if (signal && abortListener) signal.removeEventListener("abort", abortListener);
+				resolve({ code, signal: exitSignal });
+			};
 
 			const processLine = (line: string) => {
 				if (!line.trim()) return;
@@ -389,32 +455,57 @@ async function runSingleAgent(
 				currentResult.stderr += data.toString();
 			});
 
-			proc.on("close", (code) => {
+			proc.once("close", (code, exitSignal) => {
 				if (buffer.trim()) processLine(buffer);
-				resolve(code ?? 0);
+				settle(code ?? 1, exitSignal ?? undefined);
 			});
 
-			proc.on("error", () => {
-				resolve(1);
+			proc.once("error", (error) => {
+				currentResult.stderr += `${error.message}\n`;
+				settle(1);
 			});
 
+			const terminate = () => {
+				if (settled || wasAborted) return;
+				wasAborted = true;
+				try {
+					if (!proc.kill("SIGTERM")) {
+						settle(1, "SIGTERM");
+						return;
+					}
+					terminationTimer = setTimeout(() => {
+						if (settled) return;
+						try {
+							if (!proc.kill("SIGKILL")) settle(1, "SIGKILL");
+						} catch (error) {
+							currentResult.stderr += `${error instanceof Error ? error.message : String(error)}\n`;
+							settle(1, "SIGKILL");
+						}
+					}, TERMINATION_GRACE_MS);
+				} catch (error) {
+					currentResult.stderr += `${error instanceof Error ? error.message : String(error)}\n`;
+					settle(1, "SIGTERM");
+				}
+			};
 			if (signal) {
-				const killProc = () => {
-					wasAborted = true;
-					proc.kill("SIGTERM");
-					setTimeout(() => {
-						if (!proc.killed) proc.kill("SIGKILL");
-					}, 5000);
-				};
-				if (signal.aborted) killProc();
-				else signal.addEventListener("abort", killProc, { once: true });
+				abortListener = terminate;
+				if (signal.aborted) terminate();
+				else signal.addEventListener("abort", terminate, { once: true });
 			}
 		});
 
-		currentResult.exitCode = exitCode;
-		if (wasAborted) throw new Error("Subagent was aborted");
+		currentResult.exitCode = exit.code;
+		if (exit.signal) {
+			currentResult.stopReason = wasAborted ? "aborted" : "error";
+			currentResult.errorMessage ??= `Subagent terminated by ${exit.signal}${wasAborted ? " after an abort request" : ""}.`;
+		}
+		if (wasAborted && !currentResult.errorMessage) {
+			currentResult.stopReason = "aborted";
+			currentResult.errorMessage = "Subagent was aborted.";
+		}
 		return currentResult;
 	} finally {
+		if (lease) releaseWorktreeLease({ sessionId, ...lease });
 		if (tmpPromptPath)
 			try {
 				fs.unlinkSync(tmpPromptPath);
@@ -530,6 +621,13 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if (params.chain && params.chain.length > 0) {
+				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, params.chain, true);
+				if (!preflight.prepared)
+					return {
+						content: [{ type: "text", text: `Chain launch rejected: ${preflight.reason}` }],
+						details: makeDetails("chain")([]),
+						isError: true,
+					};
 				const results: SingleResult[] = [];
 				let previousOutput = "";
 
@@ -553,11 +651,10 @@ export default function (pi: ExtensionAPI) {
 						: undefined;
 
 					const result = await runSingleAgent(
-						ctx.cwd,
-						agents,
+						ctx.sessionManager.getSessionId(),
+						preflight.prepared[i],
 						step.agent,
 						taskWithContext,
-						step.cwd,
 						i + 1,
 						signal,
 						chainUpdate,
@@ -623,13 +720,20 @@ export default function (pi: ExtensionAPI) {
 					}
 				};
 
+				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, params.tasks);
+				if (!preflight.prepared)
+					return {
+						content: [{ type: "text", text: `Parallel launch rejected: ${preflight.reason}` }],
+						details: makeDetails("parallel")([]),
+						isError: true,
+					};
+
 				const results = await mapWithConcurrencyLimit(params.tasks, MAX_CONCURRENCY, async (t, index) => {
 					const result = await runSingleAgent(
-						ctx.cwd,
-						agents,
+						ctx.sessionManager.getSessionId(),
+						preflight.prepared![index],
 						t.agent,
 						t.task,
-						t.cwd,
 						undefined,
 						signal,
 						// Per-task update callback
@@ -666,12 +770,18 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if (params.agent && params.task) {
+				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, [{ agent: params.agent, cwd: params.cwd }]);
+				if (!preflight.prepared)
+					return {
+						content: [{ type: "text", text: `Agent launch rejected: ${preflight.reason}` }],
+						details: makeDetails("single")([]),
+						isError: true,
+					};
 				const result = await runSingleAgent(
-					ctx.cwd,
-					agents,
+					ctx.sessionManager.getSessionId(),
+					preflight.prepared[0],
 					params.agent,
 					params.task,
-					params.cwd,
 					undefined,
 					signal,
 					onUpdate,

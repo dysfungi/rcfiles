@@ -10,7 +10,7 @@
 
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const [extensionPath, packageDir] = process.argv.slice(2);
@@ -30,6 +30,10 @@ const jiti = createJiti(import.meta.url, {
 	},
 });
 const { default: planModeExtension } = await jiti.import(resolve(extensionPath));
+const extensionDir = dirname(resolve(extensionPath));
+const { default: rootThreadGuard } = await jiti.import(resolve(extensionDir, "..", "root-thread-guard.ts"));
+const bashSafety = await jiti.import(resolve(extensionDir, "bash-safety.ts"));
+const mutationPolicy = await import(pathToFileURL(resolve(extensionDir, "..", "bash-mutation-policy.mjs")).href);
 
 function createHarness({ entries = [], branchEntries = entries, idle = true, mode = "rpc", plan = true, sendFailure } = {}) {
 	const commands = new Map();
@@ -38,7 +42,7 @@ function createHarness({ entries = [], branchEntries = entries, idle = true, mod
 	const statuses = [];
 	const persistedEntries = [];
 	const sentMessages = [];
-	const initialTools = ["read", "bash", "edit", "write", "external_tool"];
+	const initialTools = ["read", "bash", "edit", "write", "mcp", "external_tool"];
 	const state = { activeTools: [...initialTools], idle };
 
 	const pi = {
@@ -52,7 +56,9 @@ function createHarness({ entries = [], branchEntries = entries, idle = true, mod
 			return name === "plan" && plan;
 		},
 		on(name, handler) {
-			events.set(name, handler);
+			const handlers = events.get(name) ?? [];
+			handlers.push(handler);
+			events.set(name, handlers);
 		},
 		registerCommand(name, options) {
 			commands.set(name, options);
@@ -89,11 +95,20 @@ function createHarness({ entries = [], branchEntries = entries, idle = true, mod
 	};
 
 	planModeExtension(pi);
-	return { commands, ctx, events, initialTools, notifications, persistedEntries, sentMessages, state, statuses };
+	return { commands, ctx, events, initialTools, notifications, persistedEntries, pi, sentMessages, state, statuses };
+}
+
+async function emit(harness, eventName, event) {
+	let result;
+	for (const handler of harness.events.get(eventName) ?? []) {
+		const nextResult = await handler(event, harness.ctx);
+		if (nextResult !== undefined) result = nextResult;
+	}
+	return result;
 }
 
 async function startPlanMode(harness) {
-	await harness.events.get("session_start")({}, harness.ctx);
+	await emit(harness, "session_start", {});
 }
 
 async function runCommand(harness, name, args = "") {
@@ -115,7 +130,7 @@ function testCommandRegistration() {
 async function testSelectorsAndToolSnapshots() {
 	const harness = createHarness();
 	await startPlanMode(harness);
-	assert.deepEqual(harness.state.activeTools, ["read", "bash", "external_tool", "grep", "find", "ls", "questionnaire", "plan_write"]);
+	assert.deepEqual(harness.state.activeTools, ["read", "bash", "mcp", "external_tool", "grep", "find", "ls", "questionnaire", "plan_write"]);
 
 	const beforeRepeatedPlan = {
 		entries: harness.persistedEntries.length,
@@ -174,6 +189,7 @@ async function testBranchLocalSessionRestore() {
 	assert.deepEqual(branchWithPlanMode.state.activeTools, [
 		"read",
 		"bash",
+		"mcp",
 		"external_tool",
 		"grep",
 		"find",
@@ -264,18 +280,59 @@ async function testContextDeduplication() {
 	await startPlanMode(harness);
 	const first = contextMessage("plan-mode-context", "[PLAN MODE ACTIVE]\nold structured context");
 	const quotedMarker = contextMessage(undefined, "Please explain [PLAN MODE ACTIVE] to me.");
-	const injected = await harness.events.get("before_agent_start")({}, harness.ctx);
+	const injected = await emit(harness, "before_agent_start", {});
 	const legacy = { role: "user", ...injected.message };
 	delete legacy.customType;
 	const newest = contextMessage("plan-mode-context", "[PLAN MODE ACTIVE]\nnew structured context");
 	const ordinary = { role: "user", content: "keep me" };
 	const messages = [first, ordinary, quotedMarker, legacy, newest];
-	const activeResult = await harness.events.get("context")({ messages }, harness.ctx);
+	const activeResult = await emit(harness, "context", { messages });
 	assert.deepEqual(activeResult.messages, [ordinary, quotedMarker, newest]);
 
 	await runCommand(harness, "normal");
-	const normalResult = await harness.events.get("context")({ messages }, harness.ctx);
+	const normalResult = await emit(harness, "context", { messages });
 	assert.deepEqual(normalResult.messages, [ordinary, quotedMarker]);
+}
+
+async function testBashPolicyParity() {
+	await bashSafety.ensureParserLoaded();
+	for (const subcommand of mutationPolicy.MUTATING_GIT_SUBCMDS) {
+		assert.ok(
+			bashSafety.checkPlanModeBash(`git ${subcommand}`),
+			`plan mode must block the worktree policy's git ${subcommand}`,
+		);
+	}
+	for (const command of ["env SAFE=1 git config --get user.name", "find . -delete", "bash -c true"]) {
+		assert.ok(bashSafety.checkPlanModeBash(command), `plan mode must block ${command}`);
+	}
+	assert.equal(bashSafety.checkPlanModeBash("git status --short"), undefined);
+	assert.equal(bashSafety.checkPlanModeBash("printf '>'"), undefined);
+	assert.equal(bashSafety.checkPlanModeBash("printf 'literal ` backtick'"), undefined);
+	assert.ok(bashSafety.checkPlanModeBash("echo `rm -f output`"));
+
+	const harness = createHarness();
+	await startPlanMode(harness);
+	const blocked = await emit(harness, "tool_call", {
+		toolName: "bash",
+		input: { command: "git config --get user.name" },
+	});
+	assert.match(blocked.reason, /Plan mode: command blocked/);
+}
+
+async function testRootThreadPolicyComposition() {
+	const harness = createHarness({ mode: "rpc" });
+	rootThreadGuard(harness.pi);
+	await startPlanMode(harness);
+	assert.ok(harness.state.activeTools.includes("bash"), "plan mode preserves nominal Bash composition");
+	assert.ok(harness.state.activeTools.includes("mcp"), "plan mode preserves nominal MCP composition");
+
+	const bash = await emit(harness, "tool_call", {
+		toolName: "bash",
+		input: { command: "git status --short" },
+	});
+	const mcp = await emit(harness, "tool_call", { toolName: "mcp", input: {} });
+	assert.match(bash.reason, /root-thread context discipline/);
+	assert.match(mcp.reason, /root-thread context discipline/);
 }
 
 testCommandRegistration();
@@ -285,4 +342,6 @@ await testBranchLocalSessionRestore();
 await testModeParsingAndIdleGuards();
 await testImplementationKickoffAndFailure();
 await testContextDeduplication();
+await testBashPolicyParity();
+await testRootThreadPolicyComposition();
 console.log("plan-mode runtime handler harness: ok");

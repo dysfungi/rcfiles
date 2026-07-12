@@ -130,9 +130,9 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 
 ### Pi Extensions
 
-`dot_pi/agent/extensions/subagent/` vendors the complete upstream pi subagent example. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; prompts render into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace.
+`dot_pi/agent/extensions/subagent/` provides the managed subagent launcher. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; canonical workflow prompts render from `dot_pi/agent/prompts/` into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace.
 
-`root-thread-guard.ts` hard-blocks exploratory tools in root TUI/RPC sessions and directs work to `subagent`; JSON workers and print one-shots remain exempt. `plan-mode/` likewise applies only to interactive roots, so delegated workers retain write/edit capability. No root-guard bypass sentinel exists.
+`root-thread-guard.ts` hard-blocks exploratory tools in root TUI/RPC sessions and directs work to `subagent`; JSON workers and print one-shots remain exempt. The root owns `worktree_start`, `worktree_status`, and `worktree_stop`; an active approval routes every managed subagent to the approved linked worktree, so read-only review steps see uncommitted worker edits. Validated writable workers retain direct Git/Bash there. That topology check routes launch rather than containing later direct Git/Bash paths, so workers remain cooperative. Read-only Bash filtering recognizes known mutation forms only and is not a shell sandbox. `plan-mode/` likewise applies only to interactive roots, so delegated workers retain write/edit capability. No root-guard bypass sentinel exists.
 
 ## Setting Up a New Machine
 

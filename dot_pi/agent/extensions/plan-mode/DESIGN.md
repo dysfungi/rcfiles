@@ -37,12 +37,16 @@ evaluated, and why each decision was made, so the context lives next to the code
    read and edit without a parent-side CLI opt-out.
 7. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
    simply restore persisted state.
-8. **Hard read-only.** `edit`/`write` are _physically removed_ from the tool set
-   (a guarantee, not advice), and `bash` is gated to read-only commands.
-9. **Auto tool-preservation.** Plan mode must keep `worktree_*`/`memory_*`/`mcp`/
-   `scratchpad` available **without per-session reconfiguration** (the worktree
-   workflow is mandatory). Tools are preserved by _subtracting_ `edit`/`write`,
-   never by replacing the set with a hardcoded list.
+8. **Hard tool read-only.** `edit`/`write` are _physically removed_ from the tool
+   set (a guarantee, not advice). The plan-mode Bash gate independently rejects
+   mutations it recognizes, but is a best-effort classifier rather than a shell
+   sandbox; the managed root-thread guard blocks root Bash entirely.
+9. **Auto tool-preservation.** Plan mode must keep root lifecycle tools
+   (`worktree_start`, `worktree_status`, `worktree_stop`), `memory_*`, and
+   `scratchpad` available **without per-session reconfiguration**. Tools are
+   preserved by _subtracting_ `edit`/`write`, never by replacing the set with a
+   hardcoded list. The nominal tool set preserves `bash`/`mcp`, but the separate
+   root-thread policy still blocks those exploratory root calls.
 10. **Plans synced to disk.** The model can persist its plan even though
     `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
     is unaffected (`memory_*` tools are preserved).
@@ -125,7 +129,10 @@ substring, so ordinary user messages that quote it remain in context.
 
 `planTools = (active tools) − {edit, write} + {read, bash, grep, find, ls,
 questionnaire, plan_write}`. The pre-plan set is captured and restored on exit.
-This preserves `worktree_*`/`memory_*`/`mcp`/`scratchpad` automatically.
+This preserves root worktree lifecycle, `memory_*`, and `scratchpad`
+automatically. `bash` and `mcp` remain in the nominal set so plan mode does not
+silently replace unrelated extensions, but interactive roots cannot invoke them:
+root-thread-guard requires delegation for shell and MCP exploration.
 
 ### Plan persistence — scoped `plan_write` tool
 
@@ -190,15 +197,27 @@ uses pi's `ctx.ui.custom()` overlay rather than an external `less` process: it
 preserves the pi session, works across supported terminals, uses the active
 theme, and requires no subprocess or terminal-state cleanup.
 
-### Bash read-only enforcement — shell-quote tokenizer, regex fallback
+### Bash mutation policy — shared classifier, shell-quote enhancement
 
-Bash stays available for inspection but is gated. The check **tokenizes with
-`shell-quote` first** (handles quoting/escaping/redirects correctly — e.g.
-`echo ">"` is not a redirect, `echo "rm -rf"` is not an `rm`), applying the same
-mutation denylist `worktree-guard.ts` uses (one mental model across the repo),
-but stricter for read-only exploration (all `git merge` blocked; `push`/`pull`
-blocked; extra file-mutating builtins blocked). Regex is the **fallback only**,
-when the parser file is absent or a command fails to parse.
+In managed interactive roots, root-thread-guard blocks Bash before plan mode can
+use it; shell exploration belongs in a delegated read-only agent. Plan mode still
+keeps an independent gate for defense in depth and standalone use. It tokenizes
+with `shell-quote` when available (so `echo ">"` is not a redirect and
+`echo "rm -rf"` is not an `rm`), then always applies the quote-aware shared
+classifier in `../bash-mutation-policy.mjs`. Worktree and plan mode therefore
+use one conservative mutation policy rather than diverging deny lists.
+
+This is an accepted best-effort, cooperative boundary, not a complete Bash parser
+or hostile-process sandbox. An undefined result means only that no supported
+mutation form was recognized. The physical removal of `edit`/`write` is the hard
+plan-mode tool boundary; the Bash classifier is deliberately narrower.
+
+The policy treats command families such as `git branch`, `git config`, and
+`git stash` as mutating regardless of apparent read-only flags. That deliberate
+conservatism avoids trying to infer shell or Git intent and makes plan mode no
+less restrictive than the worktree guard. The built-in tokenizer is the fallback
+when `shell-quote` is absent or cannot parse an input; there is no regex-only
+fallback.
 
 #### Dependency delivery — chezmoi external + TTL (no scripts, no node_modules)
 
@@ -207,7 +226,7 @@ when the parser file is absent or a command fails to parse.
 (`../.chezmoiexternal.toml`, `refreshPeriod`, pinned to major `@1`) to
 `vendor/shell-quote-parse.cjs`. So: **no `package.json`, no `npm install`, no
 `node_modules`, nothing to maintain.** The extension imports it relatively and
-degrades to regex if it's missing.
+degrades to the shared built-in tokenizer if it's missing.
 
 ##### Why not `just-bash` (full bash AST)
 
@@ -225,7 +244,8 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 | File                           | Role                                                                                                                                                                                    |
 | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `index.ts`                     | Extension entry: flag, idempotent mode transitions, `/plan`/`/normal`/`/mode`/`/execute`, tool preservation, `plan_write`, status, context injection, bash gating, and session restore. |
-| `bash-safety.ts`               | Read-only bash analysis: shell-quote token check + regex fallback.                                                                                                                      |
+| `bash-safety.ts`               | Plan-mode Bash gate: shell-quote enhancement plus shared conservative fallback.                                                                                                         |
+| `../bash-mutation-policy.mjs`  | Canonical quote-aware shell mutation classifier shared with worktree guard.                                                                                                             |
 | `vendor/shell-quote-parse.cjs` | Vendored parser, fetched by chezmoi external (not committed).                                                                                                                           |
 | `../.chezmoiexternal.toml`     | Declares the shell-quote external (TTL refresh).                                                                                                                                        |
 
@@ -239,10 +259,13 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 - Valid `/plan`, `/normal`, `/mode`, and `/execute` while busy preserve state and warn. Invalid `/mode` arguments warn about parsing before checking busy state.
 - `/execute [instructions]` selects normal mode and emits exactly one `pi.sendUserMessage` kickoff. Optional instructions appear once under `--- Additional implementation instructions ---`; a kickoff failure reports an error and leaves normal mode selected.
 - `/implement <task>` resolves to the canonical managed `prompts/implement.md` as a prompt template (scout → planner → worker), not an extension command.
-- In plan mode: `edit`/`write` absent; `worktree_*`/`memory_*`/`mcp` present;
-  mutating bash blocked, read-only bash allowed; `plan_write` writes
-  `~/.pi/agent/plans/<sessionId>.md` **and** renders the plan as Markdown inline
-  (model-facing result stays `Plan saved to <path>`).
+- In plan mode: `edit`/`write` absent; root lifecycle tools and `memory_*`
+  remain callable; `bash`/`mcp` remain in nominal tool composition but
+  root-thread-guard blocks their root use and requires delegated exploration.
+  The independent Bash gate preserves the shared policy's supported
+  classifications; it does not claim complete shell mutation detection.
+  `plan_write` writes `~/.pi/agent/plans/<sessionId>.md` **and** renders
+  the plan as Markdown inline (model-facing result stays `Plan saved to <path>`).
 - `/plan-show` (Ctrl+Alt+V) opens the saved plan in a full-screen, scrollable
   Markdown pager (out of context); missing/empty plan → a warning notification.
 
@@ -257,11 +280,14 @@ without an LLM turn.
 The harness verifies idempotent `/plan` and `/normal` selection, preservation
 of tools added by another extension, exact `/mode` parsing and completions,
 busy-agent rejection, `/execute` ordering and error behavior, and that plan mode
-does not register `/implement`. The pytest wrapper additionally asks Pi's real
-RPC command dispatcher for the command list and verifies `/implement` resolves
-to the canonical managed `prompts/implement.md` prompt template. Coverage also
-includes interactive-root session-start gates, branch-local state restore, and
-structured plus exact-legacy plan-context de-duplication without removing ordinary
-user text that quotes the plan marker. The Node harness is intentionally a small API mock: Pi's
-interactive/RPC modes cannot reliably hold an agent busy or intercept
+does not register `/implement`. It also verifies that plan mode's nominal tool
+composition preserves `bash`/`mcp` while root-thread-guard blocks those root
+calls, and that the shared Bash classifier preserves the supported
+worktree-guard Git mutation set. The pytest wrapper additionally asks Pi's real RPC command
+dispatcher for the command list and verifies `/implement` resolves to the
+canonical managed `prompts/implement.md` prompt template. Coverage also includes
+interactive-root session-start gates, branch-local state restore, and structured
+plus exact-legacy plan-context de-duplication without removing ordinary user text
+that quotes the plan marker. The Node harness is intentionally a small API mock:
+Pi's interactive/RPC modes cannot reliably hold an agent busy or intercept
 `sendUserMessage()` without starting a real provider request.

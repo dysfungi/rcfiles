@@ -21,8 +21,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 LEGACY_SOURCE = REPO_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
 TARGET = Path.home() / ".pi" / "agent" / "settings.json"
-PACKAGES = [
-    "npm:@rezamonangg/pi-worktree",
+PACKAGES: list[object] = [
+    {
+        "source": "git:github.com/frank-machine/pi-worktree@626f7bd76abec16578838a0966a39e4472e80aa8",
+        "autoload": False,
+        "extensions": ["+extensions/index.ts"],
+        "skills": [],
+    },
     "npm:pi-mcp-adapter",
     "npm:pi-memory",
     "npm:pi-vimmode",
