@@ -111,11 +111,11 @@ class PaneProbe:
 
     argv0: str
     cwd: str
+    inherited: str
     login: str
     mail: str
     mailcheck: str
     mailpath: str
-    path: str
     shell: str
     term: str
 
@@ -147,13 +147,13 @@ class IsolatedTmuxServer:
         # The managed config creates a chezmoi window there; make its declared
         # start directory real so source-file is fully hermetic on every CI OS.
         (self.home / ".local" / "share" / "chezmoi").mkdir(parents=True)
-        self.path_sentinel = tmp_path / "inherited-path"
-        self.path_sentinel.mkdir()
+        # Login shells may intentionally rebuild PATH (MSYS2 does), so use a
+        # neutral marker to prove tmux's environment reaches its direct child.
+        self.inherited_sentinel = secrets.token_hex(16)
         self.mailbox = tmp_path / "empty-mailbox"
         self.mailbox.touch()
         self.clients: list[AttachedTmuxClient] = []
         self.closed = False
-        inherited_path = os.environ.get("PATH", "")
         excluded_environment = {
             "MAIL",
             "MAILCHECK",
@@ -172,8 +172,8 @@ class IsolatedTmuxServer:
                 "MAIL": str(self.mailbox),
                 "MAILCHECK": _TEST_MAILCHECK_SECONDS,
                 "MAILPATH": "",
-                "PATH": os.pathsep.join((str(self.path_sentinel), inherited_path)),
                 "SHELL": str(self.shell),
+                "TMUX_DIRECT_INHERITED": self.inherited_sentinel,
                 # A known POSIX terminal keeps detached-server startup independent of
                 # the caller's terminal emulator while tmux still supplies a terminal
                 # type to every direct child shell.
@@ -302,11 +302,11 @@ Path(sys.argv[1]).write_text(
         {
             "argv0": os.environ.get("TMUX_DIRECT_ARGV0", ""),
             "cwd": os.getcwd(),
+            "inherited": os.environ.get("TMUX_DIRECT_INHERITED", ""),
             "login": os.environ.get("TMUX_DIRECT_LOGIN", ""),
             "mail": os.environ.get("MAIL", ""),
             "mailcheck": os.environ.get("MAILCHECK", ""),
             "mailpath": os.environ.get("MAILPATH", ""),
-            "path": os.environ.get("PATH", ""),
             "shell": os.environ.get("SHELL", ""),
             "term": os.environ.get("TERM", ""),
         }
@@ -367,9 +367,7 @@ Path(sys.argv[1]).write_text(
         assert Path(probe.mail).resolve() == self.mailbox.resolve()
         assert probe.mailcheck == _TEST_MAILCHECK_SECONDS
         assert probe.mailpath == ""
-        assert self.path_sentinel.as_posix() in probe.path.replace("\\", "/").split(
-            os.pathsep
-        )
+        assert probe.inherited == self.inherited_sentinel
         assert Path(probe.shell).resolve() == self.shell
         assert probe.term, "tmux child shell lost TERM"
         assert probe.term.startswith(("screen", "tmux")), probe.term
