@@ -345,15 +345,10 @@ Path(sys.argv[1]).write_text(
         raise AssertionError(f"timed out waiting for {description}")
 
     def process_name(self, pane_id: str) -> str:
-        """Return the pane process executable without reading process environments."""
-        result = subprocess.run(
-            ["ps", "-p", str(self.pane_pid(pane_id)), "-o", "comm="],
-            capture_output=True,
-            text=True,
-            timeout=_TIMEOUT_SECONDS,
+        """Return tmux's direct child command without platform-specific process probes."""
+        return self.run(
+            "display-message", "-p", "-t", pane_id, "#{pane_current_command}"
         )
-        assert result.returncode == 0, result.stderr
-        return result.stdout.strip()
 
     def assert_direct_bash(
         self, pane_id: str, expected_cwd: Path, tmp_path: Path
