@@ -54,6 +54,7 @@ jobs:
           msystem: MSYS
           update: true
           install: >-
+            git
             tmux
             python
             python-pip
