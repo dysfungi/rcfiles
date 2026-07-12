@@ -57,7 +57,17 @@ jobs:
             tmux
             python
             python-pip
-            chezmoi
+      - name: Install chezmoi on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          winget install --id twpayne.chezmoi --exact --accept-package-agreements --accept-source-agreements --disable-interactivity
+          $chezmoi_dir = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"
+          $chezmoi = Join-Path $chezmoi_dir "chezmoi.exe"
+          if (-not (Test-Path -LiteralPath $chezmoi -PathType Leaf)) {
+            throw "winget did not expose chezmoi at $chezmoi"
+          }
+          "CHEZMOI_DIR=$chezmoi_dir" >> $env:GITHUB_ENV
       - name: Run direct-shell and mail regressions
         if: runner.os != 'Windows'
         run: mise x -- uv run --locked --group test pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v
@@ -65,5 +75,11 @@ jobs:
         if: runner.os == 'Windows'
         shell: msys2 {0}
         run: |
-          python -m pip install --disable-pip-version-check uv
-          uv run --locked --group test pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v
+          export PATH="$(cygpath "$CHEZMOI_DIR"):$PATH"
+          chezmoi --version
+          # uv does not support MSYS2's POSIX Python (https://github.com/astral-sh/uv/issues/3573).
+          # Keep direct test dependencies aligned with uv.lock.
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --disable-pip-version-check pytest==9.1.1 xonsh==0.24.0
+          python -m pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v

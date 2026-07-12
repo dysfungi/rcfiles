@@ -228,6 +228,7 @@ class IsolatedTmuxServer:
 
         self.run("source-file", str(TMUX_CONFIG))
         self._assert_stale_default_command_was_cleared()
+        self._assert_extended_key_configuration()
         assert (
             Path(self.run("show-options", "-gv", "default-shell")).resolve()
             == self.shell
@@ -242,6 +243,15 @@ class IsolatedTmuxServer:
             "sourcing the managed tmux configuration retained a stale "
             f"default-command: {result.stdout!r} {result.stderr!r}"
         )
+
+    def _assert_extended_key_configuration(self) -> None:
+        """Require csi-u when supported, while retaining tmux 3.4 compatibility."""
+        assert self.run("show-options", "-gv", "extended-keys") == "on"
+        result = self.command("show-options", "-gv", "extended-keys-format")
+        if result.returncode == 0:
+            assert result.stdout.strip() == "csi-u"
+            return
+        assert result.stderr.strip() == "invalid option: extended-keys-format"
 
     def source_pane(self) -> str:
         """Return the initial pane created by the actual managed configuration."""
@@ -497,7 +507,7 @@ def _tmux_default_command_surfaces() -> tuple[str, ...]:
 
 def _render_wezterm(tmp_path: Path) -> str:
     """Render the real template with minimal non-secret ChezMoi data."""
-    chezmoi = shutil.which("chezmoi")
+    chezmoi = shutil.which("chezmoi") or shutil.which("chezmoi.exe")
     if chezmoi is None:
         raise AssertionError("chezmoi is required to render the WezTerm regression")
     config = tmp_path / "chezmoi.toml"
