@@ -189,10 +189,13 @@ The entered worktree persists across turns.
   write/edit/bash calls into it via path rewriting.
 - Worktree path: `.worktree/<branch>`, branch inferred from task type
   (feat/, fix/, docs/, refactor/, test/).
-- The `worktree-guard.ts` extension blocks mutations until `worktree_start` succeeds;
-  all `worktree_*` tools are always allowed.
+- The `worktree-guard.ts` extension blocks mutations until a matching successful
+  `worktree_start` result is validated. Root permits only `worktree_start`,
+  `worktree_status`, and `worktree_stop`; workers receive a topology-validated initial
+  cwd and use direct Git there. That launch check is not path containment: workers must
+  remain inside their assigned worktree. Other `worktree_*` tools and every lifecycle
+  tool in a child are blocked.
 - Complete: call `worktree_stop` (optionally `remove: true`) only after an approved merge;
-  hand off per the integration/handoff/merge rules in steps 2–8 above.
-- Human-only bypass: `touch .pi/worktree-exempt` — agents must never create worktree
-  exemption files.
+  its approval remains active unless the matching external stop succeeds.
+- There is no worktree-exemption sentinel or human bypass.
 {{- end }}

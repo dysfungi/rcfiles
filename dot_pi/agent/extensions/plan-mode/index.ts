@@ -21,12 +21,14 @@
  *
  *   - Tool preservation: plan mode = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
- *     is captured and restored on exit, so `worktree_*`/`memory_*`/`mcp`/
- *     `scratchpad` stay available throughout (no per-session reconfiguration).
+ *     is captured and restored on exit, so root worktree lifecycle tools,
+ *     `memory_*`, and `scratchpad` stay available throughout. The separate
+ *     root-thread guard still blocks root Bash and MCP exploration.
  *
- *   - Hard read-only: `edit`/`write` are physically removed from the tool set,
- *     and `bash` is gated to read-only commands (see bash-safety.ts). This is a
- *     guarantee, not advice.
+ *   - Hard read-only: `edit`/`write` are physically removed from the tool set.
+ *     `bash` also has an independent best-effort mutation gate (see
+ *     bash-safety.ts), while root-thread-guard blocks root Bash entirely in the
+ *     managed configuration.
  *
  *   - Plans synced to disk: `edit`/`write` are gone, but the model can persist
  *     its plan via the `plan_write` tool, which can ONLY write the session's
@@ -58,7 +60,8 @@ import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } fro
 import { isPlanModeEnabled } from "./mode.mjs";
 
 const PLAN_WRITE_TOOL = "plan_write";
-// Read-only tools ensured active in plan mode, plus the scoped plan writer.
+// Nominal plan tools plus the scoped plan writer; root-thread-guard separately
+// controls which interactive-root calls remain invocable.
 const PLAN_MODE_TOOLS = ["read", "bash", "grep", "find", "ls", "questionnaire", PLAN_WRITE_TOOL];
 const NORMAL_MODE_TOOLS = ["read", "bash", "edit", "write"];
 const PLAN_MODE_DISABLED_TOOLS = new Set<string>(["edit", "write"]);
@@ -69,13 +72,14 @@ You are in plan mode - a read-only exploration mode for safe analysis.
 
 Restrictions:
 - The edit and write tools are disabled.
-- Bash is restricted to read-only commands (mutating commands are blocked).
-- All other currently active tools remain available (including memory_* and worktree_*).
+- The root-thread guard blocks Bash, MCP, and exploratory root calls; delegate them to a read-only subagent.
+- Root orchestration, memory, task, and worktree lifecycle tools remain available.
 
-Investigate, then produce a clear, concise plan. Ask clarifying questions with
-the questionnaire tool. Persist or update your plan to disk with the ${PLAN_WRITE_TOOL}
-tool (it writes this session's plan file). Do NOT attempt to make changes or run
-mutating commands; run /normal to leave plan mode or /execute to begin implementation.`;
+Investigate through delegated agents, then produce a clear, concise plan. Ask
+clarifying questions with the questionnaire tool. Persist or update your plan
+to disk with the ${PLAN_WRITE_TOOL} tool (it writes this session's plan file).
+Do NOT attempt to make changes or run mutating commands; run /normal to leave
+plan mode or /execute to begin implementation.`;
 
 interface PlanModeState {
 	enabled: boolean;
@@ -278,7 +282,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		planModeEnabled = enablePlanMode;
 		if (planModeEnabled) {
 			enablePlanModeTools();
-			ctx.ui.notify("Plan mode enabled. Write tools disabled; bash restricted to read-only.");
+			ctx.ui.notify("Plan mode enabled. Write tools disabled; delegate Bash/MCP exploration.");
 		} else {
 			restoreNormalModeTools();
 			ctx.ui.notify("Normal mode enabled. Full access restored.");

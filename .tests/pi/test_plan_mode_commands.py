@@ -20,7 +20,15 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "index.ts"
 IMPLEMENT_PROMPT = REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement.md"
+IMPLEMENT_AND_REVIEW_PROMPT = (
+    REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement-and-review.md"
+)
 HARNESS = Path(__file__).with_name("plan_mode_runtime_harness.mjs")
+LEGACY_SUBAGENT_PROMPT_TARGETS = (
+    ".pi/agent/extensions/subagent/prompts/implement-and-review.md",
+    ".pi/agent/extensions/subagent/prompts/implement.md",
+    ".pi/agent/extensions/subagent/prompts/scout-and-plan.md",
+)
 PI = shutil.which("pi")
 NODE = shutil.which("node")
 
@@ -106,3 +114,34 @@ def test_implement_resolves_to_canonical_prompt_template(tmp_path: Path) -> None
     assert (
         Path(implement_commands[0]["sourceInfo"]["path"]).resolve() == IMPLEMENT_PROMPT
     )
+
+
+@pytest.mark.parametrize(
+    "prompt",
+    [IMPLEMENT_PROMPT, IMPLEMENT_AND_REVIEW_PROMPT],
+    ids=["implement", "implement-and-review"],
+)
+def test_implementation_prompts_activate_the_root_worktree_before_workers(
+    prompt: Path,
+) -> None:
+    """Workers cannot create their own approval, so canonical workflows start first."""
+    content = prompt.read_text()
+    assert "The interactive root must call `worktree_start`" in content
+    assert content.index("worktree_start") < content.index('"worker"')
+    assert "do not ask a\nsubagent to call it or supply a worker cwd" in content
+
+
+def test_workflow_prompts_have_one_canonical_location() -> None:
+    """Nested extension prompts were inert duplicates that could silently drift."""
+    assert not (
+        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "prompts"
+    ).exists()
+
+
+def test_legacy_extension_prompt_targets_are_removed_by_chezmoi() -> None:
+    """Deleted source files need explicit target removal instead of broad exact sync."""
+    removals = (REPO_ROOT / ".chezmoiremove").read_text().splitlines()
+    missing = [
+        target for target in LEGACY_SUBAGENT_PROMPT_TARGETS if target not in removals
+    ]
+    assert not missing, f"missing ChezMoi removal directives: {missing}"

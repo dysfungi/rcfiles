@@ -39,8 +39,9 @@ args = ["--rebase", "--autostash"]
 # Pinned to major `@1` (jsdelivr resolves to latest 1.x) — parse() output shape
 # is stable across 1.x, and TTL refresh keeps it current with zero upkeep.
 # Named .cjs because parse.js is CommonJS (module.exports); plan-mode imports it
-# relatively. The extension degrades to a regex fallback if this file is absent
-# (e.g. offline first apply). See extensions/plan-mode/{DESIGN.md,bash-safety.ts}.
+# relatively. If this file is absent (e.g. offline first apply), the extension
+# uses its shared built-in quote-aware tokenizer. See
+# extensions/plan-mode/{DESIGN.md,bash-safety.ts}.
 ["extensions/plan-mode/vendor/shell-quote-parse.cjs"]
 type = "file"
 url = "https://cdn.jsdelivr.net/npm/shell-quote@1/parse.js"

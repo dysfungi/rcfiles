@@ -56,6 +56,7 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - The root-thread guard is a hard block in `tui` and `rpc` sessions: only orchestration tools, task/memory/worktree tools, and `read` of plans, pi-memory, or repo `todo.txt`/`done.txt` are permitted. `read`, `grep`, `find`, `ls`, `bash`, `mcp`, and unknown tools must be delegated.
 - JSON subagents and print-mode one-shots are intentionally exempt so workers can perform the delegated work. There is no root-guard escape hatch; change the managed extension only when deliberately changing policy.
 - `/plan` is interactive-root-only. Spawned JSON workers do not enter plan mode and can write/edit as delegated.
+- The root alone owns `worktree_start`, `worktree_status`, and `worktree_stop`. Before delegating implementation, activate one worktree; workers receive a topology-validated initial cwd automatically, use direct Git there, and must not invoke worktree lifecycle tools. This is cooperative launch routing, not path containment: workers must not access paths outside their assigned worktree.
 {{- end }}
 
 ## Mode discipline

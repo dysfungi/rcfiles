@@ -7,6 +7,7 @@ import * as path from "node:path";
 import { CONFIG_DIR_NAME, getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
 
 export type AgentScope = "user" | "project" | "both";
+export type AgentExecution = "read-only" | "worktree-write";
 
 export interface AgentConfig {
 	name: string;
@@ -16,6 +17,8 @@ export interface AgentConfig {
 	systemPrompt: string;
 	source: "user" | "project";
 	filePath: string;
+	execution?: AgentExecution;
+	executionError?: string;
 }
 
 export interface AgentDiscoveryResult {
@@ -60,6 +63,12 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			.map((t: string) => t.trim())
 			.filter(Boolean);
 
+		const execution = frontmatter.execution as AgentExecution | undefined;
+		const executionError =
+			execution === "read-only" || execution === "worktree-write"
+				? undefined
+				: "frontmatter must declare execution: read-only or execution: worktree-write";
+
 		agents.push({
 			name: frontmatter.name,
 			description: frontmatter.description,
@@ -68,6 +77,8 @@ function loadAgentsFromDir(dir: string, source: "user" | "project"): AgentConfig
 			systemPrompt: body,
 			source,
 			filePath,
+			execution,
+			executionError,
 		});
 	}
 

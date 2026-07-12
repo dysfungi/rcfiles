@@ -35,6 +35,7 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { isDelegatedChild } from "./child-policy.mjs";
 
 const execFileAsync = promisify(execFile);
 
@@ -66,6 +67,8 @@ async function isSyncableRepo(dir: string): Promise<boolean> {
 }
 
 export default function (pi: ExtensionAPI) {
+  if (isDelegatedChild()) return;
+
   pi.on("session_start", async (_event, ctx) => {
     const dir = memoryDir();
     if (!(await isSyncableRepo(dir))) return;
