@@ -30,31 +30,36 @@ PACKAGES = [
 
 PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
 
-EXPECTED = {
+CATALOG_ENABLED_SCOPES = {
+    "personal": [
+        "claude-opus-4-8:max",
+        "claude-sonnet-5:max",
+        "claude-fable-5:max",
+        "google/gemini-3.1-pro-preview:max",
+        "google/gemini-3.5-flash:max",
+        "google/gemini-3.1-flash-lite:max",
+    ],
+    "riot": [
+        "openai/openai/gpt-5.6-terra:max",
+        "openai/openai/gpt-5.6-luna:max",
+        "truefoundry/claude-vertex/anthropic-claude-opus-4-8:max",
+        "truefoundry/claude-vertex/anthropic-claude-sonnet-5:max",
+        "openai/google-vertexai/gemini-3.1-pro-preview:max",
+        "openai/google-vertexai/gemini-3.5-flash:max",
+        "openai/google-vertexai/gemini-3.1-flash-lite-preview:max",
+    ],
+}
+
+EXPECTED: dict[str, dict[str, str | list[str]]] = {
     "personal": {
         "defaultModel": "claude-opus-4-8",
         "defaultProvider": "anthropic",
-        "enabledModels": [
-            "claude-opus-4-8",
-            "claude-sonnet-5",
-            "claude-fable-5",
-            "gemini-3.1-pro-preview",
-            "gemini-3.5-flash",
-            "gemini-3.1-flash-lite",
-        ],
+        "enabledModels": CATALOG_ENABLED_SCOPES["personal"],
     },
     "riot": {
         "defaultModel": "openai/gpt-5.6-terra",
         "defaultProvider": "openai",
-        "enabledModels": [
-            "openai/gpt-5.6-terra",
-            "openai/gpt-5.6-luna",
-            "claude-vertex/anthropic-claude-opus-4-8",
-            "claude-vertex/anthropic-claude-sonnet-5",
-            "google-vertexai/gemini-3.1-pro-preview",
-            "google-vertexai/gemini-3.5-flash",
-            "google-vertexai/gemini-3.1-flash-lite-preview",
-        ],
+        "enabledModels": CATALOG_ENABLED_SCOPES["riot"],
     },
 }
 
@@ -174,7 +179,10 @@ def test_default_model_uses_its_provider_identity(
     else:
         assert settings["defaultProvider"] == "openai"
         assert settings["defaultModel"] == "openai/gpt-5.6-terra"
-        assert settings["defaultModel"] in settings["enabledModels"]
+
+    enabled_models = settings["enabledModels"]
+    assert enabled_models == CATALOG_ENABLED_SCOPES[machine]
+    assert all(model.endswith(":max") for model in enabled_models)
 
 
 @pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])
