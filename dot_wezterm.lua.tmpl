@@ -124,9 +124,9 @@ if is_unix_like then
     -- (default_prog above = xonsh-in-tmux) is unchanged.
     config.launch_menu = {
       {
-        -- login(1) execs the DS UserShell (xonsh) and prints the mail notice.
-        label = "Xonsh (login, no tmux)",
-        args = { "/usr/bin/login", "-pfl", os.getenv "USER" },
+        -- Shell mail checks own notices; no managed account-level login wrapper.
+        label = "Configured shell (no tmux)",
+        args = { shell },
       },
       {
         -- brew zsh (repo prefers brew shells); mail notice via the .zsh/mail/ module.

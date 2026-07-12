@@ -11,6 +11,7 @@ source = { virtual = "." }
 test = [
     { name = "pytest" },
     { name = "pyyaml" },
+    { name = "xonsh" },
 ]
 
 [package.metadata]
@@ -19,6 +20,7 @@ test = [
 test = [
     { name = "pytest" },
     { name = "pyyaml" },
+    { name = "xonsh", specifier = "==0.24.0" },
 ]
 
 [[package]]
@@ -126,4 +128,16 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/da/92/1446574745d74df0c92e6aa4a7b0b3130706a4142b2d1a5869f2eaa423c6/pyyaml-6.0.3-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:16249ee61e95f858e83976573de0f5b2893b3677ba71c9dd36b9cf8be9ac6d65", size = 829923, upload-time = "2025-09-25T21:32:54.537Z" },
     { url = "https://files.pythonhosted.org/packages/f0/7a/1c7270340330e575b92f397352af856a8c06f230aa3e76f86b39d01b416a/pyyaml-6.0.3-cp314-cp314t-win_amd64.whl", hash = "sha256:4ad1906908f2f5ae4e5a8ddfce73c320c2a1429ec52eafd27138b7f1cbe341c9", size = 174062, upload-time = "2025-09-25T21:32:55.767Z" },
     { url = "https://files.pythonhosted.org/packages/f1/12/de94a39c2ef588c7e6455cfbe7343d3b2dc9d6b6b2f40c4c6565744c873d/pyyaml-6.0.3-cp314-cp314t-win_arm64.whl", hash = "sha256:ebc55a14a21cb14062aa4162f906cd962b28e2e9ea38f9b4391244cd8de4ae0b", size = 149341, upload-time = "2025-09-25T21:32:56.828Z" },
+]
+
+[[package]]
+name = "xonsh"
+version = "0.24.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/1e/82/a70fcbd8e542a55b990c61707c4f26fd42071badd3c08193931706a10323/xonsh-0.24.0.tar.gz", hash = "sha256:14cbf5bcac12bdbedd8ddb7bd2221ca869903eb039e97158ee86aa639152fff6", size = 1204432, upload-time = "2026-07-02T11:02:43.063Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/99/95/131aca79356daeb377287dd61c781ce635f9f59868763f9c7650002067e9/xonsh-0.24.0-py311-none-any.whl", hash = "sha256:88d32fed4fb17e656e5ff7dcc6b61f59ac4e2d155cc1d314c0889d6ac96d4bf2", size = 817351, upload-time = "2026-07-02T11:02:41Z" },
+    { url = "https://files.pythonhosted.org/packages/36/f3/012e918eeadcecc07c1e06f3904d4ffea6a9a1c2dd4c24c6a37b6bf58122/xonsh-0.24.0-py312-none-any.whl", hash = "sha256:59b8e0d6d3c739aa5295f823d277888b465eb84abdcff010e04556d61f047408", size = 817374, upload-time = "2026-07-02T11:02:41.889Z" },
+    { url = "https://files.pythonhosted.org/packages/60/24/f594ce2a4864eb4cc650608adbc13e1c4737af9503e689e82488a8772c6d/xonsh-0.24.0-py313-none-any.whl", hash = "sha256:4e5b1b936305e2ebd3901a60d588e2b8aaf28d1af60cbc7696a21cb45d2672db", size = 817975, upload-time = "2026-07-02T11:02:41.835Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/89/5f80e6be505c4c6326f7802ca5561c635c996bf667cb175d5919a76e4059/xonsh-0.24.0-py314-none-any.whl", hash = "sha256:c8fe2aa1e3a88bc106a47f5892b6b9c97d9ba83571b8c7a979db784dd2922529", size = 817948, upload-time = "2026-07-02T11:02:35.388Z" },
 ]

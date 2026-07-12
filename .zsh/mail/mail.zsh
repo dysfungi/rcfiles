@@ -1,4 +1,4 @@
-# login(1)-style startup notice for fresh zsh shells NOT spawned via login(1)
-# (WezTerm launch-menu zsh, ssh, bare `zsh`): zsh's native MAILCHECK only
-# announces mail that arrives AFTER startup, never a pre-existing spool.
+# Startup notice for fresh zsh shells: native MAILCHECK only announces mail
+# that arrives AFTER startup, never a pre-existing spool. This covers direct
+# WezTerm launch-menu, SSH, and bare `zsh` sessions.
 [[ -s $MAIL ]] && print -u2 "You have mail."

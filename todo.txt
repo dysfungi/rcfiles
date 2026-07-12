@@ -33,3 +33,4 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (B) Fix pi-worktree fork linked-root state path: persist via git --git-path instead of <worktree>/.git so direct Pi roots do not EEXIST; then publish immutable pin +pi +worktree @bug
 (B) Fix pi worktree-guard false positive when a read-only Python command contains literal > in a regex +pi +worktree @bug
 (B) Refactor skill/subagent templating: extract reusable bodies from my-planning and my-code-review into shared partials; compose pi planner/reviewer agent definitions from them plus pi-specific frontmatter and delegation contracts +pi +skills @follow-up
+(C) Make tmux.conf initial main-session window declarations idempotent on source-file reload; live reload emits duplicate session/window errors although options apply +tmux +bug

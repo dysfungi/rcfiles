@@ -192,7 +192,9 @@ my:
     vultr-cli: { mise: vultr-cli }
     watchexec: { brew: watchexec, pacman: watchexec }
     wget: { brew: wget, pacman: wget }
-    xonsh: { mamba: "xonsh[full]==0.22.8", python: "3.14" }
+    # Keep the interpreter core aligned with pyproject's xonsh test pin; the
+    # managed environment adds [full] integrations while regressions need only xonsh.
+    xonsh: { mamba: "xonsh[full]==0.24.0", python: "3.14" }
     xz: { brew: xz, pacman: xz }
     yadm: { brew: yadm }
     yarn: { brew: yarn, pacman: yarn }

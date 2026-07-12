@@ -19,3 +19,68 @@ jobs:
           install: true
           cache: true
       - run: pre-commit run --all-files --hook-stage manual --show-diff-on-failure --color=always
+
+  tmux-direct-shell:
+    name: tmux direct shell (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS
+            os: macos-latest
+          - name: Linux
+            os: ubuntu-latest
+          - name: MSYS2/Git Bash
+            os: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install tmux on macOS
+        if: runner.os == 'macOS'
+        run: brew install tmux
+      - name: Install tmux on Linux
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install --yes tmux
+      - name: Set up mise
+        if: runner.os != 'Windows'
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+      - name: Set up MSYS2
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          update: true
+          install: >-
+            git
+            tmux
+            python
+            python-pip
+      - name: Install chezmoi on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          winget install --id twpayne.chezmoi --exact --accept-package-agreements --accept-source-agreements --disable-interactivity
+          $chezmoi_dir = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"
+          $chezmoi = Join-Path $chezmoi_dir "chezmoi.exe"
+          if (-not (Test-Path -LiteralPath $chezmoi -PathType Leaf)) {
+            throw "winget did not expose chezmoi at $chezmoi"
+          }
+          "CHEZMOI_DIR=$chezmoi_dir" >> $env:GITHUB_ENV
+      - name: Run direct-shell and mail regressions
+        if: runner.os != 'Windows'
+        run: mise x -- uv run --locked --group test pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v
+      - name: Run direct-shell and mail regressions in MSYS2
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          export PATH="$(cygpath "$CHEZMOI_DIR"):$PATH"
+          chezmoi --version
+          # uv does not support MSYS2's POSIX Python (https://github.com/astral-sh/uv/issues/3573).
+          # Keep direct test dependencies aligned with uv.lock.
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install --disable-pip-version-check pytest==9.1.1 xonsh==0.24.0
+          python -m pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v

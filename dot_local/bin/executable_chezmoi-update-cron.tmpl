@@ -67,8 +67,8 @@ LOG_FILE="${LOG_DIR}/update-cron.log"
 mkdir -p "${LOG_DIR}"
 
 # Save the original stderr as fd 3 — the mail channel: cron mails any job
-# output to the crontab owner, landing in /var/mail/$USER, which login(1)
-# and the shells' mail checks then surface as "You have (new) mail.". Write
+# output to the crontab owner, landing in /var/mail/$USER, which shell mail
+# checks surface as "You have (new) mail.". Write
 # ONLY nag-worthy summaries to >&3 — a clean run must stay silent there so
 # no mail is sent.
 exec 3>&2
