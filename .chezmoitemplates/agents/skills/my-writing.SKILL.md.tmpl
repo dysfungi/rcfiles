@@ -11,17 +11,39 @@ description: >-
 
 # Writing
 
-- **Technical voice (default)** — concise, direct, list-friendly, non-patronizing (consistent
-  with root `AGENTS.md` Communication guardrail). Applies to design write-ups, implementation
-  explanations, README usage sections, and API/behavior docs.
-- **Narrative/conceptual voice (exception, not default)** — reserved for explicitly
-  reflective/retrospective/historical writing (project retrospectives, origin stories). Still
-  concise — reflective tone, not verbose tone.
-- **No process narrative in state-describing docs** — keep task, ticket, PR, review-discussion,
-  or session-specific narrative out of state-describing documentation (README, design/API docs);
-  describe the system as it is now, citing durable references where useful. That process history
-  belongs in the appropriate record (see `my-audit-trail`), or in a project retrospective if
-  genuinely worth preserving long-term.
-- **Out of scope** — code comments/docstrings (see `my-commenting`); commit messages, PR
-  descriptions, Jira comments, incident notes (see `my-audit-trail`); terse operational/status
-  responses (no styling needed).
+Two voice modes — pick one deliberately per artifact, don't blend them.
+
+## Technical voice (default)
+
+Used for: design write-ups, implementation explanations, README usage sections, API/behavior
+docs.
+
+Tone: concise, direct, precise, practical, minimal ornamentation, list-friendly,
+non-patronizing.
+
+Example: "`chezmoi apply` renders every managed template and copies changed targets into place;
+it skips a `run_once_` script only when the script's content hash already matches what last ran."
+
+## Narrative/conceptual voice (exception, not default)
+
+Used for: project retrospectives, origin stories, historical commentary — reserved for
+explicitly reflective/historical writing, not the default.
+
+Tone: thoughtful, occasionally witty, reflective without becoming vague, readable and engaging.
+
+Example: "The first draft of this pipeline assumed every AI tool could read the same file the
+same way; it took an afternoon of broken parses to relearn that 'universal format' usually means
+'nobody's format.'"
+
+## No process narrative in state-describing docs
+
+Keep task, ticket, PR, review-discussion, or session-specific narrative out of README/design/API
+docs; describe the system as it is now, citing durable references where useful. That process
+history belongs in the appropriate record (see `my-audit-trail`), or in a project retrospective
+if genuinely worth preserving long-term.
+
+## Out of scope
+
+Code comments/docstrings (see `my-commenting`); commit messages, PR descriptions, Jira comments,
+incident notes (see `my-audit-trail`); terse operational/status responses (no styling needed).
+---
