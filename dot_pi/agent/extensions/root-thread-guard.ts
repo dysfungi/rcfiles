@@ -7,8 +7,8 @@
  * so future tools cannot quietly reintroduce context pollution.
  *
  * JSON subagents and print-mode one-shots are exempt. Root permits only
- * orchestration tools plus read of self-authored plans, memory, and repo task
- * files. There is intentionally no bypass sentinel: disabling this guard means
+ * orchestration tools plus read access to plans, memory, global skill roots,
+ * and repo task files. There is intentionally no bypass sentinel: disabling this guard means
  * explicitly removing the managed extension and reloading pi.
  */
 

@@ -113,6 +113,86 @@ def test_read_is_limited_to_scratch_paths(
 
 
 @pytest.mark.parametrize(
+    ("path", "allowed"),
+    [
+        ("~/.pi/agent/skills/nested/example/SKILL.md", True),
+        ("~/.agents/skills/nested/example/SKILL.md", True),
+        ("~/.pi/agent/skills/flat-skill.md", True),
+        ("~/.agents/skills/flat-skill.md", True),
+        ("~/.pi/agent/skills", True),
+        ("~/.agents/skills", True),
+        (".pi/skills/local/SKILL.md", False),
+        (".agents/skills/local/SKILL.md", False),
+        ("~/.pi/agent/skills-extra/SKILL.md", False),
+        ("~/.pi/agent/skills/../untrusted.md", False),
+    ],
+    ids=[
+        "pi-global-nested",
+        "agents-global-nested",
+        "pi-global-flat-file",
+        "agents-global-flat-file",
+        "pi-global-root",
+        "agents-global-root",
+        "project-pi-skills",
+        "project-agents-skills",
+        "prefix-collision",
+        "traversal-escape",
+    ],
+)
+def test_read_skills_are_limited_to_global_roots(
+    path: str, allowed: bool, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.delenv("PI_CODING_AGENT_DIR", raising=False)
+    home = tmp_path / "home"
+    cwd = tmp_path / "project"
+    result = decide(
+        [
+            {
+                "mode": "tui",
+                "toolName": "read",
+                "input": {"path": path},
+                "cwd": str(cwd),
+                "home": str(home),
+            }
+        ]
+    )[0]
+    assert result["allowed"] is allowed
+
+
+def test_pi_coding_agent_dir_override_applies_to_global_skills(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    home = tmp_path / "home"
+    agent_dir = home / "custom-pi-agent"
+    monkeypatch.setenv("PI_CODING_AGENT_DIR", str(agent_dir))
+
+    results = decide(
+        [
+            {
+                "mode": "tui",
+                "toolName": "read",
+                "input": {"path": str(agent_dir / "skills" / "nested" / "SKILL.md")},
+                "cwd": str(tmp_path),
+                "home": str(home),
+            },
+            {
+                "mode": "tui",
+                "toolName": "read",
+                "input": {
+                    "path": str(
+                        home / ".pi" / "agent" / "skills" / "nested" / "SKILL.md"
+                    )
+                },
+                "cwd": str(tmp_path),
+                "home": str(home),
+            },
+        ]
+    )
+
+    assert [result["allowed"] for result in results] == [True, False]
+
+
+@pytest.mark.parametrize(
     ("mode", "subagent", "expected"),
     [
         ("tui", False, True),

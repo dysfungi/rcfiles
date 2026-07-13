@@ -9,7 +9,9 @@
  */
 
 import assert from "node:assert/strict";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -333,6 +335,26 @@ async function testRootThreadPolicyComposition() {
 	const mcp = await emit(harness, "tool_call", { toolName: "mcp", input: {} });
 	assert.match(bash.reason, /root-thread context discipline/);
 	assert.match(mcp.reason, /root-thread context discipline/);
+
+	const fixtureRoot = await mkdtemp(join(tmpdir(), "pi-global-skills-"));
+	const agentDir = join(fixtureRoot, ".pi", "agent");
+	const skillFile = join(agentDir, "skills", "fixture", "SKILL.md");
+	const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+	await mkdir(dirname(skillFile), { recursive: true });
+	await writeFile(skillFile, "# fixture skill\n");
+	process.env.PI_CODING_AGENT_DIR = agentDir;
+	try {
+		const allowed =
+			(await emit(harness, "tool_call", {
+				toolName: "read",
+				input: { path: skillFile },
+			})) === undefined;
+		assert.equal(allowed, true, "root reads under the global skill root must be allowed");
+	} finally {
+		if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+		else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+		await rm(fixtureRoot, { recursive: true, force: true });
+	}
 }
 
 testCommandRegistration();

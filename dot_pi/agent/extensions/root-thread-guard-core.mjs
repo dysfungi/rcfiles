@@ -21,10 +21,14 @@ function resolveInputPath(path, cwd, home) {
 function scratchReadAllowed(path, { cwd, home, agentDir, memoryDir }) {
 	const resolvedPath = resolveInputPath(path, cwd, home);
 	const plansDir = resolve(agentDir, "plans");
+	const agentSkillsDir = resolve(agentDir, "skills");
+	const globalSkillsDir = resolve(home, ".agents", "skills");
 	const allowedTodoFiles = [resolve(cwd, "todo.txt"), resolve(cwd, "done.txt")];
 	return (
 		isWithin(resolvedPath, plansDir) ||
 		isWithin(resolvedPath, memoryDir) ||
+		isWithin(resolvedPath, agentSkillsDir) ||
+		isWithin(resolvedPath, globalSkillsDir) ||
 		allowedTodoFiles.includes(resolvedPath)
 	);
 }
