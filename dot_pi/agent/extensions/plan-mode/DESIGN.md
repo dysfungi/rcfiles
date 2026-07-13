@@ -125,6 +125,28 @@ exact legacy shape: `{ role: "user", content: PLAN_CONTEXT, display: false }`
 with no `customType`. It never matches the `[PLAN MODE ACTIVE]` marker by
 substring, so ordinary user messages that quote it remain in context.
 
+### Root-thread read allowance — global skills only
+
+The separate root-thread guard lets interactive `tui`/`rpc` roots use `read`
+under the static global skill roots
+`${PI_CODING_AGENT_DIR:-~/.pi/agent}/skills` and `~/.agents/skills`, alongside
+its existing plans, pi-memory, and repo `todo.txt`/`done.txt` allowances. This
+lets a root load the instructions that govern its own planning, implementation,
+and review behavior without a lossy subagent relay. The allowance covers each
+whole global directory tree, including root-level flat skill files, and does
+not expand the root tool allowlist beyond `read`.
+
+Project-local `.pi/skills` and `.agents/skills` directories remain an explicitly
+deferred non-goal. A static ancestor walk would bypass Pi's `projectTrusted`
+gate. A registry-based allowlist is also unsuitable: it can include
+explicit/override/extension-injected paths, has an entire root as `baseDir` for
+flat skill files, and has no stable refresh semantics for authorization. Revisit
+this scope only with a trust-aware provenance signal, not more path matching.
+
+As with plans and memory, containment is lexical (`isWithin()`), while Pi's
+reader follows symlinks. This inherited context-discipline caveat is not a
+filesystem sandbox and is not new to the skill exception.
+
 ### Tool model — subtract, don't replace
 
 `planTools = (active tools) − {edit, write} + {read, bash, grep, find, ls,
