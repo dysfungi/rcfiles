@@ -13,6 +13,10 @@ description: >-
 
 - Comments are code: write them only to explain a decision, capture non-obvious context,
   or cite a reference — not to restate what the code already says.
+- Keep task, ticket, PR, review-discussion, or session-specific narrative out of comments —
+  describe the code as it exists now (durable references like specs/RFCs/design docs are still
+  fine); that process history belongs in the appropriate record (see `my-audit-trail`), not the
+  source.
 - Document non-obvious design/architectural decisions at the source (docstring, comment,
   or adjacent README): the WHY, so a future reader understands it without digging through
   git history.

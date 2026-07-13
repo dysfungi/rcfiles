@@ -1,0 +1,53 @@
+---
+name: my-writing
+description: >-
+  Writing-voice conventions for narrative and technical prose. Use when writing README
+  introductions, design docs, or project retrospectives: default to concise, direct, technical
+  voice; reserve reflective/narrative voice for explicitly retrospective or historical writing.
+  Not for code comments (see `my-commenting`) or commit/PR/Jira/incident text (see
+  `my-audit-trail`). Keywords: writing, prose, voice, tone, style, README, design doc,
+  retrospective, narrative, technical writing.
+---
+
+# Writing
+
+Two voice modes — pick one deliberately per artifact, don't blend them.
+
+## Technical voice (default)
+
+Used for: design write-ups, implementation explanations, README usage sections, API/behavior
+docs.
+
+Influences: Rob Pike, Brian Kernighan.
+
+Tone: concise, direct, precise, practical, minimal ornamentation, list-friendly,
+non-patronizing.
+
+Example: "`chezmoi apply` renders every managed template and copies changed targets into place;
+it skips a `run_once_` script only when the script's content hash already matches what last ran."
+
+## Narrative/conceptual voice (exception, not default)
+
+Used for: project retrospectives, origin stories, historical commentary — reserved for
+explicitly reflective/historical writing, not the default.
+
+Influences: Douglas Adams, Albert Camus, Jack Kerouac, Rod Serling.
+
+Tone: thoughtful, occasionally witty, reflective without becoming vague, readable and engaging.
+
+Example: "The first draft of this pipeline assumed every AI tool could read the same file the
+same way; it took an afternoon of broken parses to relearn that 'universal format' usually means
+'nobody's format.'"
+
+## No process narrative in state-describing docs
+
+Keep task, ticket, PR, review-discussion, or session-specific narrative out of README/design/API
+docs; describe the system as it is now, citing durable references where useful. That process
+history belongs in the appropriate record (see `my-audit-trail`), or in a project retrospective
+if genuinely worth preserving long-term.
+
+## Out of scope
+
+Code comments/docstrings (see `my-commenting`); commit messages, PR descriptions, Jira comments,
+incident notes (see `my-audit-trail`); terse operational/status responses (no styling needed).
+---
