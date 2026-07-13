@@ -66,12 +66,14 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - When reviewing a diff, PR, or commit — including self-review of your own work: invoke the `my-code-review` skill.
 - Before presenting any plan for approval, run the `my-code-review` self-review pass (a fresh sub-agent) and address its findings first.
 
-## Always-on guardrails — details in skills
+## Always-on guardrails — read the referenced skill before acting in its domain; don't rely on remembering it
 
 - Follow `my-git` for every git action: push immediately after every commit, and make file edits only inside an isolated git worktree (hook-enforced).
 - Follow `my-task-tracking`: maintain an active tasklist every session.
 - Follow `my-agent-memory`: treat learning-as-instructions as continuous, and capture durable learnings as skills.
 - Follow `my-engineering-principles`: less is more, and it applies to code.
+- Follow `my-writing` for design/technical prose (README intros, design docs, project retrospectives): read it before drafting, and defer PR/commit/incident text to `my-audit-trail`.
+- Follow `my-commenting` for every comment or docstring: explain durable WHY, not what; never leak task/PR/ticket narrative into the source.
 
 [less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
 {{ if .is_riot_machine }}

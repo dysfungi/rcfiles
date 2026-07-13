@@ -1,0 +1,27 @@
+---
+name: my-writing
+description: >-
+  Writing-voice conventions for narrative and technical prose. Use when writing README
+  introductions, design docs, or project retrospectives: default to concise, direct, technical
+  voice; reserve reflective/narrative voice for explicitly retrospective or historical writing.
+  Not for code comments (see `my-commenting`) or commit/PR/Jira/incident text (see
+  `my-audit-trail`). Keywords: writing, prose, voice, tone, style, README, design doc,
+  retrospective, narrative, technical writing.
+---
+
+# Writing
+
+- **Technical voice (default)** — concise, direct, list-friendly, non-patronizing (consistent
+  with root `AGENTS.md` Communication guardrail). Applies to design write-ups, implementation
+  explanations, README usage sections, and API/behavior docs.
+- **Narrative/conceptual voice (exception, not default)** — reserved for explicitly
+  reflective/retrospective/historical writing (project retrospectives, origin stories). Still
+  concise — reflective tone, not verbose tone.
+- **No process narrative in state-describing docs** — keep task, ticket, PR, review-discussion,
+  or session-specific narrative out of state-describing documentation (README, design/API docs);
+  describe the system as it is now, citing durable references where useful. That process history
+  belongs in the appropriate record (see `my-audit-trail`), or in a project retrospective if
+  genuinely worth preserving long-term.
+- **Out of scope** — code comments/docstrings (see `my-commenting`); commit messages, PR
+  descriptions, Jira comments, incident notes (see `my-audit-trail`); terse operational/status
+  responses (no styling needed).
