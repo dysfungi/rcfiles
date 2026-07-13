@@ -15,6 +15,44 @@ stripComponents = 1
 refreshPeriod = "168h"
 exact = true
 
+#### https://github.com/blader/humanizer ####
+# Bare SKILL.md only (compatibility: any-agent). Landed for Claude/Codex/Pi,
+# whose bare-SKILL.md skill directories are verified-working conventions in
+# this repo. Gemini/Antigravity deliberately excluded: this repo's existing
+# ~/.gemini/extensions/<name>/SKILL.md convention (used by all 20 native
+# skills) does not match either the actually-invoked `gemini`->`agy`
+# (Antigravity, which documents ~/.gemini/config/skills/<name>/SKILL.md) or
+# the official gemini-cli (~/.gemini/skills/<name>/SKILL.md, or a real
+# extension with gemini-extension.json + nested skills/) - tracked as a
+# separate follow-up, not solved here.
+
+[claude-humanizer-skill]
+targetPath = ".claude/skills/humanizer"
+type = "archive"
+url = "https://github.com/blader/humanizer/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/SKILL.md"]
+stripComponents = 1
+exact = true
+
+[codex-humanizer-skill]
+targetPath = ".codex/skills/humanizer"
+type = "archive"
+url = "https://github.com/blader/humanizer/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/SKILL.md"]
+stripComponents = 1
+exact = true
+
+[pi-humanizer-skill]
+targetPath = ".pi/agent/skills/humanizer"
+type = "archive"
+url = "https://github.com/blader/humanizer/archive/main.tar.gz"
+refreshPeriod = "168h"
+include = ["*/SKILL.md"]
+stripComponents = 1
+exact = true
+
 {{- if and .is_riot_machine (not .is_windows) }}
 
 #### https://gh.riotgames.com/live-operations/agent-skills ####
