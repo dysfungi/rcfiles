@@ -8,9 +8,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [extensionPath, registryPath, packageDir] = process.argv.slice(2);
-if (!extensionPath || !registryPath || !packageDir) {
-	throw new Error("Usage: subagent_runner_runtime_harness.mjs <extension-path> <registry-path> <pi-package-dir>");
+const [extensionPath, guardPath, registryPath, packageDir] = process.argv.slice(2);
+if (!extensionPath || !guardPath || !registryPath || !packageDir) {
+	throw new Error("Usage: subagent_runner_runtime_harness.mjs <extension-path> <guard-path> <registry-path> <pi-package-dir>");
 }
 
 const require = createRequire(pathToFileURL(join(packageDir, "package.json")));
@@ -25,6 +25,7 @@ const jiti = createJiti(import.meta.url, {
 	},
 });
 const { default: subagentExtension } = await jiti.import(resolve(extensionPath));
+const { default: worktreeGuard } = await jiti.import(resolve(guardPath));
 const registry = await import(pathToFileURL(resolve(registryPath)).href);
 
 function git(root, ...args) {
@@ -77,6 +78,66 @@ function runner(cwd, sessionId) {
 		},
 		tool,
 	};
+}
+
+function rootGuard(cwd, sessionId, branch, header = undefined) {
+	const handlers = new Map();
+	const ctx = {
+		cwd,
+		sessionManager: { getSessionId: () => sessionId, getBranch: () => branch, getHeader: () => header },
+		ui: { notify() {}, setStatus() {}, theme: { fg: (_color, text) => text } },
+	};
+	worktreeGuard({
+		exec: async () => ({ code: 0, stdout: `${cwd}\n` }),
+		on(name, handler) {
+			const eventHandlers = handlers.get(name) ?? [];
+			eventHandlers.push(handler);
+			handlers.set(name, eventHandlers);
+		},
+	});
+	return {
+		async emit(name, event = {}) {
+			let result;
+			for (const handler of handlers.get(name) ?? []) {
+				const next = await handler(event, ctx);
+				if (next !== undefined) result = next;
+			}
+			return result;
+		},
+	};
+}
+
+let nextSessionEntryId = 0;
+
+function worktreeStateEntry(state, toolName = "worktree_start") {
+	nextSessionEntryId += 1;
+	return {
+		type: "message",
+		id: nextSessionEntryId.toString(16).padStart(8, "0"),
+		parentId: null,
+		timestamp: "2024-12-03T14:00:01.000Z",
+		message: { role: "toolResult", toolName, details: { piWorktree: state } },
+	};
+}
+
+function resumableWorktreeState(root, worker) {
+	return {
+		mode: "active",
+		repoRoot: root,
+		worktreeRoot: worker,
+		branch: git(worker, "rev-parse", "--abbrev-ref", "HEAD").trim(),
+	};
+}
+
+function resetApprovalRegistry() {
+	delete globalThis[Symbol.for("dfrank.pi.worktree-approval-registry")];
+}
+
+async function approveFromWorktreeStart(guard, root, worker, toolCallId) {
+	const state = resumableWorktreeState(root, worker);
+	assert.equal(await guard.emit("tool_call", { toolName: "worktree_start", toolCallId }), undefined);
+	await guard.emit("tool_result", { toolName: "worktree_start", toolCallId, isError: false, details: { piWorktree: state } });
+	return state;
 }
 
 async function invoke(currentRunner, params, signal) {
@@ -327,6 +388,88 @@ async function testWritableExecution(fake) {
 	}
 }
 
+async function testResumeHydrationRoutesWritableAgent(fake) {
+	const { root, worker } = worktreeFixture();
+	const sessionId = "resumed-writable";
+	writeAgents(root);
+	const first = rootGuard(root, sessionId, []);
+	await first.emit("session_start", { reason: "startup" });
+	const state = await approveFromWorktreeStart(first, root, worker, `${sessionId}-start`);
+	const initial = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(initial.ok, true, initial.reason);
+
+	resetApprovalRegistry();
+	const before = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(before.ok, false);
+	assert.equal(before.noApproval, true);
+
+	const guard = rootGuard(root, sessionId, [worktreeStateEntry(state)]);
+	await guard.emit("session_start", { reason: "resume" });
+	assert.equal(await guard.emit("tool_call", { toolName: "write", input: { path: "resumed", content: "resumed" }, toolCallId: `${sessionId}-write` }), undefined);
+	const hydrated = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(hydrated.ok, true, hydrated.reason);
+	try {
+		const result = await withFakePi(fake, () =>
+			invoke(runner(root, sessionId), {
+				agent: "writer",
+				task: "write after resuming",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		);
+		assert.equal(result.isError, undefined, resultText(result));
+		const records = invocations(fake.log);
+		assert.equal(records.length, 1);
+		const [record] = records;
+		assert.equal(record.cwd, realpathSync(worker));
+		assert.equal(record.execution, "worktree-write");
+		assert.equal(record.marker, "1");
+		assert.equal(record.worktreeRoot, realpathSync(worker));
+		assert.equal(record.repoRoot, realpathSync(root));
+		assert.equal(record.generation, String(hydrated.approval.generation));
+	} finally {
+		registry.revokeWorktree({ sessionId, repoRoot: root });
+	}
+}
+
+async function testDeletedResumedWorktreeRejectsWritableAgent(fake) {
+	const { root, worker } = worktreeFixture();
+	const sessionId = "resumed-deleted";
+	writeAgents(root);
+	const first = rootGuard(root, sessionId, []);
+	await first.emit("session_start", { reason: "startup" });
+	const state = await approveFromWorktreeStart(first, root, worker, `${sessionId}-start`);
+	const initial = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(initial.ok, true, initial.reason);
+
+	resetApprovalRegistry();
+	const before = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(before.ok, false);
+	assert.equal(before.noApproval, true);
+
+	const guard = rootGuard(root, sessionId, [worktreeStateEntry(state)]);
+	await guard.emit("session_start", { reason: "resume" });
+	assert.equal(await guard.emit("tool_call", { toolName: "write", input: { path: "resumed", content: "resumed" }, toolCallId: `${sessionId}-write` }), undefined);
+	const hydrated = registry.resolveApprovedWorktree({ sessionId, repoRoot: root, cwd: worker });
+	assert.equal(hydrated.ok, true, hydrated.reason);
+	git(root, "worktree", "remove", "--force", worker);
+	try {
+		const result = await withFakePi(fake, () =>
+			invoke(runner(root, sessionId), {
+				agent: "writer",
+				task: "reject a deleted worktree",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		);
+		assert.equal(result.isError, true);
+		assert.match(resultText(result), /path is not an existing Git worktree/);
+		assert.deepEqual(invocations(fake.log), []);
+	} finally {
+		registry.revokeWorktree({ sessionId, repoRoot: root });
+	}
+}
+
 async function testExecutionClassAndCwdPreflight(fake) {
 	const { root, worker } = worktreeFixture();
 	const sessionId = "preflight";
@@ -542,6 +685,10 @@ writeFileSync(fake.log, "");
 await testReadOnlyRejectsUnresolvedApproval(fake);
 writeFileSync(fake.log, "");
 await testWritableExecution(fake);
+writeFileSync(fake.log, "");
+await testResumeHydrationRoutesWritableAgent(fake);
+writeFileSync(fake.log, "");
+await testDeletedResumedWorktreeRejectsWritableAgent(fake);
 writeFileSync(fake.log, "");
 await testExecutionClassAndCwdPreflight(fake);
 writeFileSync(fake.log, "");

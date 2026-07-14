@@ -13,6 +13,9 @@ from conftest import _clean_env
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HARNESS = REPO_ROOT / ".tests" / "pi" / "worktree_guard_runtime_harness.mjs"
 GUARD = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
+REGISTRY = (
+    REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
+)
 PI = shutil.which("pi")
 NODE = shutil.which("node")
 
@@ -28,10 +31,11 @@ def test_root_and_child_worktree_guard_runtime() -> None:
     assert NODE is not None
     package_dir = Path(PI).resolve().parent.parent
     result = subprocess.run(
-        [NODE, str(HARNESS), str(GUARD), str(package_dir)],
+        [NODE, str(HARNESS), str(GUARD), str(REGISTRY), str(package_dir)],
         check=True,
         capture_output=True,
         text=True,
+        timeout=60,
         env=_clean_env(),
     )
     assert result.stdout == "ok\n"

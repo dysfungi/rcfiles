@@ -27,10 +27,11 @@ subagent/
 
 ## Installation
 
-This is a ChezMoi-managed extension. Edit its source under
-`dot_pi/agent/extensions/subagent/`; ChezMoi renders it to
+This is a ChezMoi-managed extension. Edit its runtime source under
+`dot_pi/agent/extensions/subagent/`; ChezMoi renders the extension files to
 `~/.pi/agent/extensions/subagent/` with the managed agent definitions under
-`~/.pi/agent/agents/`. Workflow prompt templates are canonical only under
+`~/.pi/agent/agents/`. This README is source documentation and is excluded from
+deployment by the global README ignore rule. Workflow prompt templates are canonical only under
 `dot_pi/agent/prompts/` (rendered to `~/.pi/agent/prompts/`), not inside this
 extension. Legacy extension-local prompt targets are listed in the top-level
 `.chezmoiremove`, so a future normal apply removes only those three obsolete
@@ -41,7 +42,17 @@ files from Pi's upstream examples or manually symlink them.
 
 The interactive root owns only `worktree_start`, `worktree_status`, and
 `worktree_stop`. A matching successful start result is validated against live
-Git topology and recorded with a generation. While that approval is active,
+Git topology and recorded with a generation. When `/resume` loads a
+replacement session or `/reload` rebuilds the current runtime, hydration
+requires the `"resume"`/`"reload"` reason gate, the same live validation, and
+a fork-lineage cross-check: when `parentSession` is set, the candidate entry
+must not appear in its parent JSONL file. Only `worktree_start` and
+`worktree_stop` entries are hydration checkpoints; `worktree_status` output is
+purely observational and can never authorize hydration on its own. Pi emits
+`reason: "fork"` for both `/fork` and `/clone`; fork/clone sessions with
+copied history, sessions with an unreadable or malformed parent, and all
+`"startup"`/`"new"` sessions begin unapproved and must call `worktree_start`
+themselves. While that approval is active,
 every managed child—including `execution: read-only` reviewers—receives the
 approved worktree as its **initial cwd** so chain review sees uncommitted worker
 changes; this routing intentionally overrides a supplied `cwd`. If the session
