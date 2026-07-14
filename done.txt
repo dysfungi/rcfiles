@@ -95,3 +95,4 @@ x 2026-07-14 Add clipboard-copy key to /plan-show pager +pi +plan-mode @worktree
 x 2026-07-14 (B) Implement Pi /cwd session CWD fork command +pi @worktree:feat/pi-cwd-command
 x 2026-07-14 Implement plan-mode questionnaire tool: vendor pi 0.80.6 questionnaire.ts, fix .tests/pi/plan_mode_runtime_harness.mjs registry-filtering false-positive +pi +plan-mode @worktree:.worktree/feat/plan-mode-questionnaire-tool session:019f6214-bcb2-71fc-8c78-b6663c9fce9a
 x 2026-07-14 Fix Parsec Windows config path + newline diff churn +chezmoi +parsec @worktree:.worktree/fix/parsec-windows-config-path
+x 2026-07-14 Fix missing trailing newline in done.txt failing CI on main (end-of-file-fixer) +pi +chezmoi @worktree:.worktree/fix/done-txt-trailing-newline
