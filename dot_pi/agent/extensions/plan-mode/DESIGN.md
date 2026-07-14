@@ -208,10 +208,15 @@ inline full render is not noisy. A partial/empty-args guard shows `Saving plan�
 a full-screen, focused `ctx.ui.custom()` overlay: Markdown is rendered at the
 current terminal width, sliced by scroll offset, and painted over an opaque
 `customMessageBg` surface. Controls are ↑/↓ or j/k (line), PgUp/PgDn (page),
-Home/End (jump), the configured `tui.select.cancel` bindings, or q (close). It
-adapts to terminal resizing by rerendering Markdown at the new width and clamping
-the offset. This is UI-only and therefore
-adds **zero** LLM context.
+Ctrl+d/Ctrl+u (half page), Home/End (jump), the configured `tui.select.cancel`
+bindings, or q (close). It adapts to terminal resizing by rerendering Markdown at
+the new width and clamping the offset. This is UI-only and therefore adds **zero**
+LLM context.
+
+Pi uses Ctrl+d for `app.exit` when its input is empty and Ctrl+u for
+kill-line-backward, but this read-only overlay fully owns focused raw input (as it
+does for close keys), so their intentionally different pager meanings do not
+conflict.
 
 `c` copies the complete raw Markdown plan, not the rendered viewport. The footer
 briefly shows `Copying…`, `✓ Copied`, or `✗ Copy failed: <message>`, then returns

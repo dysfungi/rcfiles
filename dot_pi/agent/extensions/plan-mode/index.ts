@@ -280,7 +280,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 						const copySegment = copyFooterSegment(cancelKeys);
 						const footer = `${closeHint(cancelKeys)}${copySegment ? ` • ${copySegment}` : ""}${theme.fg(
 							"dim",
-							" • ↑↓/j/k scroll • PgUp/PgDn page • Home/End jump",
+							" • ↑↓/j/k scroll • PgUp/PgDn page • Ctrl+d/Ctrl+u half-page • Home/End jump",
 						)}`;
 						const body = renderedLines.slice(offset, end);
 						while (body.length < visibleLines) body.push("");
@@ -301,7 +301,10 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 							triggerCopy();
 							return;
 						}
-						if (matchesKey(data, Key.up) || matchesKey(data, "k")) offset -= 1;
+						const halfPage = Math.max(1, Math.ceil(page / 2));
+						if (matchesKey(data, Key.ctrl("d"))) offset += halfPage;
+						else if (matchesKey(data, Key.ctrl("u"))) offset -= halfPage;
+						else if (matchesKey(data, Key.up) || matchesKey(data, "k")) offset -= 1;
 						else if (matchesKey(data, Key.down) || matchesKey(data, "j")) offset += 1;
 						else if (matchesKey(data, Key.pageUp)) offset -= page;
 						else if (matchesKey(data, Key.pageDown)) offset += page;

@@ -138,6 +138,18 @@ function stripAnsi(value) {
 	return value.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "");
 }
 
+function getPlanPagerProgress(component) {
+	const header = stripAnsi(component.render(160).at(0));
+	component.render(80);
+	const match = header.match(/(\d+)-(\d+) \/ (\d+)\s*$/);
+	assert.ok(match, `plan pager header must contain progress: ${header}`);
+	return {
+		start: Number(match[1]),
+		end: Number(match[2]),
+		total: Number(match[3]),
+	};
+}
+
 function createHarness({
 	entries = [],
 	branchEntries = entries,
@@ -555,6 +567,54 @@ async function testPlanPagerCancellationBindings() {
 		assert.equal(navigation.planPagerFixture.getRenderRequests(), 1, "navigation requests a render");
 	} finally {
 		await navigation.close();
+	}
+
+	const halfPage = await openPlanPager(defaultCancelKeys);
+	try {
+		const page = Math.max(1, halfPage.planPagerFixture.tui.terminal.rows - 2);
+		const halfPageDelta = Math.max(1, Math.ceil(page / 2));
+		assert.equal(halfPageDelta, 11, "fixed pager terminal has an 11-line half page");
+		assert.match(
+			stripAnsi(halfPage.request.component.render(160).at(-1)),
+			/Ctrl\+d\/Ctrl\+u half-page/,
+			"footer documents half-page controls",
+		);
+
+		const before = getPlanPagerProgress(halfPage.request.component);
+		const rendersBefore = halfPage.planPagerFixture.getRenderRequests();
+		halfPage.request.component.handleInput("\x04");
+		const afterDown = getPlanPagerProgress(halfPage.request.component);
+		assert.equal(afterDown.start - before.start, halfPageDelta, "Ctrl+D advances by exactly half a page");
+		assert.equal(afterDown.end - before.end, halfPageDelta, "Ctrl+D advances the viewport by exactly half a page");
+		assert.equal(afterDown.total, before.total, "Ctrl+D preserves the rendered document length");
+		assert.equal(halfPage.request.doneCalls, 0, "Ctrl+D does not close the pager");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersBefore + 1,
+			"Ctrl+D requests a render after moving",
+		);
+
+		halfPage.request.component.handleInput("\x15");
+		const afterUp = getPlanPagerProgress(halfPage.request.component);
+		assert.equal(afterDown.start - afterUp.start, halfPageDelta, "Ctrl+U reverses exactly half a page");
+		assert.equal(afterDown.end - afterUp.end, halfPageDelta, "Ctrl+U restores the viewport by exactly half a page");
+		assert.equal(halfPage.request.doneCalls, 0, "Ctrl+U does not close the pager");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersBefore + 2,
+			"Ctrl+U requests a render after moving",
+		);
+
+		const rendersAtTop = halfPage.planPagerFixture.getRenderRequests();
+		halfPage.request.component.handleInput("\x15");
+		assert.deepEqual(getPlanPagerProgress(halfPage.request.component), before, "Ctrl+U at the top stays clamped");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersAtTop,
+			"a clamped Ctrl+U does not request a render",
+		);
+	} finally {
+		await halfPage.close();
 	}
 
 	const emptyCancel = await openPlanPager([]);
