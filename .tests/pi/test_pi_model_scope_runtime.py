@@ -8,7 +8,7 @@ silently select Pi's bundled OpenAI model with the same apparent reference.
 This test renders the Riot settings and models exactly as chezmoi does, then
 runs Pi's pinned 0.80.6 RPC runtime against a temporary, credential-free agent
 state. It verifies custom provider/model identity and the persisted new-session
-``max → high → max`` transition while cycling across models with different
+``xhigh → high → xhigh`` transition while cycling across models with different
 thinking ceilings. No request is sent to a model API.
 """
 
@@ -43,47 +43,47 @@ PROCESS_EXIT_TIMEOUT_SECONDS = 30
 PROCESS_TERMINATION_TIMEOUT_SECONDS = 5
 
 RIOT_SCOPES = [
-    "openai/openai/gpt-5.6-terra:max",
-    "openai/openai/gpt-5.6-luna:max",
-    "truefoundry/claude-vertex/anthropic-claude-opus-4-8:max",
-    "truefoundry/claude-vertex/anthropic-claude-sonnet-5:max",
-    "openai/google-vertexai/gemini-3.1-pro-preview:max",
-    "openai/google-vertexai/gemini-3.5-flash:max",
-    "openai/google-vertexai/gemini-3.1-flash-lite-preview:max",
+    "openai/openai/gpt-5.6-terra:xhigh",
+    "openai/openai/gpt-5.6-luna:xhigh",
+    "truefoundry/claude-vertex/anthropic-claude-opus-4-8:xhigh",
+    "truefoundry/claude-vertex/anthropic-claude-sonnet-5:xhigh",
+    "openai/google-vertexai/gemini-3.1-pro-preview:xhigh",
+    "openai/google-vertexai/gemini-3.5-flash:xhigh",
+    "openai/google-vertexai/gemini-3.1-flash-lite-preview:xhigh",
 ]
 
 RIOT_SCOPED_MODELS = [
-    {"provider": "openai", "id": "openai/gpt-5.6-terra", "thinkingLevel": "max"},
-    {"provider": "openai", "id": "openai/gpt-5.6-luna", "thinkingLevel": "max"},
+    {"provider": "openai", "id": "openai/gpt-5.6-terra", "thinkingLevel": "xhigh"},
+    {"provider": "openai", "id": "openai/gpt-5.6-luna", "thinkingLevel": "xhigh"},
     {
         "provider": "truefoundry",
         "id": "claude-vertex/anthropic-claude-opus-4-8",
-        "thinkingLevel": "max",
+        "thinkingLevel": "xhigh",
     },
     {
         "provider": "truefoundry",
         "id": "claude-vertex/anthropic-claude-sonnet-5",
-        "thinkingLevel": "max",
+        "thinkingLevel": "xhigh",
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.1-pro-preview",
-        "thinkingLevel": "max",
+        "thinkingLevel": "xhigh",
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.5-flash",
-        "thinkingLevel": "max",
+        "thinkingLevel": "xhigh",
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.1-flash-lite-preview",
-        "thinkingLevel": "max",
+        "thinkingLevel": "xhigh",
     },
 ]
 
-# Google scopes deliberately request max, but Pi clamps them to their highest
-# declared capability while cycling. Returning to Terra must restore max.
+# Google scopes deliberately request xhigh, but Pi clamps them to their highest
+# declared capability while cycling. Returning to Terra must restore xhigh.
 RIOT_CYCLE_RESULTS = [
     *RIOT_SCOPED_MODELS[1:4],
     *[{**model, "thinkingLevel": "high"} for model in RIOT_SCOPED_MODELS[4:]],
@@ -541,7 +541,7 @@ def test_rpc_timeout_reaps_child_and_joins_response_reader(tmp_path: Path) -> No
 def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     tmp_path: Path,
 ) -> None:
-    """Generated Riot scopes select their custom models and restore max after high."""
+    """Generated Riot scopes select their custom models and restore xhigh after high."""
     agent_dir = tmp_path / "agent"
     agent_dir.mkdir()
     settings = _render_riot_state(agent_dir, tmp_path)
@@ -551,5 +551,5 @@ def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     assert runtime["initial"] == RIOT_SCOPED_MODELS[0]
     assert runtime["cycles"] == RIOT_CYCLE_RESULTS
     assert runtime["baseUrls"] == [RIOT_BASE_URL] * (len(RIOT_SCOPED_MODELS) + 2)
-    assert runtime["serializedThinkingLevels"] == ["max", "high", "max"]
+    assert runtime["serializedThinkingLevels"] == ["xhigh", "high", "xhigh"]
     assert runtime["final"] == RIOT_SCOPED_MODELS[0]

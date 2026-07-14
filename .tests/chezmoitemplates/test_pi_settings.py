@@ -37,21 +37,21 @@ PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
 
 CATALOG_ENABLED_SCOPES = {
     "personal": [
-        "claude-opus-4-8:max",
-        "claude-sonnet-5:max",
-        "claude-fable-5:max",
-        "google/gemini-3.1-pro-preview:max",
-        "google/gemini-3.5-flash:max",
-        "google/gemini-3.1-flash-lite:max",
+        "claude-opus-4-8:xhigh",
+        "claude-sonnet-5:xhigh",
+        "claude-fable-5:xhigh",
+        "google/gemini-3.1-pro-preview:xhigh",
+        "google/gemini-3.5-flash:xhigh",
+        "google/gemini-3.1-flash-lite:xhigh",
     ],
     "riot": [
-        "openai/openai/gpt-5.6-terra:max",
-        "openai/openai/gpt-5.6-luna:max",
-        "truefoundry/claude-vertex/anthropic-claude-opus-4-8:max",
-        "truefoundry/claude-vertex/anthropic-claude-sonnet-5:max",
-        "openai/google-vertexai/gemini-3.1-pro-preview:max",
-        "openai/google-vertexai/gemini-3.5-flash:max",
-        "openai/google-vertexai/gemini-3.1-flash-lite-preview:max",
+        "openai/openai/gpt-5.6-terra:xhigh",
+        "openai/openai/gpt-5.6-luna:xhigh",
+        "truefoundry/claude-vertex/anthropic-claude-opus-4-8:xhigh",
+        "truefoundry/claude-vertex/anthropic-claude-sonnet-5:xhigh",
+        "openai/google-vertexai/gemini-3.1-pro-preview:xhigh",
+        "openai/google-vertexai/gemini-3.5-flash:xhigh",
+        "openai/google-vertexai/gemini-3.1-flash-lite-preview:xhigh",
     ],
 }
 
@@ -75,7 +75,7 @@ def _managed(machine: str) -> dict[str, Any]:
         **EXPECTED[machine],
         "packages": PACKAGES,
         "defaultProjectTrust": "always",
-        "defaultThinkingLevel": "max",
+        "defaultThinkingLevel": "xhigh",
         "hideThinkingBlock": False,
         "showCacheMissNotices": True,
         "theme": "dark",
@@ -188,7 +188,11 @@ def test_default_model_uses_its_provider_identity(
 
     enabled_models = settings["enabledModels"]
     assert enabled_models == CATALOG_ENABLED_SCOPES[machine]
-    assert all(model.endswith(":max") for model in enabled_models)
+    assert all(model.endswith(":xhigh") for model in enabled_models)
+    assert all(
+        model.rpartition(":")[2] == settings["defaultThinkingLevel"]
+        for model in enabled_models
+    )
 
 
 @pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])

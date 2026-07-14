@@ -9,10 +9,12 @@
        entries use Pi's canonical provider/id reference so IDs such as
        openai/gpt-5.6-terra select the generated custom model rather than a
        same-named bundled model; bundled models retain their bare IDs. Every
-       rotation entry explicitly requests `max`: without its own scope, Pi
-       inherits a lower ceiling clamped by the preceding model and persists it
-       across subsequent cycles. Pi clamps `max` to each model's declared
-       capability. Older/[1m] models stay reachable via /model. */}}
+       rotation entry explicitly requests the configured thinking level:
+       without its own scope, Pi inherits a lower ceiling clamped by the
+       preceding model and persists it across subsequent cycles. Pi clamps the
+       configured level to each model's declared capability. Older/[1m] models
+       stay reachable via /model. */}}
+{{- $thinking_level := "xhigh" -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
 {{- $default := "" -}}
@@ -28,7 +30,7 @@
     {{- if hasKey $m "gateway" -}}
       {{- $scope_id = printf "%s/%s" (dig "gateway" "provider" "" $m) $m.id -}}
     {{- end -}}
-    {{- $enabled = append $enabled (printf "%s:max" $scope_id) -}}
+    {{- $enabled = append $enabled (printf "%s:%s" $scope_id $thinking_level) -}}
   {{- end -}}
 {{- end -}}
 {{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
@@ -72,7 +74,7 @@ MANAGED: dict[str, Any] = {
         "npm:pi-vimmode@>=0.7.0 <1.0.0",
     ],
     "defaultProjectTrust": "always",
-    "defaultThinkingLevel": "max",
+    "defaultThinkingLevel": {{ $thinking_level | quote }},
     "hideThinkingBlock": False,
     "showCacheMissNotices": True,
     "theme": "dark",
