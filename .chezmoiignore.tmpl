@@ -49,8 +49,8 @@ uv.lock
 
 {{ if .is_windows }}
 
-# Native Windows Parsec reads AppData\Roaming\Parsec\config.json instead.
-.parsec/config.json
+# Native Windows Parsec reads its config from AppData\Roaming\Parsec instead.
+.parsec/**
 
 .local/bin/*.sh
 
@@ -101,7 +101,7 @@ Documents/**
 
 {{ if .is_wsl }}
 # WSL never runs a Parsec host, so this Unix-style config does not belong there.
-.parsec/config.json
+.parsec/**
 {{ end }}
 
 ##########################################

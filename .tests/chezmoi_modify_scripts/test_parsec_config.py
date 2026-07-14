@@ -243,7 +243,7 @@ def test_parsec_ignore_is_platform_scoped_with_consistent_source_state(
 ) -> None:
     """Ignored platforms must not collide with the active Parsec modify_ source."""
     rendered_lines = _render(IGNORE, data, tmp_path).decode().splitlines()
-    assert (".parsec/config.json" in rendered_lines) is should_ignore
+    assert (".parsec/**" in rendered_lines) is should_ignore
 
     result = _dry_run_apply(_scratch_source(tmp_path), data, tmp_path)
     combined_output = result.stdout + result.stderr
