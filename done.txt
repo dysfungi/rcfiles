@@ -90,3 +90,4 @@ x 2026-07-11 Implement marker-first root-worktree/direct-worker-Git Pi workflow 
 x 2026-07-11 Implement direct-shell tmux startup, xonsh mail, and cross-platform regression coverage +tmux +chezmoi @worktree:.worktree/fix/tmux-direct-shell-cwd agent:pi
 x 2026-07-12 Address tmux direct-shell review findings +tmux +xonsh +chezmoi @worktree:.worktree/fix/tmux-direct-shell-cwd agent:pi
 x 2026-07-12 Address final PR #45 review: make direct-shell tmux test mailbox state hermetic +tmux +testing @worktree:.worktree/fix/tmux-direct-shell-cwd agent:pi
+x 2026-07-13 (B) Restore Ctrl+[ as Pi Escape +pi +keybindings @worktree:.worktree/fix/pi-ctrl-bracket-escape session:019f5d7a-ac64-7ff4-b722-0a93e30837f1
