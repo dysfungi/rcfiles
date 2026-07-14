@@ -1,5 +1,5 @@
 aqua:rust-lang/rust-analyzer          2026-06-29
-aqua:rust-lang/rust-analyzer          2026-07-06        ~/.config/mise/config.toml       latest
+aqua:rust-lang/rust-analyzer          2026-07-13        ~/.config/mise/config.toml       latest
 asdf:luizm/asdf-shfmt                 3.13.1
 chezmoi                               2.71.0
 gh                                    2.96.0            ~/.config/mise/conf.d/riot.toml  latest

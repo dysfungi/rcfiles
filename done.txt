@@ -92,3 +92,4 @@ x 2026-07-12 Address tmux direct-shell review findings +tmux +xonsh +chezmoi @wo
 x 2026-07-12 Address final PR #45 review: make direct-shell tmux test mailbox state hermetic +tmux +testing @worktree:.worktree/fix/tmux-direct-shell-cwd agent:pi
 x 2026-07-13 (B) Restore Ctrl+[ as Pi Escape +pi +keybindings @worktree:.worktree/fix/pi-ctrl-bracket-escape session:019f5d7a-ac64-7ff4-b722-0a93e30837f1
 x 2026-07-14 Fix Hammerspoon WezTerm hotkey nil-window crash +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-nil-window session:019f61be-8e1f-7ee5-80d1-338b6bc58b72 agent:pi
+x 2026-07-14 (B) 2026-07-14 Implement verified-integration / silent post-merge cleanup reporting policy across my-git harnesses +chezmoi +skills @worktree:.worktree/feat/post-merge-reporting-policy agent:pi

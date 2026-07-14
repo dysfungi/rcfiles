@@ -94,6 +94,8 @@ run_after_ chezmoiscript in Phase 3). Sync scripts back up before+after to
   validators). Single hook: `mise x -- pre-commit run <hook-id> --all-files`. The `mise x --` prefix is
   required (pre-commit is mise-managed).
 - `mise run test` — regression harness, organized by subsystem under `.tests/<domain>/`.
+- Template render/content-presence validation belongs to `validate-chezmoi-templates` (pre-commit) and
+  `chezmoi apply`; pytest covers executable behavior only (scripts, hooks, tools), never rendered template content.
 - pre-commit hooks are the contract: fix the source file when a hook fails; never add `# noqa`,
   extend `exclude:`, or skip a hook without approval.
 
