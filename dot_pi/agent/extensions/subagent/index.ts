@@ -347,6 +347,9 @@ async function runSingleAgent(
 		lease = leased.lease;
 	}
 
+	// Pi resolves `parsed.noSession` before extensions bind; no environment hook lets
+	// `PI_SUBAGENT` replace this explicit flag. Never add `--no-context-files`/`-nc`:
+	// children must reload global/project AGENTS.md from their own cwd.
 	const args: string[] = ["--mode", "json", "-p", "--no-session"];
 	if (agent.model) args.push("--model", agent.model);
 	if (agent.tools && agent.tools.length > 0) args.push("--tools", agent.tools.join(","));

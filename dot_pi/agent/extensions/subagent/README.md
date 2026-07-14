@@ -17,12 +17,7 @@ Delegate tasks to specialized subagents with isolated context windows.
 subagent/
 ├── README.md            # This file
 ├── index.ts             # The extension (entry point)
-├── agents.ts            # Agent discovery logic
-└── agents/              # Sample agent definitions
-    ├── scout.md         # Fast recon, returns compressed context
-    ├── planner.md       # Creates implementation plans
-    ├── reviewer.md      # Code review
-    └── worker.md        # General-purpose (full capabilities)
+└── agents.ts            # Agent discovery logic
 ```
 
 ## Installation
@@ -31,12 +26,22 @@ This is a ChezMoi-managed extension. Edit its runtime source under
 `dot_pi/agent/extensions/subagent/`; ChezMoi renders the extension files to
 `~/.pi/agent/extensions/subagent/` with the managed agent definitions under
 `~/.pi/agent/agents/`. This README is source documentation and is excluded from
-deployment by the global README ignore rule. Workflow prompt templates are canonical only under
+deployment by the global README ignore rule. The canonical and only managed role
+definitions are `dot_pi/agent/agents/*.md.tmpl`, rendered to
+`~/.pi/agent/agents/`. Workflow prompt templates are canonical only under
 `dot_pi/agent/prompts/` (rendered to `~/.pi/agent/prompts/`), not inside this
-extension. Legacy extension-local prompt targets are listed in the top-level
-`.chezmoiremove`, so a future normal apply removes only those three obsolete
+extension. Legacy extension-local prompt and sample-role targets are listed in
+the top-level `.chezmoiremove`, so a future normal apply removes only obsolete
 files rather than exact-syncing any broader `.pi` directory. Do not copy these
 files from Pi's upstream examples or manually symlink them.
+
+## Child launch contract
+
+Children retain normal context-file discovery: never pass `--no-context-files`
+or `-nc`, so each child reloads global and project `AGENTS.md` from its own
+working directory. `--no-session` remains an explicit child CLI flag because
+Pi resolves `parsed.noSession` before extensions bind; core provides no
+environment-variable hook through which `PI_SUBAGENT` could replace it.
 
 ## Worktree ownership
 
@@ -214,19 +219,10 @@ System prompt for the agent goes here.
 
 **Locations:**
 
-- `~/.pi/agent/agents/*.md` - User-level (always loaded)
+- `~/.pi/agent/agents/*.md` - User-level canonical managed role definitions (always loaded)
 - `.pi/agents/*.md` - Project-level (only with `agentScope: "project"` or `"both"`)
 
 Project agents override user agents with the same name when `agentScope: "both"`.
-
-## Sample Agents
-
-| Agent      | Purpose              | Tools                                                                                                | Execution        |
-| ---------- | -------------------- | ---------------------------------------------------------------------------------------------------- | ---------------- |
-| `scout`    | Fast codebase recon  | `read, grep, find, ls, bash`                                                                         | `read-only`      |
-| `planner`  | Implementation plans | `read, grep, find, ls`                                                                               | `read-only`      |
-| `reviewer` | Code review          | `read, grep, find, ls, bash`                                                                         | `read-only`      |
-| `worker`   | General-purpose      | `read, grep, find, ls, bash, write, edit, mcp, memory_read, memory_write, memory_search, scratchpad` | `worktree-write` |
 
 ## Workflow Prompts
 

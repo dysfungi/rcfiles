@@ -195,6 +195,17 @@ function invocations(log) {
 	}
 }
 
+function assertChildLaunchArgs(log) {
+	const records = invocations(log);
+	assert.ok(records.length > 0, "scenario must spawn at least one child");
+	for (const [index, record] of records.entries()) {
+		const child = `child launch ${index + 1}`;
+		assert.ok(record.args.includes("--no-session"), `${child} must isolate session history`);
+		assert.equal(record.args.includes("--no-context-files"), false, `${child} must retain context-file discovery`);
+		assert.equal(record.args.includes("-nc"), false, `${child} must retain context-file discovery`);
+	}
+}
+
 async function withFakePi(fake, callback, environment = {}) {
 	const originalScript = process.argv[1];
 	const originals = new Map(
@@ -269,6 +280,7 @@ async function testReadOnlyExecution(fake) {
 		assert.equal("worktreeRoot" in record, false);
 		assert.equal("repoRoot" in record, false);
 		assert.equal("generation" in record, false);
+		assertChildLaunchArgs(fake.log);
 	} finally {
 		if (original.generation === undefined) delete process.env.PI_WORKTREE_GENERATION;
 		else process.env.PI_WORKTREE_GENERATION = original.generation;
@@ -309,6 +321,7 @@ async function testApprovedWorktreeRoutesReviewers(fake) {
 		assert.equal(records.length, 3);
 		assert.deepEqual(records.map((record) => record.cwd), [realpathSync(worker), realpathSync(worker), realpathSync(worker)]);
 		assert.deepEqual(records.map((record) => record.execution), ["read-only", "worktree-write", "read-only"]);
+		assertChildLaunchArgs(fake.log);
 	} finally {
 		registry.revokeWorktree({ sessionId, repoRoot: root });
 	}
@@ -383,6 +396,7 @@ async function testWritableExecution(fake) {
 		assert.equal(record.repoRoot, realpathSync(root));
 		assert.equal(record.generation, String(approval.generation));
 		assert.equal(registry.worktreeHasLeases({ sessionId, repoRoot: root }), false);
+		assertChildLaunchArgs(fake.log);
 	} finally {
 		registry.revokeWorktree({ sessionId, repoRoot: root });
 	}
@@ -541,6 +555,27 @@ async function testParallelPreflightIsAtomic(fake) {
 	}
 }
 
+async function testParallelReadOnlyExecution(fake) {
+	const { root } = worktreeFixture();
+	const sessionId = "parallel-read-only";
+	writeAgents(root);
+	const result = await withFakePi(fake, () =>
+		invoke(runner(root, sessionId), {
+			tasks: [
+				{ agent: "reader", task: "inspect the first concern" },
+				{ agent: "reviewer", task: "inspect the second concern" },
+			],
+			agentScope: "project",
+			confirmProjectAgents: false,
+		}),
+	);
+	assert.equal(result.isError, undefined, resultText(result));
+	const records = invocations(fake.log);
+	assert.equal(records.length, 2);
+	assert.deepEqual(records.map((record) => record.execution), ["read-only", "read-only"]);
+	assertChildLaunchArgs(fake.log);
+}
+
 async function testLeaseReleasesAfterSpawnFailure() {
 	const { root, worker } = worktreeFixture();
 	const sessionId = "spawn-failure";
@@ -611,6 +646,7 @@ async function testConcurrentToolCallsShareOneLease(fake) {
 				});
 				assert.equal(afterRelease.isError, undefined, resultText(afterRelease));
 				assert.equal(invocations(fake.log).length, 2);
+				assertChildLaunchArgs(fake.log);
 			},
 			{ FAKE_PI_BEHAVIOR: "hold", FAKE_PI_RELEASE: release },
 		);
@@ -639,6 +675,7 @@ async function testSignalTerminationAndAbortEscalation(fake) {
 		assert.equal(result.isError, true);
 		assert.match(resultText(result), /terminated by SIGTERM/);
 		assert.equal(registry.worktreeHasLeases({ sessionId: signaledSession, repoRoot: signaled.root }), false);
+		assertChildLaunchArgs(fake.log);
 	} finally {
 		registry.revokeWorktree({ sessionId: signaledSession, repoRoot: signaled.root });
 	}
@@ -672,6 +709,7 @@ async function testSignalTerminationAndAbortEscalation(fake) {
 		assert.equal(result.isError, true);
 		assert.match(resultText(result), /terminated by SIGKILL after an abort request/);
 		assert.equal(registry.worktreeHasLeases({ sessionId: ignoringSession, repoRoot: ignoring.root }), false);
+		assertChildLaunchArgs(fake.log);
 	} finally {
 		registry.revokeWorktree({ sessionId: ignoringSession, repoRoot: ignoring.root });
 	}
@@ -693,6 +731,8 @@ writeFileSync(fake.log, "");
 await testExecutionClassAndCwdPreflight(fake);
 writeFileSync(fake.log, "");
 await testParallelPreflightIsAtomic(fake);
+writeFileSync(fake.log, "");
+await testParallelReadOnlyExecution(fake);
 writeFileSync(fake.log, "");
 await testLeaseReleasesAfterSpawnFailure();
 writeFileSync(fake.log, "");
