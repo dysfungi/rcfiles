@@ -31,19 +31,80 @@ const jiti = createJiti(import.meta.url, {
 		typebox: join(nodeModules, "typebox", "build", "index.mjs"),
 	},
 });
+const themeModule = await import(
+	pathToFileURL(join(packageDir, "dist", "modes", "interactive", "theme", "theme.js")).href,
+);
+const tuiModule = await import(
+	pathToFileURL(join(nodeModules, "@earendil-works", "pi-tui", "dist", "index.js")).href,
+);
+const { KeybindingsManager } = await import(
+	pathToFileURL(join(packageDir, "dist", "core", "keybindings.js")).href,
+);
+const { TUI } = tuiModule;
+const { initTheme, theme: globalTheme } = themeModule;
 const { default: planModeExtension } = await jiti.import(resolve(extensionPath));
 const extensionDir = dirname(resolve(extensionPath));
 const { default: rootThreadGuard } = await jiti.import(resolve(extensionDir, "..", "root-thread-guard.ts"));
 const bashSafety = await jiti.import(resolve(extensionDir, "bash-safety.ts"));
 const mutationPolicy = await import(pathToFileURL(resolve(extensionDir, "..", "bash-mutation-policy.mjs")).href);
 
-function createHarness({ entries = [], branchEntries = entries, idle = true, mode = "rpc", plan = true, sendFailure } = {}) {
+function createPlanPagerFixture(cancelKeys) {
+	initTheme("dark");
+	const terminal = {
+		columns: 80,
+		rows: 24,
+		kittyProtocolActive: true,
+		start() {},
+		stop() {},
+		async drainInput() {},
+		write() {},
+		moveBy() {},
+		hideCursor() {},
+		showCursor() {},
+		clearLine() {},
+		clearFromCursor() {},
+		clearScreen() {},
+		setTitle() {},
+		setProgress() {},
+	};
+	const tui = new TUI(terminal);
+	let renderRequests = 0;
+	tui.requestRender = () => {
+		renderRequests += 1;
+	};
+	return {
+		keybindings: new KeybindingsManager({ "tui.select.cancel": cancelKeys }),
+		theme: globalTheme,
+		tui,
+		getRenderRequests: () => renderRequests,
+	};
+}
+
+function stripAnsi(value) {
+	return value.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function createHarness({
+	entries = [],
+	branchEntries = entries,
+	idle = true,
+	mode = "rpc",
+	plan = true,
+	sendFailure,
+	sessionDir = join(process.cwd(), ".tmp", "pi", "sessions", "test"),
+	planPagerFixture,
+} = {}) {
 	const commands = new Map();
 	const events = new Map();
 	const notifications = [];
 	const statuses = [];
 	const persistedEntries = [];
 	const sentMessages = [];
+	const customRequests = [];
+	let resolveCustomRequest;
+	const customRequestReady = new Promise((resolveRequest) => {
+		resolveCustomRequest = resolveRequest;
+	});
 	const initialTools = ["read", "bash", "edit", "write", "mcp", "external_tool"];
 	const state = { activeTools: [...initialTools], idle };
 
@@ -85,11 +146,32 @@ function createHarness({ entries = [], branchEntries = entries, idle = true, mod
 		sessionManager: {
 			getBranch: () => branchEntries,
 			getEntries: () => entries,
-			getSessionDir: () => join(process.cwd(), ".tmp", "pi", "sessions", "test"),
+			getSessionDir: () => sessionDir,
 			getSessionId: () => "test",
 		},
 		ui: {
-			custom: async () => undefined,
+			custom: async (factory, options) => {
+				if (!planPagerFixture) return undefined;
+				let resolveResult;
+				const result = new Promise((resolveResultValue) => {
+					resolveResult = resolveResultValue;
+				});
+				const request = { component: undefined, done: undefined, doneCalls: 0, options };
+				const done = (value) => {
+					request.doneCalls += 1;
+					resolveResult(value);
+				};
+				request.done = done;
+				request.component = await factory(
+					planPagerFixture.tui,
+					planPagerFixture.theme,
+					planPagerFixture.keybindings,
+					done,
+				);
+				customRequests.push(request);
+				resolveCustomRequest(request);
+				return result;
+			},
 			notify: (message, type = "info") => notifications.push({ message, type }),
 			setStatus: (key, value) => statuses.push({ key, value }),
 			theme: { fg: (_color, text) => text },
@@ -97,7 +179,20 @@ function createHarness({ entries = [], branchEntries = entries, idle = true, mod
 	};
 
 	planModeExtension(pi);
-	return { commands, ctx, events, initialTools, notifications, persistedEntries, pi, sentMessages, state, statuses };
+	return {
+		commands,
+		ctx,
+		customRequestReady,
+		customRequests,
+		events,
+		initialTools,
+		notifications,
+		persistedEntries,
+		pi,
+		sentMessages,
+		state,
+		statuses,
+	};
 }
 
 async function emit(harness, eventName, event) {
@@ -321,6 +416,117 @@ async function testBashPolicyParity() {
 	assert.match(blocked.reason, /Plan mode: command blocked/);
 }
 
+async function openPlanPager(cancelKeys) {
+	const fixtureRoot = await mkdtemp(join(tmpdir(), "pi-plan-pager-"));
+	const agentDir = join(fixtureRoot, "agent");
+	const sessionDir = join(agentDir, "sessions", "test");
+	await mkdir(join(agentDir, "plans"), { recursive: true });
+	await writeFile(
+		join(agentDir, "plans", "test.md"),
+		["# Plan", ...Array.from({ length: 48 }, (_, index) => `Step ${index + 1}`)].join("\n"),
+	);
+
+	const planPagerFixture = createPlanPagerFixture(cancelKeys);
+	assert.equal(planPagerFixture.tui.terminal.columns, 80, "pager TUI has a concrete width");
+	assert.equal(planPagerFixture.tui.terminal.rows, 24, "pager TUI has a concrete height");
+	const harness = createHarness({ mode: "tui", planPagerFixture, sessionDir });
+	const command = runCommand(harness, "plan-show");
+	const request = await harness.customRequestReady;
+	assert.ok(request.component, "plan pager custom factory returned a component");
+
+	return {
+		command,
+		fixtureRoot,
+		planPagerFixture,
+		request,
+		async close() {
+			try {
+				if (request.doneCalls === 0) request.done(undefined);
+				await command;
+			} finally {
+				await rm(fixtureRoot, { recursive: true, force: true });
+			}
+		},
+	};
+}
+
+async function testPlanPagerCancellationBindings() {
+	const defaultCancelKeys = ["escape", "ctrl+c", "ctrl+["];
+
+	const escape = await openPlanPager(defaultCancelKeys);
+	try {
+		escape.request.component.handleInput("\x1b");
+		escape.request.component.handleInput("\x1b");
+		assert.equal(escape.request.doneCalls, 1, "raw Escape completes the pager once through tui.select.cancel");
+		await escape.command;
+	} finally {
+		await escape.close();
+	}
+
+	const ctrlC = await openPlanPager(defaultCancelKeys);
+	try {
+		ctrlC.request.component.handleInput("\x03");
+		ctrlC.request.component.handleInput("\x03");
+		assert.equal(ctrlC.request.doneCalls, 1, "Ctrl+C completes the pager once through tui.select.cancel");
+		await ctrlC.command;
+	} finally {
+		await ctrlC.close();
+	}
+
+	const csi = await openPlanPager(defaultCancelKeys);
+	try {
+		const footer = stripAnsi(csi.request.component.render(80).at(-1));
+		assert.match(footer, /escape\/ctrl\+c\/ctrl\+\[\/q close/);
+		csi.request.component.handleInput("\x1b[91;5u");
+		csi.request.component.handleInput("\x1b[91;5u");
+		assert.equal(csi.request.doneCalls, 1, "CSI-u Ctrl+[ completes the pager once");
+		await csi.command;
+	} finally {
+		await csi.close();
+	}
+
+	const q = await openPlanPager(defaultCancelKeys);
+	try {
+		q.request.component.handleInput("q");
+		assert.equal(q.request.doneCalls, 1, "q remains a pager close fallback");
+		await q.command;
+	} finally {
+		await q.close();
+	}
+
+	const navigation = await openPlanPager(defaultCancelKeys);
+	try {
+		navigation.request.component.handleInput("\x1b[B");
+		assert.equal(navigation.request.doneCalls, 0, "navigation does not close the pager");
+		assert.equal(navigation.planPagerFixture.getRenderRequests(), 1, "navigation requests a render");
+	} finally {
+		await navigation.close();
+	}
+
+	const emptyCancel = await openPlanPager([]);
+	try {
+		const footer = stripAnsi(emptyCancel.request.component.render(80).at(-1));
+		assert.match(footer, /q close/);
+		assert.doesNotMatch(footer, /escape|ctrl\+c|ctrl\+\[/);
+		emptyCancel.request.component.handleInput("\x1b");
+		assert.equal(emptyCancel.request.doneCalls, 0, "empty cancel bindings leave Escape unclaimed");
+		emptyCancel.request.component.handleInput("q");
+		assert.equal(emptyCancel.request.doneCalls, 1, "q closes with empty cancel bindings");
+		await emptyCancel.command;
+	} finally {
+		await emptyCancel.close();
+	}
+
+	const deduplicatedQ = await openPlanPager(["q"]);
+	try {
+		const footer = stripAnsi(deduplicatedQ.request.component.render(80).at(-1));
+		assert.match(footer, /q close/);
+		assert.doesNotMatch(footer, /q\/q close/);
+	} finally {
+		await deduplicatedQ.close();
+	}
+}
+
 async function testRootThreadPolicyComposition() {
 	const harness = createHarness({ mode: "rpc" });
 	rootThreadGuard(harness.pi);
@@ -365,5 +571,6 @@ await testModeParsingAndIdleGuards();
 await testImplementationKickoffAndFailure();
 await testContextDeduplication();
 await testBashPolicyParity();
+await testPlanPagerCancellationBindings();
 await testRootThreadPolicyComposition();
 console.log("plan-mode runtime handler harness: ok");

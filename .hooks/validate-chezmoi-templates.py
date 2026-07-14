@@ -39,6 +39,9 @@ Design decisions:
   - The Python script is a pure orchestrator — all validation logic lives in
     the external tools. No Python built-ins (json.load, tomllib) are used for
     validation; real linters give better error messages and a consistent model.
+    The managed Pi keybindings source also has a jq semantic contract after its
+    JSON check, so its complete cancellation arrays cannot silently regress.
+    The source-path gate keeps that desired-state contract out of unrelated JSON.
 
 Output type detection (filename-based rules first, then extension):
   Filename rules:
@@ -135,6 +138,12 @@ _SHEBANG_TO_OUTPUT_TYPE: list[tuple[re.Pattern[str], str]] = [
 ]
 
 FORMAT_STYLE_TYPES = frozenset({"toml", "markdown", "shell", "lua"})
+
+_PI_KEYBINDINGS_TEMPLATE = Path("dot_pi/agent/keybindings.json.tmpl")
+_PI_KEYBINDINGS_JQ_CONTRACT = (
+    '."app.interrupt" == ["escape", "ctrl+["] '
+    'and ."tui.select.cancel" == ["escape", "ctrl+c", "ctrl+["]'
+)
 
 
 # ---------------------------------------------------------------------------
@@ -421,6 +430,28 @@ def run_linter(output_type: str, rendered: Path) -> str | None:
 # ---------------------------------------------------------------------------
 
 
+def validate_pi_keybindings_contract(source: str, rendered: Path) -> str | None:
+    """Enforce non-empty managed Pi cancellation bindings with jq semantic equality."""
+    if Path(source).as_posix() != _PI_KEYBINDINGS_TEMPLATE.as_posix():
+        return None
+
+    if rendered.read_text(errors="replace").strip() == "":
+        return "Pi keybindings semantic contract failed: rendered output is empty."
+
+    contract_error = _output_if_failed(
+        _mise("jq", "-e", _PI_KEYBINDINGS_JQ_CONTRACT, str(rendered))
+    )
+    if not contract_error:
+        return None
+
+    return (
+        "Pi keybindings semantic contract failed: app.interrupt must be "
+        '["escape", "ctrl+["] and tui.select.cancel must be '
+        '["escape", "ctrl+c", "ctrl+["]\n'
+        f"jq output:\n{contract_error}"
+    )
+
+
 def validate_rendered_output(
     output_type: str, rendered: Path, tmpdir: Path
 ) -> str | None:
@@ -455,7 +486,7 @@ def process_file(source: str) -> bool:
             print(f"FAIL  {source}: render failed:\n{render_err}", file=sys.stderr)
             return False
 
-        # Whitespace-only render -> PASS without type detection or linting.
+        # Whitespace-only renders normally PASS without type detection or linting.
         # Mirrors chezmoi's "empty render = no target file" semantics (the empty_
         # attribute prefix opts OUT of that). A template wholly wrapped in a
         # machine/platform conditional (e.g. {{ if .is_riot_machine }}…{{ end }})
@@ -463,7 +494,13 @@ def process_file(source: str) -> bool:
         # and thus nothing to format or lint. A successful render already validated
         # the Go-template syntax, so short-circuit rather than feed an empty buffer
         # to shellcheck (SC2148) or another linter that would false-positive on it.
+        # The managed Pi keybindings are an explicit desired-state exception:
+        # their source-aware semantic contract must reject an empty output.
         if rendered.read_text(errors="replace").strip() == "":
+            contract_err = validate_pi_keybindings_contract(source, rendered)
+            if contract_err:
+                print(f"FAIL  {source}: {contract_err}", file=sys.stderr)
+                return False
             return True
 
         # Shebang overrides filename-based detection (e.g. modify_foo.json.tmpl
@@ -479,6 +516,11 @@ def process_file(source: str) -> bool:
         validation_err = validate_rendered_output(output_type, rendered, tmpdir)
         if validation_err:
             print(f"FAIL  {source}: {validation_err}", file=sys.stderr)
+            return False
+
+        contract_err = validate_pi_keybindings_contract(source, rendered)
+        if contract_err:
+            print(f"FAIL  {source}: {contract_err}", file=sys.stderr)
             return False
 
         return True

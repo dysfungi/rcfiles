@@ -208,8 +208,9 @@ inline full render is not noisy. A partial/empty-args guard shows `Saving plan�
 a full-screen, focused `ctx.ui.custom()` overlay: Markdown is rendered at the
 current terminal width, sliced by scroll offset, and painted over an opaque
 `customMessageBg` surface. Controls are ↑/↓ or j/k (line), PgUp/PgDn (page),
-Home/End (jump), and Esc/q (close). It adapts to terminal resizing by rerendering
-Markdown at the new width and clamping the offset. This is UI-only and therefore
+Home/End (jump), the configured `tui.select.cancel` bindings, or q (close). It
+adapts to terminal resizing by rerendering Markdown at the new width and clamping
+the offset. This is UI-only and therefore
 adds **zero** LLM context.
 
 Non-TUI modes retain the previous custom transcript entry (`pi.appendEntry("plan-view")`

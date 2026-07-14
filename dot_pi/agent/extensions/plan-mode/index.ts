@@ -51,7 +51,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { defineTool, getMarkdownTheme } from "@earendil-works/pi-coding-agent";
+import { defineTool, getMarkdownTheme, rawKeyHint } from "@earendil-works/pi-coding-agent";
 import { Box, Key, Markdown, Text, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -176,10 +176,22 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		}
 
 		await ctx.ui.custom<void>(
-			(tui, theme, _keybindings, done) => {
+			(tui, theme, keybindings, done) => {
 				const markdown = new Markdown(content, 0, 0, getMarkdownTheme());
 				let offset = 0;
 				let width = tui.terminal.columns;
+				let closed = false;
+
+				function close(): void {
+					if (closed) return;
+					closed = true;
+					done(undefined);
+				}
+
+				function closeHint(): string {
+					const closeKeys = [...new Set([...keybindings.getKeys("tui.select.cancel"), "q"])];
+					return rawKeyHint(closeKeys.join("/"), "close");
+				}
 
 				function pageHeight(): number {
 					return Math.max(1, tui.terminal.rows - 2); // Header + footer.
@@ -207,7 +219,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 						const end = Math.min(offset + visibleLines, renderedLines.length);
 						const progress = `${offset + 1}-${end} / ${renderedLines.length}`;
 						const header = `${theme.bold(theme.fg("accent", "📋 Plan"))} ${theme.fg("muted", planFile)} ${theme.fg("dim", progress)}`;
-						const footer = theme.fg("dim", "↑↓/j/k scroll • PgUp/PgDn page • Home/End jump • Esc/q close");
+						const footer = `${theme.fg("dim", "↑↓/j/k scroll • PgUp/PgDn page • Home/End jump • ")}${closeHint()}`;
 						const body = renderedLines.slice(offset, end);
 						while (body.length < visibleLines) body.push("");
 						return [surface(header), ...body.map(surface), surface(footer)];
@@ -219,8 +231,8 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 						const renderedLines = lines();
 						const previousOffset = offset;
 						const page = pageHeight();
-						if (matchesKey(data, Key.escape) || matchesKey(data, "q")) {
-							done(undefined);
+						if (keybindings.matches(data, "tui.select.cancel") || matchesKey(data, "q")) {
+							close();
 							return;
 						}
 						if (matchesKey(data, Key.up) || matchesKey(data, "k")) offset -= 1;

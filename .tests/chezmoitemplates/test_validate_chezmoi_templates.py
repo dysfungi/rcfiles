@@ -381,7 +381,9 @@ def _run_hook(repo: Path, filename: str, body: str) -> subprocess.CompletedProce
     chezmoi repo. GIT_* is stripped from env for the same isolation reason as
     conftest's git helpers (pre-commit leaks GIT_DIR into subprocess env).
     """
-    (repo / filename).write_text(body)
+    target = repo / filename
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body)
     clean = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     return subprocess.run(
         [sys.executable, str(_hook_path), filename],
@@ -432,6 +434,66 @@ def test_empty_render_skip(
         assert result.returncode != 0, (
             f"expected FAIL: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Integration: Pi keybindings semantic contract
+# ---------------------------------------------------------------------------
+
+
+_PI_KEYBINDINGS_CONTRACT_CASES = [
+    (
+        "dot_pi/agent/keybindings.json.tmpl",
+        '{"app.interrupt": ["escape", "ctrl+["], "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["]}\n',
+        True,
+        "complete managed cancellation bindings pass",
+    ),
+    (
+        "dot_pi/agent/keybindings.json.tmpl",
+        "{{ if false }}x{{ end }}\n  \t\n",
+        False,
+        "empty managed keybindings render fails",
+    ),
+    (
+        "dot_pi/agent/keybindings.json.tmpl",
+        '{"app.interrupt": ["escape"], "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["]}\n',
+        False,
+        "incomplete interrupt bindings fail",
+    ),
+    (
+        "dot_pi/agent/keybindings.json.tmpl",
+        '{"app.interrupt": ["escape", "ctrl+["], "tui.select.cancel": ["escape", "ctrl+c"]}\n',
+        False,
+        "incomplete selector-cancel bindings fail",
+    ),
+    (
+        "other/keybindings.json.tmpl",
+        '{"app.interrupt": ["escape"]}\n',
+        True,
+        "unrelated JSON is outside the Pi source contract",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("filename", "body", "should_pass", "desc"),
+    _PI_KEYBINDINGS_CONTRACT_CASES,
+    ids=[case[3] for case in _PI_KEYBINDINGS_CONTRACT_CASES],
+)
+def test_pi_keybindings_semantic_contract(
+    git_repo: Path, filename: str, body: str, should_pass: bool, desc: str
+) -> None:
+    """Run synthetic managed and unrelated JSON through the real hook process."""
+    result = _run_hook(git_repo, filename, body)
+    if should_pass:
+        assert result.returncode == 0, (
+            f"expected PASS: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+    else:
+        assert result.returncode != 0, (
+            f"expected FAIL: {desc}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+        )
+        assert "Pi keybindings semantic contract failed" in result.stderr
 
 
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
   {{- /*
     pi keybindings — https://pi.dev/docs/latest/keybindings (docs/keybindings.md)
 
-    Two intents captured here:
+    Three intents captured here:
 
     1. Submit / newline. Enter inserts a newline; submit with Ctrl+Enter
        (Ctrl+J kept as a fallback — it emits a distinct line-feed byte and so
@@ -29,11 +29,17 @@
        INSERT mode, which delegates editing keys to pi's native editor (see
        settings.json `packages`).
 
+    3. Ctrl+[ is another escape route for cancellation. Modern terminals report
+       it distinctly through CSI-u, so bind it alongside physical Escape for
+       interruption and selectors without remapping raw terminal input.
+
     Rendered as a chezmoi template purely so this rationale survives as a comment;
     the emitted file is plain JSON (pi rejects non-keybinding keys like "_comment").
   */ -}}
   "tui.input.newLine": ["enter", "shift+enter"],
   "tui.input.submit": ["ctrl+enter", "ctrl+j"],
+  "app.interrupt": ["escape", "ctrl+["],
+  "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["],
   "tui.editor.cursorUp": ["up", "ctrl+p"],
   "tui.editor.cursorDown": ["down", "ctrl+n"],
   "app.model.cycleForward": ["alt+right"],
