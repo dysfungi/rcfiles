@@ -78,6 +78,10 @@ repos:
         name: validate projects.yaml
         files: ^\.chezmoidata/projects\.yaml$
         args: ["--schemafile", ".schemas/projects.schema.yaml"]
+      - id: check-jsonschema
+        name: validate p4-sync-excludes.yaml
+        files: ^\.chezmoidata/p4-sync-excludes\.yaml$
+        args: ["--schemafile", ".schemas/p4-sync-excludes.schema.yaml"]
 
   ######
   # F# #

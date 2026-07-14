@@ -1,0 +1,28 @@
+# .chezmoidata/p4-sync-excludes.yaml
+#
+# Deliberately curated, non-exhaustive extension lists for client-side P4 sync
+# filtering. Entries are bare extensions; p4-sync-excluding-assets matches them
+# case-insensitively when it builds the temporary `p4 -x` input.
+
+unreal_binary_assets:
+  - psd
+  - uasset
+  - ztl
+  - wem
+  - wav
+  - spp
+  - tga
+  - fbx
+  - png
+  - mp4
+  - pur
+  - mov
+  - hdr
+  - dll
+  - pyd
+  - fla
+  - exe
+  - umap
+  - exr
+  - ai
+  - mb

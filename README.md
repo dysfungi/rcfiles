@@ -128,6 +128,7 @@ After applying `~/.config/tmux/tmux.conf`, an existing tmux server must reload i
 - **Zsh** — fallback shell, modular configs in `.zsh/`
 - **Neovim** — `dot_config/exact_nvim/`, Lazy plugin manager, Mason for LSP/formatters
 - **Git** — aliases and config in `dot_config/git/`
+- **P4 sync exclusions** — on Darwin Riot machines, `p4-sync-excluding-assets.py --project flyingfox [--dry-run]` syncs a configured project while skipping configured binary-asset extensions. It filters at sync time because P4 stream-client Views are server-owned and cannot be customized locally.
 - **AI tools** — `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` (`~/.pi/agent/`), each rendered from shared `AGENTS.md` template
 - **Wezterm** — terminal emulator, cross-platform config in `dot_wezterm.lua`
 - **Homebrew** — `dot_config/homebrew/Brewfile.tmpl`

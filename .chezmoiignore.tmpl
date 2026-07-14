@@ -119,6 +119,13 @@ Documents/**
 
 {{ end }}
 
+# The filtered Flyingfox sync policy currently targets the macOS Riot client.
+{{ if not (and .is_darwin .is_riot_machine) }}
+.local/bin/p4-sync-excluding-assets
+.config/p4-sync/
+.config/p4-sync/**
+{{ end }}
+
 {{ if not .is_linux }}
 
 .chezmoiscripts/*.linux.*

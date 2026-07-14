@@ -21,6 +21,30 @@ $defs:
         type: array
         items:
           $ref: "#/$defs/project"
+      p4_sync_projects:
+        type: object
+        additionalProperties:
+          $ref: "#/$defs/p4_sync_project"
+
+  p4_sync_project:
+    type: object
+    additionalProperties: false
+    required: [port, depot_root, client_suffix, exclude_list]
+    properties:
+      port:
+        type: string
+        minLength: 1
+      depot_root:
+        type: string
+        pattern: "^//[^/](?:.*[^/])?$"
+        not:
+          pattern: "/\\.\\.\\.(?:/|$)"
+      client_suffix:
+        type: string
+        minLength: 1
+      exclude_list:
+        type: string
+        minLength: 1
 
   project:
     type: object

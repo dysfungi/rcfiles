@@ -1,0 +1,13 @@
+{{- $exclude_lists := dict -}}
+{{- range $_, $project := .riot.p4_sync_projects -}}
+  {{- $exclude_list_name := $project.exclude_list -}}
+  {{- if not (hasKey $ $exclude_list_name) -}}
+    {{- fail (printf "p4 sync: missing exclude list %q" $exclude_list_name) -}}
+  {{- end -}}
+  {{- $_ := set $exclude_lists $exclude_list_name (index $ $exclude_list_name) -}}
+{{- end -}}
+{{- $config := dict
+      "projects" .riot.p4_sync_projects
+      "exclude_lists" $exclude_lists
+-}}
+{{ $config | toPrettyJson }}

@@ -5,6 +5,12 @@ my:
     - path: "Code"
       is_home_relative: true
 riot:
+  p4_sync_projects:
+    flyingfox:
+      port: "uegames.p4.riotgames.io:1666"
+      depot_root: "//flyingfox/dev-main"
+      client_suffix: "flyingfox_dev-main"
+      exclude_list: "unreal_binary_assets"
   projects:
     - path: ".local/my/riot-slack"
       is_home_relative: true
