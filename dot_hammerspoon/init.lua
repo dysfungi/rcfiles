@@ -13,15 +13,21 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
     print("Primary screen ID =", primaryScreen:id())
     local primaryActiveSpaceId = hs.spaces.activeSpaceOnScreen(primaryScreen)
     print("Primary active space ID =", primaryActiveSpaceId)
-    local weztermWindow = wezterm:mainWindow()
+    local weztermWindows = wezterm:allWindows() or {}
+    local weztermWindow = wezterm:mainWindow() or weztermWindows[1]
     local weztermWindowId
     if weztermWindow then
       weztermWindowId = weztermWindow:id()
       print("Wezterm window ID =", weztermWindowId)
     end
-    -- mainWindow() can return nil (no windows yet, or macOS hasn't flagged one "main" yet);
-    -- guard here instead of relying on the branch below to catch it.
-    if not weztermWindow then
+    -- mainWindow() can be nil even when real (backgrounded, unfocused) windows
+    -- exist -- macOS/Accessibility doesn't always flag one as "main" for a
+    -- non-frontmost app. Use the actual window count, not mainWindow()'s
+    -- nilness, to decide whether Wezterm truly has zero windows, and fall back
+    -- to any existing window (weztermWindows[1]) so this state reaches the same
+    -- branch as any other visible-but-backgrounded window instead of spuriously
+    -- opening a new one.
+    if #weztermWindows == 0 then
       print "Opening new Wezterm window because there are none"
       wezterm:selectMenuItem("New OS Window", true)
     elseif wezterm:isFrontmost() then
