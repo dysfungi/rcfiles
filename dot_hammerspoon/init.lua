@@ -14,8 +14,13 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
     local primaryActiveSpaceId = hs.spaces.activeSpaceOnScreen(primaryScreen)
     print("Primary active space ID =", primaryActiveSpaceId)
     local weztermWindow = wezterm:mainWindow()
-    local weztermWindowId = weztermWindow:id()
-    print("Wezterm window ID =", weztermWindowId)
+    local weztermWindowId
+    if weztermWindow then
+      weztermWindowId = weztermWindow:id()
+      print("Wezterm window ID =", weztermWindowId)
+    end
+    -- mainWindow() can return nil (no windows yet, or macOS hasn't flagged one "main" yet);
+    -- guard here instead of relying on the branch below to catch it.
     if not weztermWindow then
       print "Opening new Wezterm window because there are none"
       wezterm:selectMenuItem("New OS Window", true)
@@ -27,7 +32,14 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
       if not wezterm:unhide() then
         print "ERROR: Could not unhide Wezterm"
       end
-      hs.spaces.moveWindowToSpace(weztermWindowId, primaryActiveSpaceId)
+      if not hs.spaces.moveWindowToSpace(weztermWindowId, primaryActiveSpaceId) then
+        print(
+          "ERROR: Could not move window "
+            .. weztermWindowId
+            .. " to primary space "
+            .. primaryActiveSpaceId
+        )
+      end
       print "Activating and focusing on Wezterm"
       wezterm:activate()
       weztermWindow:raise()
