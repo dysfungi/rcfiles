@@ -24,6 +24,7 @@ MOVE_FAILURE_LOG = "ERROR: Could not move window"
 _HARNESS = r"""
 local init_lua = assert(arg[1], "missing init.lua path")
 local scenario = assert(arg[2], "missing scenario")
+local move_succeeds = assert(arg[3], "missing move result") == "true"
 local calls = {}
 local hotkey_callback
 
@@ -139,7 +140,7 @@ hs = {
     end,
     moveWindowToSpace = function(...)
       record("moveWindowToSpace", ...)
-      return true
+      return move_succeeds
     end,
     windowSpaces = function(window_id)
       record("windowSpaces", window_id)
@@ -168,18 +169,21 @@ end
 print("CALLS=" .. table.concat(calls, "|"))
 """
 
-SCENARIOS: list[tuple[str, tuple[str, ...]]] = [
+SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
     (
         "app_absent",
+        True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
             'launchOrFocus("wezterm")',
             'get("wezterm")',
         ),
+        None,
     ),
     (
         "nil_main_window",
+        True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
@@ -190,9 +194,11 @@ SCENARIOS: list[tuple[str, tuple[str, ...]]] = [
             "mainWindow",
             'selectMenuItem("New OS Window",true)',
         ),
+        None,
     ),
     (
         "frontmost",
+        True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
@@ -205,9 +211,11 @@ SCENARIOS: list[tuple[str, tuple[str, ...]]] = [
             "isFrontmost",
             "hide",
         ),
+        None,
     ),
     (
         "hidden",
+        True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
@@ -225,9 +233,11 @@ SCENARIOS: list[tuple[str, tuple[str, ...]]] = [
             "raise",
             'moveToUnit("0.0,0.0,1.0,1.0")',
         ),
+        None,
     ),
     (
         "background",
+        True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
@@ -246,6 +256,29 @@ SCENARIOS: list[tuple[str, tuple[str, ...]]] = [
             "geometryMove",
             "activate",
         ),
+        None,
+    ),
+    (
+        "hidden",
+        False,
+        (
+            'bind("ctrl","space")',
+            'get("wezterm")',
+            "pid",
+            "primaryScreen",
+            "screenId",
+            "activeSpaceOnScreen",
+            "mainWindow",
+            "id",
+            "isFrontmost",
+            "isHidden",
+            "unhide",
+            "moveWindowToSpace(42,2)",
+            "activate",
+            "raise",
+            'moveToUnit("0.0,0.0,1.0,1.0")',
+        ),
+        "ERROR: Could not move window 42 to primary space 2",
     ),
 ]
 
@@ -270,9 +303,11 @@ def _output_value(output: str, prefix: str) -> str:
     raise AssertionError(f"Lua harness did not emit {prefix!r}.\nstdout:\n{output}")
 
 
-def _run_hotkey(lua_bin: str, scenario: str) -> tuple[bool, list[str], str]:
+def _run_hotkey(
+    lua_bin: str, scenario: str, move_succeeds: bool
+) -> tuple[bool, list[str], str]:
     result = subprocess.run(
-        [lua_bin, "-", str(INIT_LUA), scenario],
+        [lua_bin, "-", str(INIT_LUA), scenario, str(move_succeeds).lower()],
         input=_HARNESS,
         capture_output=True,
         text=True,
@@ -290,7 +325,7 @@ def _run_hotkey(lua_bin: str, scenario: str) -> tuple[bool, list[str], str]:
 
 
 @pytest.mark.parametrize(
-    "scenario,expected_calls",
+    "scenario,move_succeeds,expected_calls,expected_error",
     SCENARIOS,
     ids=[
         "app absent launches WezTerm",
@@ -298,19 +333,27 @@ def _run_hotkey(lua_bin: str, scenario: str) -> tuple[bool, list[str], str]:
         "frontmost app hides",
         "hidden app unhides and focuses",
         "background app moves and activates",
+        "hidden move failure reports an error",
     ],
 )
 def test_hotkey_handles_wezterm_state(
-    scenario: str, expected_calls: tuple[str, ...], lua_bin: str
+    scenario: str,
+    move_succeeds: bool,
+    expected_calls: tuple[str, ...],
+    expected_error: str | None,
+    lua_bin: str,
 ) -> None:
     """The hotkey completes each supported WezTerm state transition."""
-    ok, calls, output = _run_hotkey(lua_bin, scenario)
+    ok, calls, output = _run_hotkey(lua_bin, scenario, move_succeeds)
 
     assert ok, f"{scenario}: hotkey callback failed.\nstdout:\n{output}"
     assert calls == list(expected_calls), (
         f"{scenario}: expected calls {expected_calls!r}, got {calls!r}.\n"
         f"stdout:\n{output}"
     )
-    assert MOVE_FAILURE_LOG not in output, (
-        f"{scenario}: unexpected move failure.\nstdout:\n{output}"
-    )
+    if move_succeeds:
+        assert MOVE_FAILURE_LOG not in output, (
+            f"{scenario}: unexpected move failure.\nstdout:\n{output}"
+        )
+    if expected_error is not None:
+        assert expected_error in output

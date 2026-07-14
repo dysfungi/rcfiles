@@ -32,7 +32,14 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
       if not wezterm:unhide() then
         print "ERROR: Could not unhide Wezterm"
       end
-      hs.spaces.moveWindowToSpace(weztermWindowId, primaryActiveSpaceId)
+      if not hs.spaces.moveWindowToSpace(weztermWindowId, primaryActiveSpaceId) then
+        print(
+          "ERROR: Could not move window "
+            .. weztermWindowId
+            .. " to primary space "
+            .. primaryActiveSpaceId
+        )
+      end
       print "Activating and focusing on Wezterm"
       wezterm:activate()
       weztermWindow:raise()
