@@ -213,6 +213,20 @@ adapts to terminal resizing by rerendering Markdown at the new width and clampin
 the offset. This is UI-only and therefore
 adds **zero** LLM context.
 
+`c` copies the complete raw Markdown plan, not the rendered viewport. The footer
+briefly shows `Copying…`, `✓ Copied`, or `✗ Copy failed: <message>`, then returns
+to its idle copy hint. It uses a generation token to prevent delayed copy
+completion or an older timer from overwriting newer feedback. The closed guard
+prevents updates to a disposed pager. Revert timers are cleared on re-copy or
+close as cleanup. The timer handle is cleared when its callback runs as well, so
+it never represents an already-fired timer.
+
+The copy key is intentionally hardcoded instead of added to `keybindings.json.tmpl`.
+Pi 0.80.6's `KeybindingsManager` silently ignores unknown configurable IDs, and
+the extension API cannot register one. The existing `tui.select.cancel` or `q`
+check runs before copy handling. If a user maps cancel to `c`, `c` closes the
+pager rather than copying, and the footer suppresses the copy hint.
+
 Non-TUI modes retain the previous custom transcript entry (`pi.appendEntry("plan-view")`
 with `registerEntryRenderer`), which also never participates in LLM context.
 Missing/empty plan → a `notify` warning rather than an empty view. The pager
@@ -290,7 +304,10 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
   `plan_write` writes `~/.pi/agent/plans/<sessionId>.md` **and** renders
   the plan as Markdown inline (model-facing result stays `Plan saved to <path>`).
 - `/plan-show` (Ctrl+Alt+V) opens the saved plan in a full-screen, scrollable
-  Markdown pager (out of context); missing/empty plan → a warning notification.
+  Markdown pager (out of context). `c` copies the complete raw plan and the
+  footer reports copying, success, or failure briefly. If `tui.select.cancel`
+  includes `c`, it closes instead and the copy hint is hidden. Missing/empty
+  plans produce a warning notification.
 
 ## Automated coverage and harness boundary
 
@@ -311,6 +328,19 @@ dispatcher for the command list and verifies `/implement` resolves to the
 canonical managed `prompts/implement.md` prompt template. Coverage also includes
 interactive-root session-start gates, branch-local state restore, and structured
 plus exact-legacy plan-context de-duplication without removing ordinary user text
-that quotes the plan marker. The Node harness is intentionally a small API mock:
-Pi's interactive/RPC modes cannot reliably hold an agent busy or intercept
-`sendUserMessage()` without starting a real provider request.
+that quotes the plan marker. Pager coverage verifies the idle `c copy` hint,
+raw-plan copying, pending, success, and failure footer states, duplicate-copy
+suppression, `c` cancellation precedence, and closing before a pending clipboard
+call resolves without a later render. Automated coverage intentionally excludes
+wall-clock tests for transient revert-to-idle feedback and timer cancellation on
+re-copy. The generation guard, not timer cleanup, is the correctness mechanism
+that prevents stale callbacks from overwriting newer feedback. Deterministic
+tests exercise the closed-guard suppression path and re-entry guard; code
+inspection verifies the generation-mismatch invariant that distinct copies never
+cross-contaminate status. Real sleeps would add
+permanent suite cost for marginal confidence in a low-severity, visually obvious
+cosmetic behavior. The harness generates and aliases a clipboard stub so these
+tests never access the machine clipboard. The Node harness is intentionally a
+small API mock: Pi's interactive/RPC
+modes cannot reliably hold an agent busy or intercept `sendUserMessage()` without
+starting a real provider request.

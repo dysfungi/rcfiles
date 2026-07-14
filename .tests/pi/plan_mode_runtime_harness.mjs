@@ -9,6 +9,7 @@
  */
 
 import assert from "node:assert/strict";
+import { rmSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -24,9 +25,62 @@ if (!extensionPath || !packageDir) {
 const require = createRequire(pathToFileURL(join(packageDir, "package.json")));
 const createJiti = require("jiti");
 const nodeModules = join(packageDir, "node_modules");
+const realIndexFile = join(packageDir, "dist", "index.js");
+const clipboardStubDir = await mkdtemp(join(tmpdir(), "pi-plan-clipboard-stub-"));
+const clipboardStubFile = join(clipboardStubDir, "index.mjs");
+await writeFile(
+	clipboardStubFile,
+	[
+		`export * from ${JSON.stringify(pathToFileURL(realIndexFile).href)};`,
+		"export const copyToClipboardCalls = [];",
+		"let clipboardMode = 'immediate';",
+		"let nextFailure = null;",
+		"const pendingClipboardResolvers = [];",
+		"export function setClipboardFailure(error) { nextFailure = error; }",
+		"export function setClipboardPending() { clipboardMode = 'pending'; }",
+		"export function resolvePendingClipboardCopies() {",
+		"\tfor (const resolve of pendingClipboardResolvers.splice(0)) resolve();",
+		"}",
+		"export function resetClipboardStub() {",
+		"\tcopyToClipboardCalls.length = 0;",
+		"\tclipboardMode = 'immediate';",
+		"\tnextFailure = null;",
+		"\tpendingClipboardResolvers.length = 0;",
+		"}",
+		"export function copyToClipboard(text) {",
+		"\tcopyToClipboardCalls.push(text);",
+		"\tif (nextFailure) {",
+		"\t\tconst error = nextFailure;",
+		"\t\tnextFailure = null;",
+		"\t\treturn Promise.reject(error);",
+		"\t}",
+		"\tif (clipboardMode === 'pending') {",
+		"\t\treturn new Promise((resolve) => pendingClipboardResolvers.push(resolve));",
+		"\t}",
+		"\treturn Promise.resolve();",
+		"}",
+		"",
+	].join("\n"),
+);
+
+function cleanupClipboardStub() {
+	try {
+		rmSync(clipboardStubDir, { recursive: true, force: true });
+	} catch {}
+}
+
+process.once("exit", cleanupClipboardStub);
+
+const {
+	copyToClipboardCalls,
+	resetClipboardStub,
+	resolvePendingClipboardCopies,
+	setClipboardFailure,
+	setClipboardPending,
+} = await import(pathToFileURL(clipboardStubFile).href);
 const jiti = createJiti(import.meta.url, {
 	alias: {
-		"@earendil-works/pi-coding-agent": join(packageDir, "dist", "index.js"),
+		"@earendil-works/pi-coding-agent": clipboardStubFile,
 		"@earendil-works/pi-tui": join(nodeModules, "@earendil-works", "pi-tui", "dist", "index.js"),
 		typebox: join(nodeModules, "typebox", "build", "index.mjs"),
 	},
@@ -421,10 +475,8 @@ async function openPlanPager(cancelKeys) {
 	const agentDir = join(fixtureRoot, "agent");
 	const sessionDir = join(agentDir, "sessions", "test");
 	await mkdir(join(agentDir, "plans"), { recursive: true });
-	await writeFile(
-		join(agentDir, "plans", "test.md"),
-		["# Plan", ...Array.from({ length: 48 }, (_, index) => `Step ${index + 1}`)].join("\n"),
-	);
+	const planContent = ["# Plan", ...Array.from({ length: 48 }, (_, index) => `Step ${index + 1}`)].join("\n");
+	await writeFile(join(agentDir, "plans", "test.md"), planContent);
 
 	const planPagerFixture = createPlanPagerFixture(cancelKeys);
 	assert.equal(planPagerFixture.tui.terminal.columns, 80, "pager TUI has a concrete width");
@@ -437,10 +489,12 @@ async function openPlanPager(cancelKeys) {
 	return {
 		command,
 		fixtureRoot,
+		planContent,
 		planPagerFixture,
 		request,
 		async close() {
 			try {
+				if (request.doneCalls === 0) request.component.handleInput("q");
 				if (request.doneCalls === 0) request.done(undefined);
 				await command;
 			} finally {
@@ -527,6 +581,86 @@ async function testPlanPagerCancellationBindings() {
 	}
 }
 
+async function flushClipboard() {
+	await new Promise((resolveFlush) => setImmediate(resolveFlush));
+}
+
+async function testPlanPagerClipboardCopy() {
+	const defaultCancelKeys = ["escape", "ctrl+c", "ctrl+["];
+
+	resetClipboardStub();
+	const success = await openPlanPager(defaultCancelKeys);
+	try {
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /c copy/);
+		success.request.component.handleInput("c");
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /Copying…/);
+		await flushClipboard();
+		assert.deepEqual(copyToClipboardCalls, [success.planContent], "copying uses the full raw plan content");
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /✓ Copied/);
+	} finally {
+		await success.close();
+	}
+
+	resetClipboardStub();
+	setClipboardPending();
+	const reentry = await openPlanPager(defaultCancelKeys);
+	try {
+		reentry.request.component.handleInput("c");
+		reentry.request.component.handleInput("c");
+		assert.equal(copyToClipboardCalls.length, 1, "copying ignores repeated c input while a copy is pending");
+		resolvePendingClipboardCopies();
+		await flushClipboard();
+	} finally {
+		await reentry.close();
+	}
+
+	resetClipboardStub();
+	setClipboardFailure(new Error("boom"));
+	const failure = await openPlanPager(defaultCancelKeys);
+	try {
+		failure.request.component.handleInput("c");
+		await flushClipboard();
+		assert.match(stripAnsi(failure.request.component.render(80).at(-1)), /✗ Copy failed: boom/);
+		assert.equal(failure.request.doneCalls, 0, "a failed copy leaves the pager open");
+	} finally {
+		await failure.close();
+	}
+
+	resetClipboardStub();
+	const conflict = await openPlanPager(["c"]);
+	try {
+		assert.doesNotMatch(stripAnsi(conflict.request.component.render(80).at(-1)), /copy/i);
+		conflict.request.component.handleInput("c");
+		assert.equal(conflict.request.doneCalls, 1, "c keeps its configured cancel behavior");
+		assert.deepEqual(copyToClipboardCalls, [], "configured cancellation does not invoke the clipboard");
+		await conflict.command;
+	} finally {
+		await conflict.close();
+	}
+
+	resetClipboardStub();
+	setClipboardPending();
+	const copyThenClose = await openPlanPager(defaultCancelKeys);
+	try {
+		copyThenClose.request.component.handleInput("c");
+		assert.match(stripAnsi(copyThenClose.request.component.render(80).at(-1)), /Copying…/);
+		copyThenClose.request.component.handleInput("q");
+		assert.equal(copyThenClose.request.doneCalls, 1, "q closes an in-flight copy once");
+		const renderRequestsAfterClose = copyThenClose.planPagerFixture.getRenderRequests();
+		resolvePendingClipboardCopies();
+		await flushClipboard();
+		assert.deepEqual(copyToClipboardCalls, [copyThenClose.planContent]);
+		assert.equal(
+			copyThenClose.planPagerFixture.getRenderRequests(),
+			renderRequestsAfterClose,
+			"settled clipboard work does not render after the pager closes",
+		);
+		await copyThenClose.command;
+	} finally {
+		await copyThenClose.close();
+	}
+}
+
 async function testRootThreadPolicyComposition() {
 	const harness = createHarness({ mode: "rpc" });
 	rootThreadGuard(harness.pi);
@@ -563,14 +697,19 @@ async function testRootThreadPolicyComposition() {
 	}
 }
 
-testCommandRegistration();
-await testSelectorsAndToolSnapshots();
-await testSessionStartGates();
-await testBranchLocalSessionRestore();
-await testModeParsingAndIdleGuards();
-await testImplementationKickoffAndFailure();
-await testContextDeduplication();
-await testBashPolicyParity();
-await testPlanPagerCancellationBindings();
-await testRootThreadPolicyComposition();
-console.log("plan-mode runtime handler harness: ok");
+try {
+	testCommandRegistration();
+	await testSelectorsAndToolSnapshots();
+	await testSessionStartGates();
+	await testBranchLocalSessionRestore();
+	await testModeParsingAndIdleGuards();
+	await testImplementationKickoffAndFailure();
+	await testContextDeduplication();
+	await testBashPolicyParity();
+	await testPlanPagerCancellationBindings();
+	await testPlanPagerClipboardCopy();
+	await testRootThreadPolicyComposition();
+	console.log("plan-mode runtime handler harness: ok");
+} finally {
+	cleanupClipboardStub();
+}

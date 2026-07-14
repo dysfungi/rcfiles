@@ -51,7 +51,7 @@
  */
 
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { defineTool, getMarkdownTheme, rawKeyHint } from "@earendil-works/pi-coding-agent";
+import { copyToClipboard, defineTool, getMarkdownTheme, rawKeyHint } from "@earendil-works/pi-coding-agent";
 import { Box, Key, Markdown, Text, matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -60,6 +60,8 @@ import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } fro
 import { isPlanModeEnabled } from "./mode.mjs";
 
 const PLAN_WRITE_TOOL = "plan_write";
+const PLAN_COPY_KEY = "c";
+const COPY_STATUS_DURATION_MS = 1500;
 // Nominal plan tools plus the scoped plan writer; root-thread-guard separately
 // controls which interactive-root calls remain invocable.
 const PLAN_MODE_TOOLS = ["read", "bash", "grep", "find", "ls", "questionnaire", PLAN_WRITE_TOOL];
@@ -181,16 +183,71 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 				let offset = 0;
 				let width = tui.terminal.columns;
 				let closed = false;
+				let copyStatus: "idle" | "copying" | "copied" | "error" = "idle";
+				let copyGeneration = 0;
+				let copyRevertTimer: ReturnType<typeof setTimeout> | undefined;
+				let copyErrorMessage: string | undefined;
+
+				function clearCopyRevertTimer(): void {
+					if (copyRevertTimer === undefined) return;
+					clearTimeout(copyRevertTimer);
+					copyRevertTimer = undefined;
+				}
 
 				function close(): void {
 					if (closed) return;
 					closed = true;
+					clearCopyRevertTimer();
 					done(undefined);
 				}
 
-				function closeHint(): string {
-					const closeKeys = [...new Set([...keybindings.getKeys("tui.select.cancel"), "q"])];
+				function triggerCopy(): void {
+					if (copyStatus === "copying") return;
+					clearCopyRevertTimer();
+					const generation = ++copyGeneration;
+					copyStatus = "copying";
+					tui.requestRender();
+					// Each callback carries the generation guard because it, not timer cleanup,
+					// prevents an earlier copy from overwriting newer feedback. Clearing timers
+					// merely avoids harmless dangling work.
+					void copyToClipboard(content)
+						.then(() => {
+							if (closed || generation !== copyGeneration) return;
+							copyStatus = "copied";
+						})
+						.catch((error) => {
+							if (closed || generation !== copyGeneration) return;
+							copyStatus = "error";
+							copyErrorMessage = error instanceof Error ? error.message : String(error);
+						})
+						.finally(() => {
+							if (closed || generation !== copyGeneration) return;
+							tui.requestRender();
+							copyRevertTimer = setTimeout(() => {
+								copyRevertTimer = undefined;
+								if (closed || generation !== copyGeneration) return;
+								copyStatus = "idle";
+								tui.requestRender();
+							}, COPY_STATUS_DURATION_MS);
+						});
+				}
+
+				function closeHint(cancelKeys: string[]): string {
+					const closeKeys = [...new Set([...cancelKeys, "q"])];
 					return rawKeyHint(closeKeys.join("/"), "close");
+				}
+
+				function copyFooterSegment(cancelKeys: string[]): string {
+					switch (copyStatus) {
+						case "copying":
+							return theme.fg("dim", "Copying…");
+						case "copied":
+							return theme.fg("success", "✓ Copied");
+						case "error":
+							return theme.fg("error", `✗ Copy failed: ${copyErrorMessage}`);
+						case "idle":
+							return cancelKeys.includes(PLAN_COPY_KEY) ? "" : rawKeyHint(PLAN_COPY_KEY, "copy");
+					}
 				}
 
 				function pageHeight(): number {
@@ -219,7 +276,12 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 						const end = Math.min(offset + visibleLines, renderedLines.length);
 						const progress = `${offset + 1}-${end} / ${renderedLines.length}`;
 						const header = `${theme.bold(theme.fg("accent", "📋 Plan"))} ${theme.fg("muted", planFile)} ${theme.fg("dim", progress)}`;
-						const footer = `${theme.fg("dim", "↑↓/j/k scroll • PgUp/PgDn page • Home/End jump • ")}${closeHint()}`;
+						const cancelKeys = keybindings.getKeys("tui.select.cancel");
+						const copySegment = copyFooterSegment(cancelKeys);
+						const footer = `${closeHint(cancelKeys)}${copySegment ? ` • ${copySegment}` : ""}${theme.fg(
+							"dim",
+							" • ↑↓/j/k scroll • PgUp/PgDn page • Home/End jump",
+						)}`;
 						const body = renderedLines.slice(offset, end);
 						while (body.length < visibleLines) body.push("");
 						return [surface(header), ...body.map(surface), surface(footer)];
@@ -233,6 +295,10 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 						const page = pageHeight();
 						if (keybindings.matches(data, "tui.select.cancel") || matchesKey(data, "q")) {
 							close();
+							return;
+						}
+						if (matchesKey(data, PLAN_COPY_KEY)) {
+							triggerCopy();
 							return;
 						}
 						if (matchesKey(data, Key.up) || matchesKey(data, "k")) offset -= 1;
