@@ -14,7 +14,7 @@
        preceding model and persists it across subsequent cycles. Pi clamps the
        configured level to each model's declared capability. Older/[1m] models
        stay reachable via /model. */}}
-{{- $thinking_level := "xhigh" -}}
+{{- $thinking_level := .default_thinking_level -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
 {{- $default := "" -}}
