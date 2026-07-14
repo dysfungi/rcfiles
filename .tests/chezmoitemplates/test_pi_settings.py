@@ -30,7 +30,7 @@ PACKAGES: list[object] = [
     },
     "npm:pi-mcp-adapter",
     "npm:pi-memory",
-    "npm:pi-vimmode",
+    "npm:pi-vimmode@>=0.7.0 <1.0.0",
 ]
 
 PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
@@ -79,6 +79,7 @@ def _managed(machine: str) -> dict[str, Any]:
         "hideThinkingBlock": False,
         "showCacheMissNotices": True,
         "theme": "dark",
+        "piVimMode": {"keymap": {"escape": ["<C-[>"]}},
     }
 
 
@@ -224,7 +225,7 @@ def test_preserves_app_and_unknown_nested_state(
 def test_managed_values_take_precedence_for_the_full_allowlist(
     rendered_script: tuple[Path, str],
 ) -> None:
-    """Only the nine declared durable preferences are overwritten."""
+    """Only declared durable preferences are overwritten."""
     script, machine = rendered_script
     managed = _managed(machine)
     existing: dict[str, object] = {
@@ -244,6 +245,32 @@ def test_managed_values_take_precedence_for_the_full_allowlist(
         assert merged[key] == value
     assert merged["runtime"] == {"keep": True}
     assert merged["lastChangelogVersion"] == "0.1.0"
+
+
+def test_pi_vim_mode_keymap_merge_is_additive(
+    rendered_script: tuple[Path, str],
+) -> None:
+    """Managed Escape keeps user-configured Pi Vim Mode siblings."""
+    script, _ = rendered_script
+    existing = {
+        "piVimMode": {
+            "enabled": True,
+            "keymap": {
+                "enter": ["<CR>"],
+                "escape": ["<Esc>"],
+            },
+        }
+    }
+    expected = {
+        "enabled": True,
+        "keymap": {
+            "enter": ["<CR>"],
+            "escape": ["<C-[>"],
+        },
+    }
+    result = _run(script, json.dumps(existing))
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["piVimMode"] == expected
 
 
 @pytest.mark.parametrize(
@@ -356,7 +383,15 @@ def _node_merged_stringify(existing: str, managed: dict[str, Any]) -> str:
             "let input = ''; process.stdin.on('data', chunk => input += chunk); "
             "process.stdin.on('end', () => { "
             "const [existing, managed] = input.split('\\0').map(JSON.parse); "
-            "Object.assign(existing, managed); "
+            "const merge = (existing, managed) => { "
+            "for (const [key, value] of Object.entries(managed)) { "
+            "const existingValue = existing[key]; "
+            "if (existingValue && typeof existingValue === 'object' "
+            "&& !Array.isArray(existingValue) && value && typeof value === 'object' "
+            "&& !Array.isArray(value)) { merge(existingValue, value); } "
+            "else { existing[key] = value; } "
+            "} }; "
+            "merge(existing, managed); "
             "process.stdout.write(JSON.stringify(existing, null, 2)); "
             "});",
         ],

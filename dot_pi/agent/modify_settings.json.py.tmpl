@@ -69,13 +69,18 @@ MANAGED: dict[str, Any] = {
         },
         "npm:pi-mcp-adapter",
         "npm:pi-memory",
-        "npm:pi-vimmode",
+        "npm:pi-vimmode@>=0.7.0 <1.0.0",
     ],
     "defaultProjectTrust": "always",
     "defaultThinkingLevel": "max",
     "hideThinkingBlock": False,
     "showCacheMissNotices": True,
     "theme": "dark",
+    "piVimMode": {
+        "keymap": {
+            "escape": ["<C-[>"],
+        },
+    },
 }
 
 
@@ -254,9 +259,21 @@ def serialize_json(value: Any, level: int = 0) -> str:
     raise TypeError(f"unsupported JSON value: {type(value).__name__}")
 
 
+def merge_managed_preferences(
+    settings: dict[str, Any], managed: dict[str, Any]
+) -> None:
+    """Preserve extension-owned object siblings while enforcing managed leaves."""
+    for key, managed_value in managed.items():
+        existing_value = settings.get(key)
+        if isinstance(existing_value, dict) and isinstance(managed_value, dict):
+            merge_managed_preferences(existing_value, managed_value)
+        else:
+            settings[key] = managed_value
+
+
 def main() -> None:
     settings = read_settings(sys.stdin.read())
-    settings.update(MANAGED)
+    merge_managed_preferences(settings, MANAGED)
     settings = reorder_for_javascript(settings)
     try:
         rendered = serialize_json(settings)
