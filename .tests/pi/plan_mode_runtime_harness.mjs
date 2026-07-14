@@ -16,10 +16,12 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [extensionPath, packageDir] = process.argv.slice(2);
+const [planModeExtensionPath, questionnaireExtensionPath, packageDir] = process.argv.slice(2);
 
-if (!extensionPath || !packageDir) {
-	throw new Error("Usage: plan_mode_runtime_harness.mjs <extension-path> <pi-package-dir>");
+if (!planModeExtensionPath || !questionnaireExtensionPath || !packageDir) {
+	throw new Error(
+		"Usage: plan_mode_runtime_harness.mjs <plan-mode-extension-path> <questionnaire-extension-path> <pi-package-dir>",
+	);
 }
 
 const require = createRequire(pathToFileURL(join(packageDir, "package.json")));
@@ -96,8 +98,9 @@ const { KeybindingsManager } = await import(
 );
 const { TUI } = tuiModule;
 const { initTheme, theme: globalTheme } = themeModule;
-const { default: planModeExtension } = await jiti.import(resolve(extensionPath));
-const extensionDir = dirname(resolve(extensionPath));
+const { default: planModeExtension } = await jiti.import(resolve(planModeExtensionPath));
+const { default: questionnaireExtension } = await jiti.import(resolve(questionnaireExtensionPath));
+const extensionDir = dirname(resolve(planModeExtensionPath));
 const { default: rootThreadGuard } = await jiti.import(resolve(extensionDir, "..", "root-thread-guard.ts"));
 const bashSafety = await jiti.import(resolve(extensionDir, "bash-safety.ts"));
 const mutationPolicy = await import(pathToFileURL(resolve(extensionDir, "..", "bash-mutation-policy.mjs")).href);
@@ -167,6 +170,11 @@ function createHarness({
 	const persistedEntries = [];
 	const sentMessages = [];
 	const customRequests = [];
+	let customCallCount = 0;
+	const nativeToolNames = ["read", "bash", "edit", "write", "grep", "find", "ls"];
+	const registeredTools = new Map(
+		[...nativeToolNames, "mcp", "external_tool"].map((name) => [name, { name }]),
+	);
 	let resolveCustomRequest;
 	const customRequestReady = new Promise((resolveRequest) => {
 		resolveCustomRequest = resolveRequest;
@@ -195,13 +203,15 @@ function createHarness({
 		registerEntryRenderer() {},
 		registerFlag() {},
 		registerShortcut() {},
-		registerTool() {},
+		registerTool(tool) {
+			registeredTools.set(tool.name, tool);
+		},
 		sendUserMessage(message) {
 			if (sendFailure) throw sendFailure;
 			sentMessages.push({ message, activeTools: [...state.activeTools] });
 		},
 		setActiveTools(toolNames) {
-			state.activeTools = [...toolNames];
+			state.activeTools = toolNames.filter((name) => registeredTools.has(name));
 		},
 	};
 
@@ -217,6 +227,7 @@ function createHarness({
 		},
 		ui: {
 			custom: async (factory, options) => {
+				customCallCount += 1;
 				if (!planPagerFixture) return undefined;
 				let resolveResult;
 				const result = new Promise((resolveResultValue) => {
@@ -245,16 +256,19 @@ function createHarness({
 	};
 
 	planModeExtension(pi);
+	questionnaireExtension(pi);
 	return {
 		commands,
 		ctx,
 		customRequestReady,
 		customRequests,
 		events,
+		getCustomCallCount: () => customCallCount,
 		initialTools,
 		notifications,
 		persistedEntries,
 		pi,
+		registeredTools,
 		sentMessages,
 		state,
 		statuses,
@@ -284,22 +298,94 @@ function contextMessage(customType, content = "[PLAN MODE ACTIVE]\ncontext") {
 	return { role: "user", customType, content };
 }
 
+function testUnregisteredToolsAreSilentlyDropped() {
+	const harness = createHarness();
+	harness.pi.setActiveTools(["read", "synthetic_bogus_name"]);
+	assert.deepEqual(harness.state.activeTools, ["read"]);
+}
+
 function testCommandRegistration() {
 	const harness = createHarness();
 	assert.ok(harness.commands.has("execute"), "/execute must be registered for the one-step implementation kickoff");
 	assert.equal(harness.commands.has("implement"), false, "/implement must remain available to its prompt template");
 }
 
+async function testQuestionnaireNonUiErrorPaths() {
+	const nonInteractiveHarness = createHarness({ mode: "rpc" });
+	const questionnaire = nonInteractiveHarness.registeredTools.get("questionnaire");
+	assert.ok(questionnaire, "questionnaire must register with Pi");
+
+	const nonInteractiveResult = await questionnaire.execute(
+		"non-interactive-questionnaire",
+		{
+			questions: [
+				{
+					id: "scope",
+					label: "Scope",
+					prompt: "What should change?",
+					options: [{ value: "small", label: "Small" }],
+				},
+			],
+		},
+		undefined,
+		undefined,
+		nonInteractiveHarness.ctx,
+	);
+	assert.deepEqual(nonInteractiveResult, {
+		content: [{ type: "text", text: "Error: UI not available (running in non-interactive mode)" }],
+		details: { questions: [], answers: [], cancelled: true },
+	});
+	assert.equal(nonInteractiveHarness.getCustomCallCount(), 0, "non-interactive execution must not open a custom UI");
+
+	const emptyQuestionsHarness = createHarness({ mode: "tui" });
+	const emptyQuestionsQuestionnaire = emptyQuestionsHarness.registeredTools.get("questionnaire");
+	assert.ok(emptyQuestionsQuestionnaire, "questionnaire must register with Pi");
+	const emptyQuestionsResult = await emptyQuestionsQuestionnaire.execute(
+		"empty-questionnaire",
+		{ questions: [] },
+		undefined,
+		undefined,
+		emptyQuestionsHarness.ctx,
+	);
+	assert.deepEqual(emptyQuestionsResult, {
+		content: [{ type: "text", text: "Error: No questions provided" }],
+		details: { questions: [], answers: [], cancelled: true },
+	});
+	assert.equal(emptyQuestionsHarness.getCustomCallCount(), 0, "empty questionnaires must not open a custom UI");
+}
+
 async function testSelectorsAndToolSnapshots() {
 	const harness = createHarness();
-	await startPlanMode(harness);
-	assert.deepEqual(harness.state.activeTools, ["read", "bash", "mcp", "external_tool", "grep", "find", "ls", "questionnaire", "plan_write"]);
+	const baselineTools = [...harness.initialTools];
+	assert.equal(baselineTools.includes("questionnaire"), false, "questionnaire is absent before plan mode");
+	assert.equal(baselineTools.includes("plan_write"), false, "plan_write is absent before plan mode");
 
+	await startPlanMode(harness);
+	assert.deepEqual(harness.state.activeTools, [
+		"read",
+		"bash",
+		"mcp",
+		"external_tool",
+		"grep",
+		"find",
+		"ls",
+		"questionnaire",
+		"plan_write",
+	]);
+	assert.ok(harness.state.activeTools.includes("questionnaire"), "questionnaire is active in plan mode");
+	assert.ok(harness.state.activeTools.includes("plan_write"), "plan_write is active in plan mode");
+
+	await runCommand(harness, "normal");
+	assert.deepEqual(harness.state.activeTools, baselineTools, "normal mode restores the exact baseline tool set");
+	assert.equal(harness.persistedEntries.at(-1).data.enabled, false);
+
+	await runCommand(harness, "plan");
 	const beforeRepeatedPlan = {
 		entries: harness.persistedEntries.length,
 		notifications: harness.notifications.length,
 		tools: [...harness.state.activeTools],
 	};
+	harness.pi.registerTool({ name: "late_extension_tool" });
 	harness.state.activeTools.push("late_extension_tool");
 	await runCommand(harness, "plan");
 	assert.deepEqual(harness.state.activeTools, [...beforeRepeatedPlan.tools, "late_extension_tool"]);
@@ -307,7 +393,7 @@ async function testSelectorsAndToolSnapshots() {
 	assert.equal(harness.notifications.length, beforeRepeatedPlan.notifications);
 
 	await runCommand(harness, "normal");
-	assert.deepEqual(harness.state.activeTools, [...harness.initialTools, "late_extension_tool"]);
+	assert.deepEqual(harness.state.activeTools, [...baselineTools, "late_extension_tool"]);
 	assert.equal(harness.persistedEntries.at(-1).data.enabled, false);
 
 	const toolsBeforeRepeatedNormal = [...harness.state.activeTools];
@@ -758,7 +844,9 @@ async function testRootThreadPolicyComposition() {
 }
 
 try {
+	testUnregisteredToolsAreSilentlyDropped();
 	testCommandRegistration();
+	await testQuestionnaireNonUiErrorPaths();
 	await testSelectorsAndToolSnapshots();
 	await testSessionStartGates();
 	await testBranchLocalSessionRestore();
