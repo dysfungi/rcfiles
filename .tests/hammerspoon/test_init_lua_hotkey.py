@@ -78,9 +78,16 @@ local fake_wezterm = {
     record("pid")
     return 100
   end,
+  allWindows = function()
+    record("allWindows")
+    if scenario == "no_windows" then
+      return {}
+    end
+    return { fake_window }
+  end,
   mainWindow = function()
     record("mainWindow")
-    if scenario == "nil_main_window" then
+    if scenario == "no_windows" or scenario == "nil_main_window_with_window" then
       return nil
     end
     return fake_window
@@ -182,7 +189,7 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
         None,
     ),
     (
-        "nil_main_window",
+        "no_windows",
         True,
         (
             'bind("ctrl","space")',
@@ -191,8 +198,33 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             "primaryScreen",
             "screenId",
             "activeSpaceOnScreen",
+            "allWindows",
             "mainWindow",
             'selectMenuItem("New OS Window",true)',
+        ),
+        None,
+    ),
+    (
+        "nil_main_window_with_window",
+        True,
+        (
+            'bind("ctrl","space")',
+            'get("wezterm")',
+            "pid",
+            "primaryScreen",
+            "screenId",
+            "activeSpaceOnScreen",
+            "allWindows",
+            "mainWindow",
+            "id",
+            "isFrontmost",
+            "isHidden",
+            "windowSpaces(42)",
+            "moveWindowToSpace(42,2,true)",
+            "zoomButtonRect",
+            "geometry",
+            "geometryMove",
+            "activate",
         ),
         None,
     ),
@@ -206,6 +238,7 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             "primaryScreen",
             "screenId",
             "activeSpaceOnScreen",
+            "allWindows",
             "mainWindow",
             "id",
             "isFrontmost",
@@ -223,6 +256,7 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             "primaryScreen",
             "screenId",
             "activeSpaceOnScreen",
+            "allWindows",
             "mainWindow",
             "id",
             "isFrontmost",
@@ -245,6 +279,7 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             "primaryScreen",
             "screenId",
             "activeSpaceOnScreen",
+            "allWindows",
             "mainWindow",
             "id",
             "isFrontmost",
@@ -268,6 +303,7 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             "primaryScreen",
             "screenId",
             "activeSpaceOnScreen",
+            "allWindows",
             "mainWindow",
             "id",
             "isFrontmost",
@@ -329,7 +365,8 @@ def _run_hotkey(
     SCENARIOS,
     ids=[
         "app absent launches WezTerm",
-        "nil main window opens a new OS window",
+        "nil main window with no windows opens a new OS window",
+        "nil main window with a real window moves and activates",
         "frontmost app hides",
         "hidden app unhides and focuses",
         "background app moves and activates",
@@ -347,6 +384,11 @@ def test_hotkey_handles_wezterm_state(
     ok, calls, output = _run_hotkey(lua_bin, scenario, move_succeeds)
 
     assert ok, f"{scenario}: hotkey callback failed.\nstdout:\n{output}"
+    if scenario == "nil_main_window_with_window":
+        assert not any(call.startswith("selectMenuItem(") for call in calls), (
+            f"{scenario}: existing windows must not open a new OS window.\n"
+            f"stdout:\n{output}"
+        )
     assert calls == list(expected_calls), (
         f"{scenario}: expected calls {expected_calls!r}, got {calls!r}.\n"
         f"stdout:\n{output}"
