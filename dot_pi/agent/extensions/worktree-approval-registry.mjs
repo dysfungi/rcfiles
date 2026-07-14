@@ -1,9 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { realpathSync } from "node:fs";
+import { isAbsolute } from "node:path";
 
 const REGISTRY = Symbol.for("dfrank.pi.worktree-approval-registry");
 const NO_APPROVED_WORKTREE_REASON = "no active root-approved worktree for this session";
-const registry = globalThis[REGISTRY] ??= new Map();
+
+function approvalRegistry() {
+	return (globalThis[REGISTRY] ??= new Map());
+}
 
 function git(cwd, args) {
 	return execFileSync("git", ["-C", cwd, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
@@ -20,6 +24,7 @@ function registryKey(sessionId, repoRoot) {
 function recordFor(sessionId, repoRoot, create = false) {
 	const realRepoRoot = canonicalRepoRoot(repoRoot);
 	const key = registryKey(sessionId, realRepoRoot);
+	const registry = approvalRegistry();
 	let record = registry.get(key);
 	if (!record && create) {
 		record = {
@@ -120,6 +125,31 @@ export function finishWorktreeStart({ sessionId, repoRoot, worktreeRoot, toolCal
 	}
 }
 
+/** Restore a session-routed worktree only after checking live Git topology. */
+export function hydrateApprovedWorktree({ sessionId, repoRoot, worktreeRoot, branch }) {
+	try {
+		if (typeof worktreeRoot !== "string" || !isAbsolute(worktreeRoot)) {
+			return { ok: false, reason: "restored worktree path must be absolute" };
+		}
+		if (typeof branch !== "string" || !branch) {
+			return { ok: false, reason: "restored worktree branch must be a non-empty string" };
+		}
+		const record = recordFor(sessionId, repoRoot, true);
+		if (record.pendingStart || record.pendingStop) return { ok: false, reason: "another worktree lifecycle operation is pending" };
+		if (hasLease(record.active)) return { ok: false, reason: "an active worker holds the worktree lease" };
+		const validated = validateWorktree(record.repoRoot, worktreeRoot);
+		if (!validated.ok) return validated;
+		if (git(validated.worktreeRoot, ["rev-parse", "--abbrev-ref", "HEAD"]) !== branch) {
+			return { ok: false, reason: "restored worktree branch does not match session history" };
+		}
+		record.generation += 1;
+		record.active = { ...validated, generation: record.generation, leaseId: undefined };
+		return { ok: true, approval: record.active };
+	} catch (error) {
+		return { ok: false, reason: `could not restore worktree approval: ${error.message}` };
+	}
+}
+
 /** Compatibility helper for direct unit callers; production uses begin/finish. */
 export function approveWorktree({ sessionId, repoRoot, worktreeRoot, toolCallId }) {
 	const started = beginWorktreeStart({ sessionId, repoRoot, toolCallId });
@@ -192,7 +222,7 @@ export function cancelWorktreeLifecycle({ sessionId, repoRoot, toolCallId }) {
 
 export function revokeWorktree({ sessionId, repoRoot }) {
 	try {
-		registry.delete(registryKey(sessionId, canonicalRepoRoot(repoRoot)));
+		approvalRegistry().delete(registryKey(sessionId, canonicalRepoRoot(repoRoot)));
 	} catch {
 		// If the repository vanished, it remains unauthorized.
 	}

@@ -11,13 +11,15 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { realpathSync } from "node:fs";
+import { closeSync, constants, fstatSync, openSync, readSync, realpathSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import {
 	beginWorktreeStart,
 	beginWorktreeStop,
 	cancelWorktreeLifecycle,
 	finishWorktreeStart,
 	finishWorktreeStop,
+	hydrateApprovedWorktree,
 	resolveApprovedWorktree,
 	revokeWorktree,
 	validateWorktree,
@@ -26,7 +28,12 @@ import { isDelegatedChild } from "./child-policy.mjs";
 import { checkBashCommand } from "./bash-mutation-policy.mjs";
 
 const ROOT_LIFECYCLE_TOOLS = new Set(["worktree_start", "worktree_status", "worktree_stop"]);
+// pi-worktree's state contract keeps a conflict-mode worktree available for resolution, so it remains resumable.
+const RESUMABLE_WORKTREE_MODES = new Set(["active", "conflict"]);
+const RESUME_WORKTREE_CHECKPOINT_TOOLS = new Set(["worktree_start", "worktree_stop"]);
 const WORKTREE_REQUIRED_STATUS = "🔒 worktree required";
+// A 64 MiB JSONL parent is generous for a long transcript; larger ancestry proofs are anomalous and must not consume unbounded startup memory.
+const MAX_PARENT_SESSION_BYTES = 64 * 1024 * 1024;
 let repoRoot = "";
 let sessionId = "";
 let guarded = false;
@@ -38,6 +45,72 @@ function isMutation(event: { toolName: string; input?: Record<string, unknown> }
 }
 
 const BLOCK_MSG = "Blocked: mutations require a root-approved active worktree. Call worktree_start and retry.";
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+	return value !== null && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
+}
+
+function parentSessionEntryIds(parentSession: string): Set<string> | undefined {
+	let parentFd: number | undefined;
+	try {
+		if (!isAbsolute(parentSession)) return undefined;
+		// Opening nonblocking lets fstat reject a FIFO instead of waiting for a writer.
+		parentFd = openSync(parentSession, constants.O_RDONLY | constants.O_NONBLOCK);
+		const parentStats = fstatSync(parentFd);
+		if (!parentStats.isFile() || parentStats.size > MAX_PARENT_SESSION_BYTES) return undefined;
+		const contents = Buffer.allocUnsafe(parentStats.size);
+		let bytesRead = 0;
+		while (bytesRead < contents.length) {
+			const read = readSync(parentFd, contents, bytesRead, contents.length - bytesRead, bytesRead);
+			if (read === 0) return undefined;
+			bytesRead += read;
+		}
+		if (fstatSync(parentFd).size !== parentStats.size) return undefined;
+		const entries = contents
+			.toString("utf8")
+			.trim()
+			.split("\n")
+			.map((line) => asRecord(JSON.parse(line)));
+		if (entries[0]?.type !== "session") return undefined;
+		const entryIds = new Set<string>();
+		for (const entry of entries) {
+			if (!entry || typeof entry.type !== "string" || typeof entry.id !== "string" || !entry.id) return undefined;
+			entryIds.add(entry.id);
+		}
+		return entryIds;
+	} catch {
+		return undefined;
+	} finally {
+		if (parentFd !== undefined) closeSync(parentFd);
+	}
+}
+
+function restoredWorktreeState(entries: unknown, expectedRepoRoot: string): { entryId: string; worktreeRoot: string; branch: string } | undefined {
+	if (!Array.isArray(entries)) return undefined;
+	for (const entry of [...entries].reverse()) {
+		const entryRecord = asRecord(entry);
+		const message = asRecord(entryRecord?.message);
+		if (typeof message?.toolName !== "string" || !RESUME_WORKTREE_CHECKPOINT_TOOLS.has(message.toolName)) continue;
+		const details = asRecord(message?.details ?? entryRecord?.details);
+		if (!details || !Object.hasOwn(details, "piWorktree")) return undefined;
+		const candidate = asRecord(details.piWorktree);
+		if (!candidate || typeof candidate.repoRoot !== "string" || !isAbsolute(candidate.repoRoot)) return undefined;
+		if (candidate.repoRoot !== expectedRepoRoot) continue;
+		if (message.toolName === "worktree_stop") return undefined;
+		if (
+			typeof entryRecord?.id !== "string" ||
+			!entryRecord.id ||
+			typeof candidate.mode !== "string" ||
+			!RESUMABLE_WORKTREE_MODES.has(candidate.mode) ||
+			typeof candidate.worktreeRoot !== "string" ||
+			typeof candidate.branch !== "string"
+		) {
+			return undefined;
+		}
+		return { entryId: entryRecord.id, worktreeRoot: candidate.worktreeRoot, branch: candidate.branch };
+	}
+	return undefined;
+}
 
 function childInitialCwdIsApprovedWorktree(cwd: string): boolean {
 	try {
@@ -61,7 +134,7 @@ function childInitialCwdIsApprovedWorktree(cwd: string): boolean {
 }
 
 export default function worktreeGuard(pi: ExtensionAPI) {
-	pi.on("session_start", async (_event, ctx) => {
+	pi.on("session_start", async (event, ctx) => {
 		sessionId = ctx.sessionManager.getSessionId();
 		// A delegated reader may start outside Git; classify it before the root
 		// probe so a failed discovery cannot leave its mutation boundary inactive.
@@ -82,6 +155,19 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 		repoRoot = result.stdout.trim();
 		guarded = true;
 		ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("warning", WORKTREE_REQUIRED_STATUS));
+		if (event.reason !== "resume" && event.reason !== "reload") return;
+		const restored = restoredWorktreeState(ctx.sessionManager.getBranch(), repoRoot);
+		if (!restored) return;
+		const parentSession = ctx.sessionManager.getHeader()?.parentSession;
+		// The reason gate limits restoration paths; parentSession rejects a candidate copied from fork/clone history.
+		// A parent that cannot be read as JSONL is not evidence of native approval.
+		if (parentSession !== undefined) {
+			const parentEntryIds = typeof parentSession === "string" ? parentSessionEntryIds(parentSession) : undefined;
+			if (!parentEntryIds || parentEntryIds.has(restored.entryId)) return;
+		}
+		// Session history records routing, not permission; live Git must reject stale or forged state before writes are allowed.
+		const hydrated = hydrateApprovedWorktree({ sessionId, repoRoot, worktreeRoot: restored.worktreeRoot, branch: restored.branch });
+		if (hydrated.ok) ctx.ui.setStatus("worktree-guard", ctx.ui.theme.fg("success", "🌿 worktree approved"));
 	});
 
 	pi.on("tool_call", async (event, ctx) => {

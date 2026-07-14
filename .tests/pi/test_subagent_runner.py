@@ -11,6 +11,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
+GUARD = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
 REGISTRY = (
     REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
 )
@@ -30,11 +31,11 @@ def test_subagent_execution_preflight_and_leases() -> None:
     assert NODE is not None
     package_dir = Path(PI).resolve().parent.parent
     result = subprocess.run(
-        [NODE, HARNESS, EXTENSION, REGISTRY, package_dir],
+        [NODE, HARNESS, EXTENSION, GUARD, REGISTRY, package_dir],
         check=False,
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=60,
         env={
             key: value
             for key, value in os.environ.items()
