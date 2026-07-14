@@ -43,9 +43,7 @@ x 2026-06-16 Fix CI: hermetic PATH for cron-install tests +tests @worktree:.clau
 x 2026-06-21 Fix cron-install: run_after_ + hard-fail + macOS launchctl @worktree:.claude/worktrees/d1bd3a4d-cd09-4e0e-8c86-51ee96b2cf7c.cron-fix session:d1bd3a4d-cd09-4e0e-8c86-51ee96b2cf7c agent:claude model:claude-opus-4-8
 x 2026-06-22 Set up pi.dev as main harness, chezmoi-managed +pi @worktree:.claude/worktrees/a05a54d5-49e2-42b2-a16e-18928dda8fde.pi-harness session:a05a54d5-49e2-42b2-a16e-18928dda8fde agent:claude model:claude-opus-4-8
 x 2026-06-22 fix(nvim): gotmpl TreeSitter highlighter for chezmoi templates +nvim @worktree:.worktree/fix/nvim-gotmpl-hl session:019ef0e3 agent:pi model:claude-vertex/anthropic-claude-opus-4-8
-
 x 2026-06-22 feat(pi): wire MCP support via pi-mcp-adapter, rendering mcp-servers.yaml into ~/.pi/agent/mcp.json +pi +mcp @worktree:.worktree/feat/pi-mcp-adapter agent:pi model:claude-vertex/anthropic-claude-opus-4-8
-
 x 2026-06-22 feat(pi): pi-memory extension + qmd semantic search + git-synced memory store +chezmoi +pi @worktree:.worktree/feat/pi-memory-extension agent:pi model:truefoundry/claude-vertex/anthropic-claude-opus-4-8
 x 2026-06-25 Add Figma Dev Mode MCP server +mcp @worktree:.worktree/feat/figma-mcp agent:pi model:claude-opus-4
 x 2026-06-26 Fix xonsh f-string $() subproc crash on Python 3.14 in cdargs +xonsh @worktree:.worktree/fix/xonsh-fstring-py314 agent:pi model:unknown
@@ -95,4 +93,5 @@ x 2026-07-14 Fix Hammerspoon WezTerm hotkey nil-window crash +chezmoi @worktree:
 x 2026-07-14 (B) 2026-07-14 Implement verified-integration / silent post-merge cleanup reporting policy across my-git harnesses +chezmoi +skills @worktree:.worktree/feat/post-merge-reporting-policy agent:pi
 x 2026-07-14 Add clipboard-copy key to /plan-show pager +pi +plan-mode @worktree:.worktree/feat/plan-pager-clipboard-copy session:019f61c1-9648-74f8-bd14-877bf9eae18d
 x 2026-07-14 (B) Implement Pi /cwd session CWD fork command +pi @worktree:feat/pi-cwd-command
+x 2026-07-14 Implement plan-mode questionnaire tool: vendor pi 0.80.6 questionnaire.ts, fix .tests/pi/plan_mode_runtime_harness.mjs registry-filtering false-positive +pi +plan-mode @worktree:.worktree/feat/plan-mode-questionnaire-tool session:019f6214-bcb2-71fc-8c78-b6663c9fce9a
 x 2026-07-14 Fix Parsec Windows config path + newline diff churn +chezmoi +parsec @worktree:.worktree/fix/parsec-windows-config-path

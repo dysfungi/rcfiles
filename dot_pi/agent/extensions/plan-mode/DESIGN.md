@@ -150,7 +150,7 @@ filesystem sandbox and is not new to the skill exception.
 ### Tool model — subtract, don't replace
 
 `planTools = (active tools) − {edit, write} + {read, bash, grep, find, ls,
-questionnaire, plan_write}`. The pre-plan set is captured and restored on exit.
+questionnaire, plan_write}`. [`questionnaire`](../questionnaire.ts) is registered by the sibling extension.
 This preserves root worktree lifecycle, `memory_*`, and `scratchpad`
 automatically. `bash` and `mcp` remain in the nominal set so plan mode does not
 silently replace unrelated extensions, but interactive roots cannot invoke them:

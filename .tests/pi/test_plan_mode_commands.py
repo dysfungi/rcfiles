@@ -1,7 +1,7 @@
 """Behavioral coverage for Pi plan-mode command ownership and handlers.
 
-The Node harness loads the real TypeScript extension through Pi's bundled Jiti
-loader, captures its public ``ExtensionAPI`` registrations, and invokes the
+The Node harness loads the real TypeScript extensions through Pi's bundled Jiti
+loader, captures their public ``ExtensionAPI`` registrations, and invokes the
 handlers with controlled extension contexts. A real Pi RPC command listing then
 verifies that the ``/implement`` prompt template is not shadowed. Neither path
 starts an LLM turn or depends on source-text assertions.
@@ -19,6 +19,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "index.ts"
+QUESTIONNAIRE = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "questionnaire.ts"
 IMPLEMENT_PROMPT = REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement.md"
 IMPLEMENT_AND_REVIEW_PROMPT = (
     REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement-and-review.md"
@@ -45,7 +46,7 @@ def test_plan_mode_command_handlers() -> None:
     package_dir = Path(PI).resolve().parent.parent
 
     result = subprocess.run(
-        [NODE, HARNESS, EXTENSION, package_dir],
+        [NODE, HARNESS, EXTENSION, QUESTIONNAIRE, package_dir],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
