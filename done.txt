@@ -95,3 +95,4 @@ x 2026-07-14 Fix Hammerspoon WezTerm hotkey nil-window crash +chezmoi @worktree:
 x 2026-07-14 (B) 2026-07-14 Implement verified-integration / silent post-merge cleanup reporting policy across my-git harnesses +chezmoi +skills @worktree:.worktree/feat/post-merge-reporting-policy agent:pi
 x 2026-07-14 Add clipboard-copy key to /plan-show pager +pi +plan-mode @worktree:.worktree/feat/plan-pager-clipboard-copy session:019f61c1-9648-74f8-bd14-877bf9eae18d
 x 2026-07-14 (B) Implement Pi /cwd session CWD fork command +pi @worktree:feat/pi-cwd-command
+x 2026-07-14 Fix Parsec Windows config path + newline diff churn +chezmoi +parsec @worktree:.worktree/fix/parsec-windows-config-path
