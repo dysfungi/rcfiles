@@ -101,3 +101,4 @@ x 2026-07-14 Preserve Pi subagent child context and remove obsolete sample agent
 x 2026-07-14 Fix Hammerspoon WezTerm window activation fallback +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-window-activation-fallback session:019f61be-8e1f-7ee5-80d1-338b6bc58b72 agent:pi
 x 2026-07-14 Fix Hammerspoon WezTerm unhide false-positive error log +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-unhide-false-error agent:pi
 x 2026-07-14 (B) Fix Pi memory chezmoi git-repo external/runtime sync conflicts: refreshPeriod=0 + merge-not-rebase health-gated sync + daily-only union merge +pi +chezmoi +memory @worktree:.worktree/fix/pi-memory-sync-hardening
+x 2026-07-14 Fix Parsec Windows config path + newline diff churn +chezmoi +parsec @worktree:.worktree/fix/parsec-windows-config-path
