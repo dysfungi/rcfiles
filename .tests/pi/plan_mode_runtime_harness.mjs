@@ -9,6 +9,7 @@
  */
 
 import assert from "node:assert/strict";
+import { rmSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
@@ -24,9 +25,62 @@ if (!extensionPath || !packageDir) {
 const require = createRequire(pathToFileURL(join(packageDir, "package.json")));
 const createJiti = require("jiti");
 const nodeModules = join(packageDir, "node_modules");
+const realIndexFile = join(packageDir, "dist", "index.js");
+const clipboardStubDir = await mkdtemp(join(tmpdir(), "pi-plan-clipboard-stub-"));
+const clipboardStubFile = join(clipboardStubDir, "index.mjs");
+await writeFile(
+	clipboardStubFile,
+	[
+		`export * from ${JSON.stringify(pathToFileURL(realIndexFile).href)};`,
+		"export const copyToClipboardCalls = [];",
+		"let clipboardMode = 'immediate';",
+		"let nextFailure = null;",
+		"const pendingClipboardResolvers = [];",
+		"export function setClipboardFailure(error) { nextFailure = error; }",
+		"export function setClipboardPending() { clipboardMode = 'pending'; }",
+		"export function resolvePendingClipboardCopies() {",
+		"\tfor (const resolve of pendingClipboardResolvers.splice(0)) resolve();",
+		"}",
+		"export function resetClipboardStub() {",
+		"\tcopyToClipboardCalls.length = 0;",
+		"\tclipboardMode = 'immediate';",
+		"\tnextFailure = null;",
+		"\tpendingClipboardResolvers.length = 0;",
+		"}",
+		"export function copyToClipboard(text) {",
+		"\tcopyToClipboardCalls.push(text);",
+		"\tif (nextFailure) {",
+		"\t\tconst error = nextFailure;",
+		"\t\tnextFailure = null;",
+		"\t\treturn Promise.reject(error);",
+		"\t}",
+		"\tif (clipboardMode === 'pending') {",
+		"\t\treturn new Promise((resolve) => pendingClipboardResolvers.push(resolve));",
+		"\t}",
+		"\treturn Promise.resolve();",
+		"}",
+		"",
+	].join("\n"),
+);
+
+function cleanupClipboardStub() {
+	try {
+		rmSync(clipboardStubDir, { recursive: true, force: true });
+	} catch {}
+}
+
+process.once("exit", cleanupClipboardStub);
+
+const {
+	copyToClipboardCalls,
+	resetClipboardStub,
+	resolvePendingClipboardCopies,
+	setClipboardFailure,
+	setClipboardPending,
+} = await import(pathToFileURL(clipboardStubFile).href);
 const jiti = createJiti(import.meta.url, {
 	alias: {
-		"@earendil-works/pi-coding-agent": join(packageDir, "dist", "index.js"),
+		"@earendil-works/pi-coding-agent": clipboardStubFile,
 		"@earendil-works/pi-tui": join(nodeModules, "@earendil-works", "pi-tui", "dist", "index.js"),
 		typebox: join(nodeModules, "typebox", "build", "index.mjs"),
 	},
@@ -82,6 +136,18 @@ function createPlanPagerFixture(cancelKeys) {
 
 function stripAnsi(value) {
 	return value.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function getPlanPagerProgress(component) {
+	const header = stripAnsi(component.render(160).at(0));
+	component.render(80);
+	const match = header.match(/(\d+)-(\d+) \/ (\d+)\s*$/);
+	assert.ok(match, `plan pager header must contain progress: ${header}`);
+	return {
+		start: Number(match[1]),
+		end: Number(match[2]),
+		total: Number(match[3]),
+	};
 }
 
 function createHarness({
@@ -421,10 +487,8 @@ async function openPlanPager(cancelKeys) {
 	const agentDir = join(fixtureRoot, "agent");
 	const sessionDir = join(agentDir, "sessions", "test");
 	await mkdir(join(agentDir, "plans"), { recursive: true });
-	await writeFile(
-		join(agentDir, "plans", "test.md"),
-		["# Plan", ...Array.from({ length: 48 }, (_, index) => `Step ${index + 1}`)].join("\n"),
-	);
+	const planContent = ["# Plan", ...Array.from({ length: 48 }, (_, index) => `Step ${index + 1}`)].join("\n");
+	await writeFile(join(agentDir, "plans", "test.md"), planContent);
 
 	const planPagerFixture = createPlanPagerFixture(cancelKeys);
 	assert.equal(planPagerFixture.tui.terminal.columns, 80, "pager TUI has a concrete width");
@@ -437,10 +501,12 @@ async function openPlanPager(cancelKeys) {
 	return {
 		command,
 		fixtureRoot,
+		planContent,
 		planPagerFixture,
 		request,
 		async close() {
 			try {
+				if (request.doneCalls === 0) request.component.handleInput("q");
 				if (request.doneCalls === 0) request.done(undefined);
 				await command;
 			} finally {
@@ -503,6 +569,54 @@ async function testPlanPagerCancellationBindings() {
 		await navigation.close();
 	}
 
+	const halfPage = await openPlanPager(defaultCancelKeys);
+	try {
+		const page = Math.max(1, halfPage.planPagerFixture.tui.terminal.rows - 2);
+		const halfPageDelta = Math.max(1, Math.ceil(page / 2));
+		assert.equal(halfPageDelta, 11, "fixed pager terminal has an 11-line half page");
+		assert.match(
+			stripAnsi(halfPage.request.component.render(160).at(-1)),
+			/Ctrl\+d\/Ctrl\+u half-page/,
+			"footer documents half-page controls",
+		);
+
+		const before = getPlanPagerProgress(halfPage.request.component);
+		const rendersBefore = halfPage.planPagerFixture.getRenderRequests();
+		halfPage.request.component.handleInput("\x04");
+		const afterDown = getPlanPagerProgress(halfPage.request.component);
+		assert.equal(afterDown.start - before.start, halfPageDelta, "Ctrl+D advances by exactly half a page");
+		assert.equal(afterDown.end - before.end, halfPageDelta, "Ctrl+D advances the viewport by exactly half a page");
+		assert.equal(afterDown.total, before.total, "Ctrl+D preserves the rendered document length");
+		assert.equal(halfPage.request.doneCalls, 0, "Ctrl+D does not close the pager");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersBefore + 1,
+			"Ctrl+D requests a render after moving",
+		);
+
+		halfPage.request.component.handleInput("\x15");
+		const afterUp = getPlanPagerProgress(halfPage.request.component);
+		assert.equal(afterDown.start - afterUp.start, halfPageDelta, "Ctrl+U reverses exactly half a page");
+		assert.equal(afterDown.end - afterUp.end, halfPageDelta, "Ctrl+U restores the viewport by exactly half a page");
+		assert.equal(halfPage.request.doneCalls, 0, "Ctrl+U does not close the pager");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersBefore + 2,
+			"Ctrl+U requests a render after moving",
+		);
+
+		const rendersAtTop = halfPage.planPagerFixture.getRenderRequests();
+		halfPage.request.component.handleInput("\x15");
+		assert.deepEqual(getPlanPagerProgress(halfPage.request.component), before, "Ctrl+U at the top stays clamped");
+		assert.equal(
+			halfPage.planPagerFixture.getRenderRequests(),
+			rendersAtTop,
+			"a clamped Ctrl+U does not request a render",
+		);
+	} finally {
+		await halfPage.close();
+	}
+
 	const emptyCancel = await openPlanPager([]);
 	try {
 		const footer = stripAnsi(emptyCancel.request.component.render(80).at(-1));
@@ -524,6 +638,86 @@ async function testPlanPagerCancellationBindings() {
 		assert.doesNotMatch(footer, /q\/q close/);
 	} finally {
 		await deduplicatedQ.close();
+	}
+}
+
+async function flushClipboard() {
+	await new Promise((resolveFlush) => setImmediate(resolveFlush));
+}
+
+async function testPlanPagerClipboardCopy() {
+	const defaultCancelKeys = ["escape", "ctrl+c", "ctrl+["];
+
+	resetClipboardStub();
+	const success = await openPlanPager(defaultCancelKeys);
+	try {
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /c copy/);
+		success.request.component.handleInput("c");
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /Copying…/);
+		await flushClipboard();
+		assert.deepEqual(copyToClipboardCalls, [success.planContent], "copying uses the full raw plan content");
+		assert.match(stripAnsi(success.request.component.render(80).at(-1)), /✓ Copied/);
+	} finally {
+		await success.close();
+	}
+
+	resetClipboardStub();
+	setClipboardPending();
+	const reentry = await openPlanPager(defaultCancelKeys);
+	try {
+		reentry.request.component.handleInput("c");
+		reentry.request.component.handleInput("c");
+		assert.equal(copyToClipboardCalls.length, 1, "copying ignores repeated c input while a copy is pending");
+		resolvePendingClipboardCopies();
+		await flushClipboard();
+	} finally {
+		await reentry.close();
+	}
+
+	resetClipboardStub();
+	setClipboardFailure(new Error("boom"));
+	const failure = await openPlanPager(defaultCancelKeys);
+	try {
+		failure.request.component.handleInput("c");
+		await flushClipboard();
+		assert.match(stripAnsi(failure.request.component.render(80).at(-1)), /✗ Copy failed: boom/);
+		assert.equal(failure.request.doneCalls, 0, "a failed copy leaves the pager open");
+	} finally {
+		await failure.close();
+	}
+
+	resetClipboardStub();
+	const conflict = await openPlanPager(["c"]);
+	try {
+		assert.doesNotMatch(stripAnsi(conflict.request.component.render(80).at(-1)), /copy/i);
+		conflict.request.component.handleInput("c");
+		assert.equal(conflict.request.doneCalls, 1, "c keeps its configured cancel behavior");
+		assert.deepEqual(copyToClipboardCalls, [], "configured cancellation does not invoke the clipboard");
+		await conflict.command;
+	} finally {
+		await conflict.close();
+	}
+
+	resetClipboardStub();
+	setClipboardPending();
+	const copyThenClose = await openPlanPager(defaultCancelKeys);
+	try {
+		copyThenClose.request.component.handleInput("c");
+		assert.match(stripAnsi(copyThenClose.request.component.render(80).at(-1)), /Copying…/);
+		copyThenClose.request.component.handleInput("q");
+		assert.equal(copyThenClose.request.doneCalls, 1, "q closes an in-flight copy once");
+		const renderRequestsAfterClose = copyThenClose.planPagerFixture.getRenderRequests();
+		resolvePendingClipboardCopies();
+		await flushClipboard();
+		assert.deepEqual(copyToClipboardCalls, [copyThenClose.planContent]);
+		assert.equal(
+			copyThenClose.planPagerFixture.getRenderRequests(),
+			renderRequestsAfterClose,
+			"settled clipboard work does not render after the pager closes",
+		);
+		await copyThenClose.command;
+	} finally {
+		await copyThenClose.close();
 	}
 }
 
@@ -563,14 +757,19 @@ async function testRootThreadPolicyComposition() {
 	}
 }
 
-testCommandRegistration();
-await testSelectorsAndToolSnapshots();
-await testSessionStartGates();
-await testBranchLocalSessionRestore();
-await testModeParsingAndIdleGuards();
-await testImplementationKickoffAndFailure();
-await testContextDeduplication();
-await testBashPolicyParity();
-await testPlanPagerCancellationBindings();
-await testRootThreadPolicyComposition();
-console.log("plan-mode runtime handler harness: ok");
+try {
+	testCommandRegistration();
+	await testSelectorsAndToolSnapshots();
+	await testSessionStartGates();
+	await testBranchLocalSessionRestore();
+	await testModeParsingAndIdleGuards();
+	await testImplementationKickoffAndFailure();
+	await testContextDeduplication();
+	await testBashPolicyParity();
+	await testPlanPagerCancellationBindings();
+	await testPlanPagerClipboardCopy();
+	await testRootThreadPolicyComposition();
+	console.log("plan-mode runtime handler harness: ok");
+} finally {
+	cleanupClipboardStub();
+}
