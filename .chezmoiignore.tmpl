@@ -49,6 +49,9 @@ uv.lock
 
 {{ if .is_windows }}
 
+# Native Windows Parsec reads its config from AppData\Roaming\Parsec instead.
+.parsec/**
+
 .local/bin/*.sh
 
 .config/Code/
@@ -94,6 +97,11 @@ Documents/**
 .vsvimrc
 .wslconfig
 
+{{ end }}
+
+{{ if .is_wsl }}
+# WSL never runs a Parsec host, so this Unix-style config does not belong there.
+.parsec/**
 {{ end }}
 
 ##########################################
