@@ -134,21 +134,57 @@ primary checkout (the parent of `git rev-parse --git-common-dir`).
    never merge a change you don't expect to ship (here, to be `chezmoi apply`-ied). If it isn't
    deploy-ready, keep it a draft / on the branch.
    - *Repos I own ({{ .my.github_personal_owners | join ", " }}):* after I approve in-session,
-     squash-merge. GitHub → `gh pr merge --squash --delete-branch`, then `git -C <main> pull --rebase`,
-     and delete the local branch with `git branch -D <branch>` (squash leaves it "unmerged", so `-d`
-     refuses). Local → `git -C <main> pull --rebase` (if it has a remote), `git -C <main> merge --squash
-     <branch>` + one conventional commit, `git -C <main> push` (if it has a remote), then
-     `git branch -D <branch>`.
+     squash-merge. GitHub → `gh pr merge --squash`; verify `state=MERGED` and `mergeCommit.oid` before
+     declaring `Integration: verified`. Local → `git -C <main> pull --rebase` (if it has a remote),
+     `git -C <main> merge --squash <branch>` + one conventional commit, then `git -C <main> push`
+     (if it has a remote).
    - *Work / shared (owner not mine):* I merge through the org's process; the agent never merges these.
    - *Unrecognized origin:* gather the facts (remote URL, owner, is it yours?), ask me how to
      integrate, then propose a `my-git` update so it's covered next time (see `my-agent-memory`).
 
-9. **Cleanup — after an approved merge only.** Keep the worktree until the change is merged (I may
-   request changes — resume in it). Then delete the local branch (step 8) and remove the worktree with
-   the harness-specific mechanism below. Automatic cleanup is harness-specific and not available in every
-   harness; no agent may treat it as authoritative task completion. The owner must archive the exact task
-   in step 4 before PR-ready/final handoff. (A squash-merge isn't a fast-forward, so the explicit
-   `git branch -D` is what clears the branch.)
+9. **Cleanup — after an approved merge only, and silent only after `Integration: verified`.** Keep the
+   worktree until the change is merged (I may request changes — resume in it). After verified integration,
+   an explicitly approved `git push origin --delete <branch>` is best-effort remote cleanup independent of
+   worktree exit/removal. Exit/remove the worktree with the harness-specific mechanism below before any
+   optional local branch cleanup that the harness safely supports. Never force-delete a branch or claim
+   cleanup completed merely because it was attempted. Automatic cleanup is harness-specific and not available
+   in every harness; no agent may treat it as authoritative task completion. The owner must archive the exact
+   task in step 4 before PR-ready/final handoff.
+
+### Post-merge reporting
+
+This contract governs only the model-authored final handoff. It does not suppress direct harness, hook, or
+tool diagnostics.
+
+Classify integration before cleanup:
+
+| Integration route | `Integration: verified` evidence | Failure behavior |
+| --- | --- | --- |
+| GitHub PR | After the merge attempt, a read-only `gh pr view <pr> --json state,mergeCommit` query confirms `state=MERGED` and records `mergeCommit.oid`. | A failed or ambiguous merge command, or an unavailable/non-merged PR state, is `Integration: failed` or `Integration: unverified`, never cleanup. |
+| Local / no remote | The squash operation and resulting conventional commit succeed, and `main` resolves to that commit. If remote publication was requested, confirm the target remote ref too. | A commit or required push/verification failure remains visible as `Integration: failed` or `Integration: unverified`. |
+| Work / shared | An authoritative provider/organization merge status confirms integration; the agent never merges. | Without authoritative automated evidence, report `Integration: unverified`; do not substitute cleanup or a manual workaround. |
+
+Use these fixed states:
+
+- `Integration: verified` only after the relevant source-of-truth evidence above confirms integration.
+- `Integration: failed` when verification establishes integration did not occur or a required local
+  commit/publication failed.
+- `Integration: unverified` when authoritative confirmation is unavailable; keep that uncertainty visible.
+
+A nonzero or ambiguous merge command does not choose a state by itself: resolve it with the evidence above
+before cleanup can be silent. Remote branch deletion, primary-checkout sync, local branch deletion, and
+worktree removal are cleanup, not merge evidence. Only after `Integration: verified` may non-blocking
+cleanup be silent in the final handoff. Escalate cleanup in that handoff only when it:
+
+1. blocks the requested outcome;
+2. risks data loss or unmerged work;
+3. requires user action; or
+4. was explicitly requested.
+
+A concise verified final handoff uses `Integration: verified — <route>; evidence: <merge commit or
+ authoritative status>.` Report the authoritative integration result, not cleanup attempts. This
+final-handoff-only exception overrides the generic unavailable-automation disclosure rule for non-blocking
+post-verification cleanup; it does not hide direct diagnostics or an integration failure.
 
 {{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
 
