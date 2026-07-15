@@ -10,10 +10,11 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
-GUARD = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
+MANAGED_ROOT = REPO_ROOT / "home"
+EXTENSION = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
+GUARD = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
 REGISTRY = (
-    REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
+    MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
 )
 HARNESS = Path(__file__).with_name("subagent_runner_runtime_harness.mjs")
 PI = shutil.which("pi")

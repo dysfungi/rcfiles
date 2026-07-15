@@ -23,6 +23,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MANAGED_ROOT = REPO_ROOT / "home"
 
 # (pattern, human-readable description)
 _FORBIDDEN = [
@@ -42,7 +43,7 @@ _ALLOWED_FILES = {
     "todo.txt",
     # The removal directives themselves: .chezmoiremove names .secrets et al.
     # precisely to delete them from target machines.
-    ".chezmoiremove",
+    (MANAGED_ROOT.relative_to(REPO_ROOT) / ".chezmoiremove").as_posix(),
     # This file (defines the forbidden patterns).
     ".tests/test_no_stale_secret_refs.py",
     # Asserts the cron runner contains no ".secrets" literal.

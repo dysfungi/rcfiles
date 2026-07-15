@@ -30,12 +30,13 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CATALOG = REPO_ROOT / ".chezmoidata" / "large-language-models.yaml"
+MANAGED_ROOT = REPO_ROOT / "home"
+CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
 DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
-SETTINGS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
-MODELS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
-VALIDATE_TEMPLATE = REPO_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl"
+SETTINGS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
+MODELS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
+VALIDATE_TEMPLATE = MANAGED_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl"
 NODE_MISE_TOOL = "node"
 NODE_VERSION = "24.18.0"
 PI_MISE_TOOL = "npm:@earendil-works/pi-coding-agent"
@@ -221,7 +222,9 @@ def _runtime_fixture_source(tmp_path: Path) -> Path:
     catalog = yaml.safe_load(CATALOG.read_text())
     catalog["default_thinking_level"] = RUNTIME_FIXTURE_THINKING_LEVEL
 
-    catalog_path = source / ".chezmoidata" / CATALOG.name
+    source.mkdir()
+    (source / ".chezmoiroot").write_text("home\n")
+    catalog_path = source / "home" / ".chezmoidata" / CATALOG.name
     catalog_path.parent.mkdir(parents=True)
     catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False))
     for template in (SETTINGS_TEMPLATE, MODELS_TEMPLATE, VALIDATE_TEMPLATE):

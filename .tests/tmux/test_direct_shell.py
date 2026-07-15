@@ -36,8 +36,9 @@ from typing import Literal
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TMUX_CONFIG = REPO_ROOT / "dot_config" / "tmux" / "tmux.conf"
-WEZTERM_TEMPLATE = REPO_ROOT / "dot_wezterm.lua.tmpl"
+MANAGED_ROOT = REPO_ROOT / "home"
+TMUX_CONFIG = MANAGED_ROOT / "dot_config" / "tmux" / "tmux.conf"
+WEZTERM_TEMPLATE = MANAGED_ROOT / "dot_wezterm.lua.tmpl"
 _TIMEOUT_SECONDS = 15
 _POLL_SECONDS = 0.05
 _SESSION = "main"

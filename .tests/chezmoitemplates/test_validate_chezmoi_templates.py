@@ -443,25 +443,25 @@ def test_empty_render_skip(
 
 _PI_KEYBINDINGS_CONTRACT_CASES = [
     (
-        "dot_pi/agent/keybindings.json.tmpl",
+        "home/dot_pi/agent/keybindings.json.tmpl",
         '{"app.interrupt": ["escape", "ctrl+["], "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["]}\n',
         True,
         "complete managed cancellation bindings pass",
     ),
     (
-        "dot_pi/agent/keybindings.json.tmpl",
+        "home/dot_pi/agent/keybindings.json.tmpl",
         "{{ if false }}x{{ end }}\n  \t\n",
         False,
         "empty managed keybindings render fails",
     ),
     (
-        "dot_pi/agent/keybindings.json.tmpl",
+        "home/dot_pi/agent/keybindings.json.tmpl",
         '{"app.interrupt": ["escape"], "tui.select.cancel": ["escape", "ctrl+c", "ctrl+["]}\n',
         False,
         "incomplete interrupt bindings fail",
     ),
     (
-        "dot_pi/agent/keybindings.json.tmpl",
+        "home/dot_pi/agent/keybindings.json.tmpl",
         '{"app.interrupt": ["escape", "ctrl+["], "tui.select.cancel": ["escape", "ctrl+c"]}\n',
         False,
         "incomplete selector-cancel bindings fail",

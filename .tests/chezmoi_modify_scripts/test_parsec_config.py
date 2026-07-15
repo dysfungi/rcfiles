@@ -23,12 +23,13 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SHARED_CONFIG = REPO_ROOT / "private_dot_parsec" / "modify_config.json.py.tmpl"
+MANAGED_ROOT = REPO_ROOT / "home"
+SHARED_CONFIG = MANAGED_ROOT / "private_dot_parsec" / "modify_config.json.py.tmpl"
 WINDOWS_CONFIG = (
-    REPO_ROOT / "AppData" / "Roaming" / "Parsec" / "modify_config.json.py.tmpl"
+    MANAGED_ROOT / "AppData" / "Roaming" / "Parsec" / "modify_config.json.py.tmpl"
 )
-IGNORE = REPO_ROOT / ".chezmoiignore.tmpl"
-REMOVALS = REPO_ROOT / ".chezmoiremove"
+IGNORE = MANAGED_ROOT / ".chezmoiignore.tmpl"
+REMOVALS = MANAGED_ROOT / ".chezmoiremove"
 WINDOWS_TARGET = Path.home() / "AppData" / "Roaming" / "Parsec" / "config.json"
 
 
@@ -88,7 +89,7 @@ def _scratch_source(tmp_path: Path) -> Path:
     source = tmp_path / "source"
     source.mkdir()
     for template in (IGNORE, REMOVALS, SHARED_CONFIG, WINDOWS_CONFIG):
-        copied = source / template.relative_to(REPO_ROOT)
+        copied = source / template.relative_to(MANAGED_ROOT)
         copied.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(template, copied)
     return source
@@ -167,7 +168,7 @@ def test_windows_config_template_reuses_shared_rendering(tmp_path: Path) -> None
 def test_windows_config_source_maps_to_parsec_target(tmp_path: Path) -> None:
     """Chezmoi's modify_ filename maps to the config file Parsec actually reads."""
     source = tmp_path / "source"
-    copied_config = source / WINDOWS_CONFIG.relative_to(REPO_ROOT)
+    copied_config = source / WINDOWS_CONFIG.relative_to(MANAGED_ROOT)
     copied_config.parent.mkdir(parents=True)
     shutil.copy2(WINDOWS_CONFIG, copied_config)
     config = tmp_path / "chezmoi.toml"

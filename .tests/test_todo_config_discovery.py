@@ -26,7 +26,9 @@ from pathlib import Path
 import pytest
 
 # Path to the config file under test.
-_CONFIG = Path(__file__).resolve().parents[1] / "dot_todo" / "config"
+REPO_ROOT = Path(__file__).resolve().parents[1]
+MANAGED_ROOT = REPO_ROOT / "home"
+_CONFIG = MANAGED_ROOT / "dot_todo" / "config"
 
 
 def _clean_env() -> dict[str, str]:

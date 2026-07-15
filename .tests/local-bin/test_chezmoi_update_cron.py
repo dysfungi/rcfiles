@@ -2,7 +2,7 @@
 
 WHY THIS FILE EXISTS
     `~/.local/bin/chezmoi-update-cron` (source:
-    `dot_local/bin/executable_chezmoi-update-cron.tmpl`) is the unattended
+    `home/dot_local/bin/executable_chezmoi-update-cron.tmpl`) is the unattended
     daily updater. After the secrets-to-mise migration it must:
       1. run the update via `mise x` (mise injects OP_SERVICE_ACCOUNT_TOKEN
          from ~/.config/mise/conf.d/secrets.toml) with `--keep-going`, then
@@ -51,7 +51,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT_TMPL = REPO_ROOT / "dot_local" / "bin" / "executable_chezmoi-update-cron.tmpl"
+MANAGED_ROOT = REPO_ROOT / "home"
+SCRIPT_TMPL = MANAGED_ROOT / "dot_local" / "bin" / "executable_chezmoi-update-cron.tmpl"
 
 _BASH = shutil.which("bash") or "/bin/bash"
 

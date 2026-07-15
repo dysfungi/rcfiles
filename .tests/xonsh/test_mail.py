@@ -26,7 +26,8 @@ from typing import Literal
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-MAIL_MODULE = REPO_ROOT / "dot_config" / "xonsh" / "exact_rc.d" / "85-mail.xsh"
+MANAGED_ROOT = REPO_ROOT / "home"
+MAIL_MODULE = MANAGED_ROOT / "dot_config" / "xonsh" / "exact_rc.d" / "85-mail.xsh"
 RC_DIRECTORY = MAIL_MODULE.parent
 PROMPT_MARKER = "__MAIL_TEST_PROMPT_COMPLETE__"
 _TIMEOUT_SECONDS = 15

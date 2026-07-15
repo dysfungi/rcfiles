@@ -1,11 +1,11 @@
 """Integration tests for the SSH public-key GitHub/GHE registration helper.
 
 WHY THIS FILE EXISTS
-    `.chezmoitemplates/github/register-ssh-key.sh` defines `register_ssh_key
+    `home/.chezmoitemplates/github/register-ssh-key.sh` defines `register_ssh_key
     <host> <token>` — the shared bash function used by both:
-      - `.chezmoiscripts/20/run_onchange_after_register-ssh-github.unix-like.sh.tmpl`
+      - `home/.chezmoiscripts/20/run_onchange_after_register-ssh-github.unix-like.sh.tmpl`
         (personal github.com, every unix-like machine)
-      - `.chezmoiscripts/20/run_onchange_after_register-ssh-github-enterprise.unix-like.sh.tmpl`
+      - `home/.chezmoiscripts/20/run_onchange_after_register-ssh-github-enterprise.unix-like.sh.tmpl`
         (gh.riotgames.com, Riot machines only, gated on is_riot_machine)
 
     The helper's contract is safety-critical (it caused a github.com lockout on
@@ -55,8 +55,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-HELPER = REPO_ROOT / ".chezmoitemplates" / "github" / "register-ssh-key.sh"
-SCRIPTS = REPO_ROOT / ".chezmoiscripts" / "20"
+MANAGED_ROOT = REPO_ROOT / "home"
+HELPER = MANAGED_ROOT / ".chezmoitemplates" / "github" / "register-ssh-key.sh"
+SCRIPTS = MANAGED_ROOT / ".chezmoiscripts" / "20"
 GITHUB_SCRIPT = SCRIPTS / "run_onchange_after_register-ssh-github.unix-like.sh.tmpl"
 ENTERPRISE_SCRIPT = (
     SCRIPTS / "run_onchange_after_register-ssh-github-enterprise.unix-like.sh.tmpl"

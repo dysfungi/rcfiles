@@ -27,7 +27,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-XONSH_DIR = REPO_ROOT / "dot_config" / "xonsh"
+MANAGED_ROOT = REPO_ROOT / "home"
+XONSH_DIR = MANAGED_ROOT / "dot_config" / "xonsh"
 
 # Inline xonsh program template: compile-check one file via the live execer.
 # The path is embedded (not passed via argv, which xonsh -c does not forward to

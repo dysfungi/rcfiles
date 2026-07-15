@@ -1,7 +1,7 @@
 """Tests for the per-host SSH keypair generation script.
 
 WHY THIS FILE EXISTS
-    `.chezmoiscripts/20/run_before_generate-ssh-key.unix-like.sh` replaced a
+    `home/.chezmoiscripts/20/run_before_generate-ssh-key.unix-like.sh` replaced a
     `modify_` script that inferred "generate a new key" from EMPTY STDIN and so
     destroyed an intact keypair under disk-full/ENOSPC (2026-06-26 incident).
     These tests are the executable spec for the replacement's guarantees:
@@ -25,8 +25,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 SCRIPT = (
-    REPO_ROOT / ".chezmoiscripts" / "20" / "run_before_generate-ssh-key.unix-like.sh"
+    MANAGED_ROOT / ".chezmoiscripts" / "20" / "run_before_generate-ssh-key.unix-like.sh"
 )
 
 _BASH = shutil.which("bash") or "/bin/bash"

@@ -17,7 +17,8 @@ import tomllib
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PACKAGES = REPO_ROOT / ".chezmoidata" / "packages.yaml"
+MANAGED_ROOT = REPO_ROOT / "home"
+PACKAGES = MANAGED_ROOT / ".chezmoidata" / "packages.yaml"
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 
 

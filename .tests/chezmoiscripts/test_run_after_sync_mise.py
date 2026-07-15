@@ -1,5 +1,5 @@
 """End-to-end regression tests for the npm wrapper-postinstall materializer
-in `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`.
+in `home/.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`.
 
 WHY THIS FILE EXISTS
     mise's npm backend installs the optional-deps tree but does NOT execute
@@ -15,7 +15,7 @@ WHY THIS FILE EXISTS
 WHY THIS IS A SUBPROCESS TEST (NOT A UNIT TEST)
     The script is treated as a black box. Tests build a fake mise install
     tree under tmp_path, stub `mise` on PATH to a no-op, point HOME and
-    CHEZMOI_* at the tmp tree, then invoke the actual script via
+    CHEZMOI_* at isolated temp directories, then invoke the actual script via
     `bash $SCRIPT`. Assertions check filesystem state after the run.
     No production refactor for testability — the harness adapts to the
     script's real shape.
@@ -28,15 +28,15 @@ WHY THE PARAMETRIZED TABLE
 
 GIT ISOLATION DESIGN (root-cause note)
     The script uses `local -x GIT_DIR` / `local -x GIT_WORK_TREE` (pointing
-    at `CHEZMOI_SOURCE_DIR`) inside `_commit_backup`, so its git calls target
+    at `CHEZMOI_WORKING_TREE`) inside `_commit_backup`, so its git calls target
     the per-test tmp repo, not the real chezmoi repo.  Two local guards prevent
     regressions specific to this test file:
 
     1. _clean_env() strips GIT_* vars leaked by pre-commit into child
        processes (git init, git commit, the script itself).
-    2. _run_script() sets cwd=CHEZMOI_SOURCE_DIR so the bash script starts
-       inside the temp git repo; any bare `git` call without GIT_DIR will
-       auto-discover the tmp .git via directory traversal, not the real one.
+    2. _run_script() sets cwd=CHEZMOI_SOURCE_DIR, whose parent is the temp
+       git repo; any bare `git` call without GIT_DIR auto-discovers the tmp
+       .git via directory traversal, not the real one.
 
     The session-wide guard (assert_real_repo_unaffected in conftest.py) catches
     regressions in any test file across the whole suite.
@@ -58,7 +58,8 @@ from typing import Any
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = REPO_ROOT / ".chezmoiscripts/20/run_after_sync-mise.unix-like.sh"
+MANAGED_ROOT = REPO_ROOT / "home"
+SCRIPT = MANAGED_ROOT / ".chezmoiscripts/20/run_after_sync-mise.unix-like.sh"
 
 
 # Mirror the bash `_host_platform_suffix` logic so tests can construct
@@ -188,24 +189,27 @@ def _clean_env() -> dict[str, str]:
 
 
 def _build_env(tmp_path: Path, pkgs: list[FakePkg]) -> dict[str, str]:
-    """Build HOME + CHEZMOI_SOURCE_DIR + PATH-stubbed-mise env. Returns os.environ-style dict."""
+    """Build HOME, distinct ChezMoi source/root dirs, and PATH-stubbed mise env."""
     home = tmp_path / "home"
     home.mkdir()
-    src = tmp_path / "chezmoi-src"
-    src.mkdir()
+    working_tree = tmp_path / "chezmoi-root"
+    source = working_tree / "home"
+    source.mkdir(parents=True)
     stub_bin = tmp_path / "stub-bin"
     stub_bin.mkdir()
 
     clean = _clean_env()
-    # Real git repo at CHEZMOI_SOURCE_DIR so the backup commits in
+    # Real git repo at CHEZMOI_WORKING_TREE so the backup commits in
     # run_after_sync-mise's _commit_backup succeed. `--no-verify` keeps any
     # user-installed pre-commit hook from running against the tmp repo.
-    subprocess.run(["git", "init", "-q", "-b", "main", str(src)], check=True, env=clean)
+    subprocess.run(
+        ["git", "init", "-q", "-b", "main", str(working_tree)], check=True, env=clean
+    )
     subprocess.run(
         [
             "git",
             "-C",
-            str(src),
+            str(working_tree),
             "-c",
             "core.hooksPath=/dev/null",
             "commit",
@@ -235,8 +239,8 @@ def _build_env(tmp_path: Path, pkgs: list[FakePkg]) -> dict[str, str]:
     return {
         **clean,
         "HOME": str(home),
-        "CHEZMOI_SOURCE_DIR": str(src),
-        "CHEZMOI_WORKING_TREE": str(src),
+        "CHEZMOI_SOURCE_DIR": str(source),
+        "CHEZMOI_WORKING_TREE": str(working_tree),
         "PATH": f"{stub_bin}:{clean['PATH']}",
         # Ensure git commits inside the script's _commit_backup work without
         # a real ~/.gitconfig.
@@ -250,9 +254,9 @@ def _build_env(tmp_path: Path, pkgs: list[FakePkg]) -> dict[str, str]:
 def _run_script(
     env: dict[str, str], timeout: float = 30.0
 ) -> subprocess.CompletedProcess[str]:
-    # cwd=CHEZMOI_SOURCE_DIR: the bash script starts inside the temp git repo
-    # so any bare `git` call without GIT_DIR set auto-discovers the tmp .git,
-    # not the real chezmoi repo (see "GIT ISOLATION DESIGN" in the module doc).
+    # cwd=CHEZMOI_SOURCE_DIR: its parent is the temp git repo, so bare git
+    # auto-discovers the tmp .git rather than the real chezmoi repo (see
+    # "GIT ISOLATION DESIGN" in the module doc).
     return subprocess.run(
         ["bash", str(SCRIPT)],
         env=env,

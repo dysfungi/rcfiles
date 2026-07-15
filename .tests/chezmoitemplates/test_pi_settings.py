@@ -19,9 +19,10 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CATALOG = REPO_ROOT / ".chezmoidata" / "large-language-models.yaml"
-SCRIPT = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
-LEGACY_SOURCE = REPO_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
+MANAGED_ROOT = REPO_ROOT / "home"
+CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
+SCRIPT = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
+LEGACY_SOURCE = MANAGED_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
 TARGET = Path.home() / ".pi" / "agent" / "settings.json"
 PACKAGES: list[object] = [
     {

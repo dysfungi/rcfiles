@@ -3,12 +3,12 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-symlinkedDir="${CHEZMOI_SOURCE_DIR}/.symlinked"
+symlinkedDir="${CHEZMOI_WORKING_TREE}/.symlinked"
 userName="$(whoami)"
 hostName="$(hostname)"
 
 save_symlinked_changes() {
-  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_DIR="${CHEZMOI_WORKING_TREE}/.git"
   local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
   git add "${symlinkedDir}"

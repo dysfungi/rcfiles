@@ -12,9 +12,9 @@ x-anchors:
     - &fixes_exclude |-
       (?x)^(
         \.symlinked/.*
-        |dot_config/configstore/.*\.json
-        |dot_config/.*karabiner/.*\.json
-        |modify_private_dot_claude.json
+        |home/dot_config/configstore/.*\.json
+        |home/dot_config/.*karabiner/.*\.json
+        |home/modify_private_dot_claude.json
       )$
 
 ci:
@@ -33,7 +33,7 @@ repos:
       - id: check-json
         exclude: |-
           (?x)^(
-            modify_private_dot_claude.json
+            home/modify_private_dot_claude.json
           )$
       - id: check-merge-conflict
       - id: check-toml
@@ -64,19 +64,19 @@ repos:
     hooks:
       - id: check-jsonschema
         name: validate mcp-servers.yaml
-        files: ^\.chezmoidata/mcp-servers\.yaml$
+        files: ^home/\.chezmoidata/mcp-servers\.yaml$
         args: ["--schemafile", ".schemas/mcp-servers.schema.yaml"]
       - id: check-jsonschema
         name: validate large-language-models.yaml
-        files: ^\.chezmoidata/large-language-models\.yaml$
+        files: ^home/\.chezmoidata/large-language-models\.yaml$
         args: ["--schemafile", ".schemas/large-language-models.schema.yaml"]
       - id: check-jsonschema
         name: validate packages.yaml
-        files: ^\.chezmoidata/packages\.yaml$
+        files: ^home/\.chezmoidata/packages\.yaml$
         args: ["--schemafile", ".schemas/packages.schema.yaml"]
       - id: check-jsonschema
         name: validate projects.yaml
-        files: ^\.chezmoidata/projects\.yaml$
+        files: ^home/\.chezmoidata/projects\.yaml$
         args: ["--schemafile", ".schemas/projects.schema.yaml"]
 
   ######
@@ -99,7 +99,7 @@ repos:
         files: |-
           (?x)(
             \.tmpl$
-            |^\.chezmoitemplates/
+            |^home/\.chezmoitemplates/
           )
         pass_filenames: true
         # Serialize: parallel chezmoi execute-template runs walk the repo tree while
@@ -109,7 +109,7 @@ repos:
         stages: [pre-commit, pre-push]
         exclude: |-
           (?x)^(
-            exact_private_dot_secrets/
+            home/exact_private_dot_secrets/
             |(.*/)?symlink_
             |(.*/)?\.chezmoitemplates/ollama/Modelfile\.tmpl
           )$
@@ -173,10 +173,10 @@ repos:
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-        exclude: ^\.zsh/
+        exclude: ^home/\.zsh/
 
   - repo: https://github.com/maxwinterstein/shfmt-py
     rev: v3.12.0.1
     hooks:
       - id: shfmt
-        exclude: ^\.zsh/
+        exclude: ^home/\.zsh/

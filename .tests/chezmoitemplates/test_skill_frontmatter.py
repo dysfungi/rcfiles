@@ -39,7 +39,8 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SKILLS_DIR = REPO_ROOT / ".chezmoitemplates" / "agents" / "skills"
+MANAGED_ROOT = REPO_ROOT / "home"
+SKILLS_DIR = MANAGED_ROOT / ".chezmoitemplates" / "agents" / "skills"
 
 _SKILL_FILES = sorted(SKILLS_DIR.glob("*.SKILL.md.tmpl"))
 

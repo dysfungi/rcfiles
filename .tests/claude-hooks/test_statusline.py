@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = REPO_ROOT / "dot_claude" / "executable_statusline.py"
+SCRIPT = REPO_ROOT / "home" / "dot_claude" / "executable_statusline.py"
 
 assert SCRIPT.exists(), f"statusline script not found at {SCRIPT}"
 

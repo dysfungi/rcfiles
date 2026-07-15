@@ -18,7 +18,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-INIT_LUA = REPO_ROOT / "dot_hammerspoon" / "init.lua"
+MANAGED_ROOT = REPO_ROOT / "home"
+INIT_LUA = MANAGED_ROOT / "dot_hammerspoon" / "init.lua"
 MOVE_FAILURE_LOG = "ERROR: Could not move window"
 UNHIDE_FAILURE_LOG = "ERROR: Could not unhide Wezterm"
 RECOVERY_FAILURE_ALERT = "Wezterm: couldn't determine which window to show"
