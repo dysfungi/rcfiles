@@ -20,6 +20,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 INIT_LUA = REPO_ROOT / "dot_hammerspoon" / "init.lua"
 MOVE_FAILURE_LOG = "ERROR: Could not move window"
+UNHIDE_FAILURE_LOG = "ERROR: Could not unhide Wezterm"
 RECOVERY_FAILURE_ALERT = "Wezterm: couldn't determine which window to show"
 WINDOW_TOUCHING_ACTIONS = (
     "hide",
@@ -84,7 +85,7 @@ local fake_screen = {
 
 local state = {
   frontmost = scenario == "frontmost",
-  hidden = scenario == "hidden" or scenario == "hidden_move_failure" or scenario == "recovery_hidden_trap",
+  hidden = scenario == "hidden" or scenario == "hidden_unhide_false" or scenario == "hidden_move_failure" or scenario == "recovery_hidden_trap",
   main_window = fake_window,
   resolves_main_window_on_activate = scenario == "recovery_frontmost_trap" or scenario == "recovery_hidden_trap",
 }
@@ -119,7 +120,7 @@ local fake_wezterm = {
   end,
   unhide = function()
     record("unhide")
-    return true
+    return scenario ~= "hidden_unhide_false"
   end,
   hide = function()
     record("hide")
@@ -254,6 +255,29 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
     ),
     (
         "hidden",
+        True,
+        (
+            'bind("ctrl","space")',
+            'get("wezterm")',
+            "pid",
+            "primaryScreen",
+            "screenId",
+            "activeSpaceOnScreen",
+            "allWindows",
+            "mainWindow",
+            "isFrontmost",
+            "isHidden",
+            "id",
+            "unhide",
+            "moveWindowToSpace(42,2)",
+            "activate",
+            "raise",
+            'moveToUnit("0.0,0.0,1.0,1.0")',
+        ),
+        None,
+    ),
+    (
+        "hidden_unhide_false",
         True,
         (
             'bind("ctrl","space")',
@@ -449,6 +473,7 @@ def _run_hotkey(
         "nil main window with no windows opens a new OS window",
         "frontmost app hides",
         "hidden app unhides and focuses",
+        "false unhide return does not prevent hidden app focus",
         "background app moves and activates",
         "hidden move failure reports an error",
         "recovery preserves pre-activation frontmost state",
@@ -479,6 +504,13 @@ def test_hotkey_handles_wezterm_state(
     if move_succeeds:
         assert MOVE_FAILURE_LOG not in output, (
             f"{scenario}: unexpected move failure.\nstdout:\n{output}"
+        )
+    if scenario == "hidden_unhide_false":
+        assert UNHIDE_FAILURE_LOG not in output, (
+            f"{scenario}: unexpected unhide failure.\nstdout:\n{output}"
+        )
+        assert not any(UNHIDE_FAILURE_LOG in call for call in calls), (
+            f"{scenario}: unexpected unhide failure call.\ncalls:\n{calls!r}"
         )
     if expected_error is not None:
         assert expected_error in output
