@@ -1,6 +1,6 @@
-tap "1password/tap", trusted: true
-tap "hashicorp/tap", trusted: true
-tap "jesseduffield/lazydocker", trusted: true
+tap "1password/tap"
+tap "hashicorp/tap"
+tap "jesseduffield/lazydocker"
 # Search tool like grep, but optimized for programmers
 brew "ack"
 # Run your GitHub Actions locally
@@ -253,14 +253,9 @@ brew "zlib"
 brew "zsh"
 # Additional completion definitions for zsh
 brew "zsh-completions"
-# Terraform
-brew "hashicorp/tap/terraform"
-# Vault
-brew "hashicorp/tap/vault"
 # Password manager that keeps all passwords secure behind one password
 cask "1password"
-# Command-line interface for 1Password
-cask "1password/tap/1password-cli", args: { appdir: "/Applications" }, trusted: true
+cask "1password-cli", args: { appdir: "/Applications" }
 # Automatic tiling window manager similar to xmonad
 cask "amethyst", args: { appdir: "/Applications" }
 # Terminal interface for Antigravity agents
