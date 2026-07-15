@@ -35,6 +35,7 @@ DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_l
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
 SETTINGS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 MODELS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
+VALIDATE_TEMPLATE = REPO_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl"
 NODE_MISE_TOOL = "node"
 NODE_VERSION = "24.18.0"
 PI_MISE_TOOL = "npm:@earendil-works/pi-coding-agent"
@@ -45,52 +46,67 @@ RESPONSE_TIMEOUT_SECONDS = 30
 PROCESS_EXIT_TIMEOUT_SECONDS = 30
 PROCESS_TERMINATION_TIMEOUT_SECONDS = 5
 
-RIOT_SCOPES = [
-    f"openai/openai/gpt-5.6-terra:{DEFAULT_THINKING_LEVEL}",
-    f"openai/openai/gpt-5.6-luna:{DEFAULT_THINKING_LEVEL}",
-    f"truefoundry/claude-vertex/anthropic-claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
-    f"truefoundry/claude-vertex/anthropic-claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
-    f"openai/google-vertexai/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
-    f"openai/google-vertexai/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
-    f"openai/google-vertexai/gemini-3.1-flash-lite-preview:{DEFAULT_THINKING_LEVEL}",
+RIOT_SCOPE_IDS = [
+    "openai/openai/gpt-5.6-terra",
+    "openai/openai/gpt-5.6-luna",
+    "truefoundry/claude-vertex/anthropic-claude-opus-4-8",
+    "truefoundry/claude-vertex/anthropic-claude-sonnet-5",
+    "openai/google-vertexai/gemini-3.1-pro-preview",
+    "openai/google-vertexai/gemini-3.5-flash",
+    "openai/google-vertexai/gemini-3.1-flash-lite-preview",
 ]
+RIOT_SCOPES = [f"{scope_id}:{DEFAULT_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS]
 
-RIOT_SCOPED_MODELS = [
-    {"provider": "openai", "id": "openai/gpt-5.6-terra", "thinkingLevel": "xhigh"},
-    {"provider": "openai", "id": "openai/gpt-5.6-luna", "thinkingLevel": "xhigh"},
+# The runtime fixture fixes its own level so its clamp/cycle contract remains
+# independent of the production catalog default.
+RUNTIME_FIXTURE_THINKING_LEVEL = "xhigh"
+RUNTIME_RIOT_SCOPES = [
+    f"{scope_id}:{RUNTIME_FIXTURE_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS
+]
+RUNTIME_RIOT_SCOPED_MODELS = [
+    {
+        "provider": "openai",
+        "id": "openai/gpt-5.6-terra",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
+    },
+    {
+        "provider": "openai",
+        "id": "openai/gpt-5.6-luna",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
+    },
     {
         "provider": "truefoundry",
         "id": "claude-vertex/anthropic-claude-opus-4-8",
-        "thinkingLevel": "xhigh",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
     {
         "provider": "truefoundry",
         "id": "claude-vertex/anthropic-claude-sonnet-5",
-        "thinkingLevel": "xhigh",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.1-pro-preview",
-        "thinkingLevel": "xhigh",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.5-flash",
-        "thinkingLevel": "xhigh",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
     {
         "provider": "openai",
         "id": "google-vertexai/gemini-3.1-flash-lite-preview",
-        "thinkingLevel": "xhigh",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
 ]
 
 # Google scopes deliberately request xhigh, but Pi clamps them to their highest
-# declared capability while cycling. Returning to Terra must restore xhigh.
-RIOT_CYCLE_RESULTS = [
-    *RIOT_SCOPED_MODELS[1:4],
-    *[{**model, "thinkingLevel": "high"} for model in RIOT_SCOPED_MODELS[4:]],
-    RIOT_SCOPED_MODELS[0],
+# declared capability while cycling. Returning to Terra restores the fixture level.
+RUNTIME_RIOT_CYCLE_RESULTS = [
+    *RUNTIME_RIOT_SCOPED_MODELS[1:4],
+    *[{**model, "thinkingLevel": "high"} for model in RUNTIME_RIOT_SCOPED_MODELS[4:]],
+    RUNTIME_RIOT_SCOPED_MODELS[0],
 ]
 
 
@@ -163,8 +179,13 @@ def _mise_executable() -> str:
     return mise
 
 
-def _render_template(template: Path, config: Path, environment: dict[str, str]) -> str:
-    """Render one source template with Riot machine data."""
+def _render_template(
+    template: Path,
+    config: Path,
+    environment: dict[str, str],
+    source: Path = REPO_ROOT,
+) -> str:
+    """Render one Riot template from the supplied source catalog."""
     result = _run_setup_command(
         [
             "chezmoi",
@@ -172,7 +193,7 @@ def _render_template(template: Path, config: Path, environment: dict[str, str]) 
             "--config",
             str(config),
             "--source",
-            str(REPO_ROOT),
+            str(source),
             "--file",
             str(template),
         ],
@@ -194,13 +215,35 @@ def _write_fake_onepassword_cli(bin_dir: Path) -> None:
     op.chmod(0o755)
 
 
-def _render_riot_state(agent_dir: Path, tmp_path: Path) -> dict[str, Any]:
+def _runtime_fixture_source(tmp_path: Path) -> Path:
+    """Build an isolated source with the fixed level needed for Pi's cycle test."""
+    source = tmp_path / "runtime-source"
+    catalog = yaml.safe_load(CATALOG.read_text())
+    catalog["default_thinking_level"] = RUNTIME_FIXTURE_THINKING_LEVEL
+
+    catalog_path = source / ".chezmoidata" / CATALOG.name
+    catalog_path.parent.mkdir(parents=True)
+    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False))
+    for template in (SETTINGS_TEMPLATE, MODELS_TEMPLATE, VALIDATE_TEMPLATE):
+        destination = source / template.relative_to(REPO_ROOT)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(template, destination)
+    return source
+
+
+def _render_riot_state(
+    agent_dir: Path,
+    tmp_path: Path,
+    source: Path = REPO_ROOT,
+) -> dict[str, Any]:
     """Render exact settings and custom models using a deterministic fake secret."""
     config = tmp_path / "chezmoi.toml"
     config.write_text("[data]\nis_riot_machine = true\n")
     environment = _clean_environment()
+    settings_template = source / SETTINGS_TEMPLATE.relative_to(REPO_ROOT)
+    models_template = source / MODELS_TEMPLATE.relative_to(REPO_ROOT)
 
-    rendered_settings = _render_template(SETTINGS_TEMPLATE, config, environment)
+    rendered_settings = _render_template(settings_template, config, environment, source)
     settings_script = tmp_path / "modify_settings.py"
     settings_script.write_text(rendered_settings)
     settings_result = _run_setup_command(
@@ -216,7 +259,7 @@ def _render_riot_state(agent_dir: Path, tmp_path: Path) -> dict[str, Any]:
     environment.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
     environment["PATH"] = f"{bin_dir}{os.pathsep}{environment['PATH']}"
     (agent_dir / "models.json").write_text(
-        _render_template(MODELS_TEMPLATE, config, environment)
+        _render_template(models_template, config, environment, source)
     )
     return json.loads(settings_result.stdout)
 
@@ -412,7 +455,7 @@ def _run_runtime_check(
             initial = _request(process, responses, "initial", "get_state")
             cycles = [
                 _request(process, responses, f"cycle-{index}", "cycle_model")
-                for index in range(1, len(RIOT_SCOPED_MODELS) + 1)
+                for index in range(1, len(RUNTIME_RIOT_SCOPED_MODELS) + 1)
             ]
             entries = _request(process, responses, "entries", "get_entries")["entries"]
             final = _request(process, responses, "final", "get_state")
@@ -541,18 +584,36 @@ def test_rpc_timeout_reaps_child_and_joins_response_reader(tmp_path: Path) -> No
         assert "timeout fixture diagnostic" in _read_stderr(stderr)
 
 
+def test_riot_scopes_follow_catalog_default(tmp_path: Path) -> None:
+    """Production scope rendering follows the shared catalog default."""
+    agent_dir = tmp_path / "agent"
+    agent_dir.mkdir()
+
+    settings = _render_riot_state(agent_dir, tmp_path)
+
+    assert settings["enabledModels"] == RIOT_SCOPES
+
+
 def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     tmp_path: Path,
 ) -> None:
-    """Generated Riot scopes select their custom models and restore xhigh after high."""
+    """Generated Riot scopes select custom models and restore the fixed cycle level."""
+    source = _runtime_fixture_source(tmp_path)
     agent_dir = tmp_path / "agent"
     agent_dir.mkdir()
-    settings = _render_riot_state(agent_dir, tmp_path)
-    assert settings["enabledModels"] == RIOT_SCOPES
+    settings = _render_riot_state(agent_dir, tmp_path, source)
+    assert settings["defaultThinkingLevel"] == RUNTIME_FIXTURE_THINKING_LEVEL
+    assert settings["enabledModels"] == RUNTIME_RIOT_SCOPES
 
     runtime = _run_runtime_check(_pi_package_root(), agent_dir, tmp_path)
-    assert runtime["initial"] == RIOT_SCOPED_MODELS[0]
-    assert runtime["cycles"] == RIOT_CYCLE_RESULTS
-    assert runtime["baseUrls"] == [RIOT_BASE_URL] * (len(RIOT_SCOPED_MODELS) + 2)
-    assert runtime["serializedThinkingLevels"] == ["xhigh", "high", "xhigh"]
-    assert runtime["final"] == RIOT_SCOPED_MODELS[0]
+    assert runtime["initial"] == RUNTIME_RIOT_SCOPED_MODELS[0]
+    assert runtime["cycles"] == RUNTIME_RIOT_CYCLE_RESULTS
+    assert runtime["baseUrls"] == [RIOT_BASE_URL] * (
+        len(RUNTIME_RIOT_SCOPED_MODELS) + 2
+    )
+    assert runtime["serializedThinkingLevels"] == [
+        RUNTIME_FIXTURE_THINKING_LEVEL,
+        "high",
+        RUNTIME_FIXTURE_THINKING_LEVEL,
+    ]
+    assert runtime["final"] == RUNTIME_RIOT_SCOPED_MODELS[0]

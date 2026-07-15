@@ -475,3 +475,31 @@ def test_schema_hook_rejects_invalid_thinking_maps(
     result = _schema_result(tmp_path, catalog)
     assert result.returncode != 0
     assert expected in result.stdout + result.stderr
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        (
+            lambda catalog: catalog.pop("default_thinking_level"),
+            "default_thinking_level",
+        ),
+        (
+            lambda catalog: catalog.update({"default_thinking_level": "unsupported"}),
+            "unsupported",
+        ),
+    ],
+    ids=["missing", "invalid"],
+)
+def test_schema_hook_rejects_invalid_default_thinking_level(
+    catalog_data: dict[str, Any],
+    tmp_path: Path,
+    mutation: Any,
+    expected: str,
+) -> None:
+    """The root thinking default must be present and use a supported level."""
+    catalog = copy.deepcopy(catalog_data)
+    mutation(catalog)
+    result = _schema_result(tmp_path, catalog)
+    assert result.returncode != 0
+    assert expected in result.stdout + result.stderr
