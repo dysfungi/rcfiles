@@ -16,8 +16,10 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+CATALOG = REPO_ROOT / ".chezmoidata" / "large-language-models.yaml"
 SCRIPT = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 LEGACY_SOURCE = REPO_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
 TARGET = Path.home() / ".pi" / "agent" / "settings.json"
@@ -34,24 +36,25 @@ PACKAGES: list[object] = [
 ]
 
 PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
+DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 
 CATALOG_ENABLED_SCOPES = {
     "personal": [
-        "claude-opus-4-8:xhigh",
-        "claude-sonnet-5:xhigh",
-        "claude-fable-5:xhigh",
-        "google/gemini-3.1-pro-preview:xhigh",
-        "google/gemini-3.5-flash:xhigh",
-        "google/gemini-3.1-flash-lite:xhigh",
+        f"claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
+        f"claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
+        f"claude-fable-5:{DEFAULT_THINKING_LEVEL}",
+        f"google/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
+        f"google/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
+        f"google/gemini-3.1-flash-lite:{DEFAULT_THINKING_LEVEL}",
     ],
     "riot": [
-        "openai/openai/gpt-5.6-terra:xhigh",
-        "openai/openai/gpt-5.6-luna:xhigh",
-        "truefoundry/claude-vertex/anthropic-claude-opus-4-8:xhigh",
-        "truefoundry/claude-vertex/anthropic-claude-sonnet-5:xhigh",
-        "openai/google-vertexai/gemini-3.1-pro-preview:xhigh",
-        "openai/google-vertexai/gemini-3.5-flash:xhigh",
-        "openai/google-vertexai/gemini-3.1-flash-lite-preview:xhigh",
+        f"openai/openai/gpt-5.6-terra:{DEFAULT_THINKING_LEVEL}",
+        f"openai/openai/gpt-5.6-luna:{DEFAULT_THINKING_LEVEL}",
+        f"truefoundry/claude-vertex/anthropic-claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
+        f"truefoundry/claude-vertex/anthropic-claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
+        f"openai/google-vertexai/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
+        f"openai/google-vertexai/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
+        f"openai/google-vertexai/gemini-3.1-flash-lite-preview:{DEFAULT_THINKING_LEVEL}",
     ],
 }
 
@@ -75,7 +78,7 @@ def _managed(machine: str) -> dict[str, Any]:
         **EXPECTED[machine],
         "packages": PACKAGES,
         "defaultProjectTrust": "always",
-        "defaultThinkingLevel": "xhigh",
+        "defaultThinkingLevel": DEFAULT_THINKING_LEVEL,
         "hideThinkingBlock": False,
         "showCacheMissNotices": True,
         "theme": "dark",
@@ -188,7 +191,8 @@ def test_default_model_uses_its_provider_identity(
 
     enabled_models = settings["enabledModels"]
     assert enabled_models == CATALOG_ENABLED_SCOPES[machine]
-    assert all(model.endswith(":xhigh") for model in enabled_models)
+    assert settings["defaultThinkingLevel"] == DEFAULT_THINKING_LEVEL
+    assert all(model.endswith(f":{DEFAULT_THINKING_LEVEL}") for model in enabled_models)
     assert all(
         model.rpartition(":")[2] == settings["defaultThinkingLevel"]
         for model in enabled_models

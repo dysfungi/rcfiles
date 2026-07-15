@@ -27,8 +27,11 @@ from pathlib import Path
 from typing import Any, TextIO
 
 import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+CATALOG = REPO_ROOT / ".chezmoidata" / "large-language-models.yaml"
+DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
 SETTINGS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 MODELS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
@@ -43,13 +46,13 @@ PROCESS_EXIT_TIMEOUT_SECONDS = 30
 PROCESS_TERMINATION_TIMEOUT_SECONDS = 5
 
 RIOT_SCOPES = [
-    "openai/openai/gpt-5.6-terra:xhigh",
-    "openai/openai/gpt-5.6-luna:xhigh",
-    "truefoundry/claude-vertex/anthropic-claude-opus-4-8:xhigh",
-    "truefoundry/claude-vertex/anthropic-claude-sonnet-5:xhigh",
-    "openai/google-vertexai/gemini-3.1-pro-preview:xhigh",
-    "openai/google-vertexai/gemini-3.5-flash:xhigh",
-    "openai/google-vertexai/gemini-3.1-flash-lite-preview:xhigh",
+    f"openai/openai/gpt-5.6-terra:{DEFAULT_THINKING_LEVEL}",
+    f"openai/openai/gpt-5.6-luna:{DEFAULT_THINKING_LEVEL}",
+    f"truefoundry/claude-vertex/anthropic-claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
+    f"truefoundry/claude-vertex/anthropic-claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
+    f"openai/google-vertexai/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
+    f"openai/google-vertexai/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
+    f"openai/google-vertexai/gemini-3.1-flash-lite-preview:{DEFAULT_THINKING_LEVEL}",
 ]
 
 RIOT_SCOPED_MODELS = [
