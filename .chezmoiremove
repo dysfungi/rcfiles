@@ -12,13 +12,16 @@
 #     replaced by owned source files in the same directory).
 .pi/agent/extensions/plan-mode-default.ts
 .pi/agent/extensions/plan-mode/utils.ts
-# Orphans from the subagent-prompt migration: workflow prompts now render only
-# to .pi/agent/prompts/. These exact legacy files were previously managed under
-# the extension; list them individually rather than exact-syncing any broader
-# .pi directory.
+# Orphans from the subagent migration: workflow prompts and sample role files now
+# render only to .pi/agent/prompts/ and .pi/agent/agents/. List each legacy target
+# individually rather than exact-syncing any broader .pi directory.
 .pi/agent/extensions/subagent/prompts/implement-and-review.md
 .pi/agent/extensions/subagent/prompts/implement.md
 .pi/agent/extensions/subagent/prompts/scout-and-plan.md
+.pi/agent/extensions/subagent/agents/scout.md
+.pi/agent/extensions/subagent/agents/planner.md
+.pi/agent/extensions/subagent/agents/reviewer.md
+.pi/agent/extensions/subagent/agents/worker.md
 
 # Orphans from the secrets-to-mise migration: per-secret files formerly
 # rendered from exact_private_dot_secrets/, plus the shell loader scripts that
