@@ -97,3 +97,4 @@ x 2026-07-14 Implement plan-mode questionnaire tool: vendor pi 0.80.6 questionna
 x 2026-07-14 Fix Parsec Windows config path + newline diff churn +chezmoi +parsec @worktree:.worktree/fix/parsec-windows-config-path
 x 2026-07-14 Fix missing trailing newline in done.txt failing CI on main (end-of-file-fixer) +pi +chezmoi @worktree:.worktree/fix/done-txt-trailing-newline
 x 2026-07-14 Hydrate Pi worktree approval registry on session resume +pi +worktree @worktree:.worktree/fix/pi-worktree-resume-approval session:019f5ee0-6bcf-74ca-8ad4-63ffe9f81fe7
+x 2026-07-14 Fix Hammerspoon WezTerm window activation fallback +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-window-activation-fallback session:019f61be-8e1f-7ee5-80d1-338b6bc58b72 agent:pi
