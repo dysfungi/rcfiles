@@ -14,7 +14,6 @@
        preceding model and persists it across subsequent cycles. Pi clamps the
        configured level to each model's declared capability. Older/[1m] models
        stay reachable via /model. */}}
-{{- $thinking_level := .default_thinking_level -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
 {{- $default := "" -}}
@@ -30,7 +29,7 @@
     {{- if hasKey $m "gateway" -}}
       {{- $scope_id = printf "%s/%s" (dig "gateway" "provider" "" $m) $m.id -}}
     {{- end -}}
-    {{- $enabled = append $enabled (printf "%s:%s" $scope_id $thinking_level) -}}
+    {{- $enabled = append $enabled (printf "%s:%s" $scope_id $.default_thinking_level) -}}
   {{- end -}}
 {{- end -}}
 {{- if eq $default "" }}{{ fail "pi settings.json: no catalog model has default_for pi" }}{{ end }}
@@ -74,7 +73,7 @@ MANAGED: dict[str, Any] = {
         "npm:pi-vimmode@>=0.7.0 <1.0.0",
     ],
     "defaultProjectTrust": "always",
-    "defaultThinkingLevel": {{ $thinking_level | quote }},
+    "defaultThinkingLevel": {{ .default_thinking_level | quote }},
     "hideThinkingBlock": False,
     "showCacheMissNotices": True,
     "theme": "dark",
