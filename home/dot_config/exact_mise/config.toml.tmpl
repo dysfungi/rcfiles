@@ -41,3 +41,10 @@ trusted_config_paths = [
 # Optional local dotenv — skipped silently if absent (no .env required)
 _.file = ".env"
 # Secret env vars live in conf.d/secrets.toml (chezmoi-rendered, 0600)
+{{ if .is_wsl -}}
+# WSL2 mirrored networking bridges IPv4 loopback across the Windows/WSL
+# boundary but not IPv6 (::1). Prefer IPv4 when Node resolves "localhost";
+# otherwise local Node listeners (e.g. pi-mcp-adapter's OAuth callback) can
+# bind IPv6-only and be unreachable from Windows-side clients.
+NODE_OPTIONS = "--dns-result-order=ipv4first"
+{{- end }}
