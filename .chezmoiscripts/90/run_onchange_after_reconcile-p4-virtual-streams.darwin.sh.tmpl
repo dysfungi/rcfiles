@@ -1,0 +1,29 @@
+{{- if .is_riot_machine -}}
+#!/usr/bin/env bash
+set -euo pipefail
+
+# `run_onchange` hashes this rendered script, deliberately leaving manual
+# server-side stream edits unreconciled until `.chezmoidata` changes; routine
+# `chezmoi apply` must not depend on P4 or network availability.
+echo >&2 "INFO: Starting $0"
+
+{{- $my_projects := dig "my" "projects" (list) . -}}
+{{- $riot_projects := dig "riot" "projects" (list) . -}}
+{{- range concat $my_projects $riot_projects }}
+{{- $p4 := dig "p4" (dict) . -}}
+{{- $virtual_stream := dig "virtual_stream" (dict) $p4 -}}
+{{- $p4_port := dig "port" "" $p4 -}}
+{{- $parent_stream := dig "stream" "" $p4 -}}
+{{- $child_name := dig "name" "" $virtual_stream -}}
+{{- $ignored_extensions := dig "ignored_extensions" (list) $virtual_stream -}}
+{{- if and (has "darwin" (dig "only_on" (list) .)) $p4_port $parent_stream $child_name $ignored_extensions }}
+"$HOME/.local/bin/p4-reconcile-virtual-stream.py" \
+  --port {{ $p4_port | squote }} \
+  --parent-stream {{ $parent_stream | squote }} \
+  --child-name {{ $child_name | squote }} \
+  --ignored-extensions {{ join "," $ignored_extensions | squote }}
+{{- end }}
+{{- end }}
+
+echo >&2 "INFO: Ending $0"
+{{- end }}

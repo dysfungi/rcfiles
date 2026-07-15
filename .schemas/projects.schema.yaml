@@ -33,6 +33,31 @@ $defs:
         type: boolean
       perforce:
         type: boolean
+      p4:
+        type: object
+        additionalProperties: false
+        required: [port, stream, virtual_stream]
+        properties:
+          port:
+            type: string
+            minLength: 1
+          stream:
+            type: string
+            minLength: 1
+          virtual_stream:
+            type: object
+            additionalProperties: false
+            required: [name, ignored_extensions]
+            properties:
+              name:
+                type: string
+                minLength: 1
+              ignored_extensions:
+                type: array
+                minItems: 1
+                uniqueItems: true
+                items:
+                  type: string
       only_on:
         type: array
         uniqueItems: true

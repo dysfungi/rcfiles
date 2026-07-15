@@ -1,3 +1,9 @@
+# .chezmoidata/projects.yaml
+#
+# An optional project's `p4` object declares a virtual stream whose ignored asset
+# extensions chezmoi reconciles. It contains the P4 `port`, parent `stream`, and
+# `virtual_stream` (`name`, `ignored_extensions`).
+
 my:
   projects:
     - path: ".local/share/chezmoi"
@@ -11,6 +17,36 @@ riot:
     - path: "/mnt/t/p4/flyingfox/dev-main"
       perforce: true
       only_on: [wsl]
+    - path: "/Users/dfrank/Perforce/flyingfox/dev-main"
+      perforce: true
+      only_on: [darwin]
+      p4:
+        port: "uegames.p4.riotgames.io:1666"
+        stream: "//flyingfox/dev-main"
+        virtual_stream:
+          name: "dfrank-dev-main-mac"
+          ignored_extensions:
+            - psd
+            - uasset
+            - ztl
+            - wem
+            - wav
+            - spp
+            - tga
+            - fbx
+            - png
+            - mp4
+            - pur
+            - mov
+            - hdr
+            - dll
+            - fla
+            - exe
+            - umap
+            - exr
+            - ai
+            - pyd
+            - mb
     - path: "/mnt/t/p4/lion/dev-main"
       perforce: true
       only_on: [wsl]
