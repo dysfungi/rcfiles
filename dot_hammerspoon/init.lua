@@ -14,26 +14,36 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
     local primaryActiveSpaceId = hs.spaces.activeSpaceOnScreen(primaryScreen)
     print("Primary active space ID =", primaryActiveSpaceId)
     local weztermWindows = wezterm:allWindows() or {}
-    local weztermWindow = wezterm:mainWindow() or weztermWindows[1]
+    local weztermWindow = wezterm:mainWindow()
+    local wasFrontmost = wezterm:isFrontmost()
+    local wasHidden = wezterm:isHidden()
+    if not weztermWindow and #weztermWindows > 0 then
+      -- mainWindow() can be nil even when real (backgrounded, unfocused) windows
+      -- exist -- macOS/Accessibility doesn't always flag one as "main" for a
+      -- non-frontmost app. Let WezTerm/macOS resolve which of its own windows
+      -- becomes main by activating it, rather than Hammerspoon guessing an index
+      -- into the window list.
+      print "Wezterm has windows but no resolvable main window; activating to let it pick one"
+      wezterm:activate()
+      weztermWindow = wezterm:mainWindow()
+    end
     local weztermWindowId
     if weztermWindow then
       weztermWindowId = weztermWindow:id()
       print("Wezterm window ID =", weztermWindowId)
     end
-    -- mainWindow() can be nil even when real (backgrounded, unfocused) windows
-    -- exist -- macOS/Accessibility doesn't always flag one as "main" for a
-    -- non-frontmost app. Use the actual window count, not mainWindow()'s
-    -- nilness, to decide whether Wezterm truly has zero windows, and fall back
-    -- to any existing window (weztermWindows[1]) so this state reaches the same
-    -- branch as any other visible-but-backgrounded window instead of spuriously
-    -- opening a new one.
     if #weztermWindows == 0 then
       print "Opening new Wezterm window because there are none"
       wezterm:selectMenuItem("New OS Window", true)
-    elseif wezterm:isFrontmost() then
+    elseif not weztermWindow then
+      -- Windows exist but none could be resolved as main even after activating --
+      -- don't guess which one to touch; surface the ambiguous state instead.
+      hs.alert.show "Wezterm: couldn't determine which window to show"
+      print "ERROR: Wezterm has windows but none resolved as main after activation"
+    elseif wasFrontmost then
       print "Hiding Wezterm because it is already frontmost"
       wezterm:hide()
-    elseif wezterm:isHidden() then
+    elseif wasHidden then
       print "Unhiding Wezterm and moving to primary space"
       if not wezterm:unhide() then
         print "ERROR: Could not unhide Wezterm"
