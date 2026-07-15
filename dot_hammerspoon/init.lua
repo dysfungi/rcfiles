@@ -7,6 +7,10 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
   print "Handling hotkey to show/hide Wezterm"
   local wezterm = hs.application.get "wezterm"
 
+  -- AppKit applies WezTerm activate/hide/unhide requests asynchronously; their
+  -- return values and immediately reread state can be stale. Later observable
+  -- state, such as the next hotkey press, is authoritative.
+
   if wezterm then
     print("Wezterm application PID =", wezterm:pid())
     local primaryScreen = hs.screen.primaryScreen()
@@ -45,9 +49,9 @@ hs.hotkey.bind({ "ctrl" }, "space", function()
       wezterm:hide()
     elseif wasHidden then
       print "Unhiding Wezterm and moving to primary space"
-      if not wezterm:unhide() then
-        print "ERROR: Could not unhide Wezterm"
-      end
+      -- AppKit updates hidden state asynchronously; immediate readback can be
+      -- stale, so this request is intentionally fire-and-forget.
+      wezterm:unhide()
       if not hs.spaces.moveWindowToSpace(weztermWindowId, primaryActiveSpaceId) then
         print(
           "ERROR: Could not move window "
