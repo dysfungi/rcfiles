@@ -36,4 +36,3 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) Make tmux.conf initial main-session window declarations idempotent on source-file reload; live reload emits duplicate session/window errors although options apply +tmux +bug
 (B) Fix Hammerspoon WezTerm mainWindow() nil-but-real-windows-exist bug +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-mainwindow-fallback session:019f61be-8e1f-7ee5-80d1-338b6bc58b72 agent:pi
 (B) Hydrate Pi worktree approval registry on session resume +pi +worktree @worktree:.worktree/fix/pi-worktree-resume-approval session:019f5ee0-6bcf-74ca-8ad4-63ffe9f81fe7
-(B) Fix Hammerspoon WezTerm unhide false-positive error log +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-unhide-false-error agent:pi
