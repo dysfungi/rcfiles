@@ -594,6 +594,7 @@ def test_riot_scopes_follow_catalog_default(tmp_path: Path) -> None:
     assert settings["enabledModels"] == RIOT_SCOPES
 
 
+@pytest.mark.slow
 def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     tmp_path: Path,
 ) -> None:
