@@ -297,7 +297,10 @@ function prepareAgent(defaultCwd: string, sessionId: string, agents: AgentConfig
 		if (approved.noApproval) return { agent, effectiveCwd: cwd ?? defaultCwd };
 		return `Read-only agent launch rejected: ${approved.reason}`;
 	}
-	if (!root) return "Writable agent requires a Git repository with a root-approved worktree.";
+	if (!root) {
+		if (cwd && !path.isAbsolute(cwd)) return "Writable agent cwd must be an absolute path.";
+		return { agent, effectiveCwd: cwd ?? defaultCwd };
+	}
 	if (cwd && !path.isAbsolute(cwd)) return "Writable agent cwd must be an absolute path.";
 	const approved = resolveApprovedWorktree({ sessionId, repoRoot: root, cwd });
 	if (!approved.ok) return `Writable agent launch rejected: ${approved.reason}`;
@@ -311,8 +314,8 @@ function prepareRequests(defaultCwd: string, sessionId: string, agents: AgentCon
 		if (typeof candidate === "string") return { reason: candidate };
 		prepared.push(candidate);
 	}
-	const writable = prepared.filter((candidate) => candidate.agent.execution === "worktree-write");
-	if (!allowMultipleWritable && writable.length > 1) return { reason: "Parallel writable workers require distinct root-owned worktrees; run them sequentially." };
+	const leased = prepared.filter((candidate) => candidate.leaseRepoRoot);
+	if (!allowMultipleWritable && leased.length > 1) return { reason: "Parallel writable workers require distinct root-owned worktrees; run them sequentially." };
 	return { prepared };
 }
 
@@ -329,8 +332,8 @@ async function runSingleAgent(
 	const { agent } = prepared;
 	const effectiveCwd = prepared.effectiveCwd;
 	let lease: { repoRoot: string; worktreeRoot: string; generation: number; leaseId: number } | undefined;
-	if (agent.execution === "worktree-write") {
-		const leased = acquireWorktreeLease({ sessionId, repoRoot: prepared.leaseRepoRoot!, cwd: effectiveCwd });
+	if (prepared.leaseRepoRoot) {
+		const leased = acquireWorktreeLease({ sessionId, repoRoot: prepared.leaseRepoRoot, cwd: effectiveCwd });
 		if (!leased.ok) {
 			return {
 				agent: agentName,

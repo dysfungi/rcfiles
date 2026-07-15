@@ -20,6 +20,14 @@ Example: `(B) Add xonsh P4 config +riot @p4workspace:dfrank_RGAP-MXL5113G09_chez
 
 On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive the `todo.txt` entry to `done.txt`.
 
+## Subagents in Pure P4 Repositories
+
+A `worktree-write` worker can launch in a pure-Perforce repository with no `.git` directory. It can read files and use its granted non-mutating tools, including MCP, memory, and scratchpad. `write`, `edit`, and mutating Bash remain blocked because P4 has no equivalent of Git worktree write isolation.
+
+A Git-worktree approval establishes the Git workflow and local-file-mutation trust boundary; it does not grant a separate external-service authorization. The `mcp-mutation-policy` denylist independently classifies P4 submits and Jira or Notion writes as mutating calls. Gateway management calls remain intentionally allowed even when connection or OAuth actions have side effects. The worktree guard permits recognized MCP mutations only for a validated `worktree-write` worker.
+
+Perforce-native write isolation equivalent to Git worktrees is not currently provided.
+
 ## Submit Rules
 
 - **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
