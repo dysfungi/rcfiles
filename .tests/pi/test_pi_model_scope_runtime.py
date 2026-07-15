@@ -7,9 +7,10 @@ silently select Pi's bundled OpenAI model with the same apparent reference.
 
 This test renders the Riot settings and models exactly as chezmoi does, then
 runs Pi's pinned 0.80.6 RPC runtime against a temporary, credential-free agent
-state. It verifies custom provider/model identity and the persisted new-session
-``xhigh → high → xhigh`` transition while cycling across models with different
-thinking ceilings. No request is sent to a model API.
+state. It verifies canonical custom provider/model identity, proves the ambiguous raw
+OpenAI reference resolves Pi's bundled record, and exercises the persisted
+new-session ``xhigh → high → xhigh`` transition while cycling across models with
+different thinking ceilings. No request is sent to a model API.
 """
 
 from __future__ import annotations
@@ -64,6 +65,12 @@ RUNTIME_FIXTURE_THINKING_LEVEL = "xhigh"
 RUNTIME_RIOT_SCOPES = [
     f"{scope_id}:{RUNTIME_FIXTURE_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS
 ]
+RUNTIME_RAW_OPENAI_MODEL = {
+    "provider": "openai",
+    "id": "gpt-5.6-terra",
+    "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
+}
+
 RUNTIME_RIOT_SCOPED_MODELS = [
     {
         "provider": "openai",
@@ -408,13 +415,18 @@ def _request(
 
 
 def _run_runtime_check(
-    package_root: Path, agent_dir: Path, tmp_path: Path
+    package_root: Path,
+    agent_dir: Path,
+    tmp_path: Path,
+    *,
+    model: str | None = None,
+    cycle_models: bool = True,
 ) -> dict[str, Any]:
     """Exercise Pi's no-session RPC runtime without live credentials or requests."""
     node = _node_executable()
 
     home = tmp_path / "isolated-home"
-    home.mkdir()
+    home.mkdir(exist_ok=True)
     environment = _clean_environment()
     for key in tuple(environment):
         if key.endswith(("_API_KEY", "_TOKEN")):
@@ -433,17 +445,20 @@ def _run_runtime_check(
     with (tmp_path / "pi-rpc.stderr").open(
         "w+", encoding="utf-8", errors="replace"
     ) as stderr:
+        command = [
+            str(node),
+            str(package_root / "dist" / "cli.js"),
+            "--mode",
+            "rpc",
+            "--no-session",
+            "--no-context-files",
+            "--no-extensions",
+            "--no-skills",
+        ]
+        if model:
+            command.extend(["--model", model])
         process = subprocess.Popen(
-            [
-                str(node),
-                str(package_root / "dist" / "cli.js"),
-                "--mode",
-                "rpc",
-                "--no-session",
-                "--no-context-files",
-                "--no-extensions",
-                "--no-skills",
-            ],
+            command,
             cwd=tmp_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -456,10 +471,14 @@ def _run_runtime_check(
         responses, response_reader = _start_response_reader(process)
         try:
             initial = _request(process, responses, "initial", "get_state")
-            cycles = [
-                _request(process, responses, f"cycle-{index}", "cycle_model")
-                for index in range(1, len(RUNTIME_RIOT_SCOPED_MODELS) + 1)
-            ]
+            cycles = (
+                [
+                    _request(process, responses, f"cycle-{index}", "cycle_model")
+                    for index in range(1, len(RUNTIME_RIOT_SCOPED_MODELS) + 1)
+                ]
+                if cycle_models
+                else []
+            )
             entries = _request(process, responses, "entries", "get_entries")["entries"]
             final = _request(process, responses, "final", "get_state")
         except TimeoutError as error:
@@ -621,3 +640,13 @@ def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
         RUNTIME_FIXTURE_THINKING_LEVEL,
     ]
     assert runtime["final"] == RUNTIME_RIOT_SCOPED_MODELS[0]
+
+    raw_runtime = _run_runtime_check(
+        _pi_package_root(),
+        agent_dir,
+        tmp_path,
+        model="openai/gpt-5.6-terra",
+        cycle_models=False,
+    )
+    assert raw_runtime["initial"] == RUNTIME_RAW_OPENAI_MODEL
+    assert raw_runtime["baseUrls"] == [RIOT_BASE_URL] * 2

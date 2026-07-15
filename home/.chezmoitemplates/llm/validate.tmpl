@@ -55,8 +55,8 @@
   {{- end -}}
 {{- end -}}
 {{- /* Each pi subagent role must select exactly one enabled model. The rendered
-       agent frontmatter passes this id to `pi --model`, so dormant or missing
-       mappings fail at apply time rather than failing a delegated task. */ -}}
+       agent frontmatter passes its canonical provider/id scope (or a bare built-in
+       id) to `pi --model`, so dormant or missing mappings fail at apply time. */ -}}
 {{- range $role := (list "scout" "planner" "reviewer" "worker") -}}
   {{- $seen := dict "n" 0 -}}
   {{- range $m := $ns.models -}}

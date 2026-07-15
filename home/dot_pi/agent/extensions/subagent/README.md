@@ -210,7 +210,9 @@ Use a chain: first have scout find the read tool, then have planner suggest impr
 
 ## Agent Definitions
 
-Agents are markdown files with YAML frontmatter. The managed roles currently have:
+Agents are markdown files with YAML frontmatter. The `model` field is passed directly
+as `pi --model`: use a bare ID only for a Pi built-in; gateway-backed generated
+models require their canonical `provider/model-id` scope. The managed roles currently have:
 
 | Role       | Tools                                                                                                                      | Execution        |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- |
