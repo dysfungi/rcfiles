@@ -40,7 +40,7 @@ function fixture() {
 	return { root, worker };
 }
 
-function harness(cwd, sessionId = "session", { isGit = true, branch = [], header = undefined } = {}) {
+function harness(cwd, sessionId = "session", { isGit = true, branch = [], header = undefined, directMcpTools = [] } = {}) {
 	const handlers = new Map();
 	const events = {
 		get(name) {
@@ -61,6 +61,7 @@ function harness(cwd, sessionId = "session", { isGit = true, branch = [], header
 			gitProbes += 1;
 			return isGit ? { code: 0, stdout: `${cwd}\n` } : { code: 1, stdout: "" };
 		},
+		getAllTools: () => [toolInfo("mcp", MCP_ADAPTER_SOURCE_INFO), ...directMcpTools],
 		on: (name, handler) => {
 			const eventHandlers = handlers.get(name) ?? [];
 			eventHandlers.push(handler);
@@ -78,6 +79,82 @@ function harness(cwd, sessionId = "session", { isGit = true, branch = [], header
 
 async function call(events, ctx, toolName, input, toolCallId = toolName) {
 	return events.get("tool_call")({ toolName, input, toolCallId }, ctx);
+}
+
+const MUTATING_MCP_TOOLS = [
+	"p4_mcp_modify_files",
+	"atlassian_rovo_createJiraIssue",
+	"atlassian_rovo_transitionJiraIssue",
+];
+const READONLY_MCP_TOOLS = ["p4_mcp_query_files", "getJiraIssue", "searchJiraIssuesUsingJql"];
+const DIRECT_MUTATING_MCP_TOOLS = ["p4_mcp_modify_files", "atlassian_rovo_updateJiraIssue"];
+const DIRECT_READONLY_MCP_TOOLS = ["atlassian_rovo_getProjectSettings"];
+const MCP_ADAPTER_SOURCE_INFO = {
+	path: "/agent/npm/node_modules/pi-mcp-adapter/index.ts",
+	source: "local",
+	scope: "temporary",
+	origin: "top-level",
+	baseDir: "/agent/npm/node_modules/pi-mcp-adapter",
+};
+const OTHER_EXTENSION_SOURCE_INFO = {
+	path: "/agent/extensions/other.ts",
+	source: "local",
+	scope: "temporary",
+	origin: "top-level",
+	baseDir: "/agent/extensions",
+};
+
+function toolInfo(name, sourceInfo) {
+	return { name, description: "", parameters: {}, promptGuidelines: undefined, sourceInfo };
+}
+
+const DIRECT_MCP_TOOL_DEFINITIONS = [
+	...DIRECT_MUTATING_MCP_TOOLS.map((name) => toolInfo(name, MCP_ADAPTER_SOURCE_INFO)),
+	...DIRECT_READONLY_MCP_TOOLS.map((name) => toolInfo(name, MCP_ADAPTER_SOURCE_INFO)),
+];
+const MCP_GATEWAY_CALLS = [
+	{ connect: "p4-mcp" },
+	{ describe: "p4_mcp_query_files" },
+	{ search: "Jira" },
+	{ server: "atlassian-rovo" },
+	{ action: "ui-messages" },
+	{ action: "auth-start" },
+	{ action: "auth-complete" },
+	{ action: "auth-start", tool: "updateJiraIssue" },
+	{ connect: "p4-mcp", tool: "updateJiraIssue" },
+	{ describe: "getJiraIssue", tool: "updateJiraIssue" },
+	{ search: "Jira", tool: "updateJiraIssue" },
+	{ server: "atlassian-rovo", tool: "updateJiraIssue" },
+	{},
+];
+
+async function assertMcpPolicy(current, blockMutations = false, expectedReason) {
+	for (const tool of MUTATING_MCP_TOOLS) {
+		const result = await call(current.events, current.ctx, "mcp", { tool }, `mcp-mutation-${tool}`);
+		if (blockMutations) {
+			assert.equal(result?.block, true);
+			assert.match(result?.reason ?? "", expectedReason);
+		} else assert.equal(result, undefined);
+	}
+	for (const tool of READONLY_MCP_TOOLS) {
+		assert.equal(await call(current.events, current.ctx, "mcp", { tool }, `mcp-read-${tool}`), undefined);
+	}
+	for (const [index, input] of MCP_GATEWAY_CALLS.entries()) {
+		assert.equal(await call(current.events, current.ctx, "mcp", input, `mcp-gateway-${index}`), undefined);
+	}
+}
+
+async function assertDirectMcpPolicy(current, blockMutations = false, expectedReason) {
+	for (const toolName of DIRECT_MUTATING_MCP_TOOLS) {
+		const result = await call(current.events, current.ctx, toolName, {}, `direct-mcp-mutation-${toolName}`);
+		if (blockMutations) {
+			assert.equal(result?.block, true);
+			assert.match(result?.reason ?? "", expectedReason);
+		} else assert.equal(result, undefined);
+	}
+	for (const toolName of DIRECT_READONLY_MCP_TOOLS) {
+		assert.equal(await call(current.events, current.ctx, toolName, {}, `direct-mcp-read-${toolName}`), undefined);
+	}
 }
 
 let nextEntryId = 0;
@@ -840,7 +917,7 @@ async function testChildPolicy() {
 		process.env.PI_WORKTREE_ROOT = worker;
 		process.env.PI_WORKTREE_REPO_ROOT = root;
 		process.env.PI_WORKTREE_GENERATION = "1";
-		let current = harness(worker, "child-write");
+		let current = harness(worker, "child-write", { directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS });
 		await current.events.get("session_start")({}, current.ctx);
 		assert.equal(await call(current.events, current.ctx, "bash", { command: "git commit --allow-empty -m child" }), undefined);
 		// A validated initial cwd routes a cooperative worker; it does not contain
@@ -848,18 +925,43 @@ async function testChildPolicy() {
 		assert.equal(await call(current.events, current.ctx, "bash", { command: "git -C ../ commit --allow-empty -m direct" }), undefined);
 		assert.equal(await call(current.events, current.ctx, "bash", { command: "cd ../ && touch direct" }), undefined);
 		assert.equal(await call(current.events, current.ctx, "write", { path: "../direct", content: "direct" }), undefined);
+		await assertMcpPolicy(current);
+		await assertDirectMcpPolicy(current);
 		assert.match((await call(current.events, current.ctx, "worktree_start", {})).reason, /root-owned/);
 
 		process.env.PI_SUBAGENT_EXECUTION = "read-only";
 		delete process.env.PI_WORKTREE_ROOT;
 		delete process.env.PI_WORKTREE_REPO_ROOT;
 		delete process.env.PI_WORKTREE_GENERATION;
-		current = harness(root, "child-read");
+		current = harness(root, "child-read", { directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS });
 		await current.events.get("session_start")({}, current.ctx);
 		assert.match((await call(current.events, current.ctx, "bash", { command: "git commit --allow-empty -m denied" })).reason, /read-only/);
 		assert.match((await call(current.events, current.ctx, "bash", { command: "echo harmless\nrm -f denied" })).reason, /read-only/);
 		assert.match((await call(current.events, current.ctx, "bash", { command: "sudo -u root git commit --allow-empty -m denied" })).reason, /read-only/);
 		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /read-only/);
+		await assertMcpPolicy(current, true, /read-only/);
+		await assertDirectMcpPolicy(current, true, /read-only/);
+	} finally {
+		for (const key of Object.keys(process.env)) if (!(key in original)) delete process.env[key];
+		Object.assign(process.env, original);
+	}
+}
+
+async function testNoLabelToolInfoDoesNotThrowOrMisclassify() {
+	const original = { ...process.env };
+	try {
+		process.env.PI_SUBAGENT = "1";
+		process.env.PI_SUBAGENT_EXECUTION = "read-only";
+		for (const key of ["PI_WORKTREE_ROOT", "PI_WORKTREE_REPO_ROOT", "PI_WORKTREE_GENERATION"]) delete process.env[key];
+		const { root } = fixture();
+		const current = harness(root, "no-label-tool-info", {
+			directMcpTools: [toolInfo(DIRECT_MUTATING_MCP_TOOLS[0], OTHER_EXTENSION_SOURCE_INFO)],
+		});
+		await current.events.get("session_start")({}, current.ctx);
+		assert.equal(
+			await call(current.events, current.ctx, DIRECT_MUTATING_MCP_TOOLS[0], {}, "no-label-non-mcp-tool"),
+			undefined,
+		);
 	} finally {
 		for (const key of Object.keys(process.env)) if (!(key in original)) delete process.env[key];
 		Object.assign(process.env, original);
@@ -880,11 +982,16 @@ async function testNonGitChildrenFailClosed() {
 		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /read-only/);
 
 		process.env.PI_SUBAGENT_EXECUTION = "worktree-write";
-		current = harness(plainDirectory, "child-degraded-write-non-git", { isGit: false });
+		current = harness(plainDirectory, "child-degraded-write-non-git", {
+			isGit: false,
+			directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS,
+		});
 		await current.events.get("session_start")({}, current.ctx);
 		assert.equal(current.gitProbes(), 0, "degraded workers must not depend on a Git probe to be guarded");
 		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /without a Git worktree/);
 		assert.match((await call(current.events, current.ctx, "edit", { path: "blocked" })).reason, /without a Git worktree/);
+		await assertMcpPolicy(current, true, /without a Git worktree/);
+		await assertDirectMcpPolicy(current, true, /without a Git worktree/);
 
 		delete process.env.PI_SUBAGENT_EXECUTION;
 		current = harness(plainDirectory, "child-unmarked-non-git", { isGit: false });
@@ -926,6 +1033,7 @@ if (command === "--resume") {
 	await testHydrationPreservesPendingAndLeasedState();
 	await testLifecyclePendingRecovery();
 	await testChildPolicy();
+	await testNoLabelToolInfoDoesNotThrowOrMisclassify();
 	await testNonGitChildrenFailClosed();
 	console.log("ok");
 }

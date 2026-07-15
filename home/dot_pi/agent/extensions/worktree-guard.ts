@@ -26,6 +26,7 @@ import {
 } from "./worktree-approval-registry.mjs";
 import { isDelegatedChild } from "./child-policy.mjs";
 import { checkBashCommand } from "./bash-mutation-policy.mjs";
+import { checkMcpCall, checkMcpDirectToolCall } from "./mcp-mutation-policy.mjs";
 
 const ROOT_LIFECYCLE_TOOLS = new Set(["worktree_start", "worktree_status", "worktree_stop"]);
 // pi-worktree's state contract keeps a conflict-mode worktree available for resolution, so it remains resumable.
@@ -39,10 +40,24 @@ let sessionId = "";
 let guarded = false;
 let childExecution: "read-only" | "worktree-write" | "unmarked" | undefined;
 let childWithoutWorktreeLease = false;
+let directMcpToolNames = new Set<string>();
+
+function isMcpAdapterDirectTool(tool: { name?: unknown; sourceInfo?: { path?: unknown } }): boolean {
+	const sourcePath = tool.sourceInfo?.path;
+	return (
+		typeof tool.name === "string" &&
+		tool.name !== "mcp" &&
+		typeof sourcePath === "string" &&
+		/(?:^|\/)node_modules\/pi-mcp-adapter\/index\.[cm]?[jt]s$/.test(sourcePath.replaceAll("\\", "/"))
+	);
+}
 
 function isMutation(event: { toolName: string; input?: Record<string, unknown> }): boolean {
 	if (event.toolName === "write" || event.toolName === "edit") return true;
-	return event.toolName === "bash" && Boolean(checkBashCommand(String(event.input?.command ?? "")));
+	if (event.toolName === "bash") return Boolean(checkBashCommand(String(event.input?.command ?? "")));
+	if (directMcpToolNames.has(event.toolName)) return Boolean(checkMcpDirectToolCall(event.toolName));
+	if (event.toolName === "mcp") return Boolean(checkMcpCall(event.input));
+	return false;
 }
 
 const BLOCK_MSG = "Blocked: mutations require a root-approved active worktree. Call worktree_start and retry.";
@@ -136,6 +151,7 @@ function childInitialCwdIsApprovedWorktree(cwd: string): boolean {
 
 export default function worktreeGuard(pi: ExtensionAPI) {
 	pi.on("session_start", async (event, ctx) => {
+		directMcpToolNames = new Set(pi.getAllTools?.().filter(isMcpAdapterDirectTool).map((tool) => tool.name) ?? []);
 		sessionId = ctx.sessionManager.getSessionId();
 		// A delegated reader may start outside Git; classify it before the root
 		// probe so a failed discovery cannot leave its mutation boundary inactive.
