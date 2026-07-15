@@ -66,8 +66,8 @@ EXPECTED: dict[str, dict[str, str | list[str]]] = {
         "enabledModels": CATALOG_ENABLED_SCOPES["personal"],
     },
     "riot": {
-        "defaultModel": "openai/gpt-5.6-terra",
-        "defaultProvider": "openai",
+        "defaultModel": "claude-vertex/anthropic-claude-opus-4-8",
+        "defaultProvider": "truefoundry",
         "enabledModels": CATALOG_ENABLED_SCOPES["riot"],
     },
 }
@@ -167,6 +167,7 @@ def test_rendered_catalog_preferences(
     rendered_script: tuple[Path, str],
 ) -> None:
     """Both machine namespaces retain the validated catalog default derivation."""
+    assert DEFAULT_THINKING_LEVEL == "high"
     script, machine = rendered_script
     result = _run(script, "")
     assert result.returncode == 0, result.stderr
@@ -187,8 +188,8 @@ def test_default_model_uses_its_provider_identity(
         assert settings["defaultProvider"] == "anthropic"
         assert settings["defaultModel"] == PI_BUILTIN_ANTHROPIC_DEFAULT
     else:
-        assert settings["defaultProvider"] == "openai"
-        assert settings["defaultModel"] == "openai/gpt-5.6-terra"
+        assert settings["defaultProvider"] == "truefoundry"
+        assert settings["defaultModel"] == "claude-vertex/anthropic-claude-opus-4-8"
 
     enabled_models = settings["enabledModels"]
     assert enabled_models == CATALOG_ENABLED_SCOPES[machine]

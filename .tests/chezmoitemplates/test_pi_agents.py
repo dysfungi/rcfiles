@@ -96,10 +96,10 @@ def _fixture_source(tmp_path: Path, catalog: dict[str, object]) -> Path:
         (
             "riot",
             {
-                "planner": "openai/openai/gpt-5.6-terra",
+                "planner": "truefoundry/claude-vertex/anthropic-claude-sonnet-5",
                 "worker": "openai/openai/gpt-5.6-terra",
                 "scout": "openai/openai/gpt-5.6-luna",
-                "reviewer": "openai/openai/gpt-5.6-luna",
+                "reviewer": "openai/openai/gpt-5.6-terra",
             },
         ),
     ],

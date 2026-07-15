@@ -232,6 +232,7 @@ function assertChildLaunchArgs(log) {
 		assert.ok(record.args.includes("--no-session"), `${child} must isolate session history`);
 		assert.equal(record.args.includes("--no-context-files"), false, `${child} must retain context-file discovery`);
 		assert.equal(record.args.includes("-nc"), false, `${child} must retain context-file discovery`);
+		assert.equal(record.args.includes("--thinking"), false, `${child} must inherit Pi's configured thinking level`);
 		assert.equal("branch" in record, false, `${child} must not inherit PI_WORKTREE_BRANCH`);
 	}
 }

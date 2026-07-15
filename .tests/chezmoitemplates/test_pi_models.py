@@ -274,15 +274,26 @@ def test_one_m_variants_inherit_their_base_capability_map(
         )
 
 
-def test_riot_default_resolves_to_a_generated_custom_model(
-    rendered_models: tuple[str, dict[str, Any]],
-) -> None:
-    """The Riot default keeps its canonical provider-qualified catalog identity."""
-    machine, rendered = rendered_models
-    if machine != "riot":
-        return
+def test_riot_default_and_role_policy(catalog_data: dict[str, Any]) -> None:
+    """Opus stays Claude's default while Pi and roles use the requested policy."""
+    models = {model["id"]: model for model in catalog_data["riot"]["llm"]["models"]}
+    opus = models["claude-vertex/anthropic-claude-opus-4-8"]
 
-    assert "openai/openai/gpt-5.6-terra" in _models_by_id(rendered)
+    assert opus["default_for"] == ["claude", "pi"]
+    assert [
+        model["id"]
+        for model in models.values()
+        if "claude" in model.get("default_for", [])
+    ] == [opus["id"]]
+    assert models["openai/gpt-5.6-terra"]["default_for"] == ["codex"]
+    assert models["claude-vertex/anthropic-claude-sonnet-5"]["subagent_roles"] == [
+        "planner"
+    ]
+    assert models["openai/gpt-5.6-terra"]["subagent_roles"] == [
+        "reviewer",
+        "worker",
+    ]
+    assert models["openai/gpt-5.6-luna"]["subagent_roles"] == ["scout"]
 
 
 def test_dormant_riot_models_render_with_declared_capabilities(
