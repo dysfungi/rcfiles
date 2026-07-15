@@ -6,6 +6,8 @@
 
 Chezmoi-managed dotfiles for both personal machines (`dmf` user) and Riot Games work machines (`dfrank` / RIOTGAMES domain). A single source tree handles multi-OS, multi-machine configurations through templating and conditional logic.
 
+Managed chezmoi content lives in `home/`, not the repository root. The top-level `.chezmoiroot` file contains `home`, which makes it chezmoi's effective source root and prevents recursive `.chezmoidata` discovery from loading stray configuration in sibling directories such as linked Git worktrees under `.worktree/`.
+
 ### Bootstrap Flow
 
 `chezmoi apply` has three distinct phases, and the dependency direction between them is non-negotiable:

@@ -43,7 +43,7 @@ _ALLOWED_FILES = {
     "todo.txt",
     # The removal directives themselves: .chezmoiremove names .secrets et al.
     # precisely to delete them from target machines.
-    "home/.chezmoiremove",
+    (MANAGED_ROOT.relative_to(REPO_ROOT) / ".chezmoiremove").as_posix(),
     # This file (defines the forbidden patterns).
     ".tests/test_no_stale_secret_refs.py",
     # Asserts the cron runner contains no ".secrets" literal.
