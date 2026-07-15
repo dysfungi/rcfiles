@@ -32,6 +32,10 @@
 # Note: claude reads alias mappings regardless of `enabled`, so a dormant model
 # (e.g. haiku) can still back claude's HAIKU alias while staying out of pi.
 
+# Shared cross-harness reasoning-effort default. Pi consumes it today; Codex,
+# Claude, and Gemini retain separate settings until they opt in.
+default_thinking_level: xhigh
+
 x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
   default_model_parameters: &default_model_parameters
     num_ctx: &defaultNumCtx 16384 # Force the context window to 16k tokens (leaves safe overhead for your 18GB RAM)

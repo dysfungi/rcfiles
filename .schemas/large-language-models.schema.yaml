@@ -5,7 +5,7 @@ $schema: https://json-schema.org/draft/2020-12/schema
 
 type: object
 additionalProperties: false
-required: [my]
+required: [my, default_thinking_level]
 properties:
   x:
     type: object
@@ -21,6 +21,9 @@ properties:
         type: object
         additionalProperties:
           $ref: "#/$defs/gateway"
+  default_thinking_level:
+    type: string
+    enum: ["off", "minimal", "low", "medium", "high", "xhigh", "max"]
   my:
     $ref: "#/$defs/namespace"
   riot:
