@@ -233,7 +233,7 @@ def test_subagent_child_environment_marks_worker_non_interactive() -> None:
     runner = """
 import { pathToFileURL } from "node:url";
 const module = await import(pathToFileURL(process.argv[1]).href);
-console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
+console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value", PI_MODE: "plan" })));
 """
     child_env_module = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
@@ -244,11 +244,15 @@ console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
         capture_output=True,
         text=True,
     )
-    assert json.loads(result.stdout) == {"EXISTING": "value", "PI_SUBAGENT": "1"}
+    assert json.loads(result.stdout) == {
+        "EXISTING": "value",
+        "PI_MODE": "plan",
+        "PI_SUBAGENT": "1",
+    }
 
     extension = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
     )
     source = extension.read_text()
-    assert "execution: agent.execution" in source
+    assert "execution, approval: lease" in source
     assert "approval: lease" in source

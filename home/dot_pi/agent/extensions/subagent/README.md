@@ -69,8 +69,11 @@ outside it. Read-only agents' direct `write`/`edit` calls fail closed even when
 their cwd is not a Git repository, while Bash rejects only the shared
 classifier's known commands and syntax. That Bash policy is deliberately best-effort and
 cooperative, not a complete shell parser or sandbox. Missing, unknown, or
-invalid writable metadata fails closed before a worker receives direct tools.
-Launch preflight validates every single, chain, or parallel request before any
+invalid writable metadata fails closed before a worker receives direct tools. Outside
+plan mode, a markerless `worktree-write` worker in a confirmed non-Git cwd may
+mutate; Git cwd and ambiguous Git-probe results fail closed. Launch preflight rejects
+a non-Git parent that overrides a writable child cwd into a Git repository. Launch
+preflight validates every single, chain, or parallel request before any
 child is spawned. A generation-bound lease is exclusive across all subagent
 tool calls, so only one writable child may run in an approved worktree at once;
 other writable launches fail until its process actually exits and releases the
@@ -82,8 +85,13 @@ root mutation after package routing changed. Session shutdown revokes all
 approval for its session.
 
 `PI_SUBAGENT=1` is a cooperative child-mode marker, not an authentication or
-sandbox boundary. Root-only local extensions use it only to disable their root
-lifecycle behavior; the local worktree guard remains active in children. A
+sandbox boundary. `PI_MODE` is intentionally preserved in child environments so
+nested launchers inherit the root session's plan-mode read-only policy; only
+`PI_MODE=normal` retains declared execution, so missing or unrecognized values
+fail closed to read-only. The child's plan-mode extension stays inert. Root-only
+local extensions use
+`PI_SUBAGENT=1` only to disable their root lifecycle behavior; the local worktree
+guard remains active in children. A
 process launched outside this extension can forge its environment, so execution
 classes and worktree metadata must not be relied on to contain an adversarial
 child. The policy instead protects the managed workflow: pre-approval roots and
@@ -116,7 +124,7 @@ clone; update the immutable package pin only after the fork publishes the fix.
 | Extension                                               | Child behavior                                                                                                                                                                                      |
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `root-thread-guard`                                     | Inert: JSON children use their declared tools without root-thread restrictions.                                                                                                                     |
-| `plan-mode`                                             | Inert: children retain their declared tools.                                                                                                                                                        |
+| `plan-mode`                                             | Inert locally; `PI_MODE` is inherited so the launcher downgrades children to read-only while the root is in plan mode.                                                                              |
 | `memory-git-sync`                                       | Inert: child sessions never pull, commit, or push memory.                                                                                                                                           |
 | `worktree-guard`                                        | Active: lifecycle is root-owned; read-only/unmarked direct writes/edits fail closed, and known Bash mutations use a best-effort classifier. A validated worker initial cwd is not path containment. |
 | `@rezamonangg/pi-worktree` fork                         | Inert before registration (`PI_SUBAGENT=1`).                                                                                                                                                        |

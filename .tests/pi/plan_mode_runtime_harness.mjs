@@ -413,7 +413,7 @@ async function testSessionStartGates() {
 	for (const mode of ["json", "print"]) {
 		const harness = createHarness({ mode });
 		await startPlanMode(harness);
-		assert.deepEqual(harness.state.activeTools, harness.initialTools, `${mode} workers stay writable`);
+		assert.deepEqual(harness.state.activeTools, harness.initialTools, `${mode} sessions keep the plan-mode extension inert`);
 	}
 
 	const previous = process.env.PI_SUBAGENT;
@@ -421,10 +421,44 @@ async function testSessionStartGates() {
 	try {
 		const harness = createHarness({ mode: "tui" });
 		await startPlanMode(harness);
-		assert.deepEqual(harness.state.activeTools, harness.initialTools, "PI_SUBAGENT root stays writable");
+		assert.deepEqual(harness.state.activeTools, harness.initialTools, "PI_SUBAGENT sessions keep the plan-mode extension inert");
 	} finally {
 		if (previous === undefined) delete process.env.PI_SUBAGENT;
 		else process.env.PI_SUBAGENT = previous;
+	}
+}
+
+async function testModeEnvironmentPropagation() {
+	const previous = process.env.PI_MODE;
+	const previousSubagent = process.env.PI_SUBAGENT;
+	try {
+		delete process.env.PI_MODE;
+		const planned = createHarness();
+		await startPlanMode(planned);
+		assert.equal(process.env.PI_MODE, "plan", "session start records the default plan mode");
+		await runCommand(planned, "execute");
+		assert.equal(process.env.PI_MODE, "normal", "/execute records normal mode before launching work");
+		await runCommand(planned, "plan");
+		assert.equal(process.env.PI_MODE, "plan", "/plan records plan mode");
+		await runCommand(planned, "normal");
+		assert.equal(process.env.PI_MODE, "normal", "/normal records normal mode");
+		await runCommand(planned, "plan");
+		assert.equal(process.env.PI_MODE, "plan", "plan-normal-plan cycles update the inherited mode");
+
+		const normal = createHarness({ plan: false });
+		await startPlanMode(normal);
+		assert.equal(process.env.PI_MODE, "normal", "session start records normal mode when plan is disabled");
+
+		process.env.PI_MODE = "plan";
+		process.env.PI_SUBAGENT = "1";
+		const child = createHarness({ mode: "tui" });
+		await startPlanMode(child);
+		assert.equal(process.env.PI_MODE, "plan", "inert child plan-mode extensions preserve the inherited root mode");
+	} finally {
+		if (previous === undefined) delete process.env.PI_MODE;
+		else process.env.PI_MODE = previous;
+		if (previousSubagent === undefined) delete process.env.PI_SUBAGENT;
+		else process.env.PI_SUBAGENT = previousSubagent;
 	}
 }
 
@@ -849,6 +883,7 @@ try {
 	await testQuestionnaireNonUiErrorPaths();
 	await testSelectorsAndToolSnapshots();
 	await testSessionStartGates();
+	await testModeEnvironmentPropagation();
 	await testBranchLocalSessionRestore();
 	await testModeParsingAndIdleGuards();
 	await testImplementationKickoffAndFailure();

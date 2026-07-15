@@ -40,7 +40,7 @@ function fixture() {
 	return { root, worker };
 }
 
-function harness(cwd, sessionId = "session", { isGit = true, branch = [], header = undefined, directMcpTools = [] } = {}) {
+function harness(cwd, sessionId = "session", { isGit = true, gitResult, gitError, branch = [], header = undefined, directMcpTools = [] } = {}) {
 	const handlers = new Map();
 	const events = {
 		get(name) {
@@ -59,7 +59,8 @@ function harness(cwd, sessionId = "session", { isGit = true, branch = [], header
 	const pi = {
 		exec: async () => {
 			gitProbes += 1;
-			return isGit ? { code: 0, stdout: `${cwd}\n` } : { code: 1, stdout: "" };
+			if (gitError) throw gitError;
+			return gitResult ?? (isGit ? { code: 0, stdout: `${cwd}\n`, stderr: "" } : { code: 128, stdout: "", stderr: "fatal: not a git repository" });
 		},
 		getAllTools: () => [toolInfo("mcp", MCP_ADAPTER_SOURCE_INFO), ...directMcpTools],
 		on: (name, handler) => {
@@ -968,30 +969,46 @@ async function testNoLabelToolInfoDoesNotThrowOrMisclassify() {
 	}
 }
 
-async function testNonGitChildrenFailClosed() {
+async function testNonGitChildPolicy() {
 	const original = { ...process.env };
 	const plainDirectory = mkdtempSync(join(tmpdir(), "pi-worktree-guard-plain-"));
 	try {
 		process.env.PI_SUBAGENT = "1";
 		process.env.PI_SUBAGENT_EXECUTION = "read-only";
 		for (const key of ["PI_WORKTREE_ROOT", "PI_WORKTREE_REPO_ROOT", "PI_WORKTREE_GENERATION"]) delete process.env[key];
-		let current = harness(plainDirectory, "child-read-non-git", { isGit: false });
+		let current = harness(plainDirectory, "child-read-non-git", { isGit: false, directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS });
 		await current.events.get("session_start")({}, current.ctx);
-		assert.equal(current.gitProbes(), 0, "child policy must initialize before the root Git probe");
+		assert.equal(current.gitProbes(), 0, "read-only child initialization must not probe Git");
 		assert.match((await call(current.events, current.ctx, "bash", { command: "touch blocked" })).reason, /read-only/);
 		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /read-only/);
+		await assertMcpPolicy(current, true, /read-only/);
+		await assertDirectMcpPolicy(current, true, /read-only/);
 
 		process.env.PI_SUBAGENT_EXECUTION = "worktree-write";
-		current = harness(plainDirectory, "child-degraded-write-non-git", {
+		current = harness(plainDirectory, "child-write-non-git", {
 			isGit: false,
 			directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS,
 		});
 		await current.events.get("session_start")({}, current.ctx);
-		assert.equal(current.gitProbes(), 0, "degraded workers must not depend on a Git probe to be guarded");
-		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /without a Git worktree/);
-		assert.match((await call(current.events, current.ctx, "edit", { path: "blocked" })).reason, /without a Git worktree/);
-		await assertMcpPolicy(current, true, /without a Git worktree/);
-		await assertDirectMcpPolicy(current, true, /without a Git worktree/);
+		assert.equal(current.gitProbes(), 1, "markerless writable children must confirm a non-Git cwd");
+		assert.equal(await call(current.events, current.ctx, "write", { path: "allowed" }), undefined);
+		assert.equal(await call(current.events, current.ctx, "edit", { path: "allowed" }), undefined);
+		assert.equal(await call(current.events, current.ctx, "bash", { command: "touch allowed" }), undefined);
+		await assertMcpPolicy(current);
+		await assertDirectMcpPolicy(current);
+
+		for (const [id, options] of [
+			["git-cwd", { isGit: true }],
+			["probe-error", { gitResult: { code: 1, stdout: "", stderr: "git unavailable" } }],
+			["probe-timeout", { gitError: new Error("timed out") }],
+		]) {
+			current = harness(plainDirectory, `child-write-${id}`, { ...options, directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS });
+			await current.events.get("session_start")({}, current.ctx);
+			assert.equal(current.gitProbes(), 1, `${id} must be probed before allowing mutations`);
+			assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /confirmed non-Git cwd/);
+			await assertMcpPolicy(current, true, /confirmed non-Git cwd/);
+			await assertDirectMcpPolicy(current, true, /confirmed non-Git cwd/);
+		}
 
 		delete process.env.PI_SUBAGENT_EXECUTION;
 		current = harness(plainDirectory, "child-unmarked-non-git", { isGit: false });
@@ -1034,6 +1051,6 @@ if (command === "--resume") {
 	await testLifecyclePendingRecovery();
 	await testChildPolicy();
 	await testNoLabelToolInfoDoesNotThrowOrMisclassify();
-	await testNonGitChildrenFailClosed();
+	await testNonGitChildPolicy();
 	console.log("ok");
 }
