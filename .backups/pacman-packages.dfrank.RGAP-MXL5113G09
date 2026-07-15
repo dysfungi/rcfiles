@@ -56,5 +56,4 @@ watchexec
 wget
 yarn
 yay
-yay-debug
 zsh
