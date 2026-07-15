@@ -879,6 +879,13 @@ async function testNonGitChildrenFailClosed() {
 		assert.match((await call(current.events, current.ctx, "bash", { command: "touch blocked" })).reason, /read-only/);
 		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /read-only/);
 
+		process.env.PI_SUBAGENT_EXECUTION = "worktree-write";
+		current = harness(plainDirectory, "child-degraded-write-non-git", { isGit: false });
+		await current.events.get("session_start")({}, current.ctx);
+		assert.equal(current.gitProbes(), 0, "degraded workers must not depend on a Git probe to be guarded");
+		assert.match((await call(current.events, current.ctx, "write", { path: "blocked" })).reason, /without a Git worktree/);
+		assert.match((await call(current.events, current.ctx, "edit", { path: "blocked" })).reason, /without a Git worktree/);
+
 		delete process.env.PI_SUBAGENT_EXECUTION;
 		current = harness(plainDirectory, "child-unmarked-non-git", { isGit: false });
 		await current.events.get("session_start")({}, current.ctx);

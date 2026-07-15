@@ -89,6 +89,7 @@ function rootGuard(cwd, sessionId, branch, header = undefined) {
 	};
 	worktreeGuard({
 		exec: async () => ({ code: 0, stdout: `${cwd}\n` }),
+		getAllTools: () => [],
 		on(name, handler) {
 			const eventHandlers = handlers.get(name) ?? [];
 			eventHandlers.push(handler);
@@ -166,6 +167,7 @@ function fakePi() {
 			"\tworktreeRoot: process.env.PI_WORKTREE_ROOT,",
 			"\trepoRoot: process.env.PI_WORKTREE_REPO_ROOT,",
 			"\tgeneration: process.env.PI_WORKTREE_GENERATION,",
+			"\tbranch: process.env.PI_WORKTREE_BRANCH,",
 			"};",
 			'if (process.env.FAKE_PI_BEHAVIOR === "hold" || process.env.FAKE_PI_BEHAVIOR === "ignore-term") {',
 			'\tif (process.env.FAKE_PI_BEHAVIOR === "ignore-term") process.on("SIGTERM", () => {});',
@@ -203,6 +205,7 @@ function assertChildLaunchArgs(log) {
 		assert.ok(record.args.includes("--no-session"), `${child} must isolate session history`);
 		assert.equal(record.args.includes("--no-context-files"), false, `${child} must retain context-file discovery`);
 		assert.equal(record.args.includes("-nc"), false, `${child} must retain context-file discovery`);
+		assert.equal("branch" in record, false, `${child} must not inherit PI_WORKTREE_BRANCH`);
 	}
 }
 
@@ -259,10 +262,12 @@ async function testReadOnlyExecution(fake) {
 		generation: process.env.PI_WORKTREE_GENERATION,
 		repoRoot: process.env.PI_WORKTREE_REPO_ROOT,
 		worktreeRoot: process.env.PI_WORKTREE_ROOT,
+		branch: process.env.PI_WORKTREE_BRANCH,
 	};
 	process.env.PI_WORKTREE_GENERATION = "stale";
 	process.env.PI_WORKTREE_REPO_ROOT = "stale";
 	process.env.PI_WORKTREE_ROOT = "stale";
+	process.env.PI_WORKTREE_BRANCH = "stale";
 	try {
 		const result = await withFakePi(fake, () =>
 			invoke(currentRunner, {
@@ -288,6 +293,8 @@ async function testReadOnlyExecution(fake) {
 		else process.env.PI_WORKTREE_REPO_ROOT = original.repoRoot;
 		if (original.worktreeRoot === undefined) delete process.env.PI_WORKTREE_ROOT;
 		else process.env.PI_WORKTREE_ROOT = original.worktreeRoot;
+		if (original.branch === undefined) delete process.env.PI_WORKTREE_BRANCH;
+		else process.env.PI_WORKTREE_BRANCH = original.branch;
 	}
 }
 
@@ -399,6 +406,75 @@ async function testWritableExecution(fake) {
 		assertChildLaunchArgs(fake.log);
 	} finally {
 		registry.revokeWorktree({ sessionId, repoRoot: root });
+	}
+}
+
+async function testDegradedWritableExecution(fake) {
+	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-non-git-"));
+	const parent = worktreeFixture();
+	const sessionId = "degraded-writable";
+	const parentApproval = approve(parent.root, parent.worker, "parent-worktree");
+	writeAgents(directory);
+	try {
+		await withFakePi(
+			fake,
+			async () => {
+				const single = await invoke(runner(directory, sessionId), {
+					agent: "writer",
+					task: "use non-mutating tools in a non-Git directory",
+					agentScope: "project",
+					confirmProjectAgents: false,
+				});
+				assert.equal(single.isError, undefined, resultText(single));
+
+				const relative = await invoke(runner(directory, sessionId), {
+					agent: "writer",
+					task: "reject a relative cwd",
+					cwd: "relative",
+					agentScope: "project",
+					confirmProjectAgents: false,
+				});
+				assert.equal(relative.isError, true);
+				assert.match(resultText(relative), /cwd must be an absolute path/);
+			},
+			{
+				PI_WORKTREE_ROOT: parent.worker,
+				PI_WORKTREE_REPO_ROOT: parent.root,
+				PI_WORKTREE_GENERATION: String(parentApproval.generation),
+			},
+		);
+		const [single] = invocations(fake.log);
+		assert.equal(single.cwd, realpathSync(directory));
+		assert.equal(single.execution, "worktree-write");
+		assert.equal("worktreeRoot" in single, false);
+		assert.equal("repoRoot" in single, false);
+		assert.equal("generation" in single, false);
+		assertChildLaunchArgs(fake.log);
+
+		writeFileSync(fake.log, "");
+		const parallel = await withFakePi(fake, () =>
+			invoke(runner(directory, sessionId), {
+				tasks: [
+					{ agent: "writer", task: "inspect the first concern" },
+					{ agent: "writer", task: "inspect the second concern" },
+				],
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		);
+		assert.equal(parallel.isError, undefined, resultText(parallel));
+		const records = invocations(fake.log);
+		assert.equal(records.length, 2);
+		assert.deepEqual(records.map((record) => record.execution), ["worktree-write", "worktree-write"]);
+		for (const record of records) {
+			assert.equal(record.cwd, realpathSync(directory));
+			assert.equal("worktreeRoot" in record, false);
+			assert.equal("repoRoot" in record, false);
+			assert.equal("generation" in record, false);
+		}
+		assertChildLaunchArgs(fake.log);
+	} finally {
+		registry.revokeWorktree({ sessionId: "parent-worktree", repoRoot: parent.root });
 	}
 }
 
@@ -723,6 +799,8 @@ writeFileSync(fake.log, "");
 await testReadOnlyRejectsUnresolvedApproval(fake);
 writeFileSync(fake.log, "");
 await testWritableExecution(fake);
+writeFileSync(fake.log, "");
+await testDegradedWritableExecution(fake);
 writeFileSync(fake.log, "");
 await testResumeHydrationRoutesWritableAgent(fake);
 writeFileSync(fake.log, "");

@@ -38,6 +38,7 @@ let repoRoot = "";
 let sessionId = "";
 let guarded = false;
 let childExecution: "read-only" | "worktree-write" | "unmarked" | undefined;
+let childWithoutWorktreeLease = false;
 
 function isMutation(event: { toolName: string; input?: Record<string, unknown> }): boolean {
 	if (event.toolName === "write" || event.toolName === "edit") return true;
@@ -138,10 +139,17 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 		sessionId = ctx.sessionManager.getSessionId();
 		// A delegated reader may start outside Git; classify it before the root
 		// probe so a failed discovery cannot leave its mutation boundary inactive.
+		childWithoutWorktreeLease = false;
 		if (isDelegatedChild()) {
 			// This validates only the startup cwd; approved workers remain cooperative
 			// after launch and can otherwise select direct Git/Bash paths themselves.
-			childExecution = process.env.PI_SUBAGENT_EXECUTION === "worktree-write" && childInitialCwdIsApprovedWorktree(ctx.cwd)
+			const isWorktreeWrite = process.env.PI_SUBAGENT_EXECUTION === "worktree-write";
+			childWithoutWorktreeLease =
+				isWorktreeWrite &&
+				!process.env.PI_WORKTREE_ROOT &&
+				!process.env.PI_WORKTREE_REPO_ROOT &&
+				!process.env.PI_WORKTREE_GENERATION;
+			childExecution = isWorktreeWrite && childInitialCwdIsApprovedWorktree(ctx.cwd)
 				? "worktree-write"
 				: process.env.PI_SUBAGENT_EXECUTION === "read-only"
 					? "read-only"
@@ -174,7 +182,12 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 		if (!guarded) return;
 		if (childExecution) {
 			if (event.toolName.startsWith("worktree_")) return { block: true, reason: "Blocked: worktree lifecycle tools are root-owned." };
-			if (isMutation(event) && childExecution !== "worktree-write") return { block: true, reason: "Blocked: this delegated child is read-only or lacks a validated worktree marker." };
+			if (isMutation(event) && childExecution !== "worktree-write") {
+				const reason = childWithoutWorktreeLease
+					? "Blocked: this delegated worker launched without a Git worktree; local mutations are unavailable in a non-Git directory."
+					: "Blocked: this delegated child is read-only or lacks a validated worktree marker.";
+				return { block: true, reason };
+			}
 			return;
 		}
 		if (event.toolName === "worktree_start") {
