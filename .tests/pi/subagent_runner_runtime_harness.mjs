@@ -43,13 +43,13 @@ function worktreeFixture() {
 	return { root, worker };
 }
 
-function writeAgent(root, name, execution) {
+function writeAgent(root, name, execution, tools = "read, bash") {
 	const agentsDir = join(root, ".pi", "agents");
 	mkdirSync(agentsDir, { recursive: true });
 	const executionLine = execution === undefined ? "" : `execution: ${execution}\n`;
 	writeFileSync(
 		join(agentsDir, `${name}.md`),
-		`---\nname: ${name}\ndescription: ${name} test agent\ntools: read, bash\n${executionLine}---\n\nTest agent.\n`,
+		`---\nname: ${name}\ndescription: ${name} test agent\ntools: ${tools}\n${executionLine}---\n\nTest agent.\n`,
 	);
 }
 
@@ -478,6 +478,35 @@ async function testDegradedWritableExecution(fake) {
 	}
 }
 
+async function testReadOnlyMcpAgentsLaunchOutsideGit(fake) {
+	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-mcp-non-git-"));
+	const sessionId = "read-only-mcp-non-git";
+	const agents = [
+		["scout", "read, grep, find, ls, bash, mcp"],
+		["planner", "read, grep, find, ls, mcp"],
+		["reviewer", "read, grep, find, ls, bash, mcp"],
+	];
+	for (const [agent, tools] of agents) writeAgent(directory, agent, "read-only", tools);
+
+	await withFakePi(fake, async () => {
+		for (const [agent, tools] of agents) {
+			const result = await invoke(runner(directory, sessionId), {
+				agent,
+				task: "use MCP for read-only reconnaissance",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			});
+			assert.equal(result.isError, undefined, resultText(result));
+			const record = invocations(fake.log).at(-1);
+			assert.equal(record.cwd, realpathSync(directory));
+			assert.equal(record.execution, "read-only");
+			const toolsIndex = record.args.indexOf("--tools");
+			assert.equal(record.args[toolsIndex + 1], tools.replaceAll(" ", ""));
+		}
+	});
+	assertChildLaunchArgs(fake.log);
+}
+
 async function testResumeHydrationRoutesWritableAgent(fake) {
 	const { root, worker } = worktreeFixture();
 	const sessionId = "resumed-writable";
@@ -801,6 +830,8 @@ writeFileSync(fake.log, "");
 await testWritableExecution(fake);
 writeFileSync(fake.log, "");
 await testDegradedWritableExecution(fake);
+writeFileSync(fake.log, "");
+await testReadOnlyMcpAgentsLaunchOutsideGit(fake);
 writeFileSync(fake.log, "");
 await testResumeHydrationRoutesWritableAgent(fake);
 writeFileSync(fake.log, "");
