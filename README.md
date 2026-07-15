@@ -116,6 +116,10 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 - Skipped privileged steps emit a `WARN` to the log and are deferred to the next interactive apply — they never fail silently.
 - Targets modified out-of-band are skipped by `--keep-going` every night and re-nagged (cron mail) until fixed via `chezmoi diff <target> && chezmoi apply --force <target>`. The "you have mail" notice surfaces through zsh's `MAIL`/startup check and xonsh's startup/pre-prompt check.
 
+#### Pi Memory External
+
+`~/.pi/agent/memory` remains a native `git-repo` external, but chezmoi clones it once and does not refresh it during ordinary or scheduled updates. `memory-git-sync.ts` is the sole routine sync owner: it fetches, merges, commits, and pushes at Pi session boundaries. Daily Markdown logs use a local best-effort `union` merge rule; conflicts in curated `MEMORY.md` and `SCRATCHPAD.md` remain fail-closed for manual resolution. `--refresh-externals always` is an intentional manual escape hatch and accepts only fast-forward updates. Concurrent Pi sessions do not coordinate memory synchronization and are unsupported.
+
 ### Terminal Startup
 
 Managed tmux and WezTerm launch their configured shell directly on every platform; they deliberately do not invoke account-level `/usr/bin/login`. This restores tmux's native `pane_current_path` behavior and intentionally forgoes managed login banners, utmpx records, and login-provided mail notices. Shell-level login modes remain allowed (for example, the Windows WSL `xonsh --login` and `bash --login` launch-menu entries); direct WezTerm, SSH, and bare-shell mail checks remain independently configured.
