@@ -25,7 +25,13 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 # Source path in the repo; applied to ~/.claude/hooks/ by chezmoi, stripping the
 # "executable_" prefix. Tests invoke the source directly.
-HOOK = REPO_ROOT / "dot_claude" / "hooks" / "executable_clear_plan_review_sentinel.py"
+HOOK = (
+    REPO_ROOT
+    / "home"
+    / "dot_claude"
+    / "hooks"
+    / "executable_clear_plan_review_sentinel.py"
+)
 
 assert HOOK.exists(), f"hook not found at {HOOK}"
 

@@ -2,12 +2,12 @@
 """
 validate-chezmoi-templates.py — pre-commit hook for chezmoi dotfiles.
 
-Renders each staged *.tmpl file (and any file under .chezmoitemplates/) via
+Renders each staged *.tmpl file (and any file under home/.chezmoitemplates/) via
 `chezmoi execute-template --file` and validates the rendered output with the
 appropriate format-specific tool managed by mise.
 
 Design decisions:
-  - Two-phase ordering: .chezmoi.*.tmpl files are validated first (without
+  - Two-phase ordering: home/.chezmoi.*.tmpl files are validated first (without
     --init) because they define the data context that `chezmoi init` uses.
     Only after they pass is `chezmoi init` run once to refresh the on-disk
     config; all other templates then render against the fresh config without
@@ -139,7 +139,7 @@ _SHEBANG_TO_OUTPUT_TYPE: list[tuple[re.Pattern[str], str]] = [
 
 FORMAT_STYLE_TYPES = frozenset({"toml", "markdown", "shell", "lua"})
 
-_PI_KEYBINDINGS_TEMPLATE = Path("dot_pi/agent/keybindings.json.tmpl")
+_PI_KEYBINDINGS_TEMPLATE = Path("home/dot_pi/agent/keybindings.json.tmpl")
 _PI_KEYBINDINGS_JQ_CONTRACT = (
     '."app.interrupt" == ["escape", "ctrl+["] '
     'and ."tui.select.cancel" == ["escape", "ctrl+c", "ctrl+["]'
@@ -202,7 +202,7 @@ def is_hard_skip(path: str) -> bool:
     # lose format validation until onepasswordRead can be stubbed at render
     # time. Content check (not a hardcoded path) so future secret-bearing
     # private_ templates are covered automatically
-    # (e.g. dot_config/exact_mise/exact_conf.d/private_secrets.toml.tmpl).
+    # (e.g. home/dot_config/exact_mise/exact_conf.d/private_secrets.toml.tmpl).
     # A private_ template WITHOUT onepasswordRead still gets validated.
     if has_private_attribute(name):
         try:
@@ -295,7 +295,7 @@ def _output_if_failed(result: subprocess.CompletedProcess) -> str | None:
 def render_template_to_file(source: str, dest: Path) -> str | None:
     # Pass --source so chezmoi resolves includeTemplate against the current
     # worktree root, not the default ~/.local/share/chezmoi. This matters when
-    # wrapper files reference new .chezmoitemplates/ entries that only exist in
+    # wrapper files reference new home/.chezmoitemplates/ entries that only exist in
     # the worktree and haven't yet been merged to the main source tree.
     worktree_root = Path(
         subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
@@ -324,7 +324,7 @@ def refresh_chezmoi_config_from_staged_template() -> str | None:
     # Pass --source for the same reason as render_template_to_file: in a linked
     # worktree the config must refresh from the staged worktree template, not
     # chezmoi's configured source (the main checkout). Otherwise a template that
-    # renames a .chezmoi.toml.tmpl key renders against a config regenerated from
+    # renames a home/.chezmoi.toml.tmpl key renders against a config regenerated from
     # main's stale template and fails with `map has no entry for key`.
     worktree_root = Path(
         subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True)
@@ -531,7 +531,7 @@ def run_hook(files: list[str]) -> int:
     config_templates, other_templates = partition_into_config_and_other(actionable)
     needs_config_refresh = bool(config_templates)
 
-    # Chezmoi config templates (e.g. .chezmoi.toml.tmpl) define the data
+    # Chezmoi config templates (e.g. home/.chezmoi.toml.tmpl) define the data
     # context itself, so they must be materialized via `chezmoi init` rather
     # than rendered like ordinary templates. The template hard-fails (via
     # `fail`) when OP_SERVICE_ACCOUNT_TOKEN is absent from the environment —

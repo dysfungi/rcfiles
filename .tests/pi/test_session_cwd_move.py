@@ -12,7 +12,8 @@ import pytest
 from conftest import _clean_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "session-cwd-move.ts"
+MANAGED_ROOT = REPO_ROOT / "home"
+EXTENSION = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "session-cwd-move.ts"
 HARNESS = Path(__file__).with_name("session_cwd_move_runtime_harness.mjs")
 PI = shutil.which("pi")
 NODE = shutil.which("node")

@@ -36,8 +36,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 SCRIPT = (
-    REPO_ROOT
+    MANAGED_ROOT
     / "dot_gemini"
     / "antigravity-cli"
     / "modify_private_settings.json.py.tmpl"

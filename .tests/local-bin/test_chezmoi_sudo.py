@@ -1,7 +1,7 @@
 """Integration tests for the chezmoi-sudo wrapper script.
 
 WHY THIS FILE EXISTS
-    `~/.local/bin/chezmoi-sudo` (source: `dot_local/bin/executable_chezmoi-sudo`)
+    `~/.local/bin/chezmoi-sudo` (source: `home/dot_local/bin/executable_chezmoi-sudo`)
     provides a three-way fallback for privileged calls in unattended cron runs:
       1. Active sudo credential cache  → plain `sudo`
       2. Interactive TTY               → plain `sudo`
@@ -29,7 +29,8 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = REPO_ROOT / "dot_local" / "bin" / "executable_chezmoi-sudo"
+MANAGED_ROOT = REPO_ROOT / "home"
+SCRIPT = MANAGED_ROOT / "dot_local" / "bin" / "executable_chezmoi-sudo"
 
 
 def _clean_env() -> dict[str, str]:

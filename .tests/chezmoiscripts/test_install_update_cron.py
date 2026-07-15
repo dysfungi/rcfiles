@@ -1,7 +1,7 @@
 """Integration tests for the stage-90 cron install script.
 
 WHY THIS FILE EXISTS
-    `.chezmoiscripts/90/run_after_install-update-cron.unix-like.sh`
+    `home/.chezmoiscripts/90/run_after_install-update-cron.unix-like.sh`
     must register a managed cron block idempotently, never clobber unrelated entries,
     fail loudly when crontab is absent or the write did not persist, verify the cron
     daemon is running (via systemctl on Linux or launchctl on macOS), and fail loudly
@@ -64,8 +64,12 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 SCRIPT = (
-    REPO_ROOT / ".chezmoiscripts" / "90" / "run_after_install-update-cron.unix-like.sh"
+    MANAGED_ROOT
+    / ".chezmoiscripts"
+    / "90"
+    / "run_after_install-update-cron.unix-like.sh"
 )
 
 _BASH = shutil.which("bash") or "/bin/bash"

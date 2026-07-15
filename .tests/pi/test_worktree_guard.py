@@ -11,10 +11,11 @@ import pytest
 from conftest import _clean_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 HARNESS = REPO_ROOT / ".tests" / "pi" / "worktree_guard_runtime_harness.mjs"
-GUARD = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
+GUARD = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
 REGISTRY = (
-    REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
+    MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
 )
 PI = shutil.which("pi")
 NODE = shutil.which("node")

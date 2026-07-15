@@ -21,10 +21,11 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CATALOG = REPO_ROOT / ".chezmoidata" / "large-language-models.yaml"
+MANAGED_ROOT = REPO_ROOT / "home"
+CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
 SCHEMA = REPO_ROOT / ".schemas" / "large-language-models.schema.yaml"
-MODELS_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
-VALIDATE_TEMPLATE = REPO_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl"
+MODELS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
+VALIDATE_TEMPLATE = MANAGED_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl"
 LEVELS = ("off", "minimal", "low", "medium", "high", "xhigh", "max")
 OPENAI_GPT_5_6_MAP = {
     "off": "none",
@@ -114,7 +115,9 @@ def _write_fake_op(bin_dir: Path) -> None:
     op.chmod(0o755)
 
 
-def _render_models(source: Path, tmp_path: Path, machine: str) -> dict[str, Any]:
+def _render_models(
+    source: Path, managed_root: Path, tmp_path: Path, machine: str
+) -> dict[str, Any]:
     """Render the private template as chezmoi does for one machine namespace."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
@@ -135,7 +138,7 @@ def _render_models(source: Path, tmp_path: Path, machine: str) -> dict[str, Any]
             "--source",
             str(source),
             "--file",
-            str(source / "dot_pi" / "agent" / "private_models.json.tmpl"),
+            str(managed_root / "dot_pi" / "agent" / "private_models.json.tmpl"),
         ],
         cwd=source,
         capture_output=True,
@@ -183,7 +186,7 @@ def rendered_models(
 ) -> tuple[str, dict[str, Any]]:
     """Render both supported machine namespaces with fake credentials."""
     machine = request.param
-    return machine, _render_models(REPO_ROOT, tmp_path, machine)
+    return machine, _render_models(REPO_ROOT, MANAGED_ROOT, tmp_path, machine)
 
 
 def test_reasoning_models_emit_complete_capability_maps(
@@ -297,7 +300,8 @@ def test_dormant_riot_models_render_with_declared_capabilities(
         if model["id"] in dormant_gateway_ids:
             model["enabled"] = True
 
-    rendered = _render_models(_fixture_source(tmp_path, catalog), tmp_path, "riot")
+    source = _fixture_source(tmp_path, catalog)
+    rendered = _render_models(source, source, tmp_path, "riot")
     models = _models_by_id(rendered)
     expected_maps = {
         "claude-vertex/anthropic-claude-haiku-4-5-20251001": ANTHROPIC_STANDARD_MAP,
@@ -337,7 +341,8 @@ def test_non_reasoning_fixture_omits_thinking_map(
             "enabled": True,
         }
     )
-    rendered = _render_models(_fixture_source(tmp_path, catalog), tmp_path, "personal")
+    source = _fixture_source(tmp_path, catalog)
+    rendered = _render_models(source, source, tmp_path, "personal")
     model = _models_by_id(rendered)["google/fixture-no-reasoning"]
     assert model["reasoning"] is False
     assert "thinkingLevelMap" not in model

@@ -18,8 +18,9 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
-TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / "keybindings.json.tmpl"
+TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "keybindings.json.tmpl"
 HARNESS = Path(__file__).with_name("keybindings_runtime_harness.mjs")
 PI_MISE_TOOL = "npm:@earendil-works/pi-coding-agent"
 PI_VERSION = "0.80.6"

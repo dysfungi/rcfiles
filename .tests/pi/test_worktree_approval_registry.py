@@ -10,10 +10,13 @@ from pathlib import Path
 from conftest import _clean_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+MANAGED_ROOT = REPO_ROOT / "home"
 REGISTRY = (
-    REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
+    MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-approval-registry.mjs"
 )
-CHILD_ENV = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
+CHILD_ENV = (
+    MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
+)
 
 RUNNER = r"""
 import { execFileSync } from "node:child_process";
@@ -134,14 +137,16 @@ def test_registry_rejects_stale_results_and_preserves_on_failed_stop() -> None:
 
 
 def test_worker_policy_uses_explicit_execution_class() -> None:
-    worker = (REPO_ROOT / "dot_pi" / "agent" / "agents" / "worker.md.tmpl").read_text()
+    worker = (
+        MANAGED_ROOT / "dot_pi" / "agent" / "agents" / "worker.md.tmpl"
+    ).read_text()
     assert "execution: worktree-write" in worker
     assert "Direct Git and Bash are intentionally unrestricted" in worker
 
 
 def test_root_guard_lists_only_root_lifecycle_tools() -> None:
     policy = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
     ).read_text()
     assert '"worktree_start", "worktree_status", "worktree_stop"' in policy
     assert 'PREFIX_ALLOWED_TOOLS = ["memory_"]' in policy
@@ -150,13 +155,13 @@ def test_root_guard_lists_only_root_lifecycle_tools() -> None:
 def test_documented_child_boundary_is_cooperative_not_authentication() -> None:
     """A forged marker and shell classifier are not claims of process isolation."""
     policy = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "child-policy.mjs"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "child-policy.mjs"
     ).read_text()
     guard = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
     ).read_text()
     readme = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "README.md"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "README.md"
     ).read_text()
     assert "authentication or sandbox boundary" in policy
     assert "best-effort classifier" in guard

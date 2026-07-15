@@ -6,7 +6,7 @@ echo >&2 "INFO: Starting $0"
 userName=$(whoami 2>/dev/null || echo "${USER:-unknown}")
 hostName=$(hostname 2>/dev/null || echo "${HOSTNAME:-unknown}")
 
-symlinkedDir="${CHEZMOI_SOURCE_DIR}/.symlinked"
+symlinkedDir="${CHEZMOI_WORKING_TREE}/.symlinked"
 configDir="${HOME}/.config"
 sourceLazyLockFile="${symlinkedDir}/config/nvim/lazy-lock.${userName}.${hostName}.json"
 targetLazyLockFile="${configDir}/nvim/lazy-lock.json"

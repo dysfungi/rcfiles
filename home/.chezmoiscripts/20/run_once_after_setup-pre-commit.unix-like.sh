@@ -4,7 +4,7 @@ set -euo pipefail
 
 echo >&2 "INFO: Starting $0"
 
-cd "${CHEZMOI_SOURCE_DIR}"
+cd "${CHEZMOI_WORKING_TREE}"
 
 if git config --get core.hooksPath >/dev/null 2>&1; then
   echo >&2 "WARN: Unsetting repo-local core.hooksPath for pre-commit compatibility"

@@ -18,9 +18,10 @@ import pytest
 from conftest import _clean_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "memory-git-sync.ts"
+MANAGED_ROOT = REPO_ROOT / "home"
+EXTENSION = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "memory-git-sync.ts"
 HARNESS = Path(__file__).with_name("memory_git_sync_runtime_harness.mjs")
-EXTERNAL_TEMPLATE = REPO_ROOT / "dot_pi" / "agent" / ".chezmoiexternal.toml.tmpl"
+EXTERNAL_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / ".chezmoiexternal.toml.tmpl"
 PI = shutil.which("pi")
 NODE = shutil.which("node")
 

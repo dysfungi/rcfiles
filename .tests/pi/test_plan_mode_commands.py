@@ -18,11 +18,12 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-EXTENSION = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "index.ts"
-QUESTIONNAIRE = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "questionnaire.ts"
-IMPLEMENT_PROMPT = REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement.md"
+MANAGED_ROOT = REPO_ROOT / "home"
+EXTENSION = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "index.ts"
+QUESTIONNAIRE = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "questionnaire.ts"
+IMPLEMENT_PROMPT = MANAGED_ROOT / "dot_pi" / "agent" / "prompts" / "implement.md"
 IMPLEMENT_AND_REVIEW_PROMPT = (
-    REPO_ROOT / "dot_pi" / "agent" / "prompts" / "implement-and-review.md"
+    MANAGED_ROOT / "dot_pi" / "agent" / "prompts" / "implement-and-review.md"
 )
 HARNESS = Path(__file__).with_name("plan_mode_runtime_harness.mjs")
 LEGACY_SUBAGENT_PROMPT_TARGETS = (
@@ -135,13 +136,13 @@ def test_implementation_prompts_activate_the_root_worktree_before_workers(
 def test_workflow_prompts_have_one_canonical_location() -> None:
     """Nested extension prompts were inert duplicates that could silently drift."""
     assert not (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "prompts"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "prompts"
     ).exists()
 
 
 def test_legacy_extension_prompt_targets_are_removed_by_chezmoi() -> None:
     """Deleted source files need explicit target removal instead of broad exact sync."""
-    removals = (REPO_ROOT / ".chezmoiremove").read_text().splitlines()
+    removals = (MANAGED_ROOT / ".chezmoiremove").read_text().splitlines()
     missing = [
         target for target in LEGACY_SUBAGENT_PROMPT_TARGETS if target not in removals
     ]

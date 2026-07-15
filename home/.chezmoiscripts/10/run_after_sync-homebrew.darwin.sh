@@ -13,14 +13,14 @@ hostName="$(hostname)"
 bakSuffix="${userName}.${hostName}"
 configDir="$HOME/.config/homebrew"
 brewFile="${configDir}/Brewfile"
-bakDir="${CHEZMOI_SOURCE_DIR}/.backups"
+bakDir="${CHEZMOI_WORKING_TREE}/.backups"
 bakFile="${bakDir}/Brewfile.${bakSuffix}"
 export HOMEBREW_BUNDLE_FILE="${brewFile}"
 
 _commit_backup() {
   local clarifier="${1:?required}"
 
-  local -x GIT_DIR="${CHEZMOI_SOURCE_DIR}/.git"
+  local -x GIT_DIR="${CHEZMOI_WORKING_TREE}/.git"
   local -x GIT_WORK_TREE="${CHEZMOI_WORKING_TREE}"
 
   git add "${bakFile}"

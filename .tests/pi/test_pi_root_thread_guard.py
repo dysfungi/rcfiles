@@ -10,7 +10,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-CORE = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
+MANAGED_ROOT = REPO_ROOT / "home"
+CORE = MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
 NODE_RUNNER = """
 import { pathToFileURL } from "node:url";
 const core = await import(pathToFileURL(process.argv[1]).href);
@@ -210,7 +211,7 @@ const module = await import(pathToFileURL(process.argv[1]).href);
 console.log(JSON.stringify(module.isPlanModeEnabled(process.argv[2])));
 """
     mode_module = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "mode.mjs"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "mode.mjs"
     )
     environment = {**os.environ}
     if subagent:
@@ -235,7 +236,7 @@ const module = await import(pathToFileURL(process.argv[1]).href);
 console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
 """
     child_env_module = (
-        REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
     )
     result = subprocess.run(
         ["node", "--input-type=module", "--eval", runner, str(child_env_module)],
@@ -245,7 +246,9 @@ console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value" })));
     )
     assert json.loads(result.stdout) == {"EXISTING": "value", "PI_SUBAGENT": "1"}
 
-    extension = REPO_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
+    extension = (
+        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
+    )
     source = extension.read_text()
     assert "execution: agent.execution" in source
     assert "approval: lease" in source
