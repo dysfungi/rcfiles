@@ -23,15 +23,14 @@ subagent/
 ## Installation
 
 This is a ChezMoi-managed extension. Edit its runtime source under
-`dot_pi/agent/extensions/subagent/`; ChezMoi renders the extension files to
+`home/dot_pi/agent/extensions/subagent/`; ChezMoi renders the extension files to
 `~/.pi/agent/extensions/subagent/` with the managed agent definitions under
-`~/.pi/agent/agents/`. This README is source documentation and is excluded from
-deployment by the global README ignore rule. The canonical and only managed role
-definitions are `dot_pi/agent/agents/*.md.tmpl`, rendered to
+`~/.pi/agent/agents/`. This README is deployed with the extension. The canonical
+and only managed role definitions are `home/dot_pi/agent/agents/*.md.tmpl`, rendered to
 `~/.pi/agent/agents/`. Workflow prompt templates are canonical only under
-`dot_pi/agent/prompts/` (rendered to `~/.pi/agent/prompts/`), not inside this
+`home/dot_pi/agent/prompts/` (rendered to `~/.pi/agent/prompts/`), not inside this
 extension. Legacy extension-local prompt and sample-role targets are listed in
-the top-level `.chezmoiremove`, so a future normal apply removes only obsolete
+`home/.chezmoiremove`, so a future normal apply removes only obsolete
 files rather than exact-syncing any broader `.pi` directory. Do not copy these
 files from Pi's upstream examples or manually symlink them.
 
@@ -203,7 +202,14 @@ Use a chain: first have scout find the read tool, then have planner suggest impr
 
 ## Agent Definitions
 
-Agents are markdown files with YAML frontmatter:
+Agents are markdown files with YAML frontmatter. The managed roles currently have:
+
+| Role       | Tools                                                                                                                      | Execution        |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| `scout`    | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                                                                                | `read-only`      |
+| `planner`  | `read`, `grep`, `find`, `ls`, `mcp`                                                                                        | `read-only`      |
+| `reviewer` | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                                                                                | `read-only`      |
+| `worker`   | `read`, `grep`, `find`, `ls`, `bash`, `write`, `edit`, `mcp`, `memory_read`, `memory_write`, `memory_search`, `scratchpad` | `worktree-write` |
 
 ```markdown
 ---

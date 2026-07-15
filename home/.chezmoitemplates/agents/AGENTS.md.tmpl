@@ -52,7 +52,8 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 
 **pi specifics:**
 
-- Use the `subagent` tool for any read-heavy, exploratory, shell, or MCP task. Choose `scout` for reconnaissance, `planner` for plans, `reviewer` for review, and `worker` for implementation. Require a concise `file:line` findings handoff.
+- Use the `subagent` tool for any read-heavy, exploratory, shell, or MCP task. Choose `scout` for reconnaissance, `planner` for plans, `reviewer` for review, and `worker` for implementation. All managed roles have `mcp`; scout, planner, and reviewer use it for read-only external-service lookups, including Riot-machine-only Jira, Notion, and P4 lookups. Require a concise `file:line` findings handoff.
+- The Git-worktree launch gate scopes local file mutation only (`write`, `edit`, and mutating `bash`), rather than non-mutating tool access generally. Any subagent can launch outside a Git repository and use its granted non-mutating tools, including `mcp`; local mutations remain blocked without an approved Git worktree. Mutating MCP calls are separately classified by the `mcp-mutation-policy` denylist.
 - The root-thread guard is a hard block in `tui` and `rpc` sessions: only orchestration tools, task/memory/worktree tools, and `read` under plans, pi-memory, the global skill roots (`~/.pi/agent/skills`, `~/.agents/skills`), or repo `todo.txt`/`done.txt` are permitted. `read`, `grep`, `find`, `ls`, `bash`, `mcp`, and unknown tools must be delegated.
 - JSON subagents and print-mode one-shots are intentionally exempt so workers can perform the delegated work. There is no root-guard escape hatch; change the managed extension only when deliberately changing policy.
 - Subagent child launches must retain normal context-file discovery; never pass `--no-context-files` or `-nc`. `--no-session` isolates session history only and remains intentional.
