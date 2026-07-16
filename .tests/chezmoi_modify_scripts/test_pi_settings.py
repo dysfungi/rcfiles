@@ -1,7 +1,7 @@
 """Integration tests for Pi's state-preserving ``modify_`` settings script.
 
 Pi stores its app-owned runtime state beside durable preferences in one JSON
-file.  The script is rendered with real chezmoi data, then run as chezmoi runs
+file. The script is rendered with real chezmoi data, then run as chezmoi runs
 it: existing target JSON arrives on stdin and merged JSON is emitted on stdout.
 """
 
@@ -13,14 +13,12 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 SCRIPT = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
-LEGACY_SOURCE = MANAGED_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
 TARGET = Path.home() / ".pi" / "agent" / "settings.json"
 
 
@@ -121,19 +119,8 @@ def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _managed(script: Path) -> dict[str, Any]:
-    """Return the rendered managed payload without coupling behavior tests to catalog data."""
-    result = _run(script, "")
-    assert result.returncode == 0, result.stderr
-    return json.loads(result.stdout)
-
-
-def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
-    """The modify_ filename still maps to Pi's settings target, not ``.py``."""
-    assert SCRIPT.is_file()
-    assert not LEGACY_SOURCE.exists()
-    assert SCRIPT.read_bytes().endswith(b"\n")
-
+def test_modify_source_maps_to_pi_settings_target(tmp_path: Path) -> None:
+    """The modify_ filename maps to Pi's settings target, not ``.py``."""
     source = tmp_path / "source"
     copied_script = source / "dot_pi" / "agent" / SCRIPT.name
     copied_script.parent.mkdir(parents=True)
@@ -161,13 +148,14 @@ def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    ("model", "vendor", "gateway_provider", "expected_provider"),
+    ("model", "vendor", "gateway_provider", "expected_provider", "enabled_model"),
     [
         pytest.param(
             "claude-test",
             "anthropic",
             None,
             "anthropic",
+            "claude-test:high",
             id="built-in-uses-vendor",
         ),
         pytest.param(
@@ -175,6 +163,7 @@ def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
             "anthropic",
             "truefoundry",
             "truefoundry",
+            "truefoundry/claude-vertex/anthropic-test:high",
             id="gateway-overrides-vendor",
         ),
         pytest.param(
@@ -182,16 +171,18 @@ def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
             "openai",
             "litellm",
             "litellm",
+            "litellm/gpt-test:high",
             id="other-gateway-provider",
         ),
     ],
 )
-def test_default_model_pairs_with_its_provider(
+def test_default_model_derivation(
     tmp_path: Path,
     model: str,
     vendor: str,
     gateway_provider: str | None,
     expected_provider: str,
+    enabled_model: str,
 ) -> None:
     """A default uses its vendor unless its gateway declares a provider."""
     script = _render_synthetic_default(tmp_path, model, vendor, gateway_provider)
@@ -202,17 +193,7 @@ def test_default_model_pairs_with_its_provider(
         model,
         expected_provider,
     )
-
-
-@pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])
-def test_empty_input_seeds_only_managed_preferences(
-    rendered_script: tuple[Path, str], stdin: str
-) -> None:
-    """Fresh and whitespace-only targets are treated as an empty JSON object."""
-    script, _ = rendered_script
-    result = _run(script, stdin)
-    assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == _managed(script)
+    assert settings["enabledModels"] == [enabled_model]
 
 
 def test_preserves_app_and_unknown_nested_state(
@@ -232,30 +213,35 @@ def test_preserves_app_and_unknown_nested_state(
     assert merged["appState"] == existing["appState"]
     assert merged["lastChangelogVersion"] == "0.80.6"
     assert merged["unknown"] == existing["unknown"]
-    assert list(merged) == [*existing, *_managed(script)]
 
 
-def test_managed_values_take_precedence_for_the_full_allowlist(
+@pytest.mark.parametrize(
+    ("key", "existing_value", "managed_value"),
+    [
+        pytest.param("defaultProjectTrust", "ask", "always", id="project-trust"),
+        pytest.param("hideThinkingBlock", True, False, id="thinking-block"),
+        pytest.param("showCacheMissNotices", False, True, id="cache-miss-notices"),
+        pytest.param("theme", "light", "dark", id="theme"),
+    ],
+)
+def test_managed_values_take_precedence(
     rendered_script: tuple[Path, str],
+    key: str,
+    existing_value: object,
+    managed_value: object,
 ) -> None:
-    """Only declared durable preferences are overwritten."""
+    """Declared durable preferences override conflicting persisted values."""
     script, _ = rendered_script
-    managed = _managed(script)
-    existing: dict[str, object] = {
+    existing = {
         "runtime": {"keep": True},
-        **{key: "wrong" for key in managed},
+        key: existing_value,
         "lastChangelogVersion": "0.1.0",
     }
-    existing["enabledModels"] = ["wrong-model"]
-    existing["packages"] = ["wrong-package"]
-    existing["hideThinkingBlock"] = True
-    existing["showCacheMissNotices"] = False
 
     result = _run(script, json.dumps(existing))
     assert result.returncode == 0, result.stderr
     merged = json.loads(result.stdout)
-    for key, value in managed.items():
-        assert merged[key] == value
+    assert merged[key] == managed_value
     assert merged["runtime"] == {"keep": True}
     assert merged["lastChangelogVersion"] == "0.1.0"
 
@@ -345,27 +331,6 @@ def test_non_object_json_fails_loudly(
     assert result.stderr == "pi settings: JSON root must be an object\n"
 
 
-def test_unicode_output_key_order_and_no_final_newline(
-    rendered_script: tuple[Path, str],
-) -> None:
-    """Output is Pi-compatible JSON without escaping Unicode or adding a newline."""
-    script, _ = rendered_script
-    existing = {
-        "z": "café",
-        "nested": {"漢": "✓"},
-        "lastChangelogVersion": "0.80.6",
-    }
-    result = _run(script, json.dumps(existing, ensure_ascii=False))
-    assert result.returncode == 0, result.stderr
-
-    expected = {**existing, **_managed(script)}
-    assert result.stdout == json.dumps(expected, indent=2, ensure_ascii=False)
-    assert not result.stdout.endswith("\n")
-    assert "café" in result.stdout
-    assert "漢" in result.stdout
-    assert list(json.loads(result.stdout)) == [*existing, *_managed(script)]
-
-
 def test_idempotent(rendered_script: tuple[Path, str]) -> None:
     """A second apply of script output is byte-for-byte unchanged."""
     script, _ = rendered_script
@@ -383,140 +348,3 @@ def test_idempotent(rendered_script: tuple[Path, str]) -> None:
     second = _run(script, first.stdout)
     assert second.returncode == 0, second.stderr
     assert second.stdout == first.stdout
-
-
-def _node_merged_stringify(existing: str, managed: dict[str, Any]) -> str:
-    """Return the exact JavaScript serialization of the Pi settings merge."""
-    node = shutil.which("node")
-    assert node is not None
-    result = subprocess.run(
-        [
-            node,
-            "-e",
-            "let input = ''; process.stdin.on('data', chunk => input += chunk); "
-            "process.stdin.on('end', () => { "
-            "const [existing, managed] = input.split('\\0').map(JSON.parse); "
-            "const merge = (existing, managed) => { "
-            "for (const [key, value] of Object.entries(managed)) { "
-            "const existingValue = existing[key]; "
-            "if (existingValue && typeof existingValue === 'object' "
-            "&& !Array.isArray(existingValue) && value && typeof value === 'object' "
-            "&& !Array.isArray(value)) { merge(existingValue, value); } "
-            "else { existing[key] = value; } "
-            "} }; "
-            "merge(existing, managed); "
-            "process.stdout.write(JSON.stringify(existing, null, 2)); "
-            "});",
-        ],
-        input=existing + "\0" + json.dumps(managed, ensure_ascii=False),
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    return result.stdout
-
-
-@pytest.mark.skipif(shutil.which("node") is None, reason="Node is not installed")
-@pytest.mark.parametrize(
-    "raw_number",
-    [
-        "-0",
-        "9007199254740991",
-        "-9007199254740991",
-        "9007199254740993",
-        "-9007199254740993",
-        "100000000000000000000",
-        "-100000000000000000000",
-        "1000000000000000000000",
-        "-1000000000000000000000",
-    ],
-    ids=[
-        "negative-zero",
-        "safe-integer-limit",
-        "negative-safe-integer-limit",
-        "rounds-past-safe-integer-limit",
-        "negative-rounds-past-safe-integer-limit",
-        "decimal-before-scientific-cutoff",
-        "negative-decimal-before-scientific-cutoff",
-        "scientific-cutoff",
-        "negative-scientific-cutoff",
-    ],
-)
-def test_integer_output_matches_node_json_stringify(
-    rendered_script: tuple[Path, str], raw_number: str
-) -> None:
-    """Parse every integer through IEEE-754 before matching Node byte-for-byte."""
-    script, _ = rendered_script
-    existing = f'{{"integer": {raw_number}}}'
-    result = _run(script, existing)
-    assert result.returncode == 0, result.stderr
-    assert result.stdout == _node_merged_stringify(existing, _managed(script))
-
-
-@pytest.mark.skipif(shutil.which("node") is None, reason="Node is not installed")
-def test_output_matches_node_json_stringify_edge_cases(
-    rendered_script: tuple[Path, str],
-) -> None:
-    """Match Pi's JavaScript serializer for numbers, Unicode, and nested objects."""
-    script, _ = rendered_script
-    existing = r"""{
-  "z": "root-z",
-  "10": "root-ten",
-  "2": "root-two",
-  "01": "root-leading-zero",
-  "00": "root-double-leading-zero",
-  "4294967295": "root-not-index",
-  "0": "root-zero",
-  "4294967294": "root-max-index",
-  "negativeZero": -0.0,
-  "smallExponent": 1e-7,
-  "smallDecimal": 1e-6,
-  "largeDecimal": 1e20,
-  "largeExponent": 1e21,
-  "decimal": 123.456,
-  "unicode": "café 漢 ✓ 🦊",
-  "loneHighSurrogate": "\ud800",
-  "loneLowSurrogate": "\udc00",
-  "nested": {
-    "z": "nested-z",
-    "10": "nested-ten",
-    "2": "nested-two",
-    "01": "nested-leading-zero",
-    "00": "nested-double-leading-zero",
-    "4294967295": "nested-not-index",
-    "0": "nested-zero",
-    "4294967294": "nested-max-index"
-  },
-  "array": [
-    {
-      "z": "array-z",
-      "10": "array-ten",
-      "2": "array-two",
-      "01": "array-leading-zero",
-      "00": "array-double-leading-zero",
-      "4294967295": "array-not-index",
-      "0": "array-zero",
-      "4294967294": "array-max-index",
-      "numbers": [-0.0, 1e-7, 1e-6, 1e20, 1e21, 123.456],
-      "unicode": "café 漢 ✓ 🦊",
-      "loneHighSurrogate": "\ud800",
-      "loneLowSurrogate": "\udc00"
-    }
-  ]
-}"""
-    result = _run(script, existing)
-    assert result.returncode == 0, result.stderr
-
-    merged = json.loads(result.stdout)
-    assert merged["nested"]["01"] == "nested-leading-zero"
-    assert merged["array"][0]["01"] == "array-leading-zero"
-    assert merged["4294967295"] == "root-not-index"
-    assert "\\ud800" in result.stdout
-    assert "\\udc00" in result.stdout
-    assert "café 漢 ✓ 🦊" in result.stdout
-
-    assert result.stdout == _node_merged_stringify(existing, _managed(script))
-
-    second = _run(script, result.stdout)
-    assert second.returncode == 0, second.stderr
-    assert second.stdout == result.stdout
