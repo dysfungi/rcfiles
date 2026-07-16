@@ -40,6 +40,12 @@ INVALID_CASES = [
         INVALID_VALUES,
     )
 ]
+NO_ARGUMENT_SCENARIOS = [
+    pytest.param("missing-version", id="missing-version"),
+    pytest.param("missing-model", id="missing-model"),
+    pytest.param("fresh-snapshot", id="fresh-snapshot"),
+    pytest.param("extension-surface", id="extension-surface"),
+]
 
 pytestmark = pytest.mark.skipif(
     PI is None or NODE is None,
@@ -85,21 +91,7 @@ def test_audit_metadata_rejects_invalid_values_without_a_result(
     _run_harness("invalid-value", field, json.dumps(value))
 
 
-def test_audit_metadata_rejects_a_missing_version_without_a_result() -> None:
-    """Reject a missing Pi version rather than emitting an unprovable harness label."""
-    _run_harness("missing-version")
-
-
-def test_audit_metadata_rejects_a_missing_model_without_type_error() -> None:
-    """Report missing model fields through validation instead of dereferencing undefined."""
-    _run_harness("missing-model")
-
-
-def test_audit_metadata_reads_a_fresh_runtime_snapshot_per_call() -> None:
-    """Never cache model, session, host, or Pi version across tool invocations."""
-    _run_harness("fresh-snapshot")
-
-
-def test_audit_metadata_extension_surface_is_read_only() -> None:
-    """Register exactly one tool without handlers, command execution, or a bash override."""
-    _run_harness("extension-surface")
+@pytest.mark.parametrize(("scenario",), NO_ARGUMENT_SCENARIOS)
+def test_audit_metadata_exercises_no_argument_scenarios(scenario: str) -> None:
+    """Exercise no-argument validation, freshness, and read-only surface scenarios."""
+    _run_harness(scenario)

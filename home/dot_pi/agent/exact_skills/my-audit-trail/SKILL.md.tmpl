@@ -1,4 +1,5 @@
-{{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . }}
+{{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . | trimSuffix "\n" }}
+
 ## Pi worker runtime metadata
 
 The shared examples above use generic per-field `(source: ...)` annotations. For Pi, the
