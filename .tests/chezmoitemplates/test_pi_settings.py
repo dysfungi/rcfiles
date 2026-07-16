@@ -16,85 +16,16 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
-CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
 SCRIPT = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 LEGACY_SOURCE = MANAGED_ROOT / "dot_pi" / "agent" / "settings.json.tmpl"
 TARGET = Path.home() / ".pi" / "agent" / "settings.json"
-PACKAGES: list[object] = [
-    {
-        "source": "git:github.com/frank-machine/pi-worktree@626f7bd76abec16578838a0966a39e4472e80aa8",
-        "autoload": False,
-        "extensions": ["+extensions/index.ts"],
-        "skills": [],
-    },
-    "npm:pi-mcp-adapter",
-    "npm:pi-memory",
-    "npm:pi-vimmode@>=0.7.0 <1.0.0",
-]
-
-DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
-
-CATALOG_ENABLED_SCOPES = {
-    "personal": [
-        f"claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
-        f"claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
-        f"claude-fable-5:{DEFAULT_THINKING_LEVEL}",
-        f"google/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
-        f"google/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
-        f"google/gemini-3.1-flash-lite:{DEFAULT_THINKING_LEVEL}",
-    ],
-    "riot": [
-        f"openai/openai/gpt-5.6-terra:{DEFAULT_THINKING_LEVEL}",
-        f"openai/openai/gpt-5.6-luna:{DEFAULT_THINKING_LEVEL}",
-        f"truefoundry/claude-vertex/anthropic-claude-opus-4-8:{DEFAULT_THINKING_LEVEL}",
-        f"truefoundry/claude-vertex/anthropic-claude-sonnet-5:{DEFAULT_THINKING_LEVEL}",
-        f"openai/google-vertexai/gemini-3.1-pro-preview:{DEFAULT_THINKING_LEVEL}",
-        f"openai/google-vertexai/gemini-3.5-flash:{DEFAULT_THINKING_LEVEL}",
-        f"openai/google-vertexai/gemini-3.1-flash-lite-preview:{DEFAULT_THINKING_LEVEL}",
-    ],
-}
-
-EXPECTED: dict[str, dict[str, str | list[str]]] = {
-    "personal": {
-        "defaultModel": "claude-opus-4-8",
-        "defaultProvider": "anthropic",
-        "enabledModels": CATALOG_ENABLED_SCOPES["personal"],
-    },
-    "riot": {
-        "defaultModel": "claude-vertex/anthropic-claude-opus-4-8",
-        "defaultProvider": "truefoundry",
-        "enabledModels": CATALOG_ENABLED_SCOPES["riot"],
-    },
-}
 
 
-def _managed(machine: str) -> dict[str, Any]:
-    """Return managed preferences in their intentional append order."""
-    return {
-        **EXPECTED[machine],
-        "packages": PACKAGES,
-        "defaultProjectTrust": "always",
-        "defaultThinkingLevel": DEFAULT_THINKING_LEVEL,
-        "hideThinkingBlock": False,
-        "showCacheMissNotices": True,
-        "theme": "dark",
-        "piVimMode": {"keymap": {"escape": ["<C-[>"]}},
-    }
-
-
-@pytest.fixture(scope="session", params=["personal", "riot"])
-def rendered_script(
-    request: pytest.FixtureRequest,
-    tmp_path_factory: pytest.TempPathFactory,
-) -> tuple[Path, str]:
-    """Render the source through chezmoi with each catalog namespace selected."""
-    machine = request.param
-    config = tmp_path_factory.mktemp(f"pi-{machine}-config") / "chezmoi.toml"
-    config.write_text(f"[data]\nis_riot_machine = {str(machine == 'riot').lower()}\n")
+def _execute_template(source: Path, script: Path, config: Path) -> str:
+    """Render a settings script with isolated chezmoi source and config data."""
     clean_environment = {
         key: value for key, value in os.environ.items() if not key.startswith("GIT_")
     }
@@ -105,20 +36,80 @@ def rendered_script(
             "--config",
             str(config),
             "--source",
-            str(REPO_ROOT),
+            str(source),
             "--file",
-            str(SCRIPT),
+            str(script),
         ],
-        cwd=REPO_ROOT,
+        cwd=source,
         capture_output=True,
         text=True,
         env=clean_environment,
     )
     assert result.returncode == 0, result.stderr
+    return result.stdout
 
+
+def _render_script(tmp_path_factory: pytest.TempPathFactory, machine: str) -> Path:
+    """Render Pi settings with a selected machine namespace."""
+    config = tmp_path_factory.mktemp(f"pi-{machine}-config") / "chezmoi.toml"
+    config.write_text(f"[data]\nis_riot_machine = {str(machine == 'riot').lower()}\n")
     rendered = tmp_path_factory.mktemp(f"pi-{machine}") / "modify_settings.py"
-    rendered.write_text(result.stdout)
-    return rendered, machine
+    rendered.write_text(_execute_template(REPO_ROOT, SCRIPT, config))
+    return rendered
+
+
+def _render_synthetic_default(
+    tmp_path: Path,
+    model: str,
+    vendor: str,
+    gateway_provider: str | None,
+) -> Path:
+    """Render the production derivation against one self-contained model fixture."""
+    source = tmp_path / "source"
+    script = source / "home" / "dot_pi" / "agent" / SCRIPT.name
+    validator = source / "llm" / "validate.tmpl"
+    script.parent.mkdir(parents=True)
+    validator.parent.mkdir(parents=True)
+    shutil.copy2(SCRIPT, script)
+    shutil.copy2(
+        MANAGED_ROOT / ".chezmoitemplates" / "llm" / "validate.tmpl", validator
+    )
+
+    gateway = (
+        "\n[data.my.llm.models.gateway]\n"
+        f"provider = {json.dumps(gateway_provider)}\n"
+        'api = "anthropic-messages"\n'
+        if gateway_provider is not None
+        else ""
+    )
+    config = tmp_path / "chezmoi.toml"
+    config.write_text(
+        "[data]\n"
+        "is_riot_machine = false\n"
+        'default_thinking_level = "high"\n\n'
+        "[[data.my.llm.models]]\n"
+        f"id = {json.dumps(model)}\n"
+        f"vendor = {json.dumps(vendor)}\n"
+        "enabled = true\n"
+        'default_for = ["pi"]\n'
+        'subagent_roles = ["scout", "planner", "reviewer", "worker"]\n'
+        f"{gateway}"
+        "\n[data.riot.llm]\n"
+        "models = []\n"
+    )
+    rendered = tmp_path / "modify_settings.py"
+    rendered.write_text(_execute_template(source, script, config))
+    return rendered
+
+
+@pytest.fixture(scope="session", params=["personal", "riot"])
+def rendered_script(
+    request: pytest.FixtureRequest,
+    tmp_path_factory: pytest.TempPathFactory,
+) -> tuple[Path, str]:
+    """Render the source through chezmoi with each catalog namespace selected."""
+    machine = request.param
+    return _render_script(tmp_path_factory, machine), machine
 
 
 def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
@@ -128,6 +119,13 @@ def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
         capture_output=True,
         text=True,
     )
+
+
+def _managed(script: Path) -> dict[str, Any]:
+    """Return the rendered managed payload without coupling behavior tests to catalog data."""
+    result = _run(script, "")
+    assert result.returncode == 0, result.stderr
+    return json.loads(result.stdout)
 
 
 def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
@@ -162,22 +160,66 @@ def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
     assert Path(result.stdout.strip()) == copied_script
 
 
+@pytest.mark.parametrize(
+    ("model", "vendor", "gateway_provider", "expected_provider"),
+    [
+        pytest.param(
+            "claude-test",
+            "anthropic",
+            None,
+            "anthropic",
+            id="built-in-uses-vendor",
+        ),
+        pytest.param(
+            "claude-vertex/anthropic-test",
+            "anthropic",
+            "truefoundry",
+            "truefoundry",
+            id="gateway-overrides-vendor",
+        ),
+        pytest.param(
+            "gpt-test",
+            "openai",
+            "litellm",
+            "litellm",
+            id="other-gateway-provider",
+        ),
+    ],
+)
+def test_default_model_pairs_with_its_provider(
+    tmp_path: Path,
+    model: str,
+    vendor: str,
+    gateway_provider: str | None,
+    expected_provider: str,
+) -> None:
+    """A default uses its vendor unless its gateway declares a provider."""
+    script = _render_synthetic_default(tmp_path, model, vendor, gateway_provider)
+    result = _run(script, "")
+    assert result.returncode == 0, result.stderr
+    settings = json.loads(result.stdout)
+    assert (settings["defaultModel"], settings["defaultProvider"]) == (
+        model,
+        expected_provider,
+    )
+
+
 @pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])
 def test_empty_input_seeds_only_managed_preferences(
     rendered_script: tuple[Path, str], stdin: str
 ) -> None:
     """Fresh and whitespace-only targets are treated as an empty JSON object."""
-    script, machine = rendered_script
+    script, _ = rendered_script
     result = _run(script, stdin)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == _managed(machine)
+    assert json.loads(result.stdout) == _managed(script)
 
 
 def test_preserves_app_and_unknown_nested_state(
     rendered_script: tuple[Path, str],
 ) -> None:
     """Pi-owned state, including changelog progress, survives a managed apply."""
-    script, machine = rendered_script
+    script, _ = rendered_script
     existing = {
         "appState": {"panes": [{"id": 7, "metadata": {"expanded": True}}]},
         "lastChangelogVersion": "0.80.6",
@@ -190,15 +232,15 @@ def test_preserves_app_and_unknown_nested_state(
     assert merged["appState"] == existing["appState"]
     assert merged["lastChangelogVersion"] == "0.80.6"
     assert merged["unknown"] == existing["unknown"]
-    assert list(merged) == [*existing, *_managed(machine)]
+    assert list(merged) == [*existing, *_managed(script)]
 
 
 def test_managed_values_take_precedence_for_the_full_allowlist(
     rendered_script: tuple[Path, str],
 ) -> None:
     """Only declared durable preferences are overwritten."""
-    script, machine = rendered_script
-    managed = _managed(machine)
+    script, _ = rendered_script
+    managed = _managed(script)
     existing: dict[str, object] = {
         "runtime": {"keep": True},
         **{key: "wrong" for key in managed},
@@ -307,7 +349,7 @@ def test_unicode_output_key_order_and_no_final_newline(
     rendered_script: tuple[Path, str],
 ) -> None:
     """Output is Pi-compatible JSON without escaping Unicode or adding a newline."""
-    script, machine = rendered_script
+    script, _ = rendered_script
     existing = {
         "z": "café",
         "nested": {"漢": "✓"},
@@ -316,12 +358,12 @@ def test_unicode_output_key_order_and_no_final_newline(
     result = _run(script, json.dumps(existing, ensure_ascii=False))
     assert result.returncode == 0, result.stderr
 
-    expected = {**existing, **_managed(machine)}
+    expected = {**existing, **_managed(script)}
     assert result.stdout == json.dumps(expected, indent=2, ensure_ascii=False)
     assert not result.stdout.endswith("\n")
     assert "café" in result.stdout
     assert "漢" in result.stdout
-    assert list(json.loads(result.stdout)) == [*existing, *_managed(machine)]
+    assert list(json.loads(result.stdout)) == [*existing, *_managed(script)]
 
 
 def test_idempotent(rendered_script: tuple[Path, str]) -> None:
@@ -404,11 +446,11 @@ def test_integer_output_matches_node_json_stringify(
     rendered_script: tuple[Path, str], raw_number: str
 ) -> None:
     """Parse every integer through IEEE-754 before matching Node byte-for-byte."""
-    script, machine = rendered_script
+    script, _ = rendered_script
     existing = f'{{"integer": {raw_number}}}'
     result = _run(script, existing)
     assert result.returncode == 0, result.stderr
-    assert result.stdout == _node_merged_stringify(existing, _managed(machine))
+    assert result.stdout == _node_merged_stringify(existing, _managed(script))
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node is not installed")
@@ -416,7 +458,7 @@ def test_output_matches_node_json_stringify_edge_cases(
     rendered_script: tuple[Path, str],
 ) -> None:
     """Match Pi's JavaScript serializer for numbers, Unicode, and nested objects."""
-    script, machine = rendered_script
+    script, _ = rendered_script
     existing = r"""{
   "z": "root-z",
   "10": "root-ten",
@@ -473,7 +515,7 @@ def test_output_matches_node_json_stringify_edge_cases(
     assert "\\udc00" in result.stdout
     assert "café 漢 ✓ 🦊" in result.stdout
 
-    assert result.stdout == _node_merged_stringify(existing, _managed(machine))
+    assert result.stdout == _node_merged_stringify(existing, _managed(script))
 
     second = _run(script, result.stdout)
     assert second.returncode == 0, second.stderr

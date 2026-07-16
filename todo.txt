@@ -9,6 +9,7 @@
 (D) Explore scheduled Slack digest via Claude cron/loop — morning triage summary +riot-slack
 (D) Consider riot-slack MEMORY.md for tracking ongoing thread context across sessions +riot-slack
 Explore jj (Jujutsu) as concurrent-branch alternative to git worktree orchestration +research +backlog
+(C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
 Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cleanup Stop hooks, make todo.txt tracking optional, relax   ff-only requirement +chezmoi +backlog
 (B) style(codex) private_config.toml.tmpl inline-comment padding (~L20-21) is now unvalidatable: private_+onepasswordRead templates are hard-skipped by validate-chezmoi-templates, so taplo never runs on that file; fix path is stub-onepasswordRead rendering so structured private configs get format validation without real secrets +tooling
 (C) packages: decide keep-or-remove orphaned pytest {pip: pytest} in .chezmoidata/packages.yaml now that tests resolve via uv --group test +packages
@@ -35,5 +36,31 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) Make tmux.conf initial main-session window declarations idempotent on source-file reload; live reload emits duplicate session/window errors although options apply +tmux +bug
 (B) Fix Hammerspoon WezTerm mainWindow() nil-but-real-windows-exist bug +chezmoi @worktree:.worktree/fix/hammerspoon-wezterm-mainwindow-fallback session:019f61be-8e1f-7ee5-80d1-338b6bc58b72 agent:pi
 (B) Hydrate Pi worktree approval registry on session resume +pi +worktree @worktree:.worktree/fix/pi-worktree-resume-approval session:019f5ee0-6bcf-74ca-8ad4-63ffe9f81fe7
+(C) Fix flaky .tests/tmux/test_direct_shell.py::test_managed_tmux_config_resets_stale_login_and_preserves_pane_cwd: new tmux pane transiently reports pane_current_command=tmux before the configured shell replaces it; wait for the shell process instead of asserting immediately. +tmux +testing
 (B) After PR #66 merges: back up ~/.pi/agent/memory (worktree + .git metadata + refs + index + stash + operation state) privately, then recover its legacy conflict state (stash ref, ORIG_HEAD/AUTO_MERGE/REBASE_HEAD leftovers) as a deliberate one-time operation; re-verify health under the new probe afterward. +pi +chezmoi +memory
-(B) 2026-07-15 Track upstream pi issue earendil-works/pi#6702: pi-tui replays entire transcript on width change (tmux zoom) causing freeze; no local fix possible (no PR to pi from us). When a fix/setting (committed-live render or terminal.altScreen) ships, enable via chezmoi dot_pi settings. +pi +worktree @upstream
+(B) Revisit Pi memory: re-enable with background sync + pi-memory fast mode; target combined startup+exit p95 <=2s. See docs/pi-memory-performance-and-removal.md +pi @perf
+(A) 2026-07-16 Fix pi settings.json.tmpl lastChangelogVersion drift blocking noninteractive chezmoi apply (source vs live version mismatch on pi upgrades) +pi
+(A) 2026-07-16 Remove unnecessary interactive confirmation prompts from Pi agent git/worktree workflow; preserve only for genuine design decisions +pi
+(A) 2026-07-16 Security: investigate/fix chezmoi-update-cron logging plaintext secret-bearing config diffs +security
+(A) 2026-07-16 Gemini/Antigravity skill discovery likely broken for all 20 native skills: dot_gemini/exact_extensions render path mismatch vs agy/gemini-cli expected skill paths +gemini
+(A) 2026-07-16 Security: plaintext bearer credentials live in ~/.gemini/settings.json and ~/.gemini/config/mcp_config.json (Riot Slack MCP); a prior migration was supposed to retire settings.json +security +gemini
+(A) 2026-07-16 Security: live ~/.pi/agent/mcp.json contains plaintext bearer-token fields; verify chezmoi-management status and rotate if warranted +security +pi
+(A) 2026-07-16 Security: chezmoi cat-config/dump-config falls back to the live config instead of failing closed when --config /dev/null is given; harden subagent/tooling instructions to always use an isolated temp --config +security
+(A) 2026-07-16 Pi publication deadlock: unmanaged in-flight audit-metadata.ts extension unconditionally blocks direct git commit/gh pr create with no JSON-worker exemption, and stale root-thread-guard-core.mjs load can also block root worktree_commit; add worker exemption and/or guard reload, manage audit-metadata.ts in source +pi
+(B) 2026-07-16 Investigate/plan a durable fix for chezmoi's scheduled updater repeatedly prompting macOS permissions after Homebrew-managed mise upgrades +chezmoi
+(B) 2026-07-16 Fix Pi post-merge worktree lifecycle gap: after worktree_stop, root guard blocks worktree_sync and workers can't git -C <main> pull/delete branch on the primary checkout; need a root-safe primitive or a documented limitation +pi
+(B) 2026-07-16 SSL prefix mismatch: p4.yaml.tmpl uses ssl:uegames.p4.riotgames.io:1666 but dot_p4enviro.tmpl/generated .p4config omit the ssl: prefix; confirm which is correct +p4
+(B) 2026-07-16 run_onchange_after_setup-riot-machine.unix-like.sh.tmpl Linux branch unconditionally writes .p4config pointing at a nonexistent client when the derived client is missing +p4
+(B) 2026-07-16 Investigate flaky tmux pane-probe race in .tests/tmux/test_direct_shell.py: Path.write_text creates/truncates before the write completes, and the probe waits for existence not valid JSON +chezmoi +testing
+(B) 2026-07-16 Investigate Pi 0.80.6 PI_PACKAGE_DIR mismatch: setting it to an empty isolated dir makes pi --version report 0.0.0 despite docs describing it as a package-dir override +pi
+(B) 2026-07-16 Review Pi subagent/thinking defaults and set the managed Pi default model to Sonnet 5 +pi
+(B) 2026-07-16 Investigate intermittent invisible Pi terminal cursor +pi
+(C) 2026-07-16 Resolve pre-commit's "Unexpected key(s) present at root: x-anchors" warning without weakening hook configuration +chezmoi
+(C) 2026-07-16 Correct stale my-git skill Pi worktree package label (@rezamonangg/pi-worktree vs the managed frank-machine/pi-worktree pin) +pi
+(C) 2026-07-16 my-git skill's Pi worktree-completion mechanics assume git -C <main> pull --rebase works, but worker sandboxing blocks paths outside its assigned worktree; document the working "git fetch origin && git rebase origin/main" equivalent instead +pi
+(C) 2026-07-16 dot_config/cdargs.tmpl uses /Users/shared/p4 (lowercase) vs stage-90's /Users/Shared/p4 (uppercase); only works because APFS is case-insensitive by default, normalize casing +p4
+(C) 2026-07-16 dot_config/cdargs.tmpl:3 $localShareDir is assigned but never used (dead variable) +chezmoi
+(C) 2026-07-16 .zsh/riot/env.zsh:13 appends $LCP_BIN to PATH but never assigns it anywhere (undefined variable, silent no-op) +zsh
+(C) 2026-07-16 ~/.cache/chezmoi/httpcache has an entry with an absurdly long base64 SAS-token filename that broke du; check whether chezmoi's http cache has unbounded growth with no eviction +chezmoi
+(C) 2026-07-16 Pre-existing pre-commit failure on main: home/dot_config/exact_mise/config.toml.tmpl renders a trailing blank line, failing check-toml/formatter +chezmoi
+2026-07-16 Watch upstream pi issue #6702 (pi-tui replays entire transcript on width change / tmux zoom, causing a freeze); requested a committed/live two-region render or opt-in terminal.altScreen; enable via chezmoi dot_pi settings once fixed upstream +pi

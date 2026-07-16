@@ -5,31 +5,6 @@
 # (see chezmoi#4274), so per-namespace externals live colocated with their
 # target directory via `.chezmoiexternal.<format>` instead.
 
-# pi-memory store, synced across machines via git over SSH.
-#
-# Memory is runtime-mutable data the `pi-memory` extension writes home-side,
-# which fights chezmoi's one-way source→home apply. Chezmoi owns only the
-# initial clone; `memory-git-sync.ts` owns routine fetch/merge/commit/push.
-# A deliberate `--refresh-externals always` refresh is a manual escape hatch:
-# it fails closed with a fast-forward-only pull rather than starting a rebase.
-#
-# Unix-like only: the clone authenticates over SSH, but SSH keypairs are
-# generated + registered on GitHub solely by the `*.unix-like.sh` provisioning
-# scripts (generate-ssh-key / register-ssh-github). Native Windows registers its
-# own key too (`*.windows.ps1`), but pi + its memory run in WSL there, so a
-# native-Windows clone is unwanted; gating it off also avoids the failed clone
-# aborting the whole `chezmoi apply`. On native Windows the `pi-memory`
-# extension keeps a local, unsynced dir and `memory-git-sync.ts` refuses
-# synchronization without a healthy checkout.
-{{- if .is_unix_like }}
-[memory]
-type = "git-repo"
-url = "git@github.com:dysfungi/ai.memory.git"
-refreshPeriod = "0"
-[memory.pull]
-args = ["--no-rebase", "--ff-only"]
-{{- end }}
-
 # shell-quote parser for the plan-mode extension's read-only bash analysis.
 #
 # Vendored as a single self-contained file (zero deps, 6.3 KB) so plan-mode can

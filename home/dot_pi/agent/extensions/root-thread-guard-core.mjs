@@ -2,8 +2,16 @@ import { homedir } from "node:os";
 import { isAbsolute, relative, resolve } from "node:path";
 
 const ROOT_MODES = new Set(["tui", "rpc"]);
-const EXACTLY_ALLOWED_TOOLS = new Set(["subagent", "write", "edit", "questionnaire", "plan_write", "scratchpad", "worktree_start", "worktree_status", "worktree_stop"]);
-const PREFIX_ALLOWED_TOOLS = ["memory_"];
+const EXACTLY_ALLOWED_TOOLS = new Set([
+	"subagent",
+	"write",
+	"edit",
+	"questionnaire",
+	"plan_write",
+	"worktree_start",
+	"worktree_status",
+	"worktree_stop",
+]);
 
 function expandHome(path, home) {
 	return path === "~" || path.startsWith("~/") ? `${home}${path.slice(1)}` : path;
@@ -18,7 +26,7 @@ function resolveInputPath(path, cwd, home) {
 	return resolve(cwd, expandHome(path, home));
 }
 
-function scratchReadAllowed(path, { cwd, home, agentDir, memoryDir }) {
+function scratchReadAllowed(path, { cwd, home, agentDir }) {
 	const resolvedPath = resolveInputPath(path, cwd, home);
 	const plansDir = resolve(agentDir, "plans");
 	const agentSkillsDir = resolve(agentDir, "skills");
@@ -26,7 +34,6 @@ function scratchReadAllowed(path, { cwd, home, agentDir, memoryDir }) {
 	const allowedTodoFiles = [resolve(cwd, "todo.txt"), resolve(cwd, "done.txt")];
 	return (
 		isWithin(resolvedPath, plansDir) ||
-		isWithin(resolvedPath, memoryDir) ||
 		isWithin(resolvedPath, agentSkillsDir) ||
 		isWithin(resolvedPath, globalSkillsDir) ||
 		allowedTodoFiles.includes(resolvedPath)
@@ -38,18 +45,17 @@ function scratchReadAllowed(path, { cwd, home, agentDir, memoryDir }) {
  * JSON workers and print-mode one-shots are exempt; interactive root sessions are
  * block-by-default, with a narrowly scoped scratch-read allowance.
  */
-export function decideToolCall({ mode, toolName, input = {}, cwd, home = homedir(), agentDir, memoryDir }) {
+export function decideToolCall({ mode, toolName, input = {}, cwd, home = homedir(), agentDir }) {
 	if (!ROOT_MODES.has(mode)) return { allowed: true };
 
 	const resolvedAgentDir = resolve(agentDir ?? process.env.PI_CODING_AGENT_DIR ?? `${home}/.pi/agent`);
-	const resolvedMemoryDir = resolve(memoryDir ?? process.env.PI_MEMORY_DIR ?? `${resolvedAgentDir}/memory`);
 
-	if (EXACTLY_ALLOWED_TOOLS.has(toolName) || PREFIX_ALLOWED_TOOLS.some((prefix) => toolName.startsWith(prefix))) {
+	if (EXACTLY_ALLOWED_TOOLS.has(toolName)) {
 		return { allowed: true };
 	}
 
 	if (toolName === "read" && typeof input.path === "string") {
-		if (scratchReadAllowed(input.path, { cwd, home, agentDir: resolvedAgentDir, memoryDir: resolvedMemoryDir })) {
+		if (scratchReadAllowed(input.path, { cwd, home, agentDir: resolvedAgentDir })) {
 			return { allowed: true };
 		}
 	}

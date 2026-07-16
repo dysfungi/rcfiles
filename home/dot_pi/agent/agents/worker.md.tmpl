@@ -4,16 +4,13 @@
 {{- range $candidate := $ns.models -}}
   {{- if and (hasKey $candidate "subagent_roles") (has "worker" $candidate.subagent_roles) -}}
     {{- $model = $candidate.id -}}
-    {{- if hasKey $candidate "gateway" -}}
-      {{- $model = printf "%s/%s" (dig "gateway" "provider" "" $candidate) $candidate.id -}}
-    {{- end -}}
   {{- end -}}
 {{- end -}}
 {{- if eq $model "" -}}{{ fail "pi agent worker: no catalog model has subagent_roles worker" }}{{- end -}}
 ---
 name: worker
 description: General-purpose subagent with full capabilities, isolated context
-tools: read, grep, find, ls, bash, write, edit, mcp, memory_read, memory_write, memory_search, scratchpad
+tools: read, grep, find, ls, bash, write, edit, mcp
 execution: worktree-write
 model: {{ $model }}
 ---

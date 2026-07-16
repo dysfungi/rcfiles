@@ -7,9 +7,8 @@
 # scripts read it.
 #
 # Best-effort: SSH provisioning problems WARN and exit 0 rather than aborting the
-# whole `chezmoi apply` (the memory-external abort was the lesson here). A key
-# that isn't generated just means the register scripts no-op; nothing else
-# breaks (the memory external is gated off Windows).
+# whole `chezmoi apply`. A key that isn't generated just means the registration
+# scripts no-op; nothing else breaks.
 $ErrorActionPreference = "Stop"
 Write-Host "INFO: Starting $PSCommandPath"
 

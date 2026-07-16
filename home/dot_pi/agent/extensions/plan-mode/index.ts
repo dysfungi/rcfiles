@@ -22,8 +22,8 @@
  *
  *   - Tool preservation: plan phase = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
- *     is captured and restored on exit, so root worktree lifecycle tools,
- *     `memory_*`, and `scratchpad` stay available throughout. The separate
+ *     is captured and restored on exit, so root worktree lifecycle tools stay
+ *     available throughout. The separate
  *     root-thread guard still blocks root Bash and MCP exploration.
  *
  *   - Hard read-only: `edit`/`write` are physically removed from the tool set.
@@ -35,7 +35,6 @@
  *     its plan via the `plan_write` tool, which can ONLY write the session's
  *     plan file at `~/.pi/agent/plans/<sessionId>.md` (one flat, browsable
  *     location; the path is derived from the session manager, not hardcoded).
- *     Memory persistence is unaffected — `memory_*` tools are preserved.
  *
  *   - Plan shown in the TUI, for free: `plan_write` has a `renderResult` slot
  *     that renders the plan as Markdown inline, so I see it automatically
@@ -76,7 +75,7 @@ You are in the plan phase - a read-only exploration phase for safe analysis.
 Restrictions:
 - The edit and write tools are disabled.
 - The root-thread guard blocks Bash, MCP, and exploratory root calls; delegate them to a read-only subagent.
-- Root orchestration, memory, task, and worktree lifecycle tools remain available.
+- Root orchestration, task, and worktree lifecycle tools remain available.
 
 Investigate through delegated agents, then produce a clear, concise plan. Ask
 clarifying questions with the questionnaire tool. Persist or update your plan

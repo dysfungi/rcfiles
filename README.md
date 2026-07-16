@@ -118,10 +118,6 @@ Each machine runs `mise x -- chezmoi update --init --verbose` daily via a cron j
 - Skipped privileged steps emit a `WARN` to the log and are deferred to the next interactive apply — they never fail silently.
 - Targets modified out-of-band are skipped by `--keep-going` every night and re-nagged (cron mail) until fixed via `chezmoi diff <target> && chezmoi apply --force <target>`. The "you have mail" notice surfaces through zsh's `MAIL`/startup check and xonsh's startup/pre-prompt check.
 
-#### Pi Memory External
-
-`~/.pi/agent/memory` remains a native `git-repo` external, but chezmoi clones it once and does not refresh it during ordinary or scheduled updates. `memory-git-sync.ts` is the sole routine sync owner: it fetches, merges, commits, and pushes at Pi session boundaries. Daily Markdown logs use a local best-effort `union` merge rule; conflicts in curated `MEMORY.md` and `SCRATCHPAD.md` remain fail-closed for manual resolution. `--refresh-externals always` is an intentional manual escape hatch and accepts only fast-forward updates. Concurrent Pi sessions do not coordinate memory synchronization and are unsupported.
-
 ### Terminal Startup
 
 Managed tmux and WezTerm launch their configured shell directly on every platform; they deliberately do not invoke account-level `/usr/bin/login`. This restores tmux's native `pane_current_path` behavior and intentionally forgoes managed login banners, utmpx records, and login-provided mail notices. Shell-level login modes remain allowed (for example, the Windows WSL `xonsh --login` and `bash --login` launch-menu entries); direct WezTerm, SSH, and bare-shell mail checks remain independently configured.
@@ -142,7 +138,7 @@ After applying `~/.config/tmux/tmux.conf`, an existing tmux server must reload i
 
 ### Pi Extensions
 
-`dot_pi/agent/extensions/subagent/` provides the managed subagent launcher. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; canonical workflow prompts render from `dot_pi/agent/prompts/` into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace. Role frontmatter uses bare IDs for Pi built-ins and canonical `provider/model-id` scopes for generated gateway models.
+`dot_pi/agent/extensions/subagent/` provides the managed subagent launcher. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; canonical workflow prompts render from `dot_pi/agent/prompts/` into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace.
 
 `root-thread-guard.ts` hard-blocks exploratory tools in root TUI/RPC sessions and directs work to `subagent`; JSON workers and print one-shots remain exempt from that root guard. The root owns `worktree_start`, `worktree_status`, and `worktree_stop`; an active approval routes every managed subagent to the approved linked worktree, so read-only review steps see uncommitted worker edits. Outside plan mode, validated writable workers retain direct Git/Bash there, while a markerless `worktree-write` worker in a confirmed non-Git/P4 cwd may mutate. Git cwd and ambiguous Git-probe cases fail closed. That topology check routes launch rather than containing later direct Git/Bash paths, so workers remain cooperative. Read-only Bash filtering recognizes known mutation forms only and is not a shell sandbox. `plan-mode/` applies only to interactive roots, but propagates `PI_ROOT_PHASE` to every child: while the root is in plan phase, all launched children, including nested workers, are downgraded to read-only. No root-guard bypass sentinel exists.
 
