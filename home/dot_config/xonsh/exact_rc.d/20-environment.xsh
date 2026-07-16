@@ -88,8 +88,6 @@ def __rc_env_riot():
         p4_lol_main_dir = p4_lol_dir / "__MAIN__"
         p4_lol_code_dir = p4_lol_main_dir / "code"
         $P4CONFIG = p4_lol_code_dir / "RiotClient" / "DevTools" / "VSCodeWorkspace" / ".p4config"
-    elif @.imp.xonsh.platform.ON_LINUX:
-        $P4CONFIG = ".p4config.wsl"
     else:
         $P4CONFIG = ".p4config"
 
