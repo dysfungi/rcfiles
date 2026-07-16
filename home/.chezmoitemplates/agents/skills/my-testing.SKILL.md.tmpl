@@ -20,6 +20,71 @@ description: >-
   Use the platform's render validator for rendering and human review for content correctness.
 - Add the test in the same commit as the functionality (and its regression class).
 
+## Anti-patterns — do not test
+
+Heuristics, not absolutes — see Exceptions below.
+
+1. **Config/catalog values** — asserting a setting equals its current value (e.g.
+   `default == "claude-opus"`). Mirrors data; breaks on legitimate edits. Test the
+   *invariant/contract* instead (e.g. "exactly one default emitted", "missing
+   default fails").
+2. **Live-config-sourced globals/fixtures** — reading a production/config value
+   into a test global or fixture that must stay "in sync" with config. **Fix:**
+   replace with independent, explicit cases via `@pytest.mark.parametrize()` —
+   don't mirror a single live value.
+3. **Template rendering / rendered content** — rendering a template and asserting
+   its output text is a linter's job (e.g. a template-validation pre-commit hook),
+   not pytest. Rendering as *setup* to exercise a script's behavior is fine;
+   asserting the rendered text itself is not.
+4. **Live-config-coupled tests** — any test that must be edited whenever a pinned
+   version, model ID, or catalog entry changes. If bumping a version breaks the
+   test without a real regression, it's bloat.
+5. **Duplicated production logic** — reimplementing the code under test inside the
+   test and asserting against the copy. Invoke the real artifact instead.
+6. **Generated documentation/prose wording** — exact wording of generated docs,
+   prompts, comments, or help text. Not executable behavior.
+7. **Static source-string assertions** — grepping a source/template file for a
+   substring, especially when a runtime test already covers the wired behavior.
+8. **Tautological / mirror assertions** — recomputing a value the same way the
+   code does, or asserting a data list equals itself.
+9. **Framework / stdlib / third-party behavior** — testing that the language or a
+   library works. Test *your usage* of it, not the dependency itself.
+10. **Order-dependent / shared-state tests** — pass only in a given order, or leak
+    state between tests.
+11. **Uncontrolled non-determinism** — real network calls, wall-clock time,
+    randomness, or `sleep`-based timing without injection/control. Flaky by
+    construction.
+12. **Private-implementation / call-order assertions** — asserting internal call
+    sequences or mock internals instead of observable outcomes.
+13. **Redundant tests** — multiple tests covering the same behavior with no
+    distinct failure mode.
+14. **Trivial getters / constants** — no logic, no regression surface.
+15. **Over-mocking** — mocks that reshape production behavior or assert on mock
+    internals rather than real outcomes.
+
+**Exceptions.** Test a value/source directly only when it's a stable, intentional
+user/operational/security/protocol contract with no safe behavioral path (e.g. a
+security-policy declaration, a wire-protocol constant). Prefer a behavior test;
+fall back to a value/source assertion only when none exists, and say why in the
+test.
+
+**Constructive fix pattern.** Turn a live-value mirror into a behavioral test:
+parametrize independent, self-contained cases and assert the *derivation/mapping*
+(e.g. "model X resolves to provider Y") across several cases — not the single
+current selection.
+
+**Litmus.** If this test fails, does it signal a regression in a stable supported
+contract — user-visible, operational, or security — or just that data/config/
+wording legitimately changed? If the latter, it's bloat.
+
+**Trade-offs to weigh:**
+- Regression value vs maintenance cost — does it break on unrelated legitimate changes?
+- Contract vs value — assert the stable invariant, not the volatile current value.
+- Real vs mocked — fidelity vs speed/isolation.
+- Fixture independence — self-contained cases vs reading production data.
+- Signal vs count — one behavioral test on the user path beats many value asserts.
+- Harness cost (e.g. PTY/runtime harness) vs the regression risk it actually catches.
+
 ## Prefer real over mocked
 
 - Prefer real inputs and outputs over mocks — sit as close to actual user behavior as
