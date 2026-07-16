@@ -1,1 +1,11 @@
 {{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . -}}
+
+## Pi worker runtime metadata
+
+In an execution/worker session that authors a durable record, call `audit_metadata` once
+before authoring it and paste its returned block verbatim. Never hand-write, guess, infer
+from config or defaults, or use `unknown` for Model, Model-Provider, Session-ID, Username,
+or Hostname; `audit_metadata` is their only valid source.
+
+`git commit` and `gh pr create` remain direct and un-intercepted: nothing attaches this block
+or blocks publication if it is omitted. This is a manual, cooperative requirement.
