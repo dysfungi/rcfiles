@@ -36,7 +36,7 @@ INVALID_VALUES = [
 INVALID_CASES = [
     pytest.param(field, value, id=f"{field}-{label}")
     for field, (label, value) in product(
-        ["model", "modelProvider", "sessionId", "username", "hostname"],
+        ["model", "modelProvider", "sessionId", "hostname", "piVersion"],
         INVALID_VALUES,
     )
 ]
@@ -63,17 +63,17 @@ def _run_harness(scenario: str, *args: str) -> None:
 
 
 def test_audit_metadata_extracts_runtime_values() -> None:
-    """Return the exact live model, session, user, and host values in details."""
+    """Return the exact live model, session, and host values in details."""
     _run_harness("extraction")
 
 
 def test_audit_metadata_formats_paste_ready_runtime_sources() -> None:
-    """Label every emitted audit field as sourced from the Pi runtime."""
+    """Label every emitted audit field with the verified Pi version."""
     _run_harness("output-format")
 
 
 def test_audit_metadata_uses_live_default_runtime_identity() -> None:
-    """Read the current user and host through the extension's default runtime wrapper."""
+    """Read the current host and Pi version through the extension's default runtime wrapper."""
     _run_harness("default-runtime")
 
 
@@ -85,13 +85,18 @@ def test_audit_metadata_rejects_invalid_values_without_a_result(
     _run_harness("invalid-value", field, json.dumps(value))
 
 
+def test_audit_metadata_rejects_a_missing_version_without_a_result() -> None:
+    """Reject a missing Pi version rather than emitting an unprovable source label."""
+    _run_harness("missing-version")
+
+
 def test_audit_metadata_rejects_a_missing_model_without_type_error() -> None:
     """Report missing model fields through validation instead of dereferencing undefined."""
     _run_harness("missing-model")
 
 
 def test_audit_metadata_reads_a_fresh_runtime_snapshot_per_call() -> None:
-    """Never cache model, session, user, or host identity across tool invocations."""
+    """Never cache model, session, host, or Pi version across tool invocations."""
     _run_harness("fresh-snapshot")
 
 

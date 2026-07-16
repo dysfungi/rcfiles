@@ -31,10 +31,10 @@ function context({ model = { id: "model-alpha", provider: "provider-alpha" }, se
 	};
 }
 
-function runtime({ username = "user-alpha", hostname = "host-alpha" } = {}) {
+function runtime({ hostname = "host-alpha", version = "0.80.6-test" } = {}) {
 	return {
-		userInfo: () => ({ username }),
 		hostname: () => hostname,
+		version: () => version,
 	};
 }
 
@@ -60,7 +60,7 @@ async function invoke(tool, ctx) {
 }
 
 async function testExtraction() {
-	const { tool } = load(runtime({ username: "known-user", hostname: "known-host" }));
+	const { tool } = load(runtime({ hostname: "known-host" }));
 	const result = await invoke(
 		tool,
 		context({ model: { id: "known-model", provider: "known-provider" }, sessionId: "known-session" }),
@@ -70,13 +70,12 @@ async function testExtraction() {
 		model: "known-model",
 		modelProvider: "known-provider",
 		sessionId: "known-session",
-		username: "known-user",
 		hostname: "known-host",
 	});
 }
 
 async function testOutputFormat() {
-	const { tool } = load(runtime({ username: "format-user", hostname: "format-host" }));
+	const { tool } = load(runtime({ hostname: "format-host", version: "1.2.3" }));
 	const result = await invoke(
 		tool,
 		context({ model: { id: "format-model", provider: "format-provider" }, sessionId: "format-session" }),
@@ -84,23 +83,22 @@ async function testOutputFormat() {
 	assert.equal(
 		result.content[0]?.text,
 		[
-			"Model: format-model (source: Pi runtime)",
-			"Model-Provider: format-provider (source: Pi runtime)",
-			"Session-ID: format-session (source: Pi runtime)",
-			"Username: format-user (source: Pi runtime)",
-			"Hostname: format-host (source: Pi runtime)",
+			"Model: format-model (source: Pi 1.2.3)",
+			"Model-Provider: format-provider (source: Pi 1.2.3)",
+			"Session-ID: format-session (source: Pi 1.2.3)",
+			"Hostname: format-host (source: Pi 1.2.3)",
 		].join("\n"),
 	);
 }
 
 async function testDefaultRuntime() {
-	const expectedUsername = os.userInfo().username;
 	const expectedHostname = os.hostname();
+	const { VERSION } = require(join(packageDir, "dist", "index.js"));
 	const { tool } = load();
 	const result = await invoke(tool, context());
 
-	assert.equal(result.details.username, expectedUsername);
 	assert.equal(result.details.hostname, expectedHostname);
+	assert.match(result.content[0]?.text, new RegExp(`\\(source: Pi ${VERSION}\\)`));
 }
 
 async function testInvalidValue() {
@@ -112,8 +110,8 @@ async function testInvalidValue() {
 		model: "Model",
 		modelProvider: "Model-Provider",
 		sessionId: "Session-ID",
-		username: "Username",
 		hostname: "Hostname",
+		piVersion: "Pi-Version",
 	};
 	const label = labels[field];
 	if (!label) throw new Error(`Unknown audit field: ${field}`);
@@ -121,8 +119,8 @@ async function testInvalidValue() {
 	if (field === "model") ctx.model.id = value;
 	else if (field === "modelProvider") ctx.model.provider = value;
 	else if (field === "sessionId") ctx.sessionManager = { getSessionId: () => value };
-	else if (field === "username") auditRuntime.userInfo = () => ({ username: value });
-	else auditRuntime.hostname = () => value;
+	else if (field === "hostname") auditRuntime.hostname = () => value;
+	else auditRuntime.version = () => value;
 
 	const { tool } = load(auditRuntime);
 	let result;
@@ -137,6 +135,24 @@ async function testInvalidValue() {
 		},
 	);
 	assert.equal(result, undefined, "invalid metadata must not produce an audit result");
+}
+
+async function testMissingVersion() {
+	const auditRuntime = runtime();
+	auditRuntime.version = () => undefined;
+	const { tool } = load(auditRuntime);
+	let result;
+	await assert.rejects(
+		async () => {
+			result = await invoke(tool, context());
+		},
+		(error) => {
+			assert.equal(error instanceof TypeError, false, "missing version must not cause a raw TypeError");
+			assert.match(String(error.message), /Pi-Version is missing/);
+			return true;
+		},
+	);
+	assert.equal(result, undefined, "missing version must not produce an audit result");
 }
 
 async function testMissingModel() {
@@ -159,18 +175,18 @@ async function testMissingModel() {
 }
 
 async function testFreshSnapshot() {
-	let username = "first-user";
 	let hostname = "first-host";
+	let version = "1.0.0";
 	const { tool } = load({
-		userInfo: () => ({ username }),
 		hostname: () => hostname,
+		version: () => version,
 	});
 	const first = await invoke(
 		tool,
 		context({ model: { id: "first-model", provider: "first-provider" }, sessionId: "first-session" }),
 	);
-	username = "second-user";
 	hostname = "second-host";
+	version = "2.0.0";
 	const second = await invoke(
 		tool,
 		context({ model: { id: "second-model", provider: "second-provider" }, sessionId: "second-session" }),
@@ -180,14 +196,12 @@ async function testFreshSnapshot() {
 		model: "first-model",
 		modelProvider: "first-provider",
 		sessionId: "first-session",
-		username: "first-user",
 		hostname: "first-host",
 	});
 	assert.deepEqual(second.details, {
 		model: "second-model",
 		modelProvider: "second-provider",
 		sessionId: "second-session",
-		username: "second-user",
 		hostname: "second-host",
 	});
 	assert.notDeepEqual(first.details, second.details, "tool must read a fresh runtime snapshot for every call");
@@ -209,6 +223,7 @@ const scenarios = {
 	"default-runtime": testDefaultRuntime,
 	"invalid-value": testInvalidValue,
 	"missing-model": testMissingModel,
+	"missing-version": testMissingVersion,
 	"fresh-snapshot": testFreshSnapshot,
 	"extension-surface": testExtensionSurface,
 };

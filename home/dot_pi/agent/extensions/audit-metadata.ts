@@ -4,7 +4,7 @@
  * than emitting "unknown" so durable records never contain fabricated provenance.
  */
 
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { VERSION, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import * as os from "node:os";
 import { Type } from "typebox";
 
@@ -14,13 +14,13 @@ type AuditField = {
 };
 
 type AuditRuntime = {
-	userInfo(): { username?: unknown };
 	hostname(): unknown;
+	version(): unknown;
 };
 
 const runtime: AuditRuntime = {
-	userInfo: () => os.userInfo(),
 	hostname: () => os.hostname(),
+	version: () => VERSION,
 };
 
 function validationProblems(value: unknown): string[] {
@@ -42,15 +42,18 @@ function auditValues(ctx: {
 		{ label: "Model", value: ctx.model?.id },
 		{ label: "Model-Provider", value: ctx.model?.provider },
 		{ label: "Session-ID", value: ctx.sessionManager?.getSessionId?.() },
-		{ label: "Username", value: auditRuntime.userInfo()?.username },
 		{ label: "Hostname", value: auditRuntime.hostname() },
 	];
-	const failures = fields.flatMap(({ label, value }) =>
+	const piVersion = auditRuntime.version();
+	const failures = [...fields, { label: "Pi-Version", value: piVersion }].flatMap(({ label, value }) =>
 		validationProblems(value).map((problem) => `${label} ${problem}`),
 	);
 	if (failures.length > 0) throw new Error(`Invalid audit metadata: ${failures.join("; ")}`);
 
-	return Object.fromEntries(fields.map(({ label, value }) => [label, value])) as Record<string, string>;
+	return {
+		values: Object.fromEntries(fields.map(({ label, value }) => [label, value])) as Record<string, string>,
+		piVersion: piVersion as string,
+	};
 }
 
 export default function auditMetadata(pi: ExtensionAPI, auditRuntime: AuditRuntime = runtime): void {
@@ -60,21 +63,19 @@ export default function auditMetadata(pi: ExtensionAPI, auditRuntime: AuditRunti
 		description: "Return verified live Pi runtime metadata for durable audit records.",
 		parameters: Type.Object({}),
 		async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
-			const values = auditValues(ctx, auditRuntime);
+			const { values, piVersion } = auditValues(ctx, auditRuntime);
 			const details = {
 				model: values.Model,
 				modelProvider: values["Model-Provider"],
 				sessionId: values["Session-ID"],
-				username: values.Username,
 				hostname: values.Hostname,
 			};
 			// The Pi audit-trail skill owns the static co-author identity trailer by design; this tool emits only provable runtime facts.
 			const text = [
-				`Model: ${details.model} (source: Pi runtime)`,
-				`Model-Provider: ${details.modelProvider} (source: Pi runtime)`,
-				`Session-ID: ${details.sessionId} (source: Pi runtime)`,
-				`Username: ${details.username} (source: Pi runtime)`,
-				`Hostname: ${details.hostname} (source: Pi runtime)`,
+				`Model: ${details.model} (source: Pi ${piVersion})`,
+				`Model-Provider: ${details.modelProvider} (source: Pi ${piVersion})`,
+				`Session-ID: ${details.sessionId} (source: Pi ${piVersion})`,
+				`Hostname: ${details.hostname} (source: Pi ${piVersion})`,
 			].join("\n");
 
 			return { content: [{ type: "text", text }], details };
