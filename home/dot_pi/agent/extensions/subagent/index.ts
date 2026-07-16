@@ -28,7 +28,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import { type AgentConfig, type AgentScope, discoverAgents } from "./agents.ts";
+import { type AgentConfig, type AgentExecution, type AgentScope, discoverAgents } from "./agents.ts";
 import { childEnvironment } from "./child-env.mjs";
 import { acquireWorktreeLease, releaseWorktreeLease, resolveApprovedWorktree } from "../worktree-approval-registry.mjs";
 
@@ -277,6 +277,7 @@ function repoRoot(cwd: string): string | null {
 
 interface PreparedAgent {
 	agent: AgentConfig;
+	execution: AgentExecution;
 	effectiveCwd: string;
 	leaseRepoRoot?: string;
 }
@@ -288,23 +289,25 @@ function prepareAgent(defaultCwd: string, sessionId: string, agents: AgentConfig
 		return `Unknown agent: "${agentName}". Available agents: ${available}.`;
 	}
 	if (agent.executionError || !agent.execution) return `Agent "${agentName}" rejected: ${agent.executionError ?? "missing execution class"}.`;
+	const effectiveExecution = process.env.PI_MODE === "normal" ? agent.execution : "read-only";
 	const root = repoRoot(defaultCwd);
-	if (agent.execution === "read-only") {
-		if (!root) return { agent, effectiveCwd: cwd ?? defaultCwd };
+	if (effectiveExecution === "read-only") {
+		if (!root) return { agent, execution: effectiveExecution, effectiveCwd: cwd ?? defaultCwd };
 		// An active approval defines the workflow snapshot, including uncommitted worker edits.
 		const approved = resolveApprovedWorktree({ sessionId, repoRoot: root });
-		if (approved.ok) return { agent, effectiveCwd: approved.approval.worktreeRoot };
-		if (approved.noApproval) return { agent, effectiveCwd: cwd ?? defaultCwd };
+		if (approved.ok) return { agent, execution: effectiveExecution, effectiveCwd: approved.approval.worktreeRoot };
+		if (approved.noApproval) return { agent, execution: effectiveExecution, effectiveCwd: cwd ?? defaultCwd };
 		return `Read-only agent launch rejected: ${approved.reason}`;
 	}
 	if (!root) {
 		if (cwd && !path.isAbsolute(cwd)) return "Writable agent cwd must be an absolute path.";
-		return { agent, effectiveCwd: cwd ?? defaultCwd };
+		if (cwd && repoRoot(cwd)) return "Writable agent cwd override must not be inside a Git repository when the parent is non-Git.";
+		return { agent, execution: effectiveExecution, effectiveCwd: cwd ?? defaultCwd };
 	}
 	if (cwd && !path.isAbsolute(cwd)) return "Writable agent cwd must be an absolute path.";
 	const approved = resolveApprovedWorktree({ sessionId, repoRoot: root, cwd });
 	if (!approved.ok) return `Writable agent launch rejected: ${approved.reason}`;
-	return { agent, effectiveCwd: approved.approval.worktreeRoot, leaseRepoRoot: approved.approval.repoRoot };
+	return { agent, execution: effectiveExecution, effectiveCwd: approved.approval.worktreeRoot, leaseRepoRoot: approved.approval.repoRoot };
 }
 
 function prepareRequests(defaultCwd: string, sessionId: string, agents: AgentConfig[], requests: Array<{ agent: string; cwd?: string }>, allowMultipleWritable = false): { prepared?: PreparedAgent[]; reason?: string } {
@@ -329,7 +332,7 @@ async function runSingleAgent(
 	onUpdate: OnUpdateCallback | undefined,
 	makeDetails: (results: SingleResult[]) => SubagentDetails,
 ): Promise<SingleResult> {
-	const { agent } = prepared;
+	const { agent, execution } = prepared;
 	const effectiveCwd = prepared.effectiveCwd;
 	let lease: { repoRoot: string; worktreeRoot: string; generation: number; leaseId: number } | undefined;
 	if (prepared.leaseRepoRoot) {
@@ -396,7 +399,7 @@ async function runSingleAgent(
 			const invocation = getPiInvocation(args);
 			const proc = spawn(invocation.command, invocation.args, {
 				cwd: effectiveCwd,
-				env: childEnvironment(process.env, { execution: agent.execution, approval: lease }),
+				env: childEnvironment(process.env, { execution, approval: lease }),
 				shell: false,
 				stdio: ["ignore", "pipe", "pipe"],
 			});

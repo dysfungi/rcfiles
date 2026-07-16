@@ -103,3 +103,4 @@ x 2026-07-14 Fix Hammerspoon WezTerm unhide false-positive error log +chezmoi @w
 x 2026-07-14 (B) Fix Pi memory chezmoi git-repo external/runtime sync conflicts: refreshPeriod=0 + merge-not-rebase health-gated sync + daily-only union merge +pi +chezmoi +memory @worktree:.worktree/fix/pi-memory-sync-hardening
 x 2026-07-14 Set Pi default thinking level to xhigh +pi @worktree:fix/pi-thinking-level-xhigh
 x 2026-07-14 (B) decouple mcp/non-mutating tools from git-worktree launch gate @worktree
+x 2026-07-15 Fix flaky .tests/tmux/test_direct_shell.py::test_managed_tmux_config_resets_stale_login_and_preserves_pane_cwd: new tmux pane transiently reports pane_current_command=tmux before the configured shell replaces it; wait for the shell process instead of asserting immediately. +tmux +testing

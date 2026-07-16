@@ -355,8 +355,13 @@ Path(sys.argv[1]).write_text(
         self, pane_id: str, expected_cwd: Path, tmp_path: Path
     ) -> None:
         """Validate a direct configured login shell and its inherited environment."""
-        actual_name = _executable_name(self.process_name(pane_id))
         expected_name = _executable_name(str(self.shell))
+        # tmux reports its bootstrap process until the configured shell replaces it.
+        self.wait_for(
+            lambda: _executable_name(self.process_name(pane_id)) == expected_name,
+            f"pane {pane_id} configured shell {expected_name}",
+        )
+        actual_name = _executable_name(self.process_name(pane_id))
         assert actual_name == expected_name, (
             f"pane {pane_id} runs {actual_name!r}, expected configured shell "
             f"{expected_name!r}; account-level login must not own panes"

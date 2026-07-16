@@ -2,8 +2,10 @@
 
 Owned pi extension providing a **read-only exploration mode that is ON BY DEFAULT
 for interactive root sessions** (`tui`/`rpc`). JSON subagents and print one-shots
-are deliberately inert. This document records the requirements, the options
-evaluated, and why each decision was made, so the context lives next to the code.
+keep their own plan-mode extension inert, while the launcher propagates the root
+`PI_MODE` signal to enforce its child execution policy. This document records the
+requirements, the options evaluated, and why each decision was made, so the context
+lives next to the code.
 
 ## Requirements
 
@@ -32,9 +34,12 @@ evaluated, and why each decision was made, so the context lives next to the code
    fails, normal mode remains selected and the failure is reported. `/implement`
    remains the subagent prompt template's scout → planner → worker workflow; plan
    mode must not register it because extension commands take precedence.
-6. **Delegated workers stay writable.** `json` subagents, `print` one-shots,
-   and processes marked `PI_SUBAGENT=1` never enable plan mode, so workers can
-   read and edit without a parent-side CLI opt-out.
+6. **Delegated workers inherit the root mode.** `json` subagents, `print`
+   one-shots, and processes marked `PI_SUBAGENT=1` never enable their own plan
+   mode. The launcher propagates `PI_MODE`, however, and retains a declared
+   execution class only for `PI_MODE=normal`; plan, missing, and unrecognized
+   values downgrade every child to `read-only`. The inherited signal also closes
+   nested-delegation escapes.
 7. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
    simply restore persisted state.
 8. **Hard tool read-only.** `edit`/`write` are _physically removed_ from the tool
@@ -294,7 +299,7 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 ## Verification matrix
 
 - Fresh `tui`/`rpc` start, `/new` → plan mode on; first user message becomes session name.
-- `json` subagent and `print` one-shot → plan mode inert; write/edit stay available.
+- `json` subagent and `print` one-shot → plan-mode extension inert; inherited `PI_MODE=plan` still downgrades launched workers to read-only.
 - `/resume` → state restored, no injected `/plan`.
 - `--plan` → accepted but redundant because plan mode defaults on; `--no-plan` → unsupported and rejected by this installed Pi version. `/plan` and `/normal` select modes after startup without starting an agent turn.
 - `/mode` → cycles; `/mode PLAN` and `/mode normal` select explicitly; `/mode p`, `/mode plan extra`, and other malformed inputs preserve state and report exact-name usage. Completion offers only `plan` and `normal`.

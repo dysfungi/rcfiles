@@ -128,6 +128,20 @@ function restoredWorktreeState(entries: unknown, expectedRepoRoot: string): { en
 	return undefined;
 }
 
+interface GitProbeResult {
+	code: number;
+	stdout: string;
+	stderr: string;
+	killed: boolean;
+}
+
+function isConfirmedNonGitProbe(probe: GitProbeResult): boolean {
+	// Only Git's completed "not a repository" response proves a markerless
+	// worker began outside Git. Success, errors, and killed probes are ambiguous,
+	// so they must retain the mutation boundary.
+	return probe.killed === false && probe.code === 128 && !probe.stdout.trim() && /not a git repository/i.test(probe.stderr);
+}
+
 function childInitialCwdIsApprovedWorktree(cwd: string): boolean {
 	try {
 		const expectedRepoRoot = process.env.PI_WORKTREE_REPO_ROOT;
@@ -170,6 +184,14 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 				: process.env.PI_SUBAGENT_EXECUTION === "read-only"
 					? "read-only"
 					: "unmarked";
+			if (childWithoutWorktreeLease) {
+				try {
+					const probe = await pi.exec("git", ["rev-parse", "--show-toplevel"], { cwd: ctx.cwd, timeout: 3_000 });
+					if (isConfirmedNonGitProbe(probe)) childExecution = "worktree-write";
+				} catch {
+					// A missing executable or transport failure is not evidence of a non-Git cwd.
+				}
+			}
 			guarded = true;
 			return;
 		}
@@ -200,7 +222,7 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 			if (event.toolName.startsWith("worktree_")) return { block: true, reason: "Blocked: worktree lifecycle tools are root-owned." };
 			if (isMutation(event) && childExecution !== "worktree-write") {
 				const reason = childWithoutWorktreeLease
-					? "Blocked: this delegated worker launched without a Git worktree; local mutations are unavailable in a non-Git directory."
+					? "Blocked: markerless writable children require a confirmed non-Git cwd; Git and ambiguous Git probes are denied."
 					: "Blocked: this delegated child is read-only or lacks a validated worktree marker.";
 				return { block: true, reason };
 			}

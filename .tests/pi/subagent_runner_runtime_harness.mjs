@@ -26,6 +26,7 @@ const jiti = createJiti(import.meta.url, {
 });
 const { default: subagentExtension } = await jiti.import(resolve(extensionPath));
 const { default: worktreeGuard } = await jiti.import(resolve(guardPath));
+const { default: planModeExtension } = await jiti.import(resolve(extensionPath, "..", "..", "plan-mode", "index.ts"));
 const registry = await import(pathToFileURL(resolve(registryPath)).href);
 
 function git(root, ...args) {
@@ -80,6 +81,30 @@ function runner(cwd, sessionId) {
 	};
 }
 
+async function startNestedChildPlanMode() {
+	const handlers = [];
+	planModeExtension({
+		appendEntry() {},
+		getActiveTools: () => [],
+		getFlag: () => true,
+		on(name, handler) {
+			if (name === "session_start") handlers.push(handler);
+		},
+		registerCommand() {},
+		registerEntryRenderer() {},
+		registerFlag() {},
+		registerShortcut() {},
+		registerTool() {},
+		setActiveTools() {},
+	});
+	const ctx = {
+		mode: "json",
+		sessionManager: { getBranch: () => [] },
+		ui: { notify() {}, setStatus() {}, theme: { fg: (_color, text) => text } },
+	};
+	for (const handler of handlers) await handler({ reason: "startup" }, ctx);
+}
+
 function rootGuard(cwd, sessionId, branch, header = undefined) {
 	const handlers = new Map();
 	const ctx = {
@@ -88,7 +113,7 @@ function rootGuard(cwd, sessionId, branch, header = undefined) {
 		ui: { notify() {}, setStatus() {}, theme: { fg: (_color, text) => text } },
 	};
 	worktreeGuard({
-		exec: async () => ({ code: 0, stdout: `${cwd}\n` }),
+		exec: async () => ({ code: 0, killed: false, stdout: `${cwd}\n`, stderr: "" }),
 		getAllTools: () => [],
 		on(name, handler) {
 			const eventHandlers = handlers.get(name) ?? [];
@@ -163,6 +188,7 @@ function fakePi() {
 			"\tcwd: process.cwd(),",
 			"\targs: process.argv.slice(2),",
 			"\texecution: process.env.PI_SUBAGENT_EXECUTION,",
+			"\tmode: process.env.PI_MODE,",
 			"\tmarker: process.env.PI_SUBAGENT,",
 			"\tworktreeRoot: process.env.PI_WORKTREE_ROOT,",
 			"\trepoRoot: process.env.PI_WORKTREE_REPO_ROOT,",
@@ -409,10 +435,10 @@ async function testWritableExecution(fake) {
 	}
 }
 
-async function testDegradedWritableExecution(fake) {
+async function testMarkerlessWritableExecutionOutsideGit(fake) {
 	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-non-git-"));
 	const parent = worktreeFixture();
-	const sessionId = "degraded-writable";
+	const sessionId = "markerless-writable";
 	const parentApproval = approve(parent.root, parent.worker, "parent-worktree");
 	writeAgents(directory);
 	try {
@@ -421,7 +447,7 @@ async function testDegradedWritableExecution(fake) {
 			async () => {
 				const single = await invoke(runner(directory, sessionId), {
 					agent: "writer",
-					task: "use non-mutating tools in a non-Git directory",
+					task: "make permitted mutations in a confirmed non-Git directory",
 					agentScope: "project",
 					confirmProjectAgents: false,
 				});
@@ -681,6 +707,124 @@ async function testParallelReadOnlyExecution(fake) {
 	assertChildLaunchArgs(fake.log);
 }
 
+async function testPlanModeDowngradesWorkers(fake) {
+	const { root } = worktreeFixture();
+	const sessionId = "plan-mode-downgrade";
+	writeAgents(root);
+	const cases = [
+		["single", { agent: "writer", task: "inspect", agentScope: "project", confirmProjectAgents: false }, 1],
+		[
+			"chain",
+			{
+				chain: [
+					{ agent: "writer", task: "inspect first" },
+					{ agent: "writer", task: "inspect second" },
+				],
+				agentScope: "project",
+				confirmProjectAgents: false,
+			},
+			2,
+		],
+		[
+			"parallel",
+			{
+				tasks: [
+					{ agent: "writer", task: "inspect first" },
+					{ agent: "writer", task: "inspect second" },
+				],
+				agentScope: "project",
+				confirmProjectAgents: false,
+			},
+			2,
+		],
+	];
+	for (const [id, params, expectedLaunches] of cases) {
+		writeFileSync(fake.log, "");
+		const result = await withFakePi(fake, () => invoke(runner(root, `${sessionId}-${id}`), params), { PI_MODE: "plan" });
+		assert.equal(result.isError, undefined, resultText(result));
+		const records = invocations(fake.log);
+		assert.equal(records.length, expectedLaunches, `${id} launch count`);
+		for (const record of records) {
+			assert.equal(record.execution, "read-only", `${id} worker execution`);
+			assert.equal(record.mode, "plan", `${id} worker mode propagation`);
+		}
+		assertChildLaunchArgs(fake.log);
+	}
+
+	writeFileSync(fake.log, "");
+	const missingMode = await withFakePi(
+		fake,
+		() =>
+			invoke(runner(root, `${sessionId}-missing-mode`), {
+				agent: "writer",
+				task: "fail closed without a root mode",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		{ PI_MODE: undefined },
+	);
+	assert.equal(missingMode.isError, undefined, resultText(missingMode));
+	const [missingModeRecord] = invocations(fake.log);
+	assert.equal(missingModeRecord.execution, "read-only");
+	assert.equal("mode" in missingModeRecord, false);
+
+	writeFileSync(fake.log, "");
+	const unrecognizedMode = await withFakePi(
+		fake,
+		() =>
+			invoke(runner(root, `${sessionId}-unrecognized-mode`), {
+				agent: "writer",
+				task: "fail closed for an unrecognized root mode",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		{ PI_MODE: "bogus" },
+	);
+	assert.equal(unrecognizedMode.isError, undefined, resultText(unrecognizedMode));
+	const [unrecognizedModeRecord] = invocations(fake.log);
+	assert.equal(unrecognizedModeRecord.execution, "read-only");
+	assert.equal(unrecognizedModeRecord.mode, "bogus");
+
+	writeFileSync(fake.log, "");
+	const nested = await withFakePi(
+		fake,
+		async () => {
+			await startNestedChildPlanMode();
+			assert.equal(process.env.PI_MODE, "plan", "child plan-mode startup must preserve the inherited root mode");
+			return invoke(runner(root, `${sessionId}-nested`), {
+				agent: "writer",
+				task: "nested worker",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			});
+		},
+		{ PI_MODE: "plan", PI_SUBAGENT: "1" },
+	);
+	assert.equal(nested.isError, undefined, resultText(nested));
+	const [nestedRecord] = invocations(fake.log);
+	assert.equal(nestedRecord.execution, "read-only");
+	assert.equal(nestedRecord.mode, "plan");
+	assert.equal(nestedRecord.marker, "1");
+}
+
+async function testNonGitParentRejectsGitCwdOverride(fake) {
+	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-non-git-parent-"));
+	const { root } = worktreeFixture();
+	writeAgents(directory);
+	const result = await withFakePi(fake, () =>
+		invoke(runner(directory, "non-git-parent-git-cwd"), {
+			agent: "writer",
+			task: "must not enter Git",
+			cwd: root,
+			agentScope: "project",
+			confirmProjectAgents: false,
+		}),
+	);
+	assert.equal(result.isError, true);
+	assert.match(resultText(result), /cwd override must not be inside a Git repository/);
+	assert.deepEqual(invocations(fake.log), []);
+}
+
 async function testLeaseReleasesAfterSpawnFailure() {
 	const { root, worker } = worktreeFixture();
 	const sessionId = "spawn-failure";
@@ -820,32 +964,43 @@ async function testSignalTerminationAndAbortEscalation(fake) {
 	}
 }
 
-const fake = fakePi();
-await testReadOnlyExecution(fake);
-writeFileSync(fake.log, "");
-await testApprovedWorktreeRoutesReviewers(fake);
-writeFileSync(fake.log, "");
-await testReadOnlyRejectsUnresolvedApproval(fake);
-writeFileSync(fake.log, "");
-await testWritableExecution(fake);
-writeFileSync(fake.log, "");
-await testDegradedWritableExecution(fake);
-writeFileSync(fake.log, "");
-await testReadOnlyMcpAgentsLaunchOutsideGit(fake);
-writeFileSync(fake.log, "");
-await testResumeHydrationRoutesWritableAgent(fake);
-writeFileSync(fake.log, "");
-await testDeletedResumedWorktreeRejectsWritableAgent(fake);
-writeFileSync(fake.log, "");
-await testExecutionClassAndCwdPreflight(fake);
-writeFileSync(fake.log, "");
-await testParallelPreflightIsAtomic(fake);
-writeFileSync(fake.log, "");
-await testParallelReadOnlyExecution(fake);
-writeFileSync(fake.log, "");
-await testLeaseReleasesAfterSpawnFailure();
-writeFileSync(fake.log, "");
-await testConcurrentToolCallsShareOneLease(fake);
-writeFileSync(fake.log, "");
-await testSignalTerminationAndAbortEscalation(fake);
-console.log("subagent runner runtime harness: ok");
+const previousMode = process.env.PI_MODE;
+process.env.PI_MODE = "normal";
+try {
+	const fake = fakePi();
+	await testReadOnlyExecution(fake);
+	writeFileSync(fake.log, "");
+	await testApprovedWorktreeRoutesReviewers(fake);
+	writeFileSync(fake.log, "");
+	await testReadOnlyRejectsUnresolvedApproval(fake);
+	writeFileSync(fake.log, "");
+	await testWritableExecution(fake);
+	writeFileSync(fake.log, "");
+	await testMarkerlessWritableExecutionOutsideGit(fake);
+	writeFileSync(fake.log, "");
+	await testReadOnlyMcpAgentsLaunchOutsideGit(fake);
+	writeFileSync(fake.log, "");
+	await testResumeHydrationRoutesWritableAgent(fake);
+	writeFileSync(fake.log, "");
+	await testDeletedResumedWorktreeRejectsWritableAgent(fake);
+	writeFileSync(fake.log, "");
+	await testExecutionClassAndCwdPreflight(fake);
+	writeFileSync(fake.log, "");
+	await testParallelPreflightIsAtomic(fake);
+	writeFileSync(fake.log, "");
+	await testParallelReadOnlyExecution(fake);
+	writeFileSync(fake.log, "");
+	await testPlanModeDowngradesWorkers(fake);
+	writeFileSync(fake.log, "");
+	await testNonGitParentRejectsGitCwdOverride(fake);
+	writeFileSync(fake.log, "");
+	await testLeaseReleasesAfterSpawnFailure();
+	writeFileSync(fake.log, "");
+	await testConcurrentToolCallsShareOneLease(fake);
+	writeFileSync(fake.log, "");
+	await testSignalTerminationAndAbortEscalation(fake);
+	console.log("subagent runner runtime harness: ok");
+} finally {
+	if (previousMode === undefined) delete process.env.PI_MODE;
+	else process.env.PI_MODE = previousMode;
+}

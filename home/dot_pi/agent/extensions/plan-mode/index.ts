@@ -10,8 +10,9 @@
  *     `session_start` enables plan mode only in `tui`/`rpc` root sessions. Both
  *     fresh processes (`reason:"startup"`) and in-session `/new` (`reason:"new"`)
  *     start in plan mode there. Spawned `json` workers, one-shot `print`
- *     invocations, and processes marked `PI_SUBAGENT=1` stay inert so delegated
- *     workers retain write/edit capability. No injected `/plan` message, startup
+ *     invocations, and processes marked `PI_SUBAGENT=1` keep this extension inert,
+ *     while the subagent launcher inherits `PI_MODE` and downgrades them to
+ *     read-only when their root remains in plan mode. No injected `/plan` message, startup
  *     turn, or session rename; the internal default starts eligible sessions in
  *     plan mode. `/plan` selects plan mode,
  *     `/normal` selects normal mode, and `/mode [plan|normal]` selects or cycles
@@ -356,6 +357,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	/** Select a mode without ever treating an explicit selection as a toggle. */
 	function selectMode(mode: ModeName, ctx: ExtensionContext): void {
 		const enablePlanMode = mode === "plan";
+		process.env.PI_MODE = mode;
 		// Do not rewrite another extension's tool state or append duplicate context
 		// when an explicit selector repeats the already active mode.
 		if (planModeEnabled === enablePlanMode) return;
@@ -517,11 +519,12 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	// Default-on (startup + /new) and restore persisted state (resume/fork).
-	// JSON subagents and print-mode one-shots must stay writable: their parent
-	// delegates execution precisely to keep that tool work out of root context.
+	// Child plan-mode extensions stay inert, but their launchers inherit PI_MODE so
+	// nested delegation cannot escape the root session's plan-mode read-only policy.
 	pi.on("session_start", async (_event, ctx) => {
 		if (!isPlanModeEnabled(ctx.mode)) {
 			planModeEnabled = false;
+			if (process.env.PI_SUBAGENT !== "1") process.env.PI_MODE = "normal";
 			toolsBeforePlanMode = undefined;
 			updateStatus(ctx);
 			return;
@@ -539,6 +542,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			toolsBeforePlanMode = planModeEntry.data.toolsBeforePlanMode ?? toolsBeforePlanMode;
 		}
 
+		process.env.PI_MODE = planModeEnabled ? "plan" : "normal";
 		if (planModeEnabled) enablePlanModeTools();
 		updateStatus(ctx);
 	});
