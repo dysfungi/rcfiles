@@ -19,6 +19,7 @@ from contextlib import suppress
 import json
 import os
 import pty
+import re
 import secrets
 import shlex
 import shutil
@@ -34,6 +35,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 TMUX_CONFIG = MANAGED_ROOT / "dot_config" / "tmux" / "tmux.conf"
+WEZTERM_TEMPLATE = MANAGED_ROOT / "dot_wezterm.lua.tmpl"
 _TIMEOUT_SECONDS = 15
 _POLL_SECONDS = 0.05
 _SESSION = "main"
@@ -431,6 +433,75 @@ def _executable_name(command: str) -> str:
     """Normalize POSIX and MSYS executable spellings for comparison."""
     executable = command.split(maxsplit=1)[0].replace("\\", "/")
     return executable.rsplit("/", maxsplit=1)[-1].lstrip("-").removesuffix(".exe")
+
+
+def _render_wezterm(tmp_path: Path) -> Path:
+    """Render the real WezTerm config with deterministic cross-platform data."""
+    config = tmp_path / "chezmoi.toml"
+    config.write_text('[data]\ndefault_shell = "xonsh"\nwsl_distro = "Ubuntu"\n')
+    rendered = tmp_path / "wezterm.lua"
+    environment = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
+    environment["HOME"] = str(tmp_path / "home")
+    result = subprocess.run(
+        [
+            "chezmoi",
+            "execute-template",
+            "--config",
+            str(config),
+            "--source",
+            str(REPO_ROOT),
+            "--file",
+            str(WEZTERM_TEMPLATE),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=environment,
+        timeout=_TIMEOUT_SECONDS,
+    )
+    assert result.returncode == 0, result.stderr
+    rendered.write_text(result.stdout)
+    return rendered
+
+
+def test_rendered_wezterm_preserves_platform_launch_behavior(tmp_path: Path) -> None:
+    """Unix launches tmux when found; Windows keeps its WSL and menu fallbacks."""
+    rendered_path = _render_wezterm(tmp_path)
+    rendered = rendered_path.read_text()
+
+    unix_default = (
+        'config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } '
+        "or { shell }"
+    )
+    assert rendered.count(unix_default) == 2
+    assert re.search(
+        r"wsl\.exe --cd '~' -- bash -lc 'if command -v tmux.*"
+        r"then exec tmux new-session -A -s main; else exec xonsh -l; fi' "
+        r"\|\| exec tmux new-session -A -s main",
+        rendered,
+    )
+    for command in (
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~" },',
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "xonsh", "--login" },',
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "bash", "--login" },',
+        'args = { gitBin .. "/bash.exe" },',
+    ):
+        assert command in rendered
+
+    wezterm = shutil.which("wezterm")
+    if wezterm is None:
+        pytest.skip("WezTerm is not installed")
+    assert wezterm is not None
+    result = subprocess.run(
+        [wezterm, "--config-file", str(rendered_path), "show-keys", "--lua"],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "HOME": str(tmp_path / "home")},
+        timeout=_TIMEOUT_SECONDS,
+    )
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.slow
