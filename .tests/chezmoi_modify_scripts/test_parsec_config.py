@@ -156,6 +156,34 @@ def test_config_output_has_no_trailing_newline(
     assert not result.stdout.endswith(b"\n")
 
 
+@pytest.mark.parametrize(
+    "stdin",
+    [
+        pytest.param(b"", id="empty-config"),
+        pytest.param(
+            b'["Parsec docs", {"runtime_key": {"value": "preserve"}}]',
+            id="existing-runtime-state",
+        ),
+    ],
+)
+def test_windows_and_shared_filters_produce_equivalent_json(
+    tmp_path: Path, stdin: bytes
+) -> None:
+    """Both platform sources preserve Parsec's JSON behavior for the same input."""
+    data = {"is_darwin": False, "is_riot_machine": True, "is_windows": True}
+    outputs: list[object] = []
+    for name, template in (("shared", SHARED_CONFIG), ("windows", WINDOWS_CONFIG)):
+        script = tmp_path / f"{name}.py"
+        script.write_bytes(_render(template, data, tmp_path))
+        result = subprocess.run(
+            [sys.executable, str(script)], input=stdin, capture_output=True
+        )
+        assert result.returncode == 0, result.stderr.decode()
+        outputs.append(json.loads(result.stdout))
+
+    assert outputs[0] == outputs[1]
+
+
 def test_windows_config_source_maps_to_parsec_target(tmp_path: Path) -> None:
     """Chezmoi's modify_ filename maps to the config file Parsec actually reads."""
     source = tmp_path / "source"
