@@ -449,6 +449,14 @@ async function testModeEnvironmentPropagation() {
 		await startPlanMode(normal);
 		assert.equal(process.env.PI_MODE, "normal", "session start records normal mode when plan is disabled");
 
+		delete process.env.PI_SUBAGENT;
+		for (const mode of ["json", "print"]) {
+			process.env.PI_MODE = "plan";
+			const nonInteractiveRoot = createHarness({ mode });
+			await startPlanMode(nonInteractiveRoot);
+			assert.equal(process.env.PI_MODE, "normal", `${mode} root session start records normal mode`);
+		}
+
 		process.env.PI_MODE = "plan";
 		process.env.PI_SUBAGENT = "1";
 		const child = createHarness({ mode: "tui" });

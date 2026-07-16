@@ -128,6 +128,20 @@ function restoredWorktreeState(entries: unknown, expectedRepoRoot: string): { en
 	return undefined;
 }
 
+interface GitProbeResult {
+	code: number;
+	stdout: string;
+	stderr: string;
+	killed: boolean;
+}
+
+function isConfirmedNonGitProbe(probe: GitProbeResult): boolean {
+	// Only Git's completed "not a repository" response proves a markerless
+	// worker began outside Git. Success, errors, and killed probes are ambiguous,
+	// so they must retain the mutation boundary.
+	return probe.killed === false && probe.code === 128 && !probe.stdout.trim() && /not a git repository/i.test(probe.stderr);
+}
+
 function childInitialCwdIsApprovedWorktree(cwd: string): boolean {
 	try {
 		const expectedRepoRoot = process.env.PI_WORKTREE_REPO_ROOT;
@@ -173,7 +187,7 @@ export default function worktreeGuard(pi: ExtensionAPI) {
 			if (childWithoutWorktreeLease) {
 				try {
 					const probe = await pi.exec("git", ["rev-parse", "--show-toplevel"], { cwd: ctx.cwd, timeout: 3_000 });
-					if (probe.code === 128 && !probe.stdout.trim() && /not a git repository/i.test(probe.stderr)) childExecution = "worktree-write";
+					if (isConfirmedNonGitProbe(probe)) childExecution = "worktree-write";
 				} catch {
 					// A missing executable or transport failure is not evidence of a non-Git cwd.
 				}

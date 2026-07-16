@@ -60,7 +60,9 @@ function harness(cwd, sessionId = "session", { isGit = true, gitResult, gitError
 		exec: async () => {
 			gitProbes += 1;
 			if (gitError) throw gitError;
-			return gitResult ?? (isGit ? { code: 0, stdout: `${cwd}\n`, stderr: "" } : { code: 128, stdout: "", stderr: "fatal: not a git repository" });
+			return gitResult ?? (isGit
+				? { code: 0, killed: false, stdout: `${cwd}\n`, stderr: "" }
+				: { code: 128, killed: false, stdout: "", stderr: "fatal: not a git repository" });
 		},
 		getAllTools: () => [toolInfo("mcp", MCP_ADAPTER_SOURCE_INFO), ...directMcpTools],
 		on: (name, handler) => {
@@ -999,8 +1001,10 @@ async function testNonGitChildPolicy() {
 
 		for (const [id, options] of [
 			["git-cwd", { isGit: true }],
-			["probe-error", { gitResult: { code: 1, stdout: "", stderr: "git unavailable" } }],
-			["probe-timeout", { gitError: new Error("timed out") }],
+			["probe-timeout", { gitResult: { code: 0, killed: true, stdout: "", stderr: "" } }],
+			["probe-spawn-error", { gitResult: { code: 1, killed: false, stdout: "", stderr: "" } }],
+			["probe-missing-killed", { gitResult: { code: 128, stdout: "", stderr: "fatal: not a git repository" } }],
+			["probe-transport-error", { gitError: new Error("transport failure") }],
 		]) {
 			current = harness(plainDirectory, `child-write-${id}`, { ...options, directMcpTools: DIRECT_MCP_TOOL_DEFINITIONS });
 			await current.events.get("session_start")({}, current.ctx);

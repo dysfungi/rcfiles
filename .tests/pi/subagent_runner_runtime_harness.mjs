@@ -26,6 +26,7 @@ const jiti = createJiti(import.meta.url, {
 });
 const { default: subagentExtension } = await jiti.import(resolve(extensionPath));
 const { default: worktreeGuard } = await jiti.import(resolve(guardPath));
+const { default: planModeExtension } = await jiti.import(resolve(extensionPath, "..", "..", "plan-mode", "index.ts"));
 const registry = await import(pathToFileURL(resolve(registryPath)).href);
 
 function git(root, ...args) {
@@ -80,6 +81,30 @@ function runner(cwd, sessionId) {
 	};
 }
 
+async function startNestedChildPlanMode() {
+	const handlers = [];
+	planModeExtension({
+		appendEntry() {},
+		getActiveTools: () => [],
+		getFlag: () => true,
+		on(name, handler) {
+			if (name === "session_start") handlers.push(handler);
+		},
+		registerCommand() {},
+		registerEntryRenderer() {},
+		registerFlag() {},
+		registerShortcut() {},
+		registerTool() {},
+		setActiveTools() {},
+	});
+	const ctx = {
+		mode: "json",
+		sessionManager: { getBranch: () => [] },
+		ui: { notify() {}, setStatus() {}, theme: { fg: (_color, text) => text } },
+	};
+	for (const handler of handlers) await handler({ reason: "startup" }, ctx);
+}
+
 function rootGuard(cwd, sessionId, branch, header = undefined) {
 	const handlers = new Map();
 	const ctx = {
@@ -88,7 +113,7 @@ function rootGuard(cwd, sessionId, branch, header = undefined) {
 		ui: { notify() {}, setStatus() {}, theme: { fg: (_color, text) => text } },
 	};
 	worktreeGuard({
-		exec: async () => ({ code: 0, stdout: `${cwd}\n` }),
+		exec: async () => ({ code: 0, killed: false, stdout: `${cwd}\n`, stderr: "" }),
 		getAllTools: () => [],
 		on(name, handler) {
 			const eventHandlers = handlers.get(name) ?? [];
@@ -410,10 +435,10 @@ async function testWritableExecution(fake) {
 	}
 }
 
-async function testDegradedWritableExecution(fake) {
+async function testMarkerlessWritableExecutionOutsideGit(fake) {
 	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-non-git-"));
 	const parent = worktreeFixture();
-	const sessionId = "degraded-writable";
+	const sessionId = "markerless-writable";
 	const parentApproval = approve(parent.root, parent.worker, "parent-worktree");
 	writeAgents(directory);
 	try {
@@ -422,7 +447,7 @@ async function testDegradedWritableExecution(fake) {
 			async () => {
 				const single = await invoke(runner(directory, sessionId), {
 					agent: "writer",
-					task: "use non-mutating tools in a non-Git directory",
+					task: "make permitted mutations in a confirmed non-Git directory",
 					agentScope: "project",
 					confirmProjectAgents: false,
 				});
@@ -744,15 +769,35 @@ async function testPlanModeDowngradesWorkers(fake) {
 	assert.equal("mode" in missingModeRecord, false);
 
 	writeFileSync(fake.log, "");
-	const nested = await withFakePi(
+	const unrecognizedMode = await withFakePi(
 		fake,
 		() =>
-			invoke(runner(root, `${sessionId}-nested`), {
+			invoke(runner(root, `${sessionId}-unrecognized-mode`), {
+				agent: "writer",
+				task: "fail closed for an unrecognized root mode",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		{ PI_MODE: "bogus" },
+	);
+	assert.equal(unrecognizedMode.isError, undefined, resultText(unrecognizedMode));
+	const [unrecognizedModeRecord] = invocations(fake.log);
+	assert.equal(unrecognizedModeRecord.execution, "read-only");
+	assert.equal(unrecognizedModeRecord.mode, "bogus");
+
+	writeFileSync(fake.log, "");
+	const nested = await withFakePi(
+		fake,
+		async () => {
+			await startNestedChildPlanMode();
+			assert.equal(process.env.PI_MODE, "plan", "child plan-mode startup must preserve the inherited root mode");
+			return invoke(runner(root, `${sessionId}-nested`), {
 				agent: "writer",
 				task: "nested worker",
 				agentScope: "project",
 				confirmProjectAgents: false,
-			}),
+			});
+		},
 		{ PI_MODE: "plan", PI_SUBAGENT: "1" },
 	);
 	assert.equal(nested.isError, undefined, resultText(nested));
@@ -931,7 +976,7 @@ try {
 	writeFileSync(fake.log, "");
 	await testWritableExecution(fake);
 	writeFileSync(fake.log, "");
-	await testDegradedWritableExecution(fake);
+	await testMarkerlessWritableExecutionOutsideGit(fake);
 	writeFileSync(fake.log, "");
 	await testReadOnlyMcpAgentsLaunchOutsideGit(fake);
 	writeFileSync(fake.log, "");
