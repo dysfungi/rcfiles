@@ -1,6 +1,7 @@
 P4CHARSET: utf8
 P4USER: {{ .username }}
-P4PORT: {{ if .is_darwin }}PERFLAX01:1666{{ else }}ssl:uegames.p4.riotgames.io:1666{{ end }}
+# The non-Darwin endpoint is plaintext; do not prefix it with `ssl:`.
+P4PORT: {{ if .is_darwin }}PERFLAX01:1666{{ else }}uegames.p4.riotgames.io:1666{{ end }}
 {{ if not .is_darwin -}}
 P4CONFIG: .p4config
 {{ end -}}

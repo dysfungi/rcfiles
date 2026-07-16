@@ -92,6 +92,8 @@ Linux)
     local winpath
     winpath=$(echo "$path" | sed 's|^/mnt/t/|T:\\|; s|/|\\|g')
     mkdir -p "$path"
+    # Retire WSL workspace-root .p4config.wsl; those workspaces now use .p4config.
+    rm -f "${path}/.p4config.wsl"
     if p4 -c "$client" client -o 2>/dev/null | grep -q "^Access:"; then
       # Pass paths via ENVIRON, not -v, to preserve backslashes (awk -v interprets escapes)
       p4 -c "$client" client -o |
@@ -112,7 +114,6 @@ Linux)
       echo >&2 "WARN: Client ${client} not found on server; skipping Root update."
       echo >&2 "WARN: Create it on the server, then re-run: chezmoi apply --include scripts"
     fi
-    # TODO: prefix $P4PORT value with `ssl:`
     cat >"${path}/.p4config" <<-EOF
 	P4CLIENT=$client
 	P4HOST=$P4HOST

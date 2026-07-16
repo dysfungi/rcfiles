@@ -104,3 +104,4 @@ x 2026-07-14 (B) Fix Pi memory chezmoi git-repo external/runtime sync conflicts:
 x 2026-07-14 Set Pi default thinking level to xhigh +pi @worktree:fix/pi-thinking-level-xhigh
 x 2026-07-14 (B) decouple mcp/non-mutating tools from git-worktree launch gate @worktree
 x 2026-07-15 Fix flaky .tests/tmux/test_direct_shell.py::test_managed_tmux_config_resets_stale_login_and_preserves_pane_cwd: new tmux pane transiently reports pane_current_command=tmux before the configured shell replaces it; wait for the shell process instead of asserting immediately. +tmux +testing
+x 2026-07-16 (C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
