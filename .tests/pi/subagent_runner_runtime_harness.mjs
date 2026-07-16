@@ -44,13 +44,14 @@ function worktreeFixture() {
 	return { root, worker };
 }
 
-function writeAgent(root, name, execution, tools = "read, bash") {
+function writeAgent(root, name, execution, tools = "read, bash", model = undefined) {
 	const agentsDir = join(root, ".pi", "agents");
 	mkdirSync(agentsDir, { recursive: true });
 	const executionLine = execution === undefined ? "" : `execution: ${execution}\n`;
+	const modelLine = model === undefined ? "" : `model: ${model}\n`;
 	writeFileSync(
 		join(agentsDir, `${name}.md`),
-		`---\nname: ${name}\ndescription: ${name} test agent\ntools: ${tools}\n${executionLine}---\n\nTest agent.\n`,
+		`---\nname: ${name}\ndescription: ${name} test agent\ntools: ${tools}\n${executionLine}${modelLine}---\n\nTest agent.\n`,
 	);
 }
 
@@ -231,6 +232,7 @@ function assertChildLaunchArgs(log) {
 		assert.ok(record.args.includes("--no-session"), `${child} must isolate session history`);
 		assert.equal(record.args.includes("--no-context-files"), false, `${child} must retain context-file discovery`);
 		assert.equal(record.args.includes("-nc"), false, `${child} must retain context-file discovery`);
+		assert.equal(record.args.includes("--thinking"), false, `${child} must inherit Pi's configured thinking level`);
 		assert.equal("branch" in record, false, `${child} must not inherit PI_WORKTREE_BRANCH`);
 	}
 }
@@ -322,6 +324,32 @@ async function testReadOnlyExecution(fake) {
 		if (original.branch === undefined) delete process.env.PI_WORKTREE_BRANCH;
 		else process.env.PI_WORKTREE_BRANCH = original.branch;
 	}
+}
+
+async function testModelScopePassThrough(fake) {
+	const { root } = worktreeFixture();
+	const sessionId = "model-scopes";
+	writeAgent(root, "canonical", "read-only", "read", "openai/openai/gpt-5.6-terra");
+	writeAgent(root, "raw", "read-only", "read", "openai/gpt-5.6-terra");
+
+	await withFakePi(fake, async () => {
+		for (const [agent, model] of [
+			["canonical", "openai/openai/gpt-5.6-terra"],
+			["raw", "openai/gpt-5.6-terra"],
+		]) {
+			const result = await invoke(runner(root, sessionId), {
+				agent,
+				task: "inspect model forwarding",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			});
+			assert.equal(result.isError, undefined, resultText(result));
+			const record = invocations(fake.log).at(-1);
+			const modelIndex = record.args.indexOf("--model");
+			assert.equal(record.args[modelIndex + 1], model);
+		}
+	});
+	assertChildLaunchArgs(fake.log);
 }
 
 async function testApprovedWorktreeRoutesReviewers(fake) {
@@ -969,6 +997,8 @@ process.env.PI_MODE = "normal";
 try {
 	const fake = fakePi();
 	await testReadOnlyExecution(fake);
+	writeFileSync(fake.log, "");
+	await testModelScopePassThrough(fake);
 	writeFileSync(fake.log, "");
 	await testApprovedWorktreeRoutesReviewers(fake);
 	writeFileSync(fake.log, "");

@@ -72,7 +72,8 @@ def rendered_script(
 ) -> Path:
     """Render the Go-template modify_ script to a runnable Python file.
 
-    Mirrors test_skill_frontmatter._render: cwd and --source are the repo root so
+    Uses the same subprocess isolation as the other template behavior tests: cwd
+    and --source are the repo root so
     the repo's .chezmoidata feeds the render, and GIT_* is stripped because
     pre-commit leaks GIT_DIR into the subprocess env (which would point chezmoi at
     the wrong tree). --file takes the absolute source path so chezmoi renders the

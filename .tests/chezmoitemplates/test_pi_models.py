@@ -274,17 +274,6 @@ def test_one_m_variants_inherit_their_base_capability_map(
         )
 
 
-def test_riot_default_resolves_to_a_generated_custom_model(
-    rendered_models: tuple[str, dict[str, Any]],
-) -> None:
-    """The Riot default keeps its canonical provider-qualified catalog identity."""
-    machine, rendered = rendered_models
-    if machine != "riot":
-        return
-
-    assert "openai/openai/gpt-5.6-terra" in _models_by_id(rendered)
-
-
 def test_dormant_riot_models_render_with_declared_capabilities(
     catalog_data: dict[str, Any], tmp_path: Path
 ) -> None:

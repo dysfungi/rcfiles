@@ -7,9 +7,9 @@ silently select Pi's bundled OpenAI model with the same apparent reference.
 
 This test renders the Riot settings and models exactly as chezmoi does, then
 runs Pi's pinned 0.80.6 RPC runtime against a temporary, credential-free agent
-state. It verifies custom provider/model identity and the persisted new-session
-``xhigh → high → xhigh`` transition while cycling across models with different
-thinking ceilings. No request is sent to a model API.
+state. It verifies canonical custom provider/model identity, proves the ambiguous raw
+OpenAI reference resolves Pi's bundled record, and exercises the persisted
+high-thinking rotation. No request is sent to a model API.
 """
 
 from __future__ import annotations
@@ -32,7 +32,6 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
-DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
 SETTINGS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 MODELS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
@@ -56,14 +55,18 @@ RIOT_SCOPE_IDS = [
     "openai/google-vertexai/gemini-3.5-flash",
     "openai/google-vertexai/gemini-3.1-flash-lite-preview",
 ]
-RIOT_SCOPES = [f"{scope_id}:{DEFAULT_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS]
-
-# The runtime fixture fixes its own level so its clamp/cycle contract remains
-# independent of the production catalog default.
-RUNTIME_FIXTURE_THINKING_LEVEL = "xhigh"
+# The runtime fixture fixes its own level so role resolution remains independent
+# of future catalog-default changes.
+RUNTIME_FIXTURE_THINKING_LEVEL = "high"
 RUNTIME_RIOT_SCOPES = [
     f"{scope_id}:{RUNTIME_FIXTURE_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS
 ]
+RUNTIME_RAW_OPENAI_MODEL = {
+    "provider": "openai",
+    "id": "gpt-5.6-terra",
+    "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
+}
+
 RUNTIME_RIOT_SCOPED_MODELS = [
     {
         "provider": "openai",
@@ -102,13 +105,17 @@ RUNTIME_RIOT_SCOPED_MODELS = [
     },
 ]
 
-# Google scopes deliberately request xhigh, but Pi clamps them to their highest
-# declared capability while cycling. Returning to Terra restores the fixture level.
+RUNTIME_DEFAULT_MODEL = RUNTIME_RIOT_SCOPED_MODELS[2]
 RUNTIME_RIOT_CYCLE_RESULTS = [
-    *RUNTIME_RIOT_SCOPED_MODELS[1:4],
-    *[{**model, "thinkingLevel": "high"} for model in RUNTIME_RIOT_SCOPED_MODELS[4:]],
-    RUNTIME_RIOT_SCOPED_MODELS[0],
+    *RUNTIME_RIOT_SCOPED_MODELS[3:],
+    *RUNTIME_RIOT_SCOPED_MODELS[:3],
 ]
+RUNTIME_ROLE_MODELS = {
+    "planner": RUNTIME_RIOT_SCOPED_MODELS[3],
+    "worker": RUNTIME_RIOT_SCOPED_MODELS[0],
+    "reviewer": RUNTIME_RIOT_SCOPED_MODELS[0],
+    "scout": RUNTIME_RIOT_SCOPED_MODELS[1],
+}
 
 
 def _clean_environment() -> dict[str, str]:
@@ -408,13 +415,18 @@ def _request(
 
 
 def _run_runtime_check(
-    package_root: Path, agent_dir: Path, tmp_path: Path
+    package_root: Path,
+    agent_dir: Path,
+    tmp_path: Path,
+    *,
+    model: str | None = None,
+    cycle_models: bool = True,
 ) -> dict[str, Any]:
     """Exercise Pi's no-session RPC runtime without live credentials or requests."""
     node = _node_executable()
 
     home = tmp_path / "isolated-home"
-    home.mkdir()
+    home.mkdir(exist_ok=True)
     environment = _clean_environment()
     for key in tuple(environment):
         if key.endswith(("_API_KEY", "_TOKEN")):
@@ -433,17 +445,20 @@ def _run_runtime_check(
     with (tmp_path / "pi-rpc.stderr").open(
         "w+", encoding="utf-8", errors="replace"
     ) as stderr:
+        command = [
+            str(node),
+            str(package_root / "dist" / "cli.js"),
+            "--mode",
+            "rpc",
+            "--no-session",
+            "--no-context-files",
+            "--no-extensions",
+            "--no-skills",
+        ]
+        if model:
+            command.extend(["--model", model])
         process = subprocess.Popen(
-            [
-                str(node),
-                str(package_root / "dist" / "cli.js"),
-                "--mode",
-                "rpc",
-                "--no-session",
-                "--no-context-files",
-                "--no-extensions",
-                "--no-skills",
-            ],
+            command,
             cwd=tmp_path,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -456,10 +471,14 @@ def _run_runtime_check(
         responses, response_reader = _start_response_reader(process)
         try:
             initial = _request(process, responses, "initial", "get_state")
-            cycles = [
-                _request(process, responses, f"cycle-{index}", "cycle_model")
-                for index in range(1, len(RUNTIME_RIOT_SCOPED_MODELS) + 1)
-            ]
+            cycles = (
+                [
+                    _request(process, responses, f"cycle-{index}", "cycle_model")
+                    for index in range(1, len(RUNTIME_RIOT_SCOPED_MODELS) + 1)
+                ]
+                if cycle_models
+                else []
+            )
             entries = _request(process, responses, "entries", "get_entries")["entries"]
             final = _request(process, responses, "final", "get_state")
         except TimeoutError as error:
@@ -587,21 +606,11 @@ def test_rpc_timeout_reaps_child_and_joins_response_reader(tmp_path: Path) -> No
         assert "timeout fixture diagnostic" in _read_stderr(stderr)
 
 
-def test_riot_scopes_follow_catalog_default(tmp_path: Path) -> None:
-    """Production scope rendering follows the shared catalog default."""
-    agent_dir = tmp_path / "agent"
-    agent_dir.mkdir()
-
-    settings = _render_riot_state(agent_dir, tmp_path)
-
-    assert settings["enabledModels"] == RIOT_SCOPES
-
-
 @pytest.mark.slow
 def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     tmp_path: Path,
 ) -> None:
-    """Generated Riot scopes select custom models and restore the fixed cycle level."""
+    """Generated Riot scopes resolve every role model at the configured high level."""
     source = _runtime_fixture_source(tmp_path)
     agent_dir = tmp_path / "agent"
     agent_dir.mkdir()
@@ -610,14 +619,24 @@ def test_pi_0_80_6_resolves_custom_scopes_and_serializes_thinking_cycle(
     assert settings["enabledModels"] == RUNTIME_RIOT_SCOPES
 
     runtime = _run_runtime_check(_pi_package_root(), agent_dir, tmp_path)
-    assert runtime["initial"] == RUNTIME_RIOT_SCOPED_MODELS[0]
+    assert runtime["initial"] == RUNTIME_DEFAULT_MODEL
     assert runtime["cycles"] == RUNTIME_RIOT_CYCLE_RESULTS
     assert runtime["baseUrls"] == [RIOT_BASE_URL] * (
         len(RUNTIME_RIOT_SCOPED_MODELS) + 2
     )
-    assert runtime["serializedThinkingLevels"] == [
-        RUNTIME_FIXTURE_THINKING_LEVEL,
-        "high",
-        RUNTIME_FIXTURE_THINKING_LEVEL,
-    ]
-    assert runtime["final"] == RUNTIME_RIOT_SCOPED_MODELS[0]
+    assert runtime["serializedThinkingLevels"] == [RUNTIME_FIXTURE_THINKING_LEVEL]
+    assert runtime["final"] == RUNTIME_DEFAULT_MODEL
+
+    resolved_models = [runtime["initial"], *runtime["cycles"]]
+    for role, expected_model in RUNTIME_ROLE_MODELS.items():
+        assert expected_model in resolved_models, role
+
+    raw_runtime = _run_runtime_check(
+        _pi_package_root(),
+        agent_dir,
+        tmp_path,
+        model="openai/gpt-5.6-terra",
+        cycle_models=False,
+    )
+    assert raw_runtime["initial"] == RUNTIME_RAW_OPENAI_MODEL
+    assert raw_runtime["baseUrls"] == [RIOT_BASE_URL] * 2

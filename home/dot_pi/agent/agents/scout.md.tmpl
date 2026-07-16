@@ -4,6 +4,9 @@
 {{- range $candidate := $ns.models -}}
   {{- if and (hasKey $candidate "subagent_roles") (has "scout" $candidate.subagent_roles) -}}
     {{- $model = $candidate.id -}}
+    {{- if hasKey $candidate "gateway" -}}
+      {{- $model = printf "%s/%s" (dig "gateway" "provider" "" $candidate) $candidate.id -}}
+    {{- end -}}
   {{- end -}}
 {{- end -}}
 {{- if eq $model "" -}}{{ fail "pi agent scout: no catalog model has subagent_roles scout" }}{{- end -}}
