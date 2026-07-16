@@ -145,13 +145,13 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - **Layout — organize by domain/scope.** Mirror the repo's subsystem boundaries: `.tests/<subsystem>/test_<subject>.py`. Examples:
   - `.tests/chezmoiscripts/test_run_after_sync_mise.py` — tests for `.chezmoiscripts/20/run_after_sync-mise.unix-like.sh`
   - `.tests/claude-hooks/test_bash_worktree_guard.py` — tests for `.claude/hooks/bash_worktree_guard.py`
-  - `.tests/chezmoitemplates/test_validate_chezmoi_templates.py` — tests for `.chezmoitemplates/...` validators
+  - `.tests/hooks/test_validate_chezmoi_templates.py` — tests for `.hooks/validate-chezmoi-templates.py`
 
   One file per script-or-hook under test; multiple test functions per file when a single artifact has multiple behaviors. New tests go in domain dirs from now on; pre-existing flat files stay until naturally touched.
 
 - Convention: parametrized tables with descriptive `ids=` per case. See `.tests/test_bash_worktree_guard.py` for the canonical shape — parametrized truth tables serve as the executable spec.
 - For shell scripts and non-Python artifacts, write subprocess-driven integration tests that invoke the artifact as a real user would. Build a tmp env (HOME tree, fake PATH stubs, tmp git repos for CHEZMOI\_\* vars). Do not refactor production code purely to expose internals for unit testing — the harness adapts to production shape, not vice versa.
-- Template render validation (does it render, does the content land) belongs to the `validate-chezmoi-templates` pre-commit linter and `chezmoi apply` — never write pytest tests that render templates and assert their contents. Pytest is for behavior of scripts, hooks, and tools (rendering a template as setup for exercising its script body is fine).
+- Avoid testing anti-patterns (config/catalog value mirrors, template-rendering assertions, live-config-coupled tests, etc.) — see the `my-testing` skill for the full list, exceptions, and trade-offs. In this repo, template render-validation belongs to the `validate-chezmoi-templates` pre-commit linter and `chezmoi apply`; never assert rendered template content in pytest. Pytest is for behavior of scripts, hooks, and tools (rendering a template as setup for exercising its script body is fine).
 - When adding new functionality with a regression class, add the test file in the same commit.
 
 ## Platform Conventions

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import re
 import subprocess
 from pathlib import Path
 
@@ -134,40 +133,3 @@ def test_registry_rejects_stale_results_and_preserves_on_failed_stop() -> None:
         },
     }
     assert Path(outcome["environment"]["PI_WORKTREE_ROOT"]).name == "worker"
-
-
-def test_worker_policy_uses_explicit_execution_class() -> None:
-    worker = (
-        MANAGED_ROOT / "dot_pi" / "agent" / "agents" / "worker.md.tmpl"
-    ).read_text()
-    assert "execution: worktree-write" in worker
-    assert "Direct Git and Bash are intentionally unrestricted" in worker
-
-
-def test_root_guard_lists_only_root_lifecycle_tools() -> None:
-    policy = (
-        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
-    ).read_text()
-    assert all(
-        f'"{tool_name}"' in policy
-        for tool_name in ("worktree_start", "worktree_status", "worktree_stop")
-    )
-
-
-def test_documented_child_boundary_is_cooperative_not_authentication() -> None:
-    """A forged marker and shell classifier are not claims of process isolation."""
-    policy = (
-        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "child-policy.mjs"
-    ).read_text()
-    guard = (
-        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "worktree-guard.ts"
-    ).read_text()
-    readme = (
-        MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "README.md"
-    ).read_text()
-    assert "authentication or sandbox boundary" in policy
-    assert "best-effort classifier" in guard
-    assert re.search(r"not an authentication or\s+sandbox boundary", readme)
-    assert "initial cwd" in readme
-    assert "not path containment" in readme
-    assert "forge its environment" in readme

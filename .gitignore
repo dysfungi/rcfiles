@@ -72,6 +72,16 @@ coverage.xml
 .pytest_cache/
 cover/
 
+# Test-bloat guard: `.tests/chezmoitemplates/` is intentionally forbidden.
+# That namespace attracts "assert the rendered template output" tests, which are
+# the job of the validate-chezmoi-templates linter + `chezmoi apply`, NOT pytest.
+# Tests belong in artifact-aligned dirs (.tests/chezmoi_modify_scripts, .tests/hooks,
+# .tests/pi, ...). This blocks ordinary/accidental tracking of the attractor path.
+# NOTE: pytest testpaths=[".tests"] is recursive, so a locally-created file here would
+# still run in a dev's own pytest; and `git add -f` can override. This guards commits,
+# not execution — it is a convention guard, not a sandbox.
+/.tests/chezmoitemplates/
+
 # Translations
 *.mo
 *.pot

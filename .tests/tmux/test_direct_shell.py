@@ -7,13 +7,9 @@ tmux configuration.  It deliberately does not recreate a binding fixture: the
 source file itself must clear the stale option and provide the bindings that
 users receive.
 
-A real PTY client exercises prefix bindings after a detach/reattach.  The
-runtime portion is marked slow because it requires a POSIX tmux implementation
+A real PTY client exercises prefix bindings after a detach/reattach. The
+runtime coverage is marked slow because it requires a POSIX tmux implementation
 and an interactive shell; CI runs it explicitly on macOS, Linux, and MSYS2.
-The Windows WSL launcher check is deliberately structural: it renders and
-inspects its commands but does not launch a WSL distribution. The native Linux
-job validates the shared tmux configuration, not WSL process, PTY, environment,
-or cwd behavior.
 """
 
 from __future__ import annotations
@@ -23,6 +19,7 @@ from contextlib import suppress
 import json
 import os
 import pty
+import re
 import secrets
 import shlex
 import shutil
@@ -43,62 +40,6 @@ _TIMEOUT_SECONDS = 15
 _POLL_SECONDS = 0.05
 _SESSION = "main"
 _TEST_MAILCHECK_SECONDS = str(24 * 60 * 60)
-_EXPECTED_TMUX_DEFAULT_COMMAND_SURFACES = (
-    'set-option -g default-shell "$SHELL"',
-    "set-option -gu default-command",
-)
-_UNIX_DEFAULT_PROGRAM = (
-    'config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } '
-    "or { shell }"
-)
-_WINDOWS_DEFAULT_PROGRAM = (
-    r"""config.default_prog = { gitBin .. "/bash.exe", "-c", "wsl.exe --cd '~' """
-    r"""-- bash -lc 'if command -v tmux >/dev/null 2>&1 && infocmp \"$TERM\""""
-    r""" >/dev/null 2>&1; then exec tmux new-session -A -s main; else exec xonsh -l; """
-    r"""fi' || exec tmux new-session -A -s main", }"""
-)
-_EXPECTED_DEFAULT_PROGRAMS = (
-    _UNIX_DEFAULT_PROGRAM,
-    _UNIX_DEFAULT_PROGRAM,
-    _WINDOWS_DEFAULT_PROGRAM,
-)
-_UNIX_SHELL_LOGIN_LAUNCH_ARGUMENTS = (
-    'args = { homebrewBin .. "/zsh", "-l" },',
-    'args = { homebrewBin .. "/bash", "-l" },',
-)
-_WINDOWS_SHELL_LOGIN_LAUNCH_ARGUMENTS = (
-    'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "xonsh", "--login" },',
-    'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "bash", "--login" },',
-)
-_EXPECTED_LAUNCH_MENU_ARGUMENTS = (
-    "args = { shell },",
-    *_UNIX_SHELL_LOGIN_LAUNCH_ARGUMENTS,
-    'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~" },',
-    *_WINDOWS_SHELL_LOGIN_LAUNCH_ARGUMENTS,
-    'args = { gitBin .. "/bash.exe" },',
-    'args = { xonshBin .. "/xbin-xonsh" },',
-    'args = { "powershell.exe", "-NoLogo" },',
-    'args = { "powershell.exe", "-NoLogo", "-Command", \'"Start-Process Wezterm -Verb RunAs"\' },',
-)
-_EXPECTED_RENDERED_COMMAND_SURFACES = (
-    *_EXPECTED_DEFAULT_PROGRAMS,
-    *_EXPECTED_LAUNCH_MENU_ARGUMENTS,
-)
-_SHELL_LOGIN_COMMAND_SURFACES = (
-    _WINDOWS_DEFAULT_PROGRAM,
-    *_UNIX_SHELL_LOGIN_LAUNCH_ARGUMENTS,
-    *_WINDOWS_SHELL_LOGIN_LAUNCH_ARGUMENTS,
-)
-_FORBIDDEN_ACCOUNT_LOGIN_COMMAND_SURFACES = (
-    'config.default_prog = { "login" }',
-    'config.default_prog = { "exec login" }',
-    'config.default_prog = { "/usr/bin/login" }',
-    'config.default_prog = { "exec /usr/bin/login" }',
-    'args = { "login" },',
-    'args = { "exec login" },',
-    'args = { "/usr/bin/login" },',
-    'args = { "exec /usr/bin/login" },',
-)
 _BINDINGS = (
     ("new-window", b"c"),
     ("vertical-split", b'"'),
@@ -494,122 +435,73 @@ def _executable_name(command: str) -> str:
     return executable.rsplit("/", maxsplit=1)[-1].lstrip("-").removesuffix(".exe")
 
 
-def _tmux_default_command_surfaces() -> tuple[str, ...]:
-    """Return every live tmux default-shell/default-command configuration line."""
-    return tuple(
-        stripped
-        for line in TMUX_CONFIG.read_text().splitlines()
-        if not (stripped := line.strip()).startswith("#")
-        and ("default-shell" in stripped or "default-command" in stripped)
-    )
-
-
-def _render_wezterm(tmp_path: Path) -> str:
-    """Render the real template with minimal non-secret ChezMoi data."""
-    chezmoi = shutil.which("chezmoi") or shutil.which("chezmoi.exe")
-    if chezmoi is None:
-        raise AssertionError("chezmoi is required to render the WezTerm regression")
+def _render_wezterm(tmp_path: Path) -> Path:
+    """Render the real WezTerm config with deterministic cross-platform data."""
     config = tmp_path / "chezmoi.toml"
     config.write_text('[data]\ndefault_shell = "xonsh"\nwsl_distro = "Ubuntu"\n')
-    home = tmp_path / "home"
-    home.mkdir()
+    rendered = tmp_path / "wezterm.lua"
+    environment = {
+        key: value for key, value in os.environ.items() if not key.startswith("GIT_")
+    }
+    environment["HOME"] = str(tmp_path / "home")
     result = subprocess.run(
         [
-            chezmoi,
+            "chezmoi",
+            "execute-template",
             "--config",
             str(config),
             "--source",
             str(REPO_ROOT),
-            "--destination",
-            str(home),
-            "execute-template",
             "--file",
             str(WEZTERM_TEMPLATE),
         ],
+        cwd=REPO_ROOT,
         capture_output=True,
-        env={**os.environ, "HOME": str(home)},
         text=True,
+        env=environment,
         timeout=_TIMEOUT_SECONDS,
     )
-    assert result.returncode == 0, (
-        f"could not render {WEZTERM_TEMPLATE}:\n"
-        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    assert result.returncode == 0, result.stderr
+    rendered.write_text(result.stdout)
+    return rendered
+
+
+def test_rendered_wezterm_preserves_platform_launch_behavior(tmp_path: Path) -> None:
+    """Unix launches tmux when found; Windows keeps its WSL and menu fallbacks."""
+    rendered_path = _render_wezterm(tmp_path)
+    rendered = rendered_path.read_text()
+
+    unix_default = (
+        'config.default_prog = tmux and { tmux, "new-session", "-A", "-s", "main" } '
+        "or { shell }"
     )
-    return result.stdout
-
-
-def _rendered_default_programs(rendered_wezterm: str) -> tuple[str, ...]:
-    """Collect every rendered WezTerm ``default_prog`` expression."""
-    programs: list[str] = []
-    lines = iter(rendered_wezterm.splitlines())
-    for line in lines:
-        stripped = line.strip()
-        if stripped.startswith("--") or not stripped.startswith(
-            "config.default_prog ="
-        ):
-            continue
-        if stripped.endswith("}"):
-            programs.append(stripped)
-            continue
-
-        expression = [stripped]
-        for continuation in lines:
-            continuation = continuation.strip()
-            expression.append(continuation)
-            if continuation == "}":
-                break
-        else:
-            raise AssertionError("unterminated rendered WezTerm default_prog")
-        programs.append(" ".join(expression))
-    return tuple(programs)
-
-
-def _rendered_launch_menu_arguments(rendered_wezterm: str) -> tuple[str, ...]:
-    """Collect every single-line ``args`` expression in rendered launch menus."""
-    arguments: list[str] = []
-    in_launch_menu = False
-    for line in rendered_wezterm.splitlines():
-        stripped = line.strip()
-        if stripped.startswith("--"):
-            continue
-        if stripped == "config.launch_menu = {":
-            assert not in_launch_menu, "nested rendered WezTerm launch menu"
-            in_launch_menu = True
-            continue
-        if not in_launch_menu:
-            continue
-        if stripped == "}":
-            in_launch_menu = False
-            continue
-        if stripped.startswith("args ="):
-            assert stripped.startswith("args = {") and stripped.endswith("},"), (
-                "rendered WezTerm launch-menu args must remain one command surface: "
-                f"{stripped!r}"
-            )
-            arguments.append(stripped)
-    assert not in_launch_menu, "unterminated rendered WezTerm launch menu"
-    return tuple(arguments)
-
-
-def test_tmux_and_rendered_wezterm_commands_match_explicit_allowlist(
-    tmp_path: Path,
-) -> None:
-    """Only approved direct-shell command surfaces can reach new panes/tabs."""
-    assert _tmux_default_command_surfaces() == _EXPECTED_TMUX_DEFAULT_COMMAND_SURFACES
-
-    rendered = _render_wezterm(tmp_path)
-    assert 'local shell = firstFoundPathFor("xonsh", myPaths)' in rendered
-    assert 'or firstFoundPathFor("zsh", myPaths)' in rendered
-    assert 'or firstFoundPathFor("bash", myPaths)' in rendered
-    rendered_command_surfaces = (
-        *_rendered_default_programs(rendered),
-        *_rendered_launch_menu_arguments(rendered),
+    assert rendered.count(unix_default) == 2
+    assert re.search(
+        r"wsl\.exe --cd '~' -- bash -lc 'if command -v tmux.*"
+        r"then exec tmux new-session -A -s main; else exec xonsh -l; fi' "
+        r"\|\| exec tmux new-session -A -s main",
+        rendered,
     )
-    assert rendered_command_surfaces == _EXPECTED_RENDERED_COMMAND_SURFACES
-    assert set(rendered_command_surfaces).isdisjoint(
-        _FORBIDDEN_ACCOUNT_LOGIN_COMMAND_SURFACES
+    for command in (
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~" },',
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "xonsh", "--login" },',
+        'args = { "wsl.exe", "-d", "Ubuntu", "--cd", "~", "--", "bash", "--login" },',
+        'args = { gitBin .. "/bash.exe" },',
+    ):
+        assert command in rendered
+
+    wezterm = shutil.which("wezterm")
+    if wezterm is None:
+        pytest.skip("WezTerm is not installed")
+    assert wezterm is not None
+    result = subprocess.run(
+        [wezterm, "--config-file", str(rendered_path), "show-keys", "--lua"],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "HOME": str(tmp_path / "home")},
+        timeout=_TIMEOUT_SECONDS,
     )
-    assert set(_SHELL_LOGIN_COMMAND_SURFACES).issubset(rendered_command_surfaces)
+    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.slow

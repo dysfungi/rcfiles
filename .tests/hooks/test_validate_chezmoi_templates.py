@@ -41,6 +41,20 @@ suffix_for_output_type = _mod.suffix_for_output_type
 process_file = _mod.process_file
 
 
+def test_template_validator_requires_serial_execution() -> None:
+    """The temp-directory TOCTOU guard has no safer behavioral substitute."""
+    config = yaml.safe_load(
+        (Path(__file__).resolve().parents[2] / ".pre-commit-config.yaml").read_text()
+    )
+    hook = next(
+        hook
+        for repository in config["repos"]
+        for hook in repository["hooks"]
+        if hook["id"] == "validate-chezmoi-templates"
+    )
+    assert hook["require_serial"] is True
+
+
 # ---------------------------------------------------------------------------
 # detect_output_type: extension-based detection
 # ---------------------------------------------------------------------------
@@ -614,32 +628,3 @@ def test_process_file_cleans_up_on_exception(
         process_file("foo.sh.tmpl")
 
     assert list(scratch.iterdir()) == [], "temp dir leaked on exception path"
-
-
-# ---------------------------------------------------------------------------
-# Config: the hook must run serially
-# ---------------------------------------------------------------------------
-
-
-def test_validate_hook_is_require_serial() -> None:
-    """Regression: the validate-chezmoi-templates hook must set require_serial.
-
-    Without it, pre-commit fans the matched files across concurrent workers.
-    Each worker runs `chezmoi execute-template --source <repo-root>` (walking the
-    whole tree) while siblings mkdtemp/rmtree subdirs under the shared in-tree
-    scratch parent .tmp/chezmoi-validate/. That is a readdir->lstat TOCTOU: one
-    worker deletes tmpXXXX in the window between another worker's chezmoi listing
-    the dir and stat-ing that entry, yielding a spurious "no such file or
-    directory" on a random unrelated file. Serializing the hook keeps one chezmoi
-    process running at a time and closes the race.
-    """
-    config_path = Path(__file__).resolve().parents[2] / ".pre-commit-config.yaml"
-    config = yaml.safe_load(config_path.read_text())
-    hooks = [
-        hook
-        for repo in config["repos"]
-        for hook in repo["hooks"]
-        if hook["id"] == "validate-chezmoi-templates"
-    ]
-    assert len(hooks) == 1, "expected exactly one validate-chezmoi-templates hook"
-    assert hooks[0].get("require_serial") is True

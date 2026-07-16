@@ -36,11 +36,6 @@ TRUTH TABLE
       4. gh ssh-key list fails      → best-effort skip, no add
       5. github.com auth            → GH_TOKEN set, GH_HOST/GH_ENTERPRISE_TOKEN empty
       6. GHE auth                   → GH_HOST + GH_ENTERPRISE_TOKEN set, GH_TOKEN empty
-    Structural template tests (static read):
-      7. enterprise .tmpl gated on is_riot_machine + targets GHE host/token
-      8. github .tmpl includes helper + MISE_GITHUB_TOKEN
-      9. github .tmpl flips remote to SSH only behind an auth-verification guard
-     10. both callers are run_onchange_ and keyed on the live public key
 """
 
 from __future__ import annotations
@@ -246,39 +241,143 @@ def test_register_auth_env(
     assert f"GH_ENTERPRISE_TOKEN={exp_ent}\n" in log
 
 
-# ── Structural template tests ─────────────────────────────────────────────────
+def _render_caller(template: Path, tmp_path: Path, *, riot: bool) -> Path:
+    """Render a real caller script with only its machine gate configured."""
+    config = tmp_path / "chezmoi.toml"
+    config.write_text(f"[data]\nis_riot_machine = {str(riot).lower()}\n")
+    environment = {
+        **_clean_env(),
+        "HOME": str(tmp_path),
+        "PATH": _SYSTEM_DIRS,
+    }
+    chezmoi = shutil.which("chezmoi")
+    assert chezmoi is not None
+    result = subprocess.run(
+        [
+            chezmoi,
+            "execute-template",
+            "--config",
+            str(config),
+            "--source",
+            str(REPO_ROOT),
+            "--file",
+            str(template),
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    assert result.returncode == 0, result.stderr
+    rendered = tmp_path / template.stem
+    rendered.write_text(result.stdout)
+    rendered.chmod(0o755)
+    return rendered
 
 
-def test_helper_is_add_only() -> None:
-    """The helper must never call `gh ssh-key delete`."""
-    assert "ssh-key delete" not in HELPER.read_text()
+def _make_ssh_stub(bin_dir: Path, *, authenticated: bool) -> None:
+    message = (
+        "Hi fixture! You've successfully authenticated, but GitHub does not provide shell access."
+        if authenticated
+        else "git@github.com: Permission denied (publickey)."
+    )
+    _make_stub(bin_dir, "ssh", f"echo >&2 {message!r}\nexit 1")
 
 
-def test_enterprise_script_gated_and_targets_ghe() -> None:
-    content = ENTERPRISE_SCRIPT.read_text()
-    assert "{{- if .is_riot_machine -}}" in content
-    assert "{{ end -}}" in content
-    assert "gh.riotgames.com" in content
-    assert "MISE_GITHUB_ENTERPRISE_TOKEN" in content
+def _run_caller(
+    script: Path, tmp_path: Path, bin_dir: Path, **environment: str
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [_BASH, str(script)],
+        capture_output=True,
+        text=True,
+        env={
+            **_clean_env(),
+            "HOME": str(tmp_path),
+            "PATH": f"{bin_dir}:{_SYSTEM_DIRS}",
+            **environment,
+        },
+    )
 
 
-def test_github_script_includes_helper() -> None:
-    content = GITHUB_SCRIPT.read_text()
-    assert 'includeTemplate "github/register-ssh-key.sh"' in content
-    assert "MISE_GITHUB_TOKEN" in content
+@pytest.mark.parametrize(
+    ("authenticated", "expected_remote"),
+    [
+        pytest.param(True, "git@github.com:dysfungi/rcfiles.git", id="authenticated"),
+        pytest.param(
+            False, "https://example.invalid/rcfiles.git", id="unauthenticated"
+        ),
+    ],
+)
+def test_github_caller_wires_token_and_flips_remote_only_after_ssh_auth(
+    tmp_path: Path, authenticated: bool, expected_remote: str
+) -> None:
+    """The top-level caller keeps bootstrap HTTPS until GitHub SSH succeeds."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls_log = tmp_path / "gh_calls.log"
+    key_body = _setup_fake_home(tmp_path)
+    _make_gh_stub(bin_dir, calls_log, mode="key_absent", key_body=key_body)
+    _make_ssh_stub(bin_dir, authenticated=authenticated)
+    repo = tmp_path / ".local" / "share" / "chezmoi"
+    repo.mkdir(parents=True)
+    environment = _clean_env()
+    subprocess.run(["git", "init"], cwd=repo, check=True, env=environment)
+    subprocess.run(
+        ["git", "remote", "add", "origin", "https://example.invalid/rcfiles.git"],
+        cwd=repo,
+        check=True,
+        env=environment,
+    )
+    script = _render_caller(GITHUB_SCRIPT, tmp_path, riot=False)
+
+    result = _run_caller(script, tmp_path, bin_dir, MISE_GITHUB_TOKEN="github-token")
+
+    assert result.returncode == 0, result.stderr
+    remote = subprocess.run(
+        ["git", "remote", "get-url", "origin"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+        env=environment,
+    )
+    assert remote.stdout.strip() == expected_remote
+    log = calls_log.read_text()
+    assert "GH_TOKEN=github-token" in log
+    assert "GH_HOST=\n" in log
+    assert "GH_ENTERPRISE_TOKEN=\n" in log
 
 
-def test_github_remote_flip_is_guarded() -> None:
-    """Remote flip to SSH must be gated on an auth-verification check."""
-    content = GITHUB_SCRIPT.read_text()
-    assert "remote set-url" in content
-    assert "git@github.com" in content
-    assert "successfully authenticated" in content, "flip must verify SSH auth first"
+def test_enterprise_caller_is_riot_gated_and_wires_enterprise_token(
+    tmp_path: Path,
+) -> None:
+    """Only Riot renders the GHE caller, which uses enterprise-only auth."""
+    _setup_fake_home(tmp_path)
+    assert _render_caller(ENTERPRISE_SCRIPT, tmp_path, riot=False).read_text() == ""
 
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    calls_log = tmp_path / "gh_calls.log"
+    assert _KEYGEN is not None
+    key_body = subprocess.run(
+        [_KEYGEN, "-y", "-f", str(tmp_path / ".ssh" / "id_ed25519")],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()[1]
+    _make_gh_stub(bin_dir, calls_log, mode="key_absent", key_body=key_body)
+    script = _render_caller(ENTERPRISE_SCRIPT, tmp_path, riot=True)
 
-@pytest.mark.parametrize("script", [GITHUB_SCRIPT, ENTERPRISE_SCRIPT])
-def test_callers_are_run_onchange_keyed_on_pubkey(script: Path) -> None:
-    assert script.name.startswith("run_onchange_after_")
-    content = script.read_text()
-    assert "# pubkey:" in content
-    assert "id_ed25519.pub" in content
+    result = _run_caller(
+        script,
+        tmp_path,
+        bin_dir,
+        MISE_GITHUB_ENTERPRISE_TOKEN="enterprise-token",
+    )
+
+    assert result.returncode == 0, result.stderr
+    log = calls_log.read_text()
+    assert "GH_TOKEN=\n" in log
+    assert "GH_HOST=gh.riotgames.com" in log
+    assert "GH_ENTERPRISE_TOKEN=enterprise-token" in log
