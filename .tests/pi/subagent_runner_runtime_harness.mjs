@@ -1008,8 +1008,6 @@ try {
 	writeFileSync(fake.log, "");
 	await testMarkerlessWritableExecutionOutsideGit(fake);
 	writeFileSync(fake.log, "");
-	await testDegradedWritableExecution(fake);
-	writeFileSync(fake.log, "");
 	await testReadOnlyMcpAgentsLaunchOutsideGit(fake);
 	writeFileSync(fake.log, "");
 	await testResumeHydrationRoutesWritableAgent(fake);

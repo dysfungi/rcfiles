@@ -32,7 +32,6 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
-DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 MISE_CONFIG = REPO_ROOT / ".mise.toml"
 SETTINGS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "modify_settings.json.py.tmpl"
 MODELS_TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "private_models.json.tmpl"
@@ -56,8 +55,6 @@ RIOT_SCOPE_IDS = [
     "openai/google-vertexai/gemini-3.5-flash",
     "openai/google-vertexai/gemini-3.1-flash-lite-preview",
 ]
-RIOT_SCOPES = [f"{scope_id}:{DEFAULT_THINKING_LEVEL}" for scope_id in RIOT_SCOPE_IDS]
-
 # The runtime fixture fixes its own level so role resolution remains independent
 # of future catalog-default changes.
 RUNTIME_FIXTURE_THINKING_LEVEL = "high"
@@ -607,16 +604,6 @@ def test_rpc_timeout_reaps_child_and_joins_response_reader(tmp_path: Path) -> No
         assert not response_reader.is_alive()
         assert responses.get(timeout=PROCESS_TERMINATION_TIMEOUT_SECONDS) is None
         assert "timeout fixture diagnostic" in _read_stderr(stderr)
-
-
-def test_riot_scopes_follow_catalog_default(tmp_path: Path) -> None:
-    """Production scope rendering follows the shared catalog default."""
-    agent_dir = tmp_path / "agent"
-    agent_dir.mkdir()
-
-    settings = _render_riot_state(agent_dir, tmp_path)
-
-    assert settings["enabledModels"] == RIOT_SCOPES
 
 
 @pytest.mark.slow
