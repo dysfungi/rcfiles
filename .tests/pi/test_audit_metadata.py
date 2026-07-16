@@ -40,11 +40,15 @@ INVALID_CASES = [
         INVALID_VALUES,
     )
 ]
-NO_ARGUMENT_SCENARIOS = [
-    pytest.param("missing-version", id="missing-version"),
-    pytest.param("missing-model", id="missing-model"),
-    pytest.param("fresh-snapshot", id="fresh-snapshot"),
-    pytest.param("extension-surface", id="extension-surface"),
+NO_ARGUMENT_SCENARIOS = {
+    "missing-version": "rejects an unprovable Pi harness label rather than emitting one",
+    "missing-model": "routes through validation instead of dereferencing undefined",
+    "fresh-snapshot": "never caches model, session, host, or version across invocations",
+    "extension-surface": "registers only a tool, no commands/events/exec/bash override",
+}
+NO_ARGUMENT_CASES = [
+    pytest.param(scenario, id=f"{scenario}: {guarantee}")
+    for scenario, guarantee in NO_ARGUMENT_SCENARIOS.items()
 ]
 
 pytestmark = pytest.mark.skipif(
@@ -91,7 +95,7 @@ def test_audit_metadata_rejects_invalid_values_without_a_result(
     _run_harness("invalid-value", field, json.dumps(value))
 
 
-@pytest.mark.parametrize(("scenario",), NO_ARGUMENT_SCENARIOS)
+@pytest.mark.parametrize(("scenario",), NO_ARGUMENT_CASES)
 def test_audit_metadata_exercises_no_argument_scenarios(scenario: str) -> None:
-    """Exercise no-argument validation, freshness, and read-only surface scenarios."""
+    """Exercise no-argument scenarios; each pytest ID states its regression guarantee."""
     _run_harness(scenario)

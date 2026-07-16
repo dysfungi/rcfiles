@@ -206,6 +206,8 @@ async function testFreshSnapshot() {
 		hostname: "second-host",
 	});
 	assert.notDeepEqual(first.details, second.details, "tool must read a fresh runtime snapshot for every call");
+	assert.match(first.content[0]?.text ?? "", /^Agent-Harness: Pi 1\.0\.0$/m);
+	assert.match(second.content[0]?.text ?? "", /^Agent-Harness: Pi 2\.0\.0$/m);
 }
 
 function testExtensionSurface() {
