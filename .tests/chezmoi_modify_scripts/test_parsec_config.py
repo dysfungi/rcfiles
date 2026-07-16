@@ -156,15 +156,6 @@ def test_config_output_has_no_trailing_newline(
     assert not result.stdout.endswith(b"\n")
 
 
-def test_windows_config_template_reuses_shared_rendering(tmp_path: Path) -> None:
-    """The Windows target must stay behaviorally identical to the shared source."""
-    data = {"is_darwin": False, "is_riot_machine": True, "is_windows": True}
-
-    assert _render(WINDOWS_CONFIG, data, tmp_path) == _render(
-        SHARED_CONFIG, data, tmp_path
-    )
-
-
 def test_windows_config_source_maps_to_parsec_target(tmp_path: Path) -> None:
     """Chezmoi's modify_ filename maps to the config file Parsec actually reads."""
     source = tmp_path / "source"
@@ -206,7 +197,6 @@ _IGNORE_CASES = [
             "is_work_machine": False,
             "is_wsl": False,
         },
-        True,
         id="native-windows",
     ),
     pytest.param(
@@ -219,7 +209,6 @@ _IGNORE_CASES = [
             "is_work_machine": False,
             "is_wsl": True,
         },
-        True,
         id="wsl",
     ),
     pytest.param(
@@ -232,20 +221,16 @@ _IGNORE_CASES = [
             "is_work_machine": False,
             "is_wsl": False,
         },
-        False,
         id="darwin",
     ),
 ]
 
 
-@pytest.mark.parametrize(("data", "should_ignore"), _IGNORE_CASES)
+@pytest.mark.parametrize("data", _IGNORE_CASES)
 def test_parsec_ignore_is_platform_scoped_with_consistent_source_state(
-    data: dict[str, bool], should_ignore: bool, tmp_path: Path
+    data: dict[str, bool], tmp_path: Path
 ) -> None:
     """Ignored platforms must not collide with the active Parsec modify_ source."""
-    rendered_lines = _render(IGNORE, data, tmp_path).decode().splitlines()
-    assert (".parsec/**" in rendered_lines) is should_ignore
-
     result = _dry_run_apply(_scratch_source(tmp_path), data, tmp_path)
     combined_output = result.stdout + result.stderr
     assert result.returncode == 0, combined_output

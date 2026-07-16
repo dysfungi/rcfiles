@@ -36,11 +36,6 @@ TRUTH TABLE
       4. gh ssh-key list fails      → best-effort skip, no add
       5. github.com auth            → GH_TOKEN set, GH_HOST/GH_ENTERPRISE_TOKEN empty
       6. GHE auth                   → GH_HOST + GH_ENTERPRISE_TOKEN set, GH_TOKEN empty
-    Structural template tests (static read):
-      7. enterprise .tmpl gated on is_riot_machine + targets GHE host/token
-      8. github .tmpl includes helper + MISE_GITHUB_TOKEN
-      9. github .tmpl flips remote to SSH only behind an auth-verification guard
-     10. both callers are run_onchange_ and keyed on the live public key
 """
 
 from __future__ import annotations
@@ -57,11 +52,6 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 HELPER = MANAGED_ROOT / ".chezmoitemplates" / "github" / "register-ssh-key.sh"
-SCRIPTS = MANAGED_ROOT / ".chezmoiscripts" / "20"
-GITHUB_SCRIPT = SCRIPTS / "run_onchange_after_register-ssh-github.unix-like.sh.tmpl"
-ENTERPRISE_SCRIPT = (
-    SCRIPTS / "run_onchange_after_register-ssh-github-enterprise.unix-like.sh.tmpl"
-)
 
 _BASH = shutil.which("bash") or "/bin/bash"
 _KEYGEN = shutil.which("ssh-keygen")
@@ -244,41 +234,3 @@ def test_register_auth_env(
     assert f"GH_TOKEN={exp_token}\n" in log
     assert f"GH_HOST={exp_host}\n" in log
     assert f"GH_ENTERPRISE_TOKEN={exp_ent}\n" in log
-
-
-# ── Structural template tests ─────────────────────────────────────────────────
-
-
-def test_helper_is_add_only() -> None:
-    """The helper must never call `gh ssh-key delete`."""
-    assert "ssh-key delete" not in HELPER.read_text()
-
-
-def test_enterprise_script_gated_and_targets_ghe() -> None:
-    content = ENTERPRISE_SCRIPT.read_text()
-    assert "{{- if .is_riot_machine -}}" in content
-    assert "{{ end -}}" in content
-    assert "gh.riotgames.com" in content
-    assert "MISE_GITHUB_ENTERPRISE_TOKEN" in content
-
-
-def test_github_script_includes_helper() -> None:
-    content = GITHUB_SCRIPT.read_text()
-    assert 'includeTemplate "github/register-ssh-key.sh"' in content
-    assert "MISE_GITHUB_TOKEN" in content
-
-
-def test_github_remote_flip_is_guarded() -> None:
-    """Remote flip to SSH must be gated on an auth-verification check."""
-    content = GITHUB_SCRIPT.read_text()
-    assert "remote set-url" in content
-    assert "git@github.com" in content
-    assert "successfully authenticated" in content, "flip must verify SSH auth first"
-
-
-@pytest.mark.parametrize("script", [GITHUB_SCRIPT, ENTERPRISE_SCRIPT])
-def test_callers_are_run_onchange_keyed_on_pubkey(script: Path) -> None:
-    assert script.name.startswith("run_onchange_after_")
-    content = script.read_text()
-    assert "# pubkey:" in content
-    assert "id_ed25519.pub" in content

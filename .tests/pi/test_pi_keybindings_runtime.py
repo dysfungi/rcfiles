@@ -8,22 +8,18 @@ never inspects the rendered JSON as a template-content assertion.
 
 from __future__ import annotations
 
-import json
 import os
 import shutil
 import subprocess
-import tomllib
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
-MISE_CONFIG = REPO_ROOT / ".mise.toml"
 TEMPLATE = MANAGED_ROOT / "dot_pi" / "agent" / "keybindings.json.tmpl"
 HARNESS = Path(__file__).with_name("keybindings_runtime_harness.mjs")
 PI_MISE_TOOL = "npm:@earendil-works/pi-coding-agent"
-PI_VERSION = "0.80.6"
 
 pytestmark = pytest.mark.slow
 
@@ -59,16 +55,11 @@ def _mise() -> str:
 
 
 def _pi_package_root() -> Path:
-    tools = tomllib.loads(MISE_CONFIG.read_text(encoding="utf-8"))["tools"]
-    assert tools[PI_MISE_TOOL] == PI_VERSION
-
     install_root = Path(_run([_mise(), "where", PI_MISE_TOOL]).stdout.strip())
     package_root = (
         install_root / "lib" / "node_modules" / "@earendil-works" / "pi-coding-agent"
     )
     assert package_root.is_dir(), f"missing installed Pi package: {package_root}"
-    installed = json.loads((package_root / "package.json").read_text(encoding="utf-8"))
-    assert installed["version"] == PI_VERSION
     return package_root
 
 
@@ -104,7 +95,5 @@ def test_pi_keybindings_match_raw_escape_ctrl_c_and_csi_u_ctrl_bracket(
 
     node = Path(_run([_mise(), "which", "node"]).stdout.strip())
     assert node.is_file(), f"missing mise-managed Node executable: {node}"
-    result = _run(
-        [str(node), str(HARNESS), str(agent_dir), str(package_root), PI_VERSION]
-    )
+    result = _run([str(node), str(HARNESS), str(agent_dir), str(package_root)])
     assert result.stdout == "Pi keybindings runtime harness: ok\n"

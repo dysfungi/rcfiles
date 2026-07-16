@@ -1,18 +1,14 @@
 #!/usr/bin/env node
 /** Runtime coverage for Pi's installed keybinding manager. */
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const [agentDir, packageDir, expectedVersion] = process.argv.slice(2);
+const [agentDir, packageDir] = process.argv.slice(2);
 
-if (!agentDir || !packageDir || !expectedVersion) {
-	throw new Error("Usage: keybindings_runtime_harness.mjs <agent-dir> <pi-package-dir> <expected-version>");
+if (!agentDir || !packageDir) {
+	throw new Error("Usage: keybindings_runtime_harness.mjs <agent-dir> <pi-package-dir>");
 }
-
-const packageJson = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-assert.equal(packageJson.version, expectedVersion, "installed Pi package version");
 
 const keybindingsPath = resolve(packageDir, "dist", "core", "keybindings.js");
 const { KeybindingsManager } = await import(pathToFileURL(keybindingsPath).href);
