@@ -13,7 +13,7 @@ npm:@anthropic-ai/claude-code         2.1.210             ~/.config/mise/config.
 npm:@earendil-works/pi-coding-agent   0.80.6
 npm:@earendil-works/pi-coding-agent   0.80.7              ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0               ~/.config/mise/config.toml       latest
-npm:@tobilu/qmd                       2.5.3               ~/.config/mise/config.toml       latest
+npm:@tobilu/qmd                       2.5.3
 npm:markdownlint-cli                  0.48.0
 pipx:bandit                           1.9.4               ~/.config/mise/config.toml       latest
 pipx:doit                             0.37.0              ~/.config/mise/config.toml       latest
