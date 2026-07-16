@@ -20,6 +20,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 _hook_path = (
     Path(__file__).resolve().parents[2] / ".hooks" / "validate-chezmoi-templates.py"
@@ -38,6 +39,20 @@ markdownlint_args = _mod.markdownlint_args
 partition_into_config_and_other = _mod.partition_into_config_and_other
 suffix_for_output_type = _mod.suffix_for_output_type
 process_file = _mod.process_file
+
+
+def test_template_validator_requires_serial_execution() -> None:
+    """The temp-directory TOCTOU guard has no safer behavioral substitute."""
+    config = yaml.safe_load(
+        (Path(__file__).resolve().parents[2] / ".pre-commit-config.yaml").read_text()
+    )
+    hook = next(
+        hook
+        for repository in config["repos"]
+        for hook in repository["hooks"]
+        if hook["id"] == "validate-chezmoi-templates"
+    )
+    assert hook["require_serial"] is True
 
 
 # ---------------------------------------------------------------------------
