@@ -189,7 +189,7 @@ function fakePi() {
 			"\tcwd: process.cwd(),",
 			"\targs: process.argv.slice(2),",
 			"\texecution: process.env.PI_SUBAGENT_EXECUTION,",
-			"\tmode: process.env.PI_MODE,",
+			"\tphase: process.env.PI_ROOT_PHASE,",
 			"\tmarker: process.env.PI_SUBAGENT,",
 			"\tworktreeRoot: process.env.PI_WORKTREE_ROOT,",
 			"\trepoRoot: process.env.PI_WORKTREE_REPO_ROOT,",
@@ -735,9 +735,9 @@ async function testParallelReadOnlyExecution(fake) {
 	assertChildLaunchArgs(fake.log);
 }
 
-async function testPlanModeDowngradesWorkers(fake) {
+async function testPlanPhaseDowngradesWorkers(fake) {
 	const { root } = worktreeFixture();
-	const sessionId = "plan-mode-downgrade";
+	const sessionId = "plan-phase-downgrade";
 	writeAgents(root);
 	const cases = [
 		["single", { agent: "writer", task: "inspect", agentScope: "project", confirmProjectAgents: false }, 1],
@@ -768,57 +768,74 @@ async function testPlanModeDowngradesWorkers(fake) {
 	];
 	for (const [id, params, expectedLaunches] of cases) {
 		writeFileSync(fake.log, "");
-		const result = await withFakePi(fake, () => invoke(runner(root, `${sessionId}-${id}`), params), { PI_MODE: "plan" });
+		const result = await withFakePi(fake, () => invoke(runner(root, `${sessionId}-${id}`), params), { PI_ROOT_PHASE: "plan" });
 		assert.equal(result.isError, undefined, resultText(result));
 		const records = invocations(fake.log);
 		assert.equal(records.length, expectedLaunches, `${id} launch count`);
 		for (const record of records) {
 			assert.equal(record.execution, "read-only", `${id} worker execution`);
-			assert.equal(record.mode, "plan", `${id} worker mode propagation`);
+			assert.equal(record.phase, "plan", `${id} worker phase propagation`);
 		}
 		assertChildLaunchArgs(fake.log);
 	}
 
 	writeFileSync(fake.log, "");
-	const missingMode = await withFakePi(
+	const missingPhase = await withFakePi(
 		fake,
 		() =>
-			invoke(runner(root, `${sessionId}-missing-mode`), {
+			invoke(runner(root, `${sessionId}-missing-phase`), {
 				agent: "writer",
-				task: "fail closed without a root mode",
+				task: "fail closed without a root phase",
 				agentScope: "project",
 				confirmProjectAgents: false,
 			}),
-		{ PI_MODE: undefined },
+		{ PI_ROOT_PHASE: undefined },
 	);
-	assert.equal(missingMode.isError, undefined, resultText(missingMode));
-	const [missingModeRecord] = invocations(fake.log);
-	assert.equal(missingModeRecord.execution, "read-only");
-	assert.equal("mode" in missingModeRecord, false);
+	assert.equal(missingPhase.isError, undefined, resultText(missingPhase));
+	const [missingPhaseRecord] = invocations(fake.log);
+	assert.equal(missingPhaseRecord.execution, "read-only");
+	assert.equal("phase" in missingPhaseRecord, false);
 
 	writeFileSync(fake.log, "");
-	const unrecognizedMode = await withFakePi(
+	const unrecognizedPhase = await withFakePi(
 		fake,
 		() =>
-			invoke(runner(root, `${sessionId}-unrecognized-mode`), {
+			invoke(runner(root, `${sessionId}-unrecognized-phase`), {
 				agent: "writer",
-				task: "fail closed for an unrecognized root mode",
+				task: "fail closed for an unrecognized root phase",
 				agentScope: "project",
 				confirmProjectAgents: false,
 			}),
-		{ PI_MODE: "bogus" },
+		{ PI_ROOT_PHASE: "bogus" },
 	);
-	assert.equal(unrecognizedMode.isError, undefined, resultText(unrecognizedMode));
-	const [unrecognizedModeRecord] = invocations(fake.log);
-	assert.equal(unrecognizedModeRecord.execution, "read-only");
-	assert.equal(unrecognizedModeRecord.mode, "bogus");
+	assert.equal(unrecognizedPhase.isError, undefined, resultText(unrecognizedPhase));
+	const [unrecognizedPhaseRecord] = invocations(fake.log);
+	assert.equal(unrecognizedPhaseRecord.execution, "read-only");
+	assert.equal(unrecognizedPhaseRecord.phase, "bogus");
+
+	writeFileSync(fake.log, "");
+	const legacyNormal = await withFakePi(
+		fake,
+		() =>
+			invoke(runner(root, `${sessionId}-legacy-normal`), {
+				agent: "writer",
+				task: "fail closed for the legacy phase value",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		{ PI_ROOT_PHASE: "normal" },
+	);
+	assert.equal(legacyNormal.isError, undefined, resultText(legacyNormal));
+	const [legacyNormalRecord] = invocations(fake.log);
+	assert.equal(legacyNormalRecord.execution, "read-only");
+	assert.equal(legacyNormalRecord.phase, "normal");
 
 	writeFileSync(fake.log, "");
 	const nested = await withFakePi(
 		fake,
 		async () => {
 			await startNestedChildPlanMode();
-			assert.equal(process.env.PI_MODE, "plan", "child plan-mode startup must preserve the inherited root mode");
+			assert.equal(process.env.PI_ROOT_PHASE, "plan", "child plan-mode startup must preserve the inherited root phase");
 			return invoke(runner(root, `${sessionId}-nested`), {
 				agent: "writer",
 				task: "nested worker",
@@ -826,12 +843,12 @@ async function testPlanModeDowngradesWorkers(fake) {
 				confirmProjectAgents: false,
 			});
 		},
-		{ PI_MODE: "plan", PI_SUBAGENT: "1" },
+		{ PI_ROOT_PHASE: "plan", PI_SUBAGENT: "1" },
 	);
 	assert.equal(nested.isError, undefined, resultText(nested));
 	const [nestedRecord] = invocations(fake.log);
 	assert.equal(nestedRecord.execution, "read-only");
-	assert.equal(nestedRecord.mode, "plan");
+	assert.equal(nestedRecord.phase, "plan");
 	assert.equal(nestedRecord.marker, "1");
 }
 
@@ -992,8 +1009,8 @@ async function testSignalTerminationAndAbortEscalation(fake) {
 	}
 }
 
-const previousMode = process.env.PI_MODE;
-process.env.PI_MODE = "normal";
+const previousPhase = process.env.PI_ROOT_PHASE;
+process.env.PI_ROOT_PHASE = "execute";
 try {
 	const fake = fakePi();
 	await testReadOnlyExecution(fake);
@@ -1020,7 +1037,7 @@ try {
 	writeFileSync(fake.log, "");
 	await testParallelReadOnlyExecution(fake);
 	writeFileSync(fake.log, "");
-	await testPlanModeDowngradesWorkers(fake);
+	await testPlanPhaseDowngradesWorkers(fake);
 	writeFileSync(fake.log, "");
 	await testNonGitParentRejectsGitCwdOverride(fake);
 	writeFileSync(fake.log, "");
@@ -1031,6 +1048,6 @@ try {
 	await testSignalTerminationAndAbortEscalation(fake);
 	console.log("subagent runner runtime harness: ok");
 } finally {
-	if (previousMode === undefined) delete process.env.PI_MODE;
-	else process.env.PI_MODE = previousMode;
+	if (previousPhase === undefined) delete process.env.PI_ROOT_PHASE;
+	else process.env.PI_ROOT_PHASE = previousPhase;
 }

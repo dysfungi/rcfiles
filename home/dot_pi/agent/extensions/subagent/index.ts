@@ -289,7 +289,7 @@ function prepareAgent(defaultCwd: string, sessionId: string, agents: AgentConfig
 		return `Unknown agent: "${agentName}". Available agents: ${available}.`;
 	}
 	if (agent.executionError || !agent.execution) return `Agent "${agentName}" rejected: ${agent.executionError ?? "missing execution class"}.`;
-	const effectiveExecution = process.env.PI_MODE === "normal" ? agent.execution : "read-only";
+	const effectiveExecution = process.env.PI_ROOT_PHASE === "execute" ? agent.execution : "read-only";
 	const root = repoRoot(defaultCwd);
 	if (effectiveExecution === "read-only") {
 		if (!root) return { agent, execution: effectiveExecution, effectiveCwd: cwd ?? defaultCwd };

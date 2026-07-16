@@ -307,6 +307,8 @@ function testUnregisteredToolsAreSilentlyDropped() {
 function testCommandRegistration() {
 	const harness = createHarness();
 	assert.ok(harness.commands.has("execute"), "/execute must be registered for the one-step implementation kickoff");
+	assert.ok(harness.commands.has("phase"), "/phase must be registered as the phase selector");
+	assert.equal(harness.commands.has("mode"), false, "/mode must not remain registered");
 	assert.equal(harness.commands.has("implement"), false, "/implement must remain available to its prompt template");
 }
 
@@ -376,7 +378,7 @@ async function testSelectorsAndToolSnapshots() {
 	assert.ok(harness.state.activeTools.includes("plan_write"), "plan_write is active in plan mode");
 
 	await runCommand(harness, "normal");
-	assert.deepEqual(harness.state.activeTools, baselineTools, "normal mode restores the exact baseline tool set");
+	assert.deepEqual(harness.state.activeTools, baselineTools, "/normal aliases the execute phase and restores the exact baseline tool set");
 	assert.equal(harness.persistedEntries.at(-1).data.enabled, false);
 
 	await runCommand(harness, "plan");
@@ -428,43 +430,45 @@ async function testSessionStartGates() {
 	}
 }
 
-async function testModeEnvironmentPropagation() {
-	const previous = process.env.PI_MODE;
+async function testPhaseEnvironmentPropagation() {
+	const previous = process.env.PI_ROOT_PHASE;
 	const previousSubagent = process.env.PI_SUBAGENT;
 	try {
-		delete process.env.PI_MODE;
+		delete process.env.PI_ROOT_PHASE;
 		const planned = createHarness();
 		await startPlanMode(planned);
-		assert.equal(process.env.PI_MODE, "plan", "session start records the default plan mode");
+		assert.equal(process.env.PI_ROOT_PHASE, "plan", "session start records the default plan phase");
 		await runCommand(planned, "execute");
-		assert.equal(process.env.PI_MODE, "normal", "/execute records normal mode before launching work");
+		assert.equal(process.env.PI_ROOT_PHASE, "execute", "/execute records the execute phase before launching work");
 		await runCommand(planned, "plan");
-		assert.equal(process.env.PI_MODE, "plan", "/plan records plan mode");
+		assert.equal(process.env.PI_ROOT_PHASE, "plan", "/plan records the plan phase");
+		const messagesBeforeAlias = planned.sentMessages.length;
 		await runCommand(planned, "normal");
-		assert.equal(process.env.PI_MODE, "normal", "/normal records normal mode");
+		assert.equal(process.env.PI_ROOT_PHASE, "execute", "/normal aliases the execute phase");
+		assert.equal(planned.sentMessages.length, messagesBeforeAlias, "/normal must not start implementation kickoff");
 		await runCommand(planned, "plan");
-		assert.equal(process.env.PI_MODE, "plan", "plan-normal-plan cycles update the inherited mode");
+		assert.equal(process.env.PI_ROOT_PHASE, "plan", "plan-execute-plan cycles update the inherited phase");
 
-		const normal = createHarness({ plan: false });
-		await startPlanMode(normal);
-		assert.equal(process.env.PI_MODE, "normal", "session start records normal mode when plan is disabled");
+		const execute = createHarness({ plan: false });
+		await startPlanMode(execute);
+		assert.equal(process.env.PI_ROOT_PHASE, "execute", "session start records the execute phase when plan is disabled");
 
 		delete process.env.PI_SUBAGENT;
 		for (const mode of ["json", "print"]) {
-			process.env.PI_MODE = "plan";
+			process.env.PI_ROOT_PHASE = "plan";
 			const nonInteractiveRoot = createHarness({ mode });
 			await startPlanMode(nonInteractiveRoot);
-			assert.equal(process.env.PI_MODE, "normal", `${mode} root session start records normal mode`);
+			assert.equal(process.env.PI_ROOT_PHASE, "execute", `${mode} root session start records the execute phase`);
 		}
 
-		process.env.PI_MODE = "plan";
+		process.env.PI_ROOT_PHASE = "plan";
 		process.env.PI_SUBAGENT = "1";
 		const child = createHarness({ mode: "tui" });
 		await startPlanMode(child);
-		assert.equal(process.env.PI_MODE, "plan", "inert child plan-mode extensions preserve the inherited root mode");
+		assert.equal(process.env.PI_ROOT_PHASE, "plan", "inert child plan-mode extensions preserve the inherited root phase");
 	} finally {
-		if (previous === undefined) delete process.env.PI_MODE;
-		else process.env.PI_MODE = previous;
+		if (previous === undefined) delete process.env.PI_ROOT_PHASE;
+		else process.env.PI_ROOT_PHASE = previous;
 		if (previousSubagent === undefined) delete process.env.PI_SUBAGENT;
 		else process.env.PI_SUBAGENT = previousSubagent;
 	}
@@ -498,28 +502,30 @@ async function testBranchLocalSessionRestore() {
 	assert.deepEqual(branchWithNormalMode.state.activeTools, branchWithNormalMode.initialTools);
 }
 
-async function testModeParsingAndIdleGuards() {
+async function testPhaseParsingAndIdleGuards() {
 	const harness = createHarness();
 	await startPlanMode(harness);
-	const mode = harness.commands.get("mode");
-	assert.deepEqual(mode.getArgumentCompletions(""), [
+	const phase = harness.commands.get("phase");
+	assert.deepEqual(phase.getArgumentCompletions(""), [
 		{ value: "plan", label: "plan" },
-		{ value: "normal", label: "normal" },
+		{ value: "execute", label: "execute" },
 	]);
-	assert.deepEqual(mode.getArgumentCompletions("P"), [{ value: "plan", label: "plan" }]);
-	assert.equal(mode.getArgumentCompletions("plan extra"), null);
+	assert.deepEqual(phase.getArgumentCompletions("P"), [{ value: "plan", label: "plan" }]);
+	assert.equal(phase.getArgumentCompletions("plan extra"), null);
 
-	await runCommand(harness, "mode");
-	assert.deepEqual(harness.state.activeTools, harness.initialTools);
-	await runCommand(harness, "mode", "PLAN");
-	assert.equal(harness.persistedEntries.at(-1).data.enabled, true);
+	await runCommand(harness, "phase");
+	assert.deepEqual(harness.state.activeTools, harness.initialTools, "/phase cycles from plan to execute");
+	await runCommand(harness, "phase", "PLAN");
+	assert.equal(harness.persistedEntries.at(-1).data.enabled, true, "/phase selects plan explicitly");
+	await runCommand(harness, "phase", "execute");
+	assert.equal(harness.persistedEntries.at(-1).data.enabled, false, "/phase selects execute explicitly");
 
 	const entriesBeforeInvalid = harness.persistedEntries.length;
 	for (const args of ["p", "plan extra"]) {
-		await runCommand(harness, "mode", args);
+		await runCommand(harness, "phase", args);
 		assert.equal(harness.persistedEntries.length, entriesBeforeInvalid);
 		assert.deepEqual(harness.notifications.at(-1), {
-			message: "Usage: /mode [plan|normal] (use an exact full mode name).",
+			message: "Usage: /phase [plan|execute] (use an exact full phase name).",
 			type: "warning",
 		});
 	}
@@ -529,14 +535,14 @@ async function testModeParsingAndIdleGuards() {
 		entries: harness.persistedEntries.length,
 		tools: [...harness.state.activeTools],
 	};
-	for (const command of ["plan", "normal", "mode", "execute"]) {
-		await runCommand(harness, command, command === "mode" ? "normal" : "");
+	for (const command of ["plan", "normal", "phase", "execute"]) {
+		await runCommand(harness, command, command === "phase" ? "execute" : "");
 	}
 	assert.equal(harness.persistedEntries.length, stateBeforeBusy.entries);
 	assert.deepEqual(harness.state.activeTools, stateBeforeBusy.tools);
 	assert.deepEqual(
 		harness.notifications.slice(-4).map(({ message, type }) => ({ message, type })),
-		["plan", "normal", "mode", "execute"].map((command) => ({
+		["plan", "normal", "phase", "execute"].map((command) => ({
 			message: `/${command} requires an idle agent. Wait for the current run to finish.`,
 			type: "warning",
 		})),
@@ -561,7 +567,7 @@ async function testImplementationKickoffAndFailure() {
 	assert.deepEqual(failed.state.activeTools, failed.initialTools);
 	assert.deepEqual(failed.sentMessages, []);
 	assert.deepEqual(failed.notifications.at(-1), {
-		message: "Could not start implementation: offline. Normal mode remains active.",
+		message: "Could not start implementation: offline. Execute phase remains active.",
 		type: "error",
 	});
 }
@@ -607,7 +613,7 @@ async function testBashPolicyParity() {
 		toolName: "bash",
 		input: { command: "git config --get user.name" },
 	});
-	assert.match(blocked.reason, /Plan mode: command blocked/);
+	assert.match(blocked.reason, /Plan phase: command blocked/);
 }
 
 async function openPlanPager(cancelKeys) {
@@ -891,9 +897,9 @@ try {
 	await testQuestionnaireNonUiErrorPaths();
 	await testSelectorsAndToolSnapshots();
 	await testSessionStartGates();
-	await testModeEnvironmentPropagation();
+	await testPhaseEnvironmentPropagation();
 	await testBranchLocalSessionRestore();
-	await testModeParsingAndIdleGuards();
+	await testPhaseParsingAndIdleGuards();
 	await testImplementationKickoffAndFailure();
 	await testContextDeduplication();
 	await testBashPolicyParity();

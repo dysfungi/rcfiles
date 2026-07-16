@@ -203,12 +203,12 @@ def test_pi_coding_agent_dir_override_applies_to_global_skills(
         ("tui", True, False),
     ],
 )
-def test_plan_mode_excludes_workers(mode: str, subagent: bool, expected: bool) -> None:
-    """JSON/print workers and explicitly spawned children cannot enable plan mode."""
+def test_plan_phase_excludes_workers(mode: str, subagent: bool, expected: bool) -> None:
+    """JSON/print workers and explicitly spawned children cannot enable the plan phase."""
     runner = """
 import { pathToFileURL } from "node:url";
 const module = await import(pathToFileURL(process.argv[1]).href);
-console.log(JSON.stringify(module.isPlanModeEnabled(process.argv[2])));
+console.log(JSON.stringify(module.isPlanPhaseActive(process.argv[2])));
 """
     mode_module = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "plan-mode" / "mode.mjs"
@@ -233,7 +233,7 @@ def test_subagent_child_environment_marks_worker_non_interactive() -> None:
     runner = """
 import { pathToFileURL } from "node:url";
 const module = await import(pathToFileURL(process.argv[1]).href);
-console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value", PI_MODE: "plan" })));
+console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value", PI_ROOT_PHASE: "plan" })));
 """
     child_env_module = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "child-env.mjs"
@@ -244,11 +244,13 @@ console.log(JSON.stringify(module.childEnvironment({ EXISTING: "value", PI_MODE:
         capture_output=True,
         text=True,
     )
-    assert json.loads(result.stdout) == {
+    child_environment = json.loads(result.stdout)
+    assert child_environment == {
         "EXISTING": "value",
-        "PI_MODE": "plan",
+        "PI_ROOT_PHASE": "plan",
         "PI_SUBAGENT": "1",
     }
+    assert "PI_MODE" not in child_environment
 
     extension = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "subagent" / "index.ts"
