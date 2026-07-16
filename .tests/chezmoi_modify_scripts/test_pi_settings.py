@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -329,6 +330,63 @@ def test_non_object_json_fails_loudly(
     assert result.returncode != 0
     assert result.stdout == ""
     assert result.stderr == "pi settings: JSON root must be an object\n"
+
+
+def _node_merged_stringify(existing: str, managed: dict[str, Any]) -> str:
+    """Return Node's JSON serialization of the same managed-settings merge."""
+    node = shutil.which("node")
+    assert node is not None
+    result = subprocess.run(
+        [
+            node,
+            "-e",
+            "let input = ''; process.stdin.on('data', chunk => input += chunk); "
+            "process.stdin.on('end', () => { "
+            "const [existing, managed] = input.split('\\0').map(JSON.parse); "
+            "const merge = (target, source) => { "
+            "for (const [key, value] of Object.entries(source)) { "
+            "if (target[key] && typeof target[key] === 'object' "
+            "&& !Array.isArray(target[key]) && value && typeof value === 'object' "
+            "&& !Array.isArray(value)) merge(target[key], value); "
+            "else target[key] = value; } }; "
+            "merge(existing, managed); process.stdout.write(JSON.stringify(existing, null, 2)); "
+            "});",
+        ],
+        input=existing + "\0" + json.dumps(managed, ensure_ascii=False),
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node is not installed")
+@pytest.mark.parametrize(
+    "existing",
+    [
+        pytest.param(
+            '{"negativeZero":-0,"rounded":9007199254740993,"small":1e-7,"decimal":1e20,"scientific":1e21}',
+            id="ieee-754-and-exponent-cutoffs",
+        ),
+        pytest.param(
+            r'{"z":"last","10":"ten","2":"two","01":"not-index","unicode":"café 漢 ✓ 🦊","loneHigh":"\ud800","nested":{"1":"one","0":"zero"}}',
+            id="array-index-order-unicode-and-surrogates",
+        ),
+    ],
+)
+def test_serializer_matches_node_json_stringify(
+    rendered_script: tuple[Path, str], existing: str
+) -> None:
+    """Pi's Python serializer preserves JavaScript JSON wire semantics."""
+    script, _ = rendered_script
+    managed_result = _run(script, "")
+    assert managed_result.returncode == 0, managed_result.stderr
+
+    result = _run(script, existing)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout == _node_merged_stringify(
+        existing, json.loads(managed_result.stdout)
+    )
 
 
 def test_idempotent(rendered_script: tuple[Path, str]) -> None:
