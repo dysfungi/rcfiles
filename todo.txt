@@ -1,5 +1,5 @@
 2026-05-19 Refactor scattered PATH exports: remove per-script `export PATH=...` in sync-mise, xpip, etc. now that [scriptEnv] in chezmoi.toml.tmpl centralizes mise shims +chezmoi @maintenance
-(B) Clean up testing anti-patterns and pytest bloat @worktree chore/testing-anti-patterns-and-bloat-cleanup
+(B) Migrate+refactor .tests/chezmoitemplates/test_pi_settings.py and strip test_memory_git_sync.py/test_worktree_approval_registry.py, then remove .tests/chezmoitemplates/ dir and add .gitignore guard — deferred until PR #78 merges @chore/testing-anti-patterns-and-bloat-cleanup
 (B) Add skills lazy-loading + compact instructions +context @worktree:.claude/worktrees/5e6a8e0d-838d-432c-87a4-8c1634e2098e.context-skills session:5e6a8e0d-838d-432c-87a4-8c1634e2098e agent:claude model:claude-vertex/anthropic-claude-opus-4-6
 (B) Harden worktree_check.py: use CLAUDE_PROJECT_DIR fallback when git rev-parse --show-toplevel fails (transient core.bare race blocks all writes) +chezmoi @bug
 (B) 2026-05-19 Two-repo situation (Windows /mnt/c/ source + WSL ~/  source) causes rebase friction; evaluate making WSL source canonical for this machine +chezmoi @architecture
@@ -23,7 +23,6 @@ Simplify worktree orchestration: cut commit_session_artifacts + worktree_stop_cl
 (C) 2026-07-02 .zsh/system/path.zsh:1 puts relative ./bin at the head of PATH — security smell (directory-dependent binary resolution); scope it out and remove or justify +zsh +security
 (B) 2026-07-02 Remove nvim termsync-in-tmux workaround once tmux fixes DEC 2026 redraw deferral (>3.7b) +nvim +tmux
 (B) 2026-07-02 Fix bash_worktree_guard.py redirect-regex false positive: fires on literal >/< anywhere in the command string (e.g. inside quoted --body "a > b" or quoted help text), not just real shell redirects +chezmoi @bug
-(C) 2026-07-02 Move skill-frontmatter contract check (.tests/chezmoitemplates/test_skill_frontmatter.py) out of pytest into a pure linter — extend validate-chezmoi-templates or add a dedicated pre-commit hook, then drop the pytest file +skills +tooling
 (C) 2026-07-02 Namespace remaining flat .tests files: test_bash_worktree_guard.py, test_worktree_check.py, test_worktree_create_validate.py → claude-hooks/; test_todo_config_discovery.py → todo/; test_no_stale_secret_refs.py → repo/ (cross-cutting) +testing +tooling
 (C) 2026-07-02 XONSH_LOGIN is never True in terminal-spawned xonsh on macOS (the shebang exec drops the dash-argv0), so the five @rc(login=True) blocks in dot_config/xonsh/exact_rc.d/10-paths.xsh:31-72 never run — latent, pre-existing, surfaced by the cron-mail review +xonsh @bug
 (C) 2026-07-02 Revisit full agent commit authorship (GIT_AUTHOR_*) if codex/agy/pi gain native env-injection support +skills +tooling
