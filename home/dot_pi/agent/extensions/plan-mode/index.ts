@@ -1,26 +1,26 @@
 /**
  * Plan Mode Extension (owned)
  *
- * Read-only exploration mode, ON BY DEFAULT for interactive root sessions.
+ * Read-only exploration phase, ON BY DEFAULT for interactive root sessions.
  *
  * See DESIGN.md (same directory) for the full requirements, the options
  * evaluated, and why each decision was made. Summary of the load-bearing ones:
  *
  *   - Interactive-root-only, clean: the `plan` flag defaults to `true` and
- *     `session_start` enables plan mode only in `tui`/`rpc` root sessions. Both
+ *     `session_start` enables the plan phase only in `tui`/`rpc` root sessions. Both
  *     fresh processes (`reason:"startup"`) and in-session `/new` (`reason:"new"`)
- *     start in plan mode there. Spawned `json` workers, one-shot `print`
+ *     start in the plan phase there. Spawned `json` workers, one-shot `print`
  *     invocations, and processes marked `PI_SUBAGENT=1` keep this extension inert,
- *     while the subagent launcher inherits `PI_MODE` and downgrades them to
- *     read-only when their root remains in plan mode. No injected `/plan` message, startup
+ *     while the subagent launcher inherits `PI_ROOT_PHASE` and downgrades them to
+ *     read-only when their root remains in the plan phase. No injected `/plan` message, startup
  *     turn, or session rename; the internal default starts eligible sessions in
- *     plan mode. `/plan` selects plan mode,
- *     `/normal` selects normal mode, and `/mode [plan|normal]` selects or cycles
- *     modes. `/execute` selects normal mode and sends one implementation kickoff.
+ *     the plan phase. `/plan` selects the plan phase,
+ *     `/normal` selects the execute phase, and `/phase [plan|execute]` selects or cycles
+ *     phases. `/execute` selects the execute phase and sends one implementation kickoff.
  *     `/implement` is intentionally unregistered here: its prompt template owns
  *     the scout → planner → worker implementation workflow.
  *
- *   - Tool preservation: plan mode = (currently active tools) MINUS `edit`/
+ *   - Tool preservation: plan phase = (currently active tools) MINUS `edit`/
  *     `write`, PLUS read-only plan tools and `plan_write`. The pre-plan tool set
  *     is captured and restored on exit, so root worktree lifecycle tools,
  *     `memory_*`, and `scratchpad` stay available throughout. The separate
@@ -58,7 +58,7 @@ import { Type } from "typebox";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { checkPlanModeBash, ensureParserLoaded, maybeWarnParserUnavailable } from "./bash-safety.ts";
-import { isPlanModeEnabled } from "./mode.mjs";
+import { isPlanPhaseActive } from "./mode.mjs";
 
 const PLAN_WRITE_TOOL = "plan_write";
 const PLAN_COPY_KEY = "c";
@@ -71,7 +71,7 @@ const PLAN_MODE_DISABLED_TOOLS = new Set<string>(["edit", "write"]);
 const PLAN_MANAGED_TOOLS = new Set<string>([...PLAN_MODE_TOOLS, ...NORMAL_MODE_TOOLS]);
 
 const PLAN_CONTEXT = `[PLAN MODE ACTIVE]
-You are in plan mode - a read-only exploration mode for safe analysis.
+You are in the plan phase - a read-only exploration phase for safe analysis.
 
 Restrictions:
 - The edit and write tools are disabled.
@@ -81,17 +81,17 @@ Restrictions:
 Investigate through delegated agents, then produce a clear, concise plan. Ask
 clarifying questions with the questionnaire tool. Persist or update your plan
 to disk with the ${PLAN_WRITE_TOOL} tool (it writes this session's plan file).
-Do NOT attempt to make changes or run mutating commands; run /normal to leave
-plan mode or /execute to begin implementation.`;
+Do NOT attempt to make changes or run mutating commands; run /normal to select the
+execute phase or /execute to begin implementation.`;
 
 interface PlanModeState {
 	enabled: boolean;
 	toolsBeforePlanMode?: string[];
 }
 
-type ModeName = "plan" | "normal";
+type PhaseName = "plan" | "execute";
 
-const MODE_NAMES: readonly ModeName[] = ["plan", "normal"];
+const PHASE_NAMES: readonly PhaseName[] = ["plan", "execute"];
 const IMPLEMENTATION_KICKOFF = "Implement the approved plan now.";
 
 /** Resolve this session's plan file: ~/.pi/agent/plans/<sessionId>.md.
@@ -105,16 +105,16 @@ function resolvePlanFile(ctx: ExtensionContext): string {
 }
 
 export default function planModeExtension(pi: ExtensionAPI): void {
-	let planModeEnabled = false;
+	let planPhaseActive = false;
 	let toolsBeforePlanMode: string[] | undefined;
 
 	pi.registerFlag("plan", {
-		description: "Internal default: eligible interactive root sessions start in read-only plan mode.",
+		description: "Internal default: eligible interactive root sessions start in the read-only plan phase.",
 		type: "boolean",
 		default: true,
 	});
 
-	// Scoped plan writer: the ONLY write capability in plan mode. It can write
+	// Scoped plan writer: the ONLY write capability in the plan phase. It can write
 	// nothing but the current session's plan file, so general write stays gone.
 	pi.registerTool(
 		defineTool({
@@ -122,7 +122,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 			label: "Plan Write",
 			description:
 				"Persist or update the current session's plan to disk (~/.pi/agent/plans/<sessionId>.md). " +
-				"Overwrites the file with the provided content. Use this in plan mode to keep the plan synced to disk.",
+				"Overwrites the file with the provided content. Use this in the plan phase to keep the plan synced to disk.",
 			promptSnippet: "plan_write(content): save/update this session's plan file",
 			parameters: Type.Object({
 				content: Type.String({ description: "Full Markdown content of the plan (overwrites the file)." }),
@@ -322,7 +322,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	}
 
 	function updateStatus(ctx: ExtensionContext): void {
-		ctx.ui.setStatus("plan-mode", planModeEnabled ? ctx.ui.theme.fg("warning", "⏸ plan") : undefined);
+		ctx.ui.setStatus("plan-mode", planPhaseActive ? ctx.ui.theme.fg("warning", "⏸ plan") : undefined);
 	}
 
 	function uniqueToolNames(toolNames: string[]): string[] {
@@ -351,24 +351,24 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	}
 
 	function persistState(): void {
-		pi.appendEntry("plan-mode", { enabled: planModeEnabled, toolsBeforePlanMode } satisfies PlanModeState);
+		pi.appendEntry("plan-mode", { enabled: planPhaseActive, toolsBeforePlanMode } satisfies PlanModeState);
 	}
 
-	/** Select a mode without ever treating an explicit selection as a toggle. */
-	function selectMode(mode: ModeName, ctx: ExtensionContext): void {
-		const enablePlanMode = mode === "plan";
-		process.env.PI_MODE = mode;
+	/** Select a phase without ever treating an explicit selection as a toggle. */
+	function selectPhase(phase: PhaseName, ctx: ExtensionContext): void {
+		const planPhaseSelected = phase === "plan";
+		process.env.PI_ROOT_PHASE = phase;
 		// Do not rewrite another extension's tool state or append duplicate context
-		// when an explicit selector repeats the already active mode.
-		if (planModeEnabled === enablePlanMode) return;
+		// when an explicit selector repeats the already active phase.
+		if (planPhaseActive === planPhaseSelected) return;
 
-		planModeEnabled = enablePlanMode;
-		if (planModeEnabled) {
+		planPhaseActive = planPhaseSelected;
+		if (planPhaseActive) {
 			enablePlanModeTools();
-			ctx.ui.notify("Plan mode enabled. Write tools disabled; delegate Bash/MCP exploration.");
+			ctx.ui.notify("Plan phase enabled. Write tools disabled; delegate Bash/MCP exploration.");
 		} else {
 			restoreNormalModeTools();
-			ctx.ui.notify("Normal mode enabled. Full access restored.");
+			ctx.ui.notify("Execute phase enabled. Full access restored.");
 		}
 		updateStatus(ctx);
 		persistState();
@@ -380,16 +380,16 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		return false;
 	}
 
-	function parseModeArgument(args: string): ModeName | "cycle" | undefined {
+	function parsePhaseArgument(args: string): PhaseName | "cycle" | undefined {
 		const tokens = args.trim().split(/\s+/).filter(Boolean);
 		if (tokens.length === 0) return "cycle";
 		if (tokens.length !== 1) return undefined;
-		const mode = tokens[0].toLowerCase();
-		return MODE_NAMES.find((name) => name === mode);
+		const phase = tokens[0].toLowerCase();
+		return PHASE_NAMES.find((name) => name === phase);
 	}
 
-	function cycleMode(ctx: ExtensionContext): void {
-		selectMode(planModeEnabled ? "normal" : "plan", ctx);
+	function cyclePhase(ctx: ExtensionContext): void {
+		selectPhase(planPhaseActive ? "execute" : "plan", ctx);
 	}
 
 	function buildImplementationKickoff(args: string): string {
@@ -403,52 +403,52 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		if (!requireIdle(ctx, "execute")) return;
 
 		// Transition first and never roll it back: even a failed kickoff must leave
-		// full tools visible and plan-mode context disabled for the next attempt.
-		selectMode("normal", ctx);
+		// full tools visible and plan-phase context disabled for the next attempt.
+		selectPhase("execute", ctx);
 		try {
 			pi.sendUserMessage(buildImplementationKickoff(args));
 		} catch (error) {
 			const detail = error instanceof Error ? `: ${error.message}` : "";
-			ctx.ui.notify(`Could not start implementation${detail}. Normal mode remains active.`, "error");
+			ctx.ui.notify(`Could not start implementation${detail}. Execute phase remains active.`, "error");
 		}
 	}
 
 	pi.registerCommand("plan", {
-		description: "Select plan mode (read-only exploration)",
+		description: "Select plan phase (read-only exploration)",
 		handler: async (_args, ctx) => {
-			if (requireIdle(ctx, "plan")) selectMode("plan", ctx);
+			if (requireIdle(ctx, "plan")) selectPhase("plan", ctx);
 		},
 	});
 
 	pi.registerCommand("normal", {
-		description: "Select normal mode (full tool access)",
+		description: "Alias for execute phase (full tool access)",
 		handler: async (_args, ctx) => {
-			if (requireIdle(ctx, "normal")) selectMode("normal", ctx);
+			if (requireIdle(ctx, "normal")) selectPhase("execute", ctx);
 		},
 	});
 
-	pi.registerCommand("mode", {
-		description: "Select plan or normal mode; omit the argument to cycle",
+	pi.registerCommand("phase", {
+		description: "Select plan or execute phase; omit the argument to cycle",
 		getArgumentCompletions: (argumentPrefix) => {
 			const prefix = argumentPrefix.trim().toLowerCase();
 			if (/\s/.test(argumentPrefix.trim())) return null;
-			const matches = MODE_NAMES.filter((name) => name.startsWith(prefix));
+			const matches = PHASE_NAMES.filter((name) => name.startsWith(prefix));
 			return matches.length > 0 ? matches.map((value) => ({ value, label: value })) : null;
 		},
 		handler: async (args, ctx) => {
-			const requestedMode = parseModeArgument(args);
-			if (!requestedMode) {
-				ctx.ui.notify("Usage: /mode [plan|normal] (use an exact full mode name).", "warning");
+			const requestedPhase = parsePhaseArgument(args);
+			if (!requestedPhase) {
+				ctx.ui.notify("Usage: /phase [plan|execute] (use an exact full phase name).", "warning");
 				return;
 			}
-			if (!requireIdle(ctx, "mode")) return;
-			if (requestedMode === "cycle") cycleMode(ctx);
-			else selectMode(requestedMode, ctx);
+			if (!requireIdle(ctx, "phase")) return;
+			if (requestedPhase === "cycle") cyclePhase(ctx);
+			else selectPhase(requestedPhase, ctx);
 		},
 	});
 
 	pi.registerCommand("execute", {
-		description: "Leave plan mode and start implementing the approved plan",
+		description: "Select execute phase and start implementing the approved plan",
 		handler: async (args, ctx) => startImplementation(args, ctx),
 	});
 
@@ -458,9 +458,9 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 	});
 
 	pi.registerShortcut(Key.ctrlAlt("p"), {
-		description: "Cycle plan and normal modes",
+		description: "Cycle plan and execute phases",
 		handler: async (ctx) => {
-			if (requireIdle(ctx, "mode")) cycleMode(ctx);
+			if (requireIdle(ctx, "phase")) cyclePhase(ctx);
 		},
 	});
 
@@ -469,9 +469,9 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		handler: async (ctx) => showPlan(ctx),
 	});
 
-	// Block mutating bash commands while plan mode is active.
+	// Block mutating bash commands while the plan phase is active.
 	pi.on("tool_call", async (event, ctx) => {
-		if (!planModeEnabled || event.toolName !== "bash") return;
+		if (!planPhaseActive || event.toolName !== "bash") return;
 		const command = event.input?.command as string | undefined;
 		if (!command) return;
 		await ensureParserLoaded();
@@ -480,7 +480,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		if (reason) {
 			return {
 				block: true,
-				reason: `Plan mode: command blocked (${reason}). Run /normal to leave plan mode first.\nCommand: ${command}`,
+				reason: `Plan phase: command blocked (${reason}). Run /normal to select the execute phase first.\nCommand: ${command}`,
 			};
 		}
 	});
@@ -501,7 +501,7 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 				message.content === PLAN_CONTEXT &&
 				message.display === false);
 
-		if (planModeEnabled) {
+		if (planPhaseActive) {
 			const newestPlanContext = event.messages.findLastIndex(isPlanModeContext);
 			if (newestPlanContext === -1) return;
 			return {
@@ -512,38 +512,38 @@ export default function planModeExtension(pi: ExtensionAPI): void {
 		return { messages: event.messages.filter((message) => !isPlanModeContext(message)) };
 	});
 
-	// Inject plan-mode instructions before each turn while active.
+	// Inject plan-phase instructions before each turn while active.
 	pi.on("before_agent_start", async () => {
-		if (!planModeEnabled) return;
+		if (!planPhaseActive) return;
 		return { message: { customType: "plan-mode-context", content: PLAN_CONTEXT, display: false } };
 	});
 
 	// Default-on (startup + /new) and restore persisted state (resume/fork).
-	// Child plan-mode extensions stay inert, but their launchers inherit PI_MODE so
-	// nested delegation cannot escape the root session's plan-mode read-only policy.
+	// Child plan-mode extensions stay inert, but their launchers inherit PI_ROOT_PHASE so
+	// nested delegation cannot escape the root session's plan-phase read-only policy.
 	pi.on("session_start", async (_event, ctx) => {
-		if (!isPlanModeEnabled(ctx.mode)) {
-			planModeEnabled = false;
-			if (process.env.PI_SUBAGENT !== "1") process.env.PI_MODE = "normal";
+		if (!isPlanPhaseActive(ctx.mode)) {
+			planPhaseActive = false;
+			if (process.env.PI_SUBAGENT !== "1") process.env.PI_ROOT_PHASE = "execute";
 			toolsBeforePlanMode = undefined;
 			updateStatus(ctx);
 			return;
 		}
 
 		void ensureParserLoaded(); // warm the parser; don't block startup
-		if (pi.getFlag("plan") === true) planModeEnabled = true;
+		if (pi.getFlag("plan") === true) planPhaseActive = true;
 
 		const planModeEntry = ctx.sessionManager
 			.getBranch()
 			.filter((e: { type: string; customType?: string }) => e.type === "custom" && e.customType === "plan-mode")
 			.pop() as { data?: PlanModeState } | undefined;
 		if (planModeEntry?.data) {
-			planModeEnabled = planModeEntry.data.enabled ?? planModeEnabled;
+			planPhaseActive = planModeEntry.data.enabled ?? planPhaseActive;
 			toolsBeforePlanMode = planModeEntry.data.toolsBeforePlanMode ?? toolsBeforePlanMode;
 		}
 
-		process.env.PI_MODE = planModeEnabled ? "plan" : "normal";
-		if (planModeEnabled) enablePlanModeTools();
+		process.env.PI_ROOT_PHASE = planPhaseActive ? "plan" : "execute";
+		if (planPhaseActive) enablePlanModeTools();
 		updateStatus(ctx);
 	});
 }

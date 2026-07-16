@@ -22,7 +22,7 @@ On completion: submit or shelve the CL, `p4 client -d <workspace>`, and archive 
 
 ## Subagents in Pure P4 Repositories
 
-Outside plan mode, a `worktree-write` worker can launch in a confirmed pure-Perforce repository with no `.git` directory and mutate locally, run mutating Bash, and use mutating MCP tools. In plan mode, the root's `PI_MODE` signal downgrades every spawned worker, including nested workers, to `read-only`; reads, memory, scratchpad, and read-only MCP calls remain available. A Git cwd or an ambiguous Git probe fails closed rather than treating the worker as a Perforce worker.
+Outside plan mode, a `worktree-write` worker can launch in a confirmed pure-Perforce repository with no `.git` directory and mutate locally, run mutating Bash, and use mutating MCP tools. In plan phase, the root's `PI_ROOT_PHASE` signal downgrades every spawned worker, including nested workers, to `read-only`; reads, memory, scratchpad, and read-only MCP calls remain available. A Git cwd or an ambiguous Git probe fails closed rather than treating the worker as a Perforce worker.
 
 A Git-worktree approval establishes the Git workflow and local-file-mutation trust boundary; it does not grant a separate external-service authorization. The `mcp-mutation-policy` denylist independently classifies P4 submits and Jira or Notion writes as mutating calls. Gateway management calls remain intentionally allowed even when connection or OAuth actions have side effects. Outside plan mode, the worktree guard permits recognized MCP mutations for a validated Git `worktree-write` worker or a confirmed non-Git markerless `worktree-write` worker.
 

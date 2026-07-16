@@ -85,10 +85,10 @@ root mutation after package routing changed. Session shutdown revokes all
 approval for its session.
 
 `PI_SUBAGENT=1` is a cooperative child-mode marker, not an authentication or
-sandbox boundary. `PI_MODE` is intentionally preserved in child environments so
-nested launchers inherit the root session's plan-mode read-only policy; only
-`PI_MODE=normal` retains declared execution, so missing or unrecognized values
-fail closed to read-only. The child's plan-mode extension stays inert. Root-only
+sandbox boundary. `PI_ROOT_PHASE` is intentionally preserved in child environments so
+nested launchers inherit the root session's plan-phase read-only policy; only
+`PI_ROOT_PHASE=execute` retains declared execution, so `plan`, missing, legacy
+`normal`, or unrecognized values fail closed to read-only. The child's plan-mode extension stays inert. Root-only
 local extensions use
 `PI_SUBAGENT=1` only to disable their root lifecycle behavior; the local worktree
 guard remains active in children. A
@@ -124,7 +124,7 @@ clone; update the immutable package pin only after the fork publishes the fix.
 | Extension                                               | Child behavior                                                                                                                                                                                      |
 | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `root-thread-guard`                                     | Inert: JSON children use their declared tools without root-thread restrictions.                                                                                                                     |
-| `plan-mode`                                             | Inert locally; `PI_MODE` is inherited so the launcher downgrades children to read-only while the root is in plan mode.                                                                              |
+| `plan-mode`                                             | Inert locally; `PI_ROOT_PHASE` is inherited so the launcher downgrades children to read-only while the root is in plan phase.                                                                       |
 | `memory-git-sync`                                       | Inert: child sessions never pull, commit, or push memory.                                                                                                                                           |
 | `worktree-guard`                                        | Active: lifecycle is root-owned; read-only/unmarked direct writes/edits fail closed, and known Bash mutations use a best-effort classifier. A validated worker initial cwd is not path containment. |
 | `@rezamonangg/pi-worktree` fork                         | Inert before registration (`PI_SUBAGENT=1`).                                                                                                                                                        |

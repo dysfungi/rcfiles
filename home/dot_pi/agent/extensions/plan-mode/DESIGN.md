@@ -3,7 +3,7 @@
 Owned pi extension providing a **read-only exploration mode that is ON BY DEFAULT
 for interactive root sessions** (`tui`/`rpc`). JSON subagents and print one-shots
 keep their own plan-mode extension inert, while the launcher propagates the root
-`PI_MODE` signal to enforce its child execution policy. This document records the
+`PI_ROOT_PHASE` signal to enforce its child execution policy. This document records the
 requirements, the options evaluated, and why each decision was made, so the context
 lives next to the code.
 
@@ -17,28 +17,28 @@ lives next to the code.
    the root cause of all four problems and is gone.)
 2. **First message is the user's task.** The user types their own first message,
    which becomes the session name — not a synthetic `/plan`.
-3. **Explicit modes still work.** The installed Pi CLI accepts the registered
+3. **Explicit phases still work.** The installed Pi CLI accepts the registered
    `--plan` flag, though it is redundant because plan mode already defaults on.
    Its inverse, `--no-plan`, is unsupported and rejected by this Pi version.
-   `/plan` idempotently selects read-only plan mode, `/normal` idempotently
-   selects full-access normal mode, and neither command sends a prompt or starts
+   `/plan` idempotently selects the read-only plan phase, `/normal` aliases the
+   full-access execute phase, and neither command sends a prompt or starts
    an agent turn.
-4. **Mode changes are deliberate.** `/mode` with no argument cycles the modes;
-   `/mode plan` and `/mode normal` accept only exact, case-insensitive full
+4. **Phase changes are deliberate.** `/phase` with no argument cycles the phases;
+   `/phase plan` and `/phase execute` accept only exact, case-insensitive full
    names. Malformed or extra arguments leave state unchanged and report usage.
-   Valid mode-changing commands require an idle agent; malformed `/mode` input
+   Valid phase-changing commands require an idle agent; malformed `/phase` input
    reports its parse error before the idle check.
 5. **Implementation transition is explicit.** `/execute` requires an idle agent,
-   selects normal mode, then sends exactly one user-message kickoff. An optional
+   selects the execute phase, then sends exactly one user-message kickoff. An optional
    argument is appended once below an explicit delimiter. If kickoff delivery
-   fails, normal mode remains selected and the failure is reported. `/implement`
+   fails, the execute phase remains selected and the failure is reported. `/implement`
    remains the subagent prompt template's scout → planner → worker workflow; plan
    mode must not register it because extension commands take precedence.
-6. **Delegated workers inherit the root mode.** `json` subagents, `print`
+6. **Delegated workers inherit the root phase.** `json` subagents, `print`
    one-shots, and processes marked `PI_SUBAGENT=1` never enable their own plan
-   mode. The launcher propagates `PI_MODE`, however, and retains a declared
-   execution class only for `PI_MODE=normal`; plan, missing, and unrecognized
-   values downgrade every child to `read-only`. The inherited signal also closes
+   phase. The launcher propagates `PI_ROOT_PHASE`, however, and retains a declared
+   execution class only for `PI_ROOT_PHASE=execute`; plan, missing, legacy `normal`,
+   and unrecognized values downgrade every child to `read-only`. The inherited signal also closes
    nested-delegation escapes.
 7. **Resume must not deceive.** No fake `/plan` prompt injected on resume; we
    simply restore persisted state.
@@ -63,7 +63,7 @@ lives next to the code.
 
 ## Decisions
 
-### Default-on mechanism — interactive-root mode gate
+### Default-on mechanism — interactive-root phase gate
 
 The `plan` flag is registered with `default: true` for extension state. The
 installed Pi CLI accepts the registered `--plan` flag, but it is redundant with
@@ -86,30 +86,30 @@ whatever the user types first.
 
 #### Command matrix
 
-| Command                   | Owner                  | Behavior                                                                                                                     |
-| ------------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/plan`                   | plan-mode extension    | Idempotently selects read-only plan mode; does not start a turn.                                                             |
-| `/normal`                 | plan-mode extension    | Idempotently selects normal mode; does not start a turn.                                                                     |
-| `/mode [plan\|normal]`    | plan-mode extension    | Selects an exact mode, or cycles when omitted; does not start a turn.                                                        |
-| `/execute [instructions]` | plan-mode extension    | The sole one-step transition: selects normal mode and sends one implementation kickoff.                                      |
-| `/implement <task>`       | `prompts/implement.md` | Expands the scout → planner → worker workflow. It is not registered by plan mode and does not itself change plan-mode state. |
+| Command                   | Owner                  | Behavior                                                                                                                |
+| ------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `/plan`                   | plan-mode extension    | Idempotently selects the read-only plan phase; does not start a turn.                                                   |
+| `/normal`                 | plan-mode extension    | Alias that idempotently selects the execute phase; does not start a turn.                                               |
+| `/phase [plan\|execute]`  | plan-mode extension    | Selects an exact phase, or cycles when omitted; does not start a turn.                                                  |
+| `/execute [instructions]` | plan-mode extension    | The sole one-step transition: selects the execute phase and sends one implementation kickoff.                           |
+| `/implement <task>`       | `prompts/implement.md` | Expands the scout → planner → worker workflow. It is not registered by the plan phase and does not itself change state. |
 
 `/plan` and `/normal` are idempotent selectors, not toggles: repeated use leaves
-both state and tool snapshots intact. `/mode` is the only slash-command cycle;
+both state and tool snapshots intact. `/phase` is the only slash-command cycle;
 its argument parser accepts no abbreviation or fuzzy matching, so an accidental
-`/mode p` cannot leave a safe read-only session. Its autocomplete offers the two
+`/phase p` cannot leave a safe read-only session. Its autocomplete offers the two
 exact names only.
 
-All valid mode changes check `ctx.isIdle()` before changing tools or persisted
-state. `/mode` parses before that check so malformed input always has a useful
+All valid phase changes check `ctx.isIdle()` before changing tools or persisted
+state. `/phase` parses before that check so malformed input always has a useful
 answer, including while another run is active. Ctrl+Alt+P retains a convenient
 cycle shortcut but follows the same idle guard.
 
-`/execute` first selects normal mode, then calls `pi.sendUserMessage()` exactly
+`/execute` first selects the execute phase, then calls `pi.sendUserMessage()` exactly
 once with `Implement the approved plan now.` and, if supplied, one trimmed
 `--- Additional implementation instructions ---` section. The transition is
 deliberately not rolled back if pi cannot start the turn: full tools and the
-absence of plan context must remain observable for a retry.
+absence of plan-phase context must remain observable for a retry.
 
 Pi resolves extension commands before prompt templates. Registering `/implement`
 here would therefore shadow the existing prompt template, so only `/execute` is
@@ -120,7 +120,7 @@ registered for plan-mode implementation kickoff.
 Pi sessions form a tree. The extension restores persisted mode state from
 `ctx.sessionManager.getBranch()`, the documented active-branch API, rather than
 `getEntries()`, which includes abandoned branches. An abandoned branch therefore
-cannot override the plan/normal selection in the branch the user resumed.
+cannot override the plan/execute selection in the branch the user resumed.
 
 ### Context cleanup — structured plus exact legacy
 
@@ -288,23 +288,23 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 
 ## Files
 
-| File                           | Role                                                                                                                                                                                    |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.ts`                     | Extension entry: flag, idempotent mode transitions, `/plan`/`/normal`/`/mode`/`/execute`, tool preservation, `plan_write`, status, context injection, bash gating, and session restore. |
-| `bash-safety.ts`               | Plan-mode Bash gate: shell-quote enhancement plus shared conservative fallback.                                                                                                         |
-| `../bash-mutation-policy.mjs`  | Canonical quote-aware shell mutation classifier shared with worktree guard.                                                                                                             |
-| `vendor/shell-quote-parse.cjs` | Vendored parser, fetched by chezmoi external (not committed).                                                                                                                           |
-| `../.chezmoiexternal.toml`     | Declares the shell-quote external (TTL refresh).                                                                                                                                        |
+| File                           | Role                                                                                                                                                                                      |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.ts`                     | Extension entry: flag, idempotent phase transitions, `/plan`/`/normal`/`/phase`/`/execute`, tool preservation, `plan_write`, status, context injection, bash gating, and session restore. |
+| `bash-safety.ts`               | Plan-mode Bash gate: shell-quote enhancement plus shared conservative fallback.                                                                                                           |
+| `../bash-mutation-policy.mjs`  | Canonical quote-aware shell mutation classifier shared with worktree guard.                                                                                                               |
+| `vendor/shell-quote-parse.cjs` | Vendored parser, fetched by chezmoi external (not committed).                                                                                                                             |
+| `../.chezmoiexternal.toml`     | Declares the shell-quote external (TTL refresh).                                                                                                                                          |
 
 ## Verification matrix
 
 - Fresh `tui`/`rpc` start, `/new` → plan mode on; first user message becomes session name.
-- `json` subagent and `print` one-shot → plan-mode extension inert; inherited `PI_MODE=plan` still downgrades launched workers to read-only.
+- `json` subagent and `print` one-shot → plan-mode extension inert; inherited `PI_ROOT_PHASE=plan` still downgrades launched workers to read-only.
 - `/resume` → state restored, no injected `/plan`.
-- `--plan` → accepted but redundant because plan mode defaults on; `--no-plan` → unsupported and rejected by this installed Pi version. `/plan` and `/normal` select modes after startup without starting an agent turn.
-- `/mode` → cycles; `/mode PLAN` and `/mode normal` select explicitly; `/mode p`, `/mode plan extra`, and other malformed inputs preserve state and report exact-name usage. Completion offers only `plan` and `normal`.
-- Valid `/plan`, `/normal`, `/mode`, and `/execute` while busy preserve state and warn. Invalid `/mode` arguments warn about parsing before checking busy state.
-- `/execute [instructions]` selects normal mode and emits exactly one `pi.sendUserMessage` kickoff. Optional instructions appear once under `--- Additional implementation instructions ---`; a kickoff failure reports an error and leaves normal mode selected.
+- `--plan` → accepted but redundant because plan mode defaults on; `--no-plan` → unsupported and rejected by this installed Pi version. `/plan` and `/normal` select phases after startup without starting an agent turn.
+- `/phase` → cycles; `/phase PLAN` and `/phase execute` select explicitly; `/phase p`, `/phase plan extra`, and other malformed inputs preserve state and report exact-name usage. Completion offers only `plan` and `execute`.
+- Valid `/plan`, `/normal`, `/phase`, and `/execute` while busy preserve state and warn. Invalid `/phase` arguments warn about parsing before checking busy state.
+- `/execute [instructions]` selects the execute phase and emits exactly one `pi.sendUserMessage` kickoff. Optional instructions appear once under `--- Additional implementation instructions ---`; a kickoff failure reports an error and leaves the execute phase selected.
 - `/implement <task>` resolves to the canonical managed `prompts/implement.md` as a prompt template (scout → planner → worker), not an extension command.
 - In plan mode: `edit`/`write` absent; root lifecycle tools and `memory_*`
   remain callable; `bash`/`mcp` remain in nominal tool composition but
@@ -328,7 +328,7 @@ tool, persistence, and message-delivery state. The pytest wrapper runs it
 without an LLM turn.
 
 The harness verifies idempotent `/plan` and `/normal` selection, preservation
-of tools added by another extension, exact `/mode` parsing and completions,
+of tools added by another extension, exact `/phase` parsing and completions,
 busy-agent rejection, `/execute` ordering and error behavior, and that plan mode
 does not register `/implement`. It also verifies that plan mode's nominal tool
 composition preserves `bash`/`mcp` while root-thread-guard blocks those root
