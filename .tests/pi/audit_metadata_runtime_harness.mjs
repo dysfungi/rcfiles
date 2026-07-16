@@ -83,10 +83,11 @@ async function testOutputFormat() {
 	assert.equal(
 		result.content[0]?.text,
 		[
-			"Model: format-model (source: Pi 1.2.3)",
-			"Model-Provider: format-provider (source: Pi 1.2.3)",
-			"Session-ID: format-session (source: Pi 1.2.3)",
-			"Hostname: format-host (source: Pi 1.2.3)",
+			"Agent-Harness: Pi 1.2.3",
+			"Model: format-model",
+			"Model-Provider: format-provider",
+			"Session-ID: format-session",
+			"Hostname: format-host",
 		].join("\n"),
 	);
 }
@@ -98,7 +99,7 @@ async function testDefaultRuntime() {
 	const result = await invoke(tool, context());
 
 	assert.equal(result.details.hostname, expectedHostname);
-	assert.match(result.content[0]?.text, new RegExp(`\\(source: Pi ${VERSION}\\)`));
+	assert.equal(result.content[0]?.text.split("\n")[0], `Agent-Harness: Pi ${VERSION}`);
 }
 
 async function testInvalidValue() {

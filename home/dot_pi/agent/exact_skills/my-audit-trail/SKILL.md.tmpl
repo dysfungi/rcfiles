@@ -1,6 +1,10 @@
-{{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . -}}
-
+{{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . }}
 ## Pi worker runtime metadata
+
+The shared examples above use generic per-field `(source: ...)` annotations. For Pi, the
+literal authoritative format is `audit_metadata`'s returned block: one `Agent-Harness: Pi
+<version>` line followed by plain field lines with no per-field suffixes. Call it and paste
+exactly what it returns, not the shared example's shape.
 
 In an execution/worker session that authors a durable record, call `audit_metadata` once
 before authoring it and paste its returned block verbatim. Never hand-write, guess, infer

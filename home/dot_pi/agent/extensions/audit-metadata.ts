@@ -72,10 +72,11 @@ export default function auditMetadata(pi: ExtensionAPI, auditRuntime: AuditRunti
 			};
 			// The Pi audit-trail skill owns the static co-author identity trailer by design; this tool emits only provable runtime facts.
 			const text = [
-				`Model: ${details.model} (source: Pi ${piVersion})`,
-				`Model-Provider: ${details.modelProvider} (source: Pi ${piVersion})`,
-				`Session-ID: ${details.sessionId} (source: Pi ${piVersion})`,
-				`Hostname: ${details.hostname} (source: Pi ${piVersion})`,
+				`Agent-Harness: Pi ${piVersion}`,
+				`Model: ${details.model}`,
+				`Model-Provider: ${details.modelProvider}`,
+				`Session-ID: ${details.sessionId}`,
+				`Hostname: ${details.hostname}`,
 			].join("\n");
 
 			return { content: [{ type: "text", text }], details };

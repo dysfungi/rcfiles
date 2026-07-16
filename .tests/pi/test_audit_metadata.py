@@ -67,8 +67,8 @@ def test_audit_metadata_extracts_runtime_values() -> None:
     _run_harness("extraction")
 
 
-def test_audit_metadata_formats_paste_ready_runtime_sources() -> None:
-    """Label every emitted audit field with the verified Pi version."""
+def test_audit_metadata_formats_paste_ready_runtime_metadata() -> None:
+    """Emit the verified Pi version once as the metadata block's harness provenance."""
     _run_harness("output-format")
 
 
@@ -86,7 +86,7 @@ def test_audit_metadata_rejects_invalid_values_without_a_result(
 
 
 def test_audit_metadata_rejects_a_missing_version_without_a_result() -> None:
-    """Reject a missing Pi version rather than emitting an unprovable source label."""
+    """Reject a missing Pi version rather than emitting an unprovable harness label."""
     _run_harness("missing-version")
 
 

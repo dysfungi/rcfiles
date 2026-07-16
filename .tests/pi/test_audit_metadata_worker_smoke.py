@@ -63,23 +63,20 @@ def _assert_valid_runtime_block(result: dict[str, Any]) -> None:
     assert content[0]["type"] == "text"
     lines = content[0]["text"].splitlines()
     labels = ("Model", "Model-Provider", "Session-ID", "Hostname")
-    assert len(lines) == len(labels)
-    source = None
-    for label, line in zip(labels, lines):
+    assert len(lines) == len(labels) + 1
+    assert not any("(source:" in line for line in lines), lines
+
+    harness_prefix = "Agent-Harness: Pi "
+    assert lines[0].startswith(harness_prefix)
+    harness_version = lines[0].removeprefix(harness_prefix)
+    assert harness_version.strip()
+    assert not harness_version.lower().startswith("unknown")
+    assert "\r" not in harness_version and "\n" not in harness_version
+
+    for label, line in zip(labels, lines[1:]):
         prefix = f"{label}: "
         assert line.startswith(prefix)
-        value, separator, source_label = line.removeprefix(prefix).rpartition(
-            " (source: "
-        )
-        assert separator
-        assert source_label.endswith(")")
-        source_label = source_label.removesuffix(")")
-        assert source_label.startswith("Pi ")
-        assert source_label.removeprefix("Pi ").strip()
-        if source is None:
-            source = source_label
-        else:
-            assert source_label == source
+        value = line.removeprefix(prefix)
         assert value.strip()
         assert not value.lower().startswith("unknown")
         assert "\r" not in value and "\n" not in value
@@ -87,8 +84,7 @@ def _assert_valid_runtime_block(result: dict[str, Any]) -> None:
     details = result["details"]
     assert tuple(details) == ("model", "modelProvider", "sessionId", "hostname")
     assert tuple(details.values()) == tuple(
-        line.removeprefix(f"{label}: ").rpartition(" (source: ")[0]
-        for label, line in zip(labels, lines)
+        line.removeprefix(f"{label}: ") for label, line in zip(labels, lines[1:])
     )
 
 
