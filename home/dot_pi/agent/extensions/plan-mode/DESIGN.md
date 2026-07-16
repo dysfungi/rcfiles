@@ -47,14 +47,13 @@ lives next to the code.
    mutations it recognizes, but is a best-effort classifier rather than a shell
    sandbox; the managed root-thread guard blocks root Bash entirely.
 9. **Auto tool-preservation.** Plan mode must keep root lifecycle tools
-   (`worktree_start`, `worktree_status`, `worktree_stop`), `memory_*`, and
-   `scratchpad` available **without per-session reconfiguration**. Tools are
-   preserved by _subtracting_ `edit`/`write`, never by replacing the set with a
-   hardcoded list. The nominal tool set preserves `bash`/`mcp`, but the separate
-   root-thread policy still blocks those exploratory root calls.
+   (`worktree_start`, `worktree_status`, `worktree_stop`) available **without
+   per-session reconfiguration**. Tools are preserved by _subtracting_
+   `edit`/`write`, never by replacing the set with a hardcoded list. The nominal
+   tool set preserves `bash`/`mcp`, but the separate root-thread policy still
+   blocks those exploratory root calls.
 10. **Plans synced to disk.** The model can persist its plan even though
-    `edit`/`write` are gone — via a scoped `plan_write` tool. Memory persistence
-    is unaffected (`memory_*` tools are preserved).
+    `edit`/`write` are gone — via a scoped `plan_write` tool.
 11. **Portable & low-maintenance** across machines (chezmoi-managed dotfiles).
 12. **Surface the plan in the TUI.** The plan must be shown to me automatically
     when written (no manual `cat`/open), and it must cost **no extra LLM
@@ -135,7 +134,7 @@ substring, so ordinary user messages that quote it remain in context.
 The separate root-thread guard lets interactive `tui`/`rpc` roots use `read`
 under the static global skill roots
 `${PI_CODING_AGENT_DIR:-~/.pi/agent}/skills` and `~/.agents/skills`, alongside
-its existing plans, pi-memory, and repo `todo.txt`/`done.txt` allowances. This
+its existing plans and repo `todo.txt`/`done.txt` allowances. This
 lets a root load the instructions that govern its own planning, implementation,
 and review behavior without a lossy subagent relay. The allowance covers each
 whole global directory tree, including root-level flat skill files, and does
@@ -148,7 +147,7 @@ explicit/override/extension-injected paths, has an entire root as `baseDir` for
 flat skill files, and has no stable refresh semantics for authorization. Revisit
 this scope only with a trust-aware provenance signal, not more path matching.
 
-As with plans and memory, containment is lexical (`isWithin()`), while Pi's
+As with plans, containment is lexical (`isWithin()`), while Pi's
 reader follows symlinks. This inherited context-discipline caveat is not a
 filesystem sandbox and is not new to the skill exception.
 
@@ -156,8 +155,7 @@ filesystem sandbox and is not new to the skill exception.
 
 `planTools = (active tools) − {edit, write} + {read, bash, grep, find, ls,
 questionnaire, plan_write}`. [`questionnaire`](../questionnaire.ts) is registered by the sibling extension.
-This preserves root worktree lifecycle, `memory_*`, and `scratchpad`
-automatically. `bash` and `mcp` remain in the nominal set so plan mode does not
+This preserves root worktree lifecycle automatically. `bash` and `mcp` remain in the nominal set so plan mode does not
 silently replace unrelated extensions, but interactive roots cannot invoke them:
 root-thread-guard requires delegation for shell and MCP exploration.
 
@@ -306,8 +304,8 @@ Publishing it as a package was declined. shell-quote delivers the meaningful win
 - Valid `/plan`, `/normal`, `/phase`, and `/execute` while busy preserve state and warn. Invalid `/phase` arguments warn about parsing before checking busy state.
 - `/execute [instructions]` selects the execute phase and emits exactly one `pi.sendUserMessage` kickoff. Optional instructions appear once under `--- Additional implementation instructions ---`; a kickoff failure reports an error and leaves the execute phase selected.
 - `/implement <task>` resolves to the canonical managed `prompts/implement.md` as a prompt template (scout → planner → worker), not an extension command.
-- In plan mode: `edit`/`write` absent; root lifecycle tools and `memory_*`
-  remain callable; `bash`/`mcp` remain in nominal tool composition but
+- In plan mode: `edit`/`write` absent; root lifecycle tools remain callable;
+  `bash`/`mcp` remain in nominal tool composition but
   root-thread-guard blocks their root use and requires delegated exploration.
   The independent Bash gate preserves the shared policy's supported
   classifications; it does not claim complete shell mutation detection.

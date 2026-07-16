@@ -121,14 +121,13 @@ clone; update the immutable package pin only after the fork publishes the fix.
 
 ## Child extension policy
 
-| Extension                                               | Child behavior                                                                                                                                                                                      |
-| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `root-thread-guard`                                     | Inert: JSON children use their declared tools without root-thread restrictions.                                                                                                                     |
-| `plan-mode`                                             | Inert locally; `PI_ROOT_PHASE` is inherited so the launcher downgrades children to read-only while the root is in plan phase.                                                                       |
-| `memory-git-sync`                                       | Inert: child sessions never pull, commit, or push memory.                                                                                                                                           |
-| `worktree-guard`                                        | Active: lifecycle is root-owned; read-only/unmarked direct writes/edits fail closed, and known Bash mutations use a best-effort classifier. A validated worker initial cwd is not path containment. |
-| `@rezamonangg/pi-worktree` fork                         | Inert before registration (`PI_SUBAGENT=1`).                                                                                                                                                        |
-| Third-party `pi-mcp-adapter`, `pi-memory`, `pi-vimmode` | No lifecycle routing or Git side effects are configured; their normal tool behavior remains available only if declared by the agent.                                                                |
+| Extension                                  | Child behavior                                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `root-thread-guard`                        | Inert: JSON children use their declared tools without root-thread restrictions.                                                                                                                     |
+| `plan-mode`                                | Inert locally; `PI_ROOT_PHASE` is inherited so the launcher downgrades children to read-only while the root is in plan phase.                                                                       |
+| `worktree-guard`                           | Active: lifecycle is root-owned; read-only/unmarked direct writes/edits fail closed, and known Bash mutations use a best-effort classifier. A validated worker initial cwd is not path containment. |
+| `@rezamonangg/pi-worktree` fork            | Inert before registration (`PI_SUBAGENT=1`).                                                                                                                                                        |
+| Third-party `pi-mcp-adapter`, `pi-vimmode` | No lifecycle routing or Git side effects are configured; their normal tool behavior remains available only if declared by the agent.                                                                |
 
 ## Security Model
 
@@ -210,16 +209,14 @@ Use a chain: first have scout find the read tool, then have planner suggest impr
 
 ## Agent Definitions
 
-Agents are markdown files with YAML frontmatter. The `model` field is passed directly
-as `pi --model`: use a bare ID only for a Pi built-in; gateway-backed generated
-models require their canonical `provider/model-id` scope. The managed roles currently have:
+Agents are markdown files with YAML frontmatter. The managed roles currently have:
 
-| Role       | Tools                                                                                                                      | Execution        |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| `scout`    | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                                                                                | `read-only`      |
-| `planner`  | `read`, `grep`, `find`, `ls`, `mcp`                                                                                        | `read-only`      |
-| `reviewer` | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                                                                                | `read-only`      |
-| `worker`   | `read`, `grep`, `find`, `ls`, `bash`, `write`, `edit`, `mcp`, `memory_read`, `memory_write`, `memory_search`, `scratchpad` | `worktree-write` |
+| Role       | Tools                                                        | Execution        |
+| ---------- | ------------------------------------------------------------ | ---------------- |
+| `scout`    | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                  | `read-only`      |
+| `planner`  | `read`, `grep`, `find`, `ls`, `mcp`                          | `read-only`      |
+| `reviewer` | `read`, `grep`, `find`, `ls`, `bash`, `mcp`                  | `read-only`      |
+| `worker`   | `read`, `grep`, `find`, `ls`, `bash`, `write`, `edit`, `mcp` | `worktree-write` |
 
 ```markdown
 ---

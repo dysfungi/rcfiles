@@ -32,10 +32,10 @@ PACKAGES: list[object] = [
         "skills": [],
     },
     "npm:pi-mcp-adapter",
-    "npm:pi-memory",
     "npm:pi-vimmode@>=0.7.0 <1.0.0",
 ]
 
+PI_BUILTIN_ANTHROPIC_DEFAULT = "claude-opus-4-8"
 DEFAULT_THINKING_LEVEL = yaml.safe_load(CATALOG.read_text())["default_thinking_level"]
 
 CATALOG_ENABLED_SCOPES = {
@@ -160,6 +160,43 @@ def test_source_mapping_and_legacy_source_removal(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stderr
     assert Path(result.stdout.strip()) == copied_script
+
+
+def test_rendered_catalog_preferences(
+    rendered_script: tuple[Path, str],
+) -> None:
+    """Both machine namespaces retain the validated catalog default derivation."""
+    script, machine = rendered_script
+    result = _run(script, "")
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == _managed(machine)
+
+
+def test_default_model_uses_its_provider_identity(
+    rendered_script: tuple[Path, str],
+) -> None:
+    """Built-ins keep their native IDs; Riot custom models keep their full IDs."""
+    script, machine = rendered_script
+    result = _run(script, "")
+    assert result.returncode == 0, result.stderr
+    settings = json.loads(result.stdout)
+
+    if machine == "personal":
+        # Anthropic is Pi's bundled provider, not an entry in generated models.json.
+        assert settings["defaultProvider"] == "anthropic"
+        assert settings["defaultModel"] == PI_BUILTIN_ANTHROPIC_DEFAULT
+    else:
+        assert settings["defaultProvider"] == "truefoundry"
+        assert settings["defaultModel"] == "claude-vertex/anthropic-claude-opus-4-8"
+
+    enabled_models = settings["enabledModels"]
+    assert enabled_models == CATALOG_ENABLED_SCOPES[machine]
+    assert settings["defaultThinkingLevel"] == DEFAULT_THINKING_LEVEL
+    assert all(model.endswith(f":{DEFAULT_THINKING_LEVEL}") for model in enabled_models)
+    assert all(
+        model.rpartition(":")[2] == settings["defaultThinkingLevel"]
+        for model in enabled_models
+    )
 
 
 @pytest.mark.parametrize("stdin", ["", " \n\t "], ids=["empty", "whitespace"])

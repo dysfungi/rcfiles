@@ -148,8 +148,10 @@ def test_root_guard_lists_only_root_lifecycle_tools() -> None:
     policy = (
         MANAGED_ROOT / "dot_pi" / "agent" / "extensions" / "root-thread-guard-core.mjs"
     ).read_text()
-    assert '"worktree_start", "worktree_status", "worktree_stop"' in policy
-    assert 'PREFIX_ALLOWED_TOOLS = ["memory_"]' in policy
+    assert all(
+        f'"{tool_name}"' in policy
+        for tool_name in ("worktree_start", "worktree_status", "worktree_stop")
+    )
 
 
 def test_documented_child_boundary_is_cooperative_not_authentication() -> None:

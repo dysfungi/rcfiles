@@ -46,9 +46,7 @@ def decide(cases: list[dict]) -> list[dict]:
         "edit",
         "questionnaire",
         "plan_write",
-        "scratchpad",
         "worktree_start",
-        "memory_search",
     ],
 )
 def test_root_allowlist(tool_name: str, tmp_path: Path) -> None:
@@ -67,6 +65,8 @@ def test_root_allowlist(tool_name: str, tmp_path: Path) -> None:
         "worktree_commit",
         "worktree_sync",
         "future_tool",
+        "memory_search",
+        "scratchpad",
     ],
 )
 def test_root_blocks_exploration_and_unknown_tools(
@@ -87,7 +87,7 @@ def test_worker_and_one_shot_modes_are_exempt(mode: str, tmp_path: Path) -> None
     ("path", "allowed"),
     [
         ("~/agent/plans/current.md", True),
-        ("~/agent/memory/MEMORY.md", True),
+        ("~/agent/memory/MEMORY.md", False),
         ("todo.txt", True),
         ("done.txt", True),
         ("README.md", False),
