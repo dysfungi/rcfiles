@@ -21,16 +21,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 INIT_LUA = MANAGED_ROOT / "dot_hammerspoon" / "init.lua"
 MOVE_FAILURE_LOG = "ERROR: Could not move window"
-UNHIDE_FAILURE_LOG = "ERROR: Could not unhide Wezterm"
-RECOVERY_FAILURE_ALERT = "Wezterm: couldn't determine which window to show"
-WINDOW_TOUCHING_ACTIONS = (
-    "hide",
-    "unhide",
-    "moveWindowToSpace",
-    "raise",
-    "moveToUnit",
-    "selectMenuItem",
-)
 
 _HARNESS = r"""
 local init_lua = assert(arg[1], "missing init.lua path")
@@ -60,52 +50,98 @@ local function record(name, ...)
   table.insert(calls, name .. "(" .. table.concat(formatted_arguments, ",") .. ")")
 end
 
-local fake_window = {
-  id = function()
-    record("id")
-    return 42
-  end,
-  raise = function()
-    record("raise")
-  end,
-  moveToUnit = function(_, unit)
-    record("moveToUnit", unit)
-  end,
-  zoomButtonRect = function()
-    record("zoomButtonRect")
-    return {}
-  end,
-}
-
-local fake_screen = {
-  id = function()
-    record("screenId")
-    return 1
-  end,
-}
-
-local state = {
-  frontmost = scenario == "frontmost",
-  hidden = scenario == "hidden" or scenario == "hidden_unhide_false" or scenario == "hidden_move_failure" or scenario == "recovery_hidden_trap",
-  main_window = fake_window,
-  resolves_main_window_on_activate = scenario == "recovery_frontmost_trap" or scenario == "recovery_hidden_trap",
-}
-
-if scenario == "no_windows" or scenario == "recovery_frontmost_trap" or scenario == "recovery_hidden_trap" or scenario == "recovery_failure" then
-  state.main_window = nil
+local function make_window(window_id)
+  return {
+    id = function()
+      record("id", window_id)
+      return window_id
+    end,
+    raise = function()
+      record("raise", window_id)
+    end,
+    moveToUnit = function(_, unit)
+      record("moveToUnit", window_id, unit)
+    end,
+  }
 end
+
+local first_window = make_window(42)
+local second_window = make_window(43)
+local scenario_config = {
+  app_absent = {
+    application_present = false,
+    pid = 100,
+    all_windows = {},
+    main_window = nil,
+    frontmost = false,
+  },
+  no_windows = {
+    application_present = true,
+    pid = 100,
+    all_windows = {},
+    main_window = nil,
+    frontmost = false,
+  },
+  frontmost = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window },
+    main_window = first_window,
+    frontmost = true,
+  },
+  frontmost_main_nil_fallback = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window },
+    main_window = nil,
+    frontmost = true,
+  },
+  frontmost_no_windows = {
+    application_present = true,
+    pid = 100,
+    all_windows = {},
+    main_window = nil,
+    frontmost = true,
+  },
+  background = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window },
+    main_window = first_window,
+    frontmost = false,
+  },
+  background_main_nil_fallback = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window },
+    main_window = nil,
+    frontmost = false,
+  },
+  move_failure = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window },
+    main_window = first_window,
+    frontmost = false,
+  },
+  multiple_windows = {
+    application_present = true,
+    pid = 100,
+    all_windows = { first_window, second_window },
+    main_window = nil,
+    frontmost = false,
+  },
+}
+local state = assert(scenario_config[scenario], "unknown scenario: " .. scenario)
 
 local fake_wezterm = {
   pid = function()
     record("pid")
-    return 100
+    return state.pid
   end,
   allWindows = function()
     record("allWindows")
-    if scenario == "no_windows" then
-      return {}
-    end
-    return { fake_window }
+    return state.all_windows
   end,
   mainWindow = function()
     record("mainWindow")
@@ -115,24 +151,14 @@ local fake_wezterm = {
     record("isFrontmost")
     return state.frontmost
   end,
-  isHidden = function()
-    record("isHidden")
-    return state.hidden
-  end,
   unhide = function()
     record("unhide")
-    return scenario ~= "hidden_unhide_false"
   end,
   hide = function()
     record("hide")
   end,
   activate = function()
     record("activate")
-    state.frontmost = true
-    state.hidden = false
-    if state.resolves_main_window_on_activate then
-      state.main_window = fake_window
-    end
   end,
   selectMenuItem = function(_, menu_item, enabled)
     record("selectMenuItem", menu_item, enabled)
@@ -146,15 +172,10 @@ hs = {
       hotkey_callback = callback
     end,
   },
-  alert = {
-    show = function(message)
-      record("alertShow", message)
-    end,
-  },
   application = {
     get = function(application_name)
       record("get", application_name)
-      if scenario == "app_absent" then
+      if not state.application_present then
         return nil
       end
       return fake_wezterm
@@ -166,7 +187,7 @@ hs = {
   screen = {
     primaryScreen = function()
       record("primaryScreen")
-      return fake_screen
+      return {}
     end,
   },
   spaces = {
@@ -178,20 +199,7 @@ hs = {
       record("moveWindowToSpace", ...)
       return move_succeeds
     end,
-    windowSpaces = function(window_id)
-      record("windowSpaces", window_id)
-      return { 9 }
-    end,
   },
-  geometry = function()
-    record("geometry")
-    return {
-      move = function()
-        record("geometryMove")
-        return { topleft = { x = 0, y = 0 } }
-      end,
-    }
-  end,
 }
 
 dofile(init_lua)
@@ -213,7 +221,6 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             'bind("ctrl","space")',
             'get("wezterm")',
             'launchOrFocus("wezterm")',
-            'get("wezterm")',
         ),
         None,
     ),
@@ -224,13 +231,8 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
-            "isFrontmost",
-            "isHidden",
+            "allWindows",
             'selectMenuItem("New OS Window",true)',
         ),
         None,
@@ -242,61 +244,36 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
             "isFrontmost",
-            "isHidden",
-            "id",
             "hide",
         ),
         None,
     ),
     (
-        "hidden",
+        "frontmost_main_nil_fallback",
         True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
+            "allWindows",
             "isFrontmost",
-            "isHidden",
-            "id",
-            "unhide",
-            "moveWindowToSpace(42,2)",
-            "activate",
-            "raise",
-            'moveToUnit("0.0,0.0,1.0,1.0")',
+            "hide",
         ),
         None,
     ),
     (
-        "hidden_unhide_false",
+        "frontmost_no_windows",
         True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
-            "isFrontmost",
-            "isHidden",
-            "id",
-            "unhide",
-            "moveWindowToSpace(42,2)",
-            "activate",
-            "raise",
-            'moveToUnit("0.0,0.0,1.0,1.0")',
+            "allWindows",
+            'selectMenuItem("New OS Window",true)',
         ),
         None,
     ),
@@ -307,114 +284,78 @@ SCENARIOS: list[tuple[str, bool, tuple[str, ...], str | None]] = [
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
             "isFrontmost",
-            "isHidden",
-            "id",
-            "windowSpaces(42)",
-            "moveWindowToSpace(42,2,true)",
-            "zoomButtonRect",
-            "geometry",
-            "geometryMove",
+            "primaryScreen",
+            "activeSpaceOnScreen",
+            "id(42)",
+            "unhide",
+            "moveWindowToSpace(42,2)",
             "activate",
+            "raise(42)",
+            'moveToUnit(42,"0.0,0.0,1.0,1.0")',
         ),
         None,
     ),
     (
-        "hidden_move_failure",
+        "background_main_nil_fallback",
+        True,
+        (
+            'bind("ctrl","space")',
+            'get("wezterm")',
+            "pid",
+            "mainWindow",
+            "allWindows",
+            "isFrontmost",
+            "primaryScreen",
+            "activeSpaceOnScreen",
+            "id(42)",
+            "unhide",
+            "moveWindowToSpace(42,2)",
+            "activate",
+            "raise(42)",
+            'moveToUnit(42,"0.0,0.0,1.0,1.0")',
+        ),
+        None,
+    ),
+    (
+        "move_failure",
         False,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
             "mainWindow",
             "isFrontmost",
-            "isHidden",
-            "id",
+            "primaryScreen",
+            "activeSpaceOnScreen",
+            "id(42)",
             "unhide",
             "moveWindowToSpace(42,2)",
             "activate",
-            "raise",
-            'moveToUnit("0.0,0.0,1.0,1.0")',
+            "raise(42)",
+            'moveToUnit(42,"0.0,0.0,1.0,1.0")',
         ),
         "ERROR: Could not move window 42 to primary space 2",
     ),
     (
-        "recovery_frontmost_trap",
+        "multiple_windows",
         True,
         (
             'bind("ctrl","space")',
             'get("wezterm")',
             "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
+            "mainWindow",
             "allWindows",
-            "mainWindow",
             "isFrontmost",
-            "isHidden",
-            "activate",
-            "mainWindow",
-            "id",
-            "windowSpaces(42)",
-            "moveWindowToSpace(42,2,true)",
-            "zoomButtonRect",
-            "geometry",
-            "geometryMove",
-            "activate",
-        ),
-        None,
-    ),
-    (
-        "recovery_hidden_trap",
-        True,
-        (
-            'bind("ctrl","space")',
-            'get("wezterm")',
-            "pid",
             "primaryScreen",
-            "screenId",
             "activeSpaceOnScreen",
-            "allWindows",
-            "mainWindow",
-            "isFrontmost",
-            "isHidden",
-            "activate",
-            "mainWindow",
-            "id",
+            "id(42)",
             "unhide",
             "moveWindowToSpace(42,2)",
             "activate",
-            "raise",
-            'moveToUnit("0.0,0.0,1.0,1.0")',
-        ),
-        None,
-    ),
-    (
-        "recovery_failure",
-        True,
-        (
-            'bind("ctrl","space")',
-            'get("wezterm")',
-            "pid",
-            "primaryScreen",
-            "screenId",
-            "activeSpaceOnScreen",
-            "allWindows",
-            "mainWindow",
-            "isFrontmost",
-            "isHidden",
-            "activate",
-            "mainWindow",
-            'alertShow("Wezterm: couldn\'t determine which window to show")',
+            "raise(42)",
+            'moveToUnit(42,"0.0,0.0,1.0,1.0")',
         ),
         None,
     ),
@@ -439,10 +380,6 @@ def _output_value(output: str, prefix: str) -> str:
         if line.startswith(prefix):
             return line.removeprefix(prefix)
     raise AssertionError(f"Lua harness did not emit {prefix!r}.\nstdout:\n{output}")
-
-
-def _contains_call(calls: list[str], name: str) -> bool:
-    return any(call == name or call.startswith(f"{name}(") for call in calls)
 
 
 def _run_hotkey(
@@ -470,16 +407,15 @@ def _run_hotkey(
     "scenario,move_succeeds,expected_calls,expected_error",
     SCENARIOS,
     ids=[
-        "app absent launches WezTerm",
+        "app absent launches WezTerm once",
         "nil main window with no windows opens a new OS window",
         "frontmost app hides",
-        "hidden app unhides and focuses",
-        "false unhide return does not prevent hidden app focus",
-        "background app moves and activates",
-        "hidden move failure reports an error",
-        "recovery preserves pre-activation frontmost state",
-        "recovery preserves pre-activation hidden state",
-        "unresolvable main window alerts without touching a window",
+        "fallback window hides frontmost app",
+        "frontmost app with no windows opens a new OS window",
+        "background app unhides moves and focuses",
+        "background fallback window is resolved once and focused",
+        "move failure reports an error and still focuses",
+        "fallback selects and focuses the first window",
     ],
 )
 def test_hotkey_handles_wezterm_state(
@@ -493,11 +429,6 @@ def test_hotkey_handles_wezterm_state(
     ok, calls, output = _run_hotkey(lua_bin, scenario, move_succeeds)
 
     assert ok, f"{scenario}: hotkey callback failed.\nstdout:\n{output}"
-    if scenario == "no_windows":
-        assert not _contains_call(calls, "activate"), (
-            "no_windows: recovery activation must not run when the app has no windows.\n"
-            f"stdout:\n{output}"
-        )
     assert calls == list(expected_calls), (
         f"{scenario}: expected calls {expected_calls!r}, got {calls!r}.\n"
         f"stdout:\n{output}"
@@ -506,57 +437,5 @@ def test_hotkey_handles_wezterm_state(
         assert MOVE_FAILURE_LOG not in output, (
             f"{scenario}: unexpected move failure.\nstdout:\n{output}"
         )
-    if scenario == "hidden_unhide_false":
-        assert UNHIDE_FAILURE_LOG not in output, (
-            f"{scenario}: unexpected unhide failure.\nstdout:\n{output}"
-        )
-        assert not any(UNHIDE_FAILURE_LOG in call for call in calls), (
-            f"{scenario}: unexpected unhide failure call.\ncalls:\n{calls!r}"
-        )
     if expected_error is not None:
         assert expected_error in output
-
-
-def test_recovery_uses_captured_frontmost_state(lua_bin: str) -> None:
-    """Recovery activation must not turn a background show into a hide."""
-    ok, calls, output = _run_hotkey(lua_bin, "recovery_frontmost_trap", True)
-
-    assert ok, f"recovery_frontmost_trap: hotkey callback failed.\nstdout:\n{output}"
-    assert not _contains_call(calls, "hide"), (
-        f"Unexpected hide call.\nstdout:\n{output}"
-    )
-    assert _contains_call(calls, "moveWindowToSpace"), (
-        f"Missing show action.\nstdout:\n{output}"
-    )
-    assert calls.count("activate") == 2, (
-        f"Expected recovery and show activation.\nstdout:\n{output}"
-    )
-
-
-def test_recovery_uses_captured_hidden_state(lua_bin: str) -> None:
-    """Recovery activation must not bypass the original hidden-window branch."""
-    ok, calls, output = _run_hotkey(lua_bin, "recovery_hidden_trap", True)
-
-    assert ok, f"recovery_hidden_trap: hotkey callback failed.\nstdout:\n{output}"
-    for action in ("unhide", "raise", "moveToUnit"):
-        assert _contains_call(calls, action), (
-            f"Missing {action} call.\nstdout:\n{output}"
-        )
-    assert not _contains_call(calls, "windowSpaces"), (
-        f"Unexpected background-branch action.\nstdout:\n{output}"
-    )
-
-
-def test_unresolvable_main_window_alerts_without_touching_windows(lua_bin: str) -> None:
-    """An unresolved main window must alert rather than guess which window to use."""
-    ok, calls, output = _run_hotkey(lua_bin, "recovery_failure", True)
-
-    assert ok, f"recovery_failure: hotkey callback failed.\nstdout:\n{output}"
-    assert _contains_call(calls, "alertShow"), f"Missing alert.\nstdout:\n{output}"
-    assert f'alertShow("{RECOVERY_FAILURE_ALERT}")' in calls, (
-        f"Unexpected alert message.\nstdout:\n{output}"
-    )
-    for action in WINDOW_TOUCHING_ACTIONS:
-        assert not _contains_call(calls, action), (
-            f"recovery_failure must not call {action}.\nstdout:\n{output}"
-        )
