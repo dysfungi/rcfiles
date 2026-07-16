@@ -105,3 +105,4 @@ x 2026-07-14 (B) Fix Pi memory chezmoi git-repo external/runtime sync conflicts:
 x 2026-07-14 Set Pi default thinking level to xhigh +pi @worktree:fix/pi-thinking-level-xhigh
 x 2026-07-14 (B) decouple mcp/non-mutating tools from git-worktree launch gate @worktree
 x 2026-07-15 chore(pi): disable memory entirely (extension + pi-memory pkg + qmd); learnings in docs/pi-memory-performance-and-removal.md +pi @perf
+x 2026-07-16 Migrate+refactor .tests/chezmoitemplates/test_pi_settings.py and strip test_memory_git_sync.py/test_worktree_approval_registry.py, then remove .tests/chezmoitemplates/ dir and add .gitignore guard — deferred until PR #78 merges @chore/testing-anti-patterns-and-bloat-cleanup
