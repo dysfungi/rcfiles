@@ -9,9 +9,9 @@ hadolint                              2.14.0
 jq                                    1.8.2               ~/.config/mise/config.toml       latest
 lua                                   5.5.0
 node                                  24.18.0             ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code         2.1.211             ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code         2.1.212             ~/.config/mise/config.toml       latest
 npm:@earendil-works/pi-coding-agent   0.80.6
-npm:@earendil-works/pi-coding-agent   0.80.7              ~/.config/mise/config.toml       latest
+npm:@earendil-works/pi-coding-agent   0.80.9              ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0               ~/.config/mise/config.toml       latest
 npm:@tobilu/qmd                       2.5.3
 npm:markdownlint-cli                  0.48.0
@@ -24,7 +24,7 @@ pipx:pre-commit                       4.6.0
 pipx:yamllint                         1.38.0
 pre-commit                            4.6.0               ~/.config/mise/config.toml       latest
 python                                3.13.14             ~/.config/mise/config.toml       3.13
-ruff                                  0.15.21             ~/.config/mise/config.toml       latest
+ruff                                  0.15.22             ~/.config/mise/config.toml       latest
 rust                                  stable (symlink)    ~/.config/mise/config.toml       stable
 shellcheck                            0.11.0
 shfmt                                 3.13.1
