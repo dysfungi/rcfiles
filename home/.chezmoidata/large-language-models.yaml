@@ -1,6 +1,6 @@
 ---
 # Central source of truth for every LLM this repo configures. All harnesses
-# (pi, codex, claude, agy, ollama) DERIVE their native config from this catalog
+# (pi, omp, codex, claude, agy, ollama) DERIVE their native config from this catalog
 # so a model is declared once and funnels everywhere.
 #
 # Per-model fields (generic — no tool-prefixed keys):
@@ -20,9 +20,16 @@
 #   enabled      appears in pi's catalog + rotation (list order = cycling order)
 #   default_for  subset of [pi, codex, claude, agy] this model is the default for
 #                (each harness may appear in at most one entry — guarded at render)
-#   subagent_roles pi-only subset of [scout, planner, reviewer, worker] this
-#                model backs; every role appears exactly once per namespace
-#                and must be enabled (guarded at render)
+#   roles        shared pi + omp role assignments. Pi roles: scout, planner,
+#                reviewer, worker. Omp roles: default, smol, slow, plan, commit,
+#                vision, designer, tiny, task, advisor. Entries may add an
+#                :effort suffix (minimal|low|medium|high|xhigh|max), meaningful
+#                only to omp. Pi roles must never use a suffix; the catalog schema
+#                rejects it. Zero enabled models for a role is valid: consumers
+#                omit it. Two or more enabled models for the same base role fail
+#                validation because the assignment is ambiguous.
+#   default_for  unrelated single default for pi, codex, claude, or agy; unchanged
+#                by roles and guarded independently
 #
 # default_for: [agy] is DECLARED intent only — validated by the guard but not yet
 # consumed: Antigravity CLI exposes no settings.json default-model key (only the
@@ -170,12 +177,12 @@ my:
         alias: opus
         enabled: true
         default_for: [pi]
-        subagent_roles: [planner, worker]
+        roles: [planner, worker]
       - id: claude-sonnet-5
         vendor: anthropic
         alias: sonnet
         enabled: true
-        subagent_roles: [scout, reviewer]
+        roles: [scout, reviewer]
       - id: claude-fable-5
         vendor: anthropic
         enabled: true
@@ -243,7 +250,7 @@ riot:
           cache_write: 0
         enabled: true
         default_for: [codex]
-        subagent_roles: [reviewer, worker]
+        roles: [reviewer, worker, "slow:high"]
       - id: openai/gpt-5.6-luna
         vendor: openai
         gateway: *tf_openai
@@ -258,7 +265,7 @@ riot:
           cache_read: 0.025
           cache_write: 0
         enabled: true
-        subagent_roles: [scout]
+        roles: [scout, smol, commit]
       - id: claude-vertex/anthropic-claude-opus-4-8
         vendor: anthropic
         alias: opus
@@ -277,6 +284,7 @@ riot:
           cache_write: 18.75
         enabled: true
         default_for: [claude, pi]
+        roles: [default, "plan:high"]
       - id: claude-vertex/anthropic-claude-sonnet-5
         vendor: anthropic
         alias: sonnet
@@ -294,7 +302,7 @@ riot:
           cache_read: 0.3
           cache_write: 3.75
         enabled: true
-        subagent_roles: [planner]
+        roles: [planner]
       - id: google-vertexai/gemini-3.1-pro-preview
         vendor: google
         gateway: *tf_openai

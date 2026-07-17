@@ -239,6 +239,7 @@ my:
     #####################
 
     claude-code: { mise: "npm:@anthropic-ai/claude-code" }
+    oh-my-pi: { mise: "github:can1357/oh-my-pi" }
     pi: { mise: "npm:@earendil-works/pi-coding-agent" }
     gsd-core: { mise: "npm:@opengsd/get-shit-done-redux" }
     jq: { mise: jq }

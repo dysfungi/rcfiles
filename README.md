@@ -130,7 +130,7 @@ After applying `~/.config/tmux/tmux.conf`, an existing tmux server must reload i
 - **Zsh** — fallback shell, modular configs in `.zsh/`
 - **Neovim** — `dot_config/exact_nvim/`, Lazy plugin manager, Mason for LSP/formatters
 - **Git** — aliases and config in `dot_config/git/`
-- **AI tools** — `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` (`~/.pi/agent/`), each rendered from shared `AGENTS.md` template
+- **AI tools** — `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` (`~/.pi/agent/`), and `dot_omp/agent/` (`~/.omp/agent/`); omp is a side-by-side trial with intentionally reduced parity while deferred work remains tracked in `todo.txt`
 - **Wezterm** — terminal emulator, cross-platform config in `dot_wezterm.lua`
 - **Homebrew** — `dot_config/homebrew/Brewfile.tmpl`
 - **Mise** — `dot_config/exact_mise/` + `.mise.toml`
@@ -138,7 +138,7 @@ After applying `~/.config/tmux/tmux.conf`, an existing tmux server must reload i
 
 ### Pi Extensions
 
-`dot_pi/agent/extensions/subagent/` provides the managed subagent launcher. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; canonical workflow prompts render from `dot_pi/agent/prompts/` into `~/.pi/agent/prompts/`. `subagent_roles` assigns exactly one enabled model to each `scout`, `planner`, `reviewer`, and `worker` role in each machine namespace.
+`dot_pi/agent/extensions/subagent/` provides the managed subagent launcher. Its runnable agent definitions are rendered from `.chezmoidata/large-language-models.yaml` into `~/.pi/agent/agents/`; canonical workflow prompts render from `dot_pi/agent/prompts/` into `~/.pi/agent/prompts/`. `roles` is shared by pi (`scout`, `planner`, `reviewer`, `worker`) and omp (`default`, `smol`, `slow`, `plan`, `commit`, `vision`, `designer`, `tiny`, `task`, `advisor`); an optional `:effort` suffix is meaningful only to omp. Consumers omit roles with no enabled model, while two enabled models for one base role fail validation. `default_for` remains the unrelated, single default-model assignment for pi, codex, claude, and agy.
 
 `root-thread-guard.ts` hard-blocks exploratory tools in root TUI/RPC sessions and directs work to `subagent`; JSON workers and print one-shots remain exempt from that root guard. The root owns `worktree_start`, `worktree_status`, and `worktree_stop`; an active approval routes every managed subagent to the approved linked worktree, so read-only review steps see uncommitted worker edits. Outside plan mode, validated writable workers retain direct Git/Bash there, while a markerless `worktree-write` worker in a confirmed non-Git/P4 cwd may mutate. Git cwd and ambiguous Git-probe cases fail closed. That topology check routes launch rather than containing later direct Git/Bash paths, so workers remain cooperative. Read-only Bash filtering recognizes known mutation forms only and is not a shell sandbox. `plan-mode/` applies only to interactive roots, but propagates `PI_ROOT_PHASE` to every child: while the root is in plan phase, all launched children, including nested workers, are downgraded to read-only. No root-guard bypass sentinel exists.
 

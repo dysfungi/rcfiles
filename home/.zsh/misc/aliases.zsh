@@ -6,6 +6,7 @@ alias gemini='agy'  # Gemini CLI migrated to Antigravity (agy)
 # (claude sets MISE_ENV=agent via its settings env; gemini chains through agy.)
 alias agy='mise x -E agent -- agy'
 alias codex='mise x -E agent -- codex'
+alias omp='mise x -E agent -- omp'
 alias pi='mise x -E agent -- pi'
 
 alias starwars="telnet towel.blinkenlights.nl"

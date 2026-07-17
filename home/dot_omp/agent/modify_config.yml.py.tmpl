@@ -1,0 +1,151 @@
+#!/usr/bin/env -S uv run --script --no-project
+# vim: ft=gotmpl.python
+# /// script
+# dependencies = ["ruamel.yaml"]
+# ///
+{{/* OMP settings live in a mutable config.yml, so only managed leaves merge. */ -}}
+{{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+{{ includeTemplate "llm/validate.tmpl" $ns -}}
+{{- $target_roles := list "default" "smol" "slow" "plan" "commit" "vision" "designer" "tiny" "task" "advisor" -}}
+{{- $model_roles := dict -}}
+{{- range $target_role := $target_roles -}}
+  {{- $matches := list -}}
+  {{- range $m := $ns.models -}}
+    {{- if and $m.enabled (hasKey $m "roles") -}}
+      {{- range $assignment := $m.roles -}}
+        {{- $parts := splitList ":" $assignment -}}
+        {{- if eq (first $parts) $target_role -}}
+          {{- if gt (len $parts) 2 -}}
+            {{- fail (printf "omp config.yml: model %s role %q has multiple effort suffixes" $m.id $assignment) -}}
+          {{- end -}}
+          {{- $resolved := $m.id -}}
+          {{- if eq (len $parts) 2 -}}
+            {{- $resolved = printf "%s:%s" $m.id (last $parts) -}}
+          {{- end -}}
+          {{- $matches = append $matches $resolved -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if gt (len $matches) 1 -}}
+    {{- fail (printf "omp config.yml: %d enabled models claim model role %q" (len $matches) $target_role) -}}
+  {{- else if eq (len $matches) 1 -}}
+    {{- $_ := set $model_roles $target_role (first $matches) -}}
+  {{- end -}}
+{{- end -}}
+{{- $managed := dict
+      "tools" (dict "approvalMode" "yolo")
+      "task" (dict "isolation" (dict "mode" "auto" "merge" "branch"))
+      "mcp" (dict "enableProjectConfig" false)
+      "secrets" (dict "enabled" true)
+      "compaction" (dict "remoteEnabled" false)
+      "providers" (dict "autoThinkingModel" "qwen3-1.7b" "memoryModel" "qwen3-1.7b" "unexpectedStopModel" "qwen3-1.7b" "tinyModel" "qwen3-0.6b")
+      "memory" (dict "backend" "local")
+      "autolearn" (dict "enabled" true)
+      "github" (dict "enabled" true)
+      "dev" (dict "autoqa" true "autoqaConsent" "granted")
+      "startup" (dict "checkUpdate" false)
+      "marketplace" (dict "autoUpdate" "off")
+      "personality" "pragmatic"
+      "steeringMode" "all"
+      "plan" (dict "defaultOnStartup" true) -}}
+"""Merge managed OMP preferences into its mutable ``config.yml`` state.
+
+OMP may write unrelated runtime settings to this file. Chezmoi renders the
+catalog-derived managed values into this script, then the script overwrites only
+those leaves while retaining every unmanaged sibling and round-trip formatting.
+
+The built-in ``modelRoles`` entries are reconciled rather than merely merged:
+otherwise a removed catalog assignment would leave OMP selecting a stale model.
+Custom role names remain OMP-user-owned state.
+"""
+import json
+import sys
+from collections.abc import Mapping, MutableMapping
+from typing import Any
+
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
+
+MANAGED: dict[str, Any] = json.loads({{ $managed | mustToJson | quote }})
+MODEL_ROLES: dict[str, str] = json.loads({{ $model_roles | mustToJson | quote }})
+MANAGED_MODEL_ROLE_NAMES: list[str] = json.loads(
+    {{ $target_roles | mustToJson | quote }}
+)
+
+
+def read_config(content: str, yaml: YAML) -> MutableMapping[str, Any]:
+    """Load OMP state without discarding comments or unmanaged settings."""
+    if not content.strip():
+        return CommentedMap()
+
+    try:
+        config = yaml.load(content)
+    except Exception as error:
+        raise SystemExit(f"omp config.yml: invalid YAML: {error}") from error
+    if config is None:
+        return CommentedMap()
+    if not isinstance(config, MutableMapping):
+        raise SystemExit("omp config.yml: root must be a mapping")
+    return config
+
+
+def merge_managed_preferences(
+    target: MutableMapping[str, Any], managed: Mapping[str, Any], path: str = ""
+) -> None:
+    """Set managed leaves while preserving mappings owned by OMP."""
+    for key, value in managed.items():
+        key_path = f"{path}.{key}" if path else key
+        if isinstance(value, Mapping):
+            existing = target.get(key)
+            if existing is None:
+                existing = CommentedMap()
+                target[key] = existing
+            if not isinstance(existing, MutableMapping):
+                raise SystemExit(f"omp config.yml: {key_path} must be a mapping")
+            merge_managed_preferences(existing, value, key_path)
+        else:
+            target[key] = value
+
+
+def reconcile_model_roles(config: MutableMapping[str, Any]) -> None:
+    """Reconcile built-in roles without taking ownership of custom role names."""
+    existing = config.get("modelRoles")
+    if existing is None:
+        # Treat null like an absent mapping so it cannot survive as a dead override.
+        config.pop("modelRoles", None)
+    elif not isinstance(existing, MutableMapping):
+        raise SystemExit("omp config.yml: modelRoles must be a mapping")
+
+    for role in MANAGED_MODEL_ROLE_NAMES:
+        if role in MODEL_ROLES:
+            if existing is None:
+                existing = CommentedMap()
+                config["modelRoles"] = existing
+            existing[role] = MODEL_ROLES[role]
+            continue
+        if existing is not None and role in existing:
+            del existing[role]
+        print(
+            f"WARNING: modelRoles.{role} has no backing model, removing",
+            file=sys.stderr,
+        )
+
+    if existing is not None and not existing:
+        # OMP defaults modelRoles to {}, so avoid persisting an empty override.
+        del config["modelRoles"]
+
+
+def main() -> None:
+    yaml = YAML(typ="rt")
+    yaml.preserve_quotes = True
+    yaml.indent(mapping=2, sequence=4, offset=2)
+
+    config = read_config(sys.stdin.read(), yaml)
+    merge_managed_preferences(config, MANAGED)
+    reconcile_model_roles(config)
+    yaml.dump(config, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()

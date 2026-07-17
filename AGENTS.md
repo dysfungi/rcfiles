@@ -109,7 +109,7 @@ Machine-specific data (MCP servers, project paths) is in `.chezmoidata/`.
 - **Zsh** (fallback): modular configs in `.zsh/` (riot, gcloud, ocaml, etc.)
 - **Neovim**: `dot_config/exact_nvim/` — Lazy plugin manager, Mason for LSP/formatters
 - **Git**: aliases and config in `dot_config/git/`
-- **AI tools**: `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/` — each rendered from shared AGENTS.md template
+- **AI tools**: `dot_claude/`, `dot_codex/`, `dot_gemini/`, `dot_pi/agent/`, `dot_omp/agent/` — omp is a side-by-side trial with reduced parity; deferred work is tracked in `todo.txt`
 - **Homebrew**: `dot_config/homebrew/Brewfile.tmpl`
 - **Mise**: polyglot tool version manager, `dot_config/exact_mise/` + `.mise.toml`
 

@@ -1,0 +1,52 @@
+{{- /*
+  OMP native MCP transport configuration generated from mcp-servers.yaml.
+
+  Figma requires a dynamic OAuth client-name spoof that only Pi's MCP adapter
+  supports. OMP has no corresponding schema field, so its otherwise-valid HTTP
+  entry is kept disabled until native support is available.
+*/ -}}
+{{- $mcp_servers_in := .my.mcp_servers -}}
+{{- if .is_riot_machine -}}
+  {{- $mcp_servers_in = mergeOverwrite $mcp_servers_in .riot.mcp_servers -}}
+{{- end -}}
+{{- $servers := dict -}}
+{{- $disabled_servers := list -}}
+{{- range $name, $mcp := $mcp_servers_in -}}
+  {{- $entry := dict -}}
+  {{- if hasKey $mcp "server_url" -}}
+    {{- $_ := set $entry "type" "http" -}}
+    {{- $_ := set $entry "url" $mcp.server_url -}}
+    {{- if hasKey $mcp "env" -}}
+      {{- fail (printf "omp mcp.json: HTTP server %q has env, which OMP cannot represent" $name) -}}
+    {{- end -}}
+    {{- if hasKey $mcp "auth" -}}
+      {{- if ne $mcp.auth.type "bearer" -}}
+        {{- fail (printf "omp mcp.json: server %q auth type %q has no OMP mapping" $name $mcp.auth.type) -}}
+      {{- end -}}
+      {{- if not (hasKey $mcp.auth "op_path") -}}
+        {{- fail (printf "omp mcp.json: bearer server %q lacks op_path" $name) -}}
+      {{- end -}}
+      {{- $_ := set $entry "headers" (dict "Authorization" (printf "Bearer %s" (onepasswordRead $mcp.auth.op_path))) -}}
+    {{- end -}}
+  {{- else if hasKey $mcp "uvx" -}}
+    {{- $_ := set $entry "type" "stdio" -}}
+    {{- $_ := set $entry "command" "uvx" -}}
+    {{- $args := list $mcp.uvx.package -}}
+    {{- if hasKey $mcp.uvx "args" -}}
+      {{- $args = concat $args $mcp.uvx.args -}}
+    {{- end -}}
+    {{- $_ := set $entry "args" $args -}}
+    {{- if hasKey $mcp "env" -}}
+      {{- $_ := set $entry "env" $mcp.env -}}
+    {{- else if hasKey $mcp "env_tmpl" -}}
+      {{- $_ := set $entry "env" (includeTemplate $mcp.env_tmpl $ | fromYaml) -}}
+    {{- end -}}
+  {{- else -}}
+    {{- fail (printf "omp mcp.json: server %q has no supported transport" $name) -}}
+  {{- end -}}
+  {{- if hasKey $mcp "spoofs" -}}
+    {{- $disabled_servers = append $disabled_servers $name -}}
+  {{- end -}}
+  {{- $_ := set $servers $name $entry -}}
+{{- end -}}
+{{- dict "mcpServers" $servers "disabledServers" $disabled_servers | toPrettyJson }}

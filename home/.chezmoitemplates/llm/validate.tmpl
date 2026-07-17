@@ -54,21 +54,21 @@
     {{- fail (printf "large-language-models.yaml: non-reasoning model %s must not declare thinking_level_map" $m.id) -}}
   {{- end -}}
 {{- end -}}
-{{- /* Each pi subagent role must select exactly one enabled model. The rendered
-       agent frontmatter passes its canonical provider/id scope (or a bare built-in
-       id) to `pi --model`, so dormant or missing mappings fail at apply time. */ -}}
-{{- range $role := (list "scout" "planner" "reviewer" "worker") -}}
+{{- /* A role may be absent, but two enabled models cannot claim the same base
+       role. Consumers filter their own vocabularies and omit absent assignments. */ -}}
+{{- range $role := (list "scout" "planner" "reviewer" "worker" "default" "smol" "slow" "plan" "commit" "vision" "designer" "tiny" "task" "advisor") -}}
   {{- $seen := dict "n" 0 -}}
   {{- range $m := $ns.models -}}
-    {{- if and (hasKey $m "subagent_roles") (has $role $m.subagent_roles) -}}
-      {{- if not $m.enabled -}}
-        {{- fail (printf "large-language-models.yaml: %s has subagent_roles %q but is disabled" $m.id $role) -}}
+    {{- if and $m.enabled (hasKey $m "roles") -}}
+      {{- range $assigned_role := $m.roles -}}
+        {{- if or (eq $role $assigned_role) (hasPrefix (printf "%s:" $role) $assigned_role) -}}
+          {{- $_ := set $seen "n" (add $seen.n 1) -}}
+        {{- end -}}
       {{- end -}}
-      {{- $_ := set $seen "n" (add $seen.n 1) -}}
     {{- end -}}
   {{- end -}}
-  {{- if ne $seen.n 1 -}}
-    {{- fail (printf "large-language-models.yaml: %d models claim subagent_roles %q (expected exactly 1)" $seen.n $role) -}}
+  {{- if gt $seen.n 1 -}}
+    {{- fail (printf "large-language-models.yaml: %d enabled models claim roles %q (expected at most 1)" $seen.n $role) -}}
   {{- end -}}
 {{- end -}}
 {{- /* A default must be runnable by the harness it defaults for. */ -}}

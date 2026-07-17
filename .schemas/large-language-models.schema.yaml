@@ -91,11 +91,12 @@ $defs:
         uniqueItems: true
         items:
           enum: [pi, codex, claude, agy]
-      subagent_roles:
+      roles:
         type: array
         uniqueItems: true
         items:
-          enum: [scout, planner, reviewer, worker]
+          type: string
+          pattern: "^(scout|planner|reviewer|worker|(default|smol|slow|plan|commit|vision|designer|tiny|task|advisor)(:(minimal|low|medium|high|xhigh|max))?)$"
 
   thinkingLevelMap:
     type: object
