@@ -8,8 +8,9 @@
 #   vendor       maker: anthropic | openai | google  (harness-compat filter)
 #   alias        optional CLI handle; claude reads opus/sonnet/haiku
 #   display_name optional pi picker label; else derived from id
-#   gateway      *anchor (provider/name/base_url/api/api_key_op); omit for
-#                built-ins (pi provider then = vendor)
+#   gateway      *anchor (id/provider/name/base_url/api/api_key_op); omit for
+#                built-ins (pi provider then = vendor). `id` is the stable logical
+#                gateway identifier used where a harness needs its own provider name.
 #   reasoning,ctx,max_tokens,cost,one_m,adaptive   pi catalog facts
 #                (ctx/max_tokens/cost required by pi for ENABLED gateway models)
 #   thinking_level_map complete Pi logical-level map for reasoning models:
@@ -116,12 +117,14 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       max: null
   gateways:
     truefoundry-anthropic: &tf_anthropic
+      id: truefoundry-anthropic
       provider: truefoundry
       name: TrueFoundry (Riot)
       base_url: &tf_base "https://truefoundry.riotgames.io/api/llm"
       api: anthropic-messages
       api_key_op: &tf_key "op://Riot/TrueFoundry - Personal Access Token/credential"
     truefoundry-openai: &tf_openai
+      id: truefoundry-openai
       # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
       # provider MUST be the built-in id `openai`, not a custom name: pi's
       # `OPENAI_API_KEY` env var (set globally for codex) auto-activates the
@@ -137,6 +140,7 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       api: openai-responses
       api_key_op: *tf_key
     google: &google # personal, direct to Google
+      id: google
       provider: google
       name: Google Gemini
       base_url: "https://generativelanguage.googleapis.com/v1beta"

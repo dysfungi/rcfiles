@@ -19,8 +19,11 @@
             {{- fail (printf "omp config.yml: model %s role %q has multiple effort suffixes" $m.id $assignment) -}}
           {{- end -}}
           {{- $resolved := $m.id -}}
+          {{- if hasKey $m "gateway" -}}
+            {{- $resolved = printf "%s/%s" $m.gateway.id $m.id -}}
+          {{- end -}}
           {{- if eq (len $parts) 2 -}}
-            {{- $resolved = printf "%s:%s" $m.id (last $parts) -}}
+            {{- $resolved = printf "%s:%s" $resolved (last $parts) -}}
           {{- end -}}
           {{- $matches = append $matches $resolved -}}
         {{- end -}}

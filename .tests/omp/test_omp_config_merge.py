@@ -13,6 +13,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -37,21 +38,32 @@ def _clean_environment() -> dict[str, str]:
     return {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith(("CHEZMOI_", "GIT_"))
+        if not key.startswith(("CHEZMOI_", "GH_", "GITHUB_", "GIT_", "OP_"))
     }
 
 
-def _catalog(roles: list[str]) -> dict[str, Any]:
-    """Return an independent catalog with one enabled OMP-capable model."""
+def _catalog(roles: list[str], *, gateway_id: str, model_id: str) -> dict[str, Any]:
+    """Return a catalog case for the rendered merger."""
     return {
         "default_thinking_level": "high",
         "my": {
             "llm": {
                 "models": [
                     {
-                        "id": "fixture/model",
-                        "vendor": "openai",
+                        "ctx": 1,
+                        "max_tokens": 1,
+                        "cost": {"input": 0, "output": 0},
                         "enabled": True,
+                        "id": model_id,
+                        "vendor": "anthropic",
+                        "gateway": {
+                            "id": gateway_id,
+                            "provider": "truefoundry",
+                            "name": "Fixture TrueFoundry",
+                            "base_url": "https://example.invalid/llm",
+                            "api": "anthropic-messages",
+                            "api_key_op": "op://fixture/token",
+                        },
                         "roles": roles,
                     }
                 ]
@@ -111,14 +123,40 @@ def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
     )
 
 
-def test_reconciles_every_builtin_model_role(tmp_path: Path) -> None:
-    """Every OMP built-in role resolves from the catalog in one merge."""
-    script = _render_script(tmp_path, _catalog(list(BUILTIN_MODEL_ROLE_NAMES)))
+@pytest.mark.parametrize(
+    ("gateway_id", "model_id", "expected_model"),
+    [
+        pytest.param(
+            "truefoundry-anthropic",
+            "claude-vertex/fixture-model",
+            "truefoundry-anthropic/claude-vertex/fixture-model",
+            id="truefoundry-anthropic-with-slash-delimited-model-id",
+        ),
+        pytest.param(
+            "truefoundry-openai",
+            "openai/gpt-5-mini",
+            "truefoundry-openai/openai/gpt-5-mini",
+            id="truefoundry-openai-with-provider-prefixed-model-id",
+        ),
+    ],
+)
+def test_reconciles_every_builtin_model_role(
+    tmp_path: Path, gateway_id: str, model_id: str, expected_model: str
+) -> None:
+    """Every OMP built-in role resolves from independent gateway/model cases."""
+    script = _render_script(
+        tmp_path,
+        _catalog(
+            list(BUILTIN_MODEL_ROLE_NAMES),
+            gateway_id=gateway_id,
+            model_id=model_id,
+        ),
+    )
     result = _run(script, "modelRoles:\n  custom: user/model\n")
 
     assert result.returncode == 0, result.stderr
     assert yaml.safe_load(result.stdout)["modelRoles"] == {
-        **{role: "fixture/model" for role in BUILTIN_MODEL_ROLE_NAMES},
+        **{role: expected_model for role in BUILTIN_MODEL_ROLE_NAMES},
         "custom": "user/model",
     }
     assert "WARNING:" not in result.stderr
@@ -128,7 +166,14 @@ def test_reconciles_builtin_roles_and_preserves_unmanaged_state(
     tmp_path: Path,
 ) -> None:
     """A vanished catalog role is removed without touching custom OMP state."""
-    initial_script = _render_script(tmp_path / "initial", _catalog(["smol"]))
+    initial_script = _render_script(
+        tmp_path / "initial",
+        _catalog(
+            ["smol"],
+            gateway_id="truefoundry-anthropic",
+            model_id="claude-vertex/fixture-model",
+        ),
+    )
     initial = _run(
         initial_script,
         """modelRoles:
@@ -142,12 +187,19 @@ tools:
     assert initial.returncode == 0, initial.stderr
     initial_config = yaml.safe_load(initial.stdout)
     assert initial_config["modelRoles"] == {
-        "smol": "fixture/model",
+        "smol": "truefoundry-anthropic/claude-vertex/fixture-model",
         "custom": "user/model",
     }
     assert initial_config["tools"]["approval"]["bash"] == "ask"
 
-    removed_script = _render_script(tmp_path / "removed", _catalog([]))
+    removed_script = _render_script(
+        tmp_path / "removed",
+        _catalog(
+            [],
+            gateway_id="truefoundry-anthropic",
+            model_id="claude-vertex/fixture-model",
+        ),
+    )
     removed = _run(removed_script, initial.stdout)
     assert removed.returncode == 0, removed.stderr
     merged = yaml.safe_load(removed.stdout)
@@ -157,7 +209,14 @@ tools:
 
 def test_omits_empty_model_roles_mapping(tmp_path: Path) -> None:
     """No catalog or custom role leaves OMP's default empty mapping implicit."""
-    script = _render_script(tmp_path, _catalog([]))
+    script = _render_script(
+        tmp_path,
+        _catalog(
+            [],
+            gateway_id="truefoundry-anthropic",
+            model_id="claude-vertex/fixture-model",
+        ),
+    )
     result = _run(script, "modelRoles:\n  vision: stale/model\n")
 
     assert result.returncode == 0, result.stderr
@@ -169,15 +228,37 @@ def test_omits_empty_model_roles_mapping(tmp_path: Path) -> None:
 
 def test_empty_stdin_is_a_valid_new_omp_config(tmp_path: Path) -> None:
     """A first apply can initialize config state when OMP has not written YAML."""
-    result = _run(_render_script(tmp_path, _catalog(["default"])), "")
+    result = _run(
+        _render_script(
+            tmp_path,
+            _catalog(
+                ["default"],
+                gateway_id="truefoundry-anthropic",
+                model_id="claude-vertex/fixture-model",
+            ),
+        ),
+        "",
+    )
 
     assert result.returncode == 0, result.stderr
-    assert yaml.safe_load(result.stdout)["modelRoles"] == {"default": "fixture/model"}
+    assert yaml.safe_load(result.stdout)["modelRoles"] == {
+        "default": "truefoundry-anthropic/claude-vertex/fixture-model"
+    }
 
 
 def test_malformed_yaml_fails_loudly_without_a_traceback(tmp_path: Path) -> None:
     """Invalid persisted OMP state is reported instead of being overwritten."""
-    result = _run(_render_script(tmp_path, _catalog([])), "modelRoles: [broken")
+    result = _run(
+        _render_script(
+            tmp_path,
+            _catalog(
+                [],
+                gateway_id="truefoundry-anthropic",
+                model_id="claude-vertex/fixture-model",
+            ),
+        ),
+        "modelRoles: [broken",
+    )
 
     assert result.returncode != 0
     assert result.stdout == ""
