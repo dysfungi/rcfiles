@@ -12,7 +12,7 @@
 ---
 name: scout
 description: Fast codebase recon that returns compressed context for handoff to other agents
-tools: read, grep, find, ls, bash, mcp
+tools: read, grep, find, ls, bash, mcp, audit_metadata
 execution: read-only
 {{- if ne $model "" }}
 model: {{ $model }}
