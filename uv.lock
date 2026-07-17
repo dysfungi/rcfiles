@@ -10,6 +10,7 @@ source = { virtual = "." }
 [package.dev-dependencies]
 test = [
     { name = "pytest" },
+    { name = "pytest-fail-slow" },
     { name = "pyyaml" },
     { name = "xonsh" },
 ]
@@ -19,6 +20,7 @@ test = [
 [package.metadata.requires-dev]
 test = [
     { name = "pytest" },
+    { name = "pytest-fail-slow" },
     { name = "pyyaml" },
     { name = "xonsh", specifier = "==0.24.0" },
 ]
@@ -82,6 +84,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz", hash = "sha256:1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313", size = 1636369, upload-time = "2026-06-19T10:58:32.857Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl", hash = "sha256:37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c", size = 386536, upload-time = "2026-06-19T10:58:31.347Z" },
+]
+
+[[package]]
+name = "pytest-fail-slow"
+version = "0.6.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pluggy" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e4/ec/32f3a9cd3e7ffd50cb4c98413f5047338f3fbc2dc67012572bbe527279bb/pytest_fail_slow-0.6.0.tar.gz", hash = "sha256:b367a5bdfadb0a4d35d4ef1c220737aa46bc8d6035256171004c67f7f2f5235c", size = 9485, upload-time = "2024-06-01T22:21:24.862Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/56/f5/9fcebc75407e14e4e36bd26da0fc659ea585af256007937e3c355ce807cd/pytest_fail_slow-0.6.0-py3-none-any.whl", hash = "sha256:1658ad93b19e54c25142540f2808640c418ba000be87dc0c9b7aac6662d493cc", size = 7076, upload-time = "2024-06-01T22:21:23.125Z" },
 ]
 
 [[package]]

@@ -57,6 +57,10 @@ run = 'chezmoi apply --source "$(git rev-parse --show-toplevel)" "${usage_target
 description = "Run tests"
 run = "uv run --group test pytest .tests/ -v"
 
+[tasks."test:durations"]
+description = "Regenerate pytest duration data"
+run = "uv run --group test pytest .tests/ --store-durations"
+
 [tasks.lint]
 description = "Lint the code"
 run = "pre-commit run --all-files --hook-stage=manual --show-diff-on-failure"

@@ -14,25 +14,16 @@ GIT ISOLATION NOTE
 
 from __future__ import annotations
 
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
 
+from _test_env import _clean_env
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 _REAL_GIT_DIR = REPO_ROOT / ".git"
-
-
-def _clean_env() -> dict[str, str]:
-    """Return os.environ with GIT_* vars stripped.
-
-    Pre-commit leaks GIT_DIR / GIT_INDEX_FILE / etc. into subprocess env;
-    stripping them ensures git calls hit the intended repo (tmp or cwd),
-    not the real chezmoi repo.
-    """
-    return {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
 
 
 @pytest.fixture(scope="session", autouse=True)
