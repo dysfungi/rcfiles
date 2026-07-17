@@ -14,6 +14,17 @@ description: >-
 - Reproduce the failure reliably, characterize the symptom, and scope the blast
   radius before forming hypotheses. A bug you can't reproduce, you can't confirm fixed.
 
+## Rule out environmental causes
+
+- Before calling a hang, timeout, crash, flaky test, or build failure a regression, rule
+  out machine contention (load averages; CPU-heavy or orphaned processes), external/infra
+  state, and resource exhaustion.
+- Reproduce in a clean environment and retry after contention clears. Extend timeouts only
+  as a last resort with the reason documented.
+- Never kill unrelated processes, including other agent sessions, without explicit
+  authorization. Confirm a process is genuinely orphaned first, and report before/after evidence.
+- For slow suites and subprocess harnesses, see `my-testing`.
+
 ## Method
 
 - Test one hypothesis/variable at a time — unless deliberately running a
