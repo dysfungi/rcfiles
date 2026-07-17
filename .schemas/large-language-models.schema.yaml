@@ -121,8 +121,11 @@ $defs:
   gateway:
     type: object
     additionalProperties: false
-    required: [provider, name, base_url, api, api_key_op]
+    required: [id, provider, name, base_url, api, api_key_op]
     properties:
+      id:
+        type: string
+        minLength: 1
       provider:
         type: string
       name:

@@ -17,6 +17,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = REPO_ROOT / "home/dot_omp/agent/modify_config.yml.py.tmpl"
+MODELS_TEMPLATE = REPO_ROOT / "home/dot_omp/agent/private_models.yml.tmpl"
 VALIDATOR = REPO_ROOT / "home/.chezmoitemplates/llm/validate.tmpl"
 BUILTIN_MODEL_ROLE_NAMES = (
     "default",
@@ -30,6 +31,7 @@ BUILTIN_MODEL_ROLE_NAMES = (
     "task",
     "advisor",
 )
+OMP_MODEL = "truefoundry-anthropic/claude-vertex/fixture-model"
 
 
 def _clean_environment() -> dict[str, str]:
@@ -37,23 +39,76 @@ def _clean_environment() -> dict[str, str]:
     return {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith(("CHEZMOI_", "GIT_"))
+        if not key.startswith(("CHEZMOI_", "GIT_", "OP_SERVICE_ACCOUNT_TOKEN"))
     }
 
 
 def _catalog(roles: list[str]) -> dict[str, Any]:
-    """Return an independent catalog with one enabled OMP-capable model."""
+    """Return an independent catalog spanning every gateway grouping."""
+    model_facts = {
+        "ctx": 1,
+        "max_tokens": 1,
+        "cost": {"input": 0, "output": 0},
+        "enabled": True,
+    }
+    truefoundry_anthropic = {
+        "id": "truefoundry-anthropic",
+        "provider": "truefoundry",
+        "name": "Fixture TrueFoundry Anthropic",
+        "base_url": "https://example.invalid/llm",
+        "api": "anthropic-messages",
+        "api_key_op": "op://fixture/token",
+    }
+    truefoundry_openai = {
+        "id": "truefoundry-openai",
+        "provider": "openai",
+        "name": "Fixture TrueFoundry OpenAI",
+        "base_url": "https://example.invalid/llm",
+        "api": "openai-responses",
+        "api_key_op": "op://fixture/token",
+    }
+    google = {
+        "id": "google",
+        "provider": "google",
+        "name": "Fixture Google",
+        "base_url": "https://example.invalid/google",
+        "api": "google-generative-ai",
+        "api_key_op": "op://fixture/google-token",
+    }
     return {
         "default_thinking_level": "high",
         "my": {
             "llm": {
                 "models": [
                     {
-                        "id": "fixture/model",
-                        "vendor": "openai",
-                        "enabled": True,
+                        **model_facts,
+                        "id": "claude-vertex/fixture-model",
+                        "vendor": "anthropic",
+                        "gateway": truefoundry_anthropic,
+                        "one_m": True,
                         "roles": roles,
-                    }
+                    },
+                    {
+                        **model_facts,
+                        "id": "openai/fixture-model",
+                        "vendor": "openai",
+                        "gateway": truefoundry_openai,
+                        "roles": [],
+                    },
+                    {
+                        **model_facts,
+                        "id": "google-vertexai/fixture-model",
+                        "vendor": "google",
+                        "gateway": truefoundry_openai,
+                        "roles": [],
+                    },
+                    {
+                        **model_facts,
+                        "id": "gemini-fixture-model",
+                        "vendor": "google",
+                        "gateway": google,
+                        "roles": [],
+                    },
                 ]
             }
         },
@@ -100,6 +155,49 @@ def _render_script(tmp_path: Path, catalog: dict[str, Any]) -> Path:
     return rendered
 
 
+def _render_models(tmp_path: Path, catalog: dict[str, Any]) -> dict[str, Any]:
+    """Render the production provider config with an isolated 1Password stub."""
+    source = tmp_path / "source"
+    template = source / "home/dot_omp/agent" / MODELS_TEMPLATE.name
+    validator = source / "llm/validate.tmpl"
+    template.parent.mkdir(parents=True)
+    validator.parent.mkdir(parents=True)
+    shutil.copy2(MODELS_TEMPLATE, template)
+    shutil.copy2(VALIDATOR, validator)
+
+    catalog_path = source / ".chezmoidata/large-language-models.yaml"
+    catalog_path.parent.mkdir()
+    catalog_path.write_text(yaml.safe_dump(catalog, sort_keys=False))
+    config = tmp_path / "chezmoi.toml"
+    config.write_text("[data]\nis_riot_machine = false\n")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    op = bin_dir / "op"
+    op.write_text("#!/bin/sh\nprintf '%s' fixture-token\n")
+    op.chmod(0o755)
+    environment = _clean_environment()
+    environment["PATH"] = f"{bin_dir}{os.pathsep}{environment['PATH']}"
+
+    result = subprocess.run(
+        [
+            "chezmoi",
+            "execute-template",
+            "--config",
+            str(config),
+            "--source",
+            str(source),
+            "--file",
+            str(template),
+        ],
+        cwd=source,
+        capture_output=True,
+        text=True,
+        env=environment,
+    )
+    assert result.returncode == 0, result.stderr
+    return yaml.safe_load(result.stdout)
+
+
 def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
     """Run the rendered PEP 723 script through its production shebang."""
     return subprocess.run(
@@ -111,6 +209,27 @@ def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def test_gateway_model_ids_stay_verbatim_on_the_wire(tmp_path: Path) -> None:
+    """OMP groups full catalog IDs by gateway, rather than their ID prefixes."""
+    providers = _render_models(tmp_path, _catalog([]))["providers"]
+
+    assert {
+        name: [model["id"] for model in provider["models"]]
+        for name, provider in providers.items()
+    } == {
+        "truefoundry-anthropic": [
+            "claude-vertex/fixture-model",
+            "claude-vertex/fixture-model[1m]",
+        ],
+        "truefoundry-openai": [
+            "openai/fixture-model",
+            "google-vertexai/fixture-model",
+        ],
+        "google": ["gemini-fixture-model"],
+    }
+    assert all(provider["auth"] == "apiKey" for provider in providers.values())
+
+
 def test_reconciles_every_builtin_model_role(tmp_path: Path) -> None:
     """Every OMP built-in role resolves from the catalog in one merge."""
     script = _render_script(tmp_path, _catalog(list(BUILTIN_MODEL_ROLE_NAMES)))
@@ -118,7 +237,7 @@ def test_reconciles_every_builtin_model_role(tmp_path: Path) -> None:
 
     assert result.returncode == 0, result.stderr
     assert yaml.safe_load(result.stdout)["modelRoles"] == {
-        **{role: "fixture/model" for role in BUILTIN_MODEL_ROLE_NAMES},
+        **{role: OMP_MODEL for role in BUILTIN_MODEL_ROLE_NAMES},
         "custom": "user/model",
     }
     assert "WARNING:" not in result.stderr
@@ -142,7 +261,7 @@ tools:
     assert initial.returncode == 0, initial.stderr
     initial_config = yaml.safe_load(initial.stdout)
     assert initial_config["modelRoles"] == {
-        "smol": "fixture/model",
+        "smol": OMP_MODEL,
         "custom": "user/model",
     }
     assert initial_config["tools"]["approval"]["bash"] == "ask"
@@ -172,7 +291,7 @@ def test_empty_stdin_is_a_valid_new_omp_config(tmp_path: Path) -> None:
     result = _run(_render_script(tmp_path, _catalog(["default"])), "")
 
     assert result.returncode == 0, result.stderr
-    assert yaml.safe_load(result.stdout)["modelRoles"] == {"default": "fixture/model"}
+    assert yaml.safe_load(result.stdout)["modelRoles"] == {"default": OMP_MODEL}
 
 
 def test_malformed_yaml_fails_loudly_without_a_traceback(tmp_path: Path) -> None:

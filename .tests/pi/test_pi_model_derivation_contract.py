@@ -52,6 +52,7 @@ def _fixture_catalog(
         }
         if role == "scout":
             model["gateway"] = {
+                "id": "fixture",
                 "provider": "fixture",
                 "name": "Fixture",
                 "base_url": "https://example.invalid/v1",

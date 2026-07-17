@@ -1,9 +1,13 @@
 {{- /*
   OMP native providers, generated from the shared LLM catalog.
 
-  Gateway-backed enabled models become OMP provider/model definitions. Models
-  without a gateway remain OMP built-ins, matching Pi's custom-provider scope.
-  `one_m` is represented by the TrueFoundry [1m] model variant; `adaptive`
+  Gateway-backed enabled models become OMP provider/model definitions keyed by
+  their catalog gateway id. Each model id stays verbatim because TrueFoundry
+  requires its complete catalog id on the wire. Gateway credentials explicitly
+  use API-key auth: relying on OMP's token heuristic can select its OAuth client,
+  whose beta query parameter is rejected by TrueFoundry. Models without a gateway
+  remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
+  the TrueFoundry [1m] model variant; `adaptive`
   selects OMP's native Anthropic adaptive-thinking mode.
 */ -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
@@ -17,10 +21,7 @@
     {{- if not (has $m.gateway.api $provider_apis) -}}
       {{- fail (printf "omp models.yml: model %s gateway API %q has no OMP equivalent" $m.id $m.gateway.api) -}}
     {{- end -}}
-    {{- $provider_name := $m.gateway.provider -}}
-    {{- if contains "/" $m.id -}}
-      {{- $provider_name = first (splitList "/" $m.id) -}}
-    {{- end -}}
+    {{- $provider_name := $m.gateway.id -}}
     {{- if hasKey $seen $provider_name -}}
       {{- $existing := index $seen $provider_name -}}
       {{- if ne ($existing | mustToJson) ($m.gateway | mustToJson) -}}
@@ -37,26 +38,16 @@ providers:
   {{ $provider.name | quote }}:
     baseUrl: {{ $provider.gateway.base_url | quote }}
     apiKey: {{ onepasswordRead $provider.gateway.api_key_op | quote }}
+    auth: apiKey
     api: {{ $provider.gateway.api | quote }}
     models:
     {{- $rendered := list -}}
     {{- range $m := $ns.models -}}
       {{- if and $m.enabled (hasKey $m "gateway") -}}
-        {{- $model_provider := $m.gateway.provider -}}
-        {{- if contains "/" $m.id -}}
-          {{- $model_provider = first (splitList "/" $m.id) -}}
-        {{- end -}}
-        {{- if eq $model_provider $provider.name -}}
-          {{- $model_id := $m.id -}}
-          {{- if contains "/" $m.id -}}
-            {{- $model_id = trimPrefix (printf "%s/" $provider.name) $m.id -}}
-            {{- if eq $model_id $m.id -}}
-              {{- fail (printf "omp models.yml: model %s does not match provider %q" $m.id $provider.name) -}}
-            {{- end -}}
-          {{- end -}}
-          {{- $rendered = append $rendered (dict "model" $m "id" $model_id "context_window" $m.ctx "one_m" false) -}}
+        {{- if eq $m.gateway.id $provider.name -}}
+          {{- $rendered = append $rendered (dict "model" $m "id" $m.id "context_window" $m.ctx "one_m" false) -}}
           {{- if dig "one_m" false $m -}}
-            {{- $rendered = append $rendered (dict "model" $m "id" (printf "%s[1m]" $model_id) "context_window" 1000000 "one_m" true) -}}
+            {{- $rendered = append $rendered (dict "model" $m "id" (printf "%s[1m]" $m.id) "context_window" 1000000 "one_m" true) -}}
           {{- end -}}
         {{- end -}}
       {{- end -}}
