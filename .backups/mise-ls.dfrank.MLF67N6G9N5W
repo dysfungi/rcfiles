@@ -4,7 +4,7 @@ asdf:luizm/asdf-shfmt                 3.13.1
 chezmoi                               2.71.0
 gh                                    2.96.0            ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0            ~/.config/mise/config.toml       latest
-github:can1357/oh-my-pi               17.0.0            ~/.config/mise/config.toml       latest
+github:can1357/oh-my-pi               17.0.1            ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 jq                                    1.8.2             ~/.config/mise/config.toml       latest
