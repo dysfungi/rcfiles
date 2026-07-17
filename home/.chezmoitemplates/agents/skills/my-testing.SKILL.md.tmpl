@@ -45,6 +45,8 @@ Heuristics, not absolutes — see Exceptions below.
    prompts, comments, or help text. Not executable behavior.
 7. **Static source-string assertions** — grepping a source/template file for a
    substring, especially when a runtime test already covers the wired behavior.
+   Parametrizing the same check across files is still a mirror; calling it a
+   "drift guard", "contract", or "anti-revocation" test does not make it behavioral.
 8. **Tautological / mirror assertions** — recomputing a value the same way the
    code does, or asserting a data list equals itself.
 9. **Framework / stdlib / third-party behavior** — testing that the language or a
@@ -70,8 +72,8 @@ test.
 
 **Constructive fix pattern.** Turn a live-value mirror into a behavioral test:
 parametrize independent, self-contained cases and assert the *derivation/mapping*
-(e.g. "model X resolves to provider Y") across several cases — not the single
-current selection.
+(e.g. "model X resolves to provider Y") across several cases — not a static
+value or substring repeated across cases.
 
 **Litmus.** If this test fails, does it signal a regression in a stable supported
 contract — user-visible, operational, or security — or just that data/config/
