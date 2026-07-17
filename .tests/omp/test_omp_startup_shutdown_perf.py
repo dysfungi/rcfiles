@@ -12,9 +12,11 @@ Baseline measured on Darwin arm64 with omp 17.0.0 on 2026-07-16:
   startup: 2653 ms best-of-3 after warmup (2653-2769 ms measured range)
   shutdown: 43 ms best-of-3 after warmup (43-47 ms measured range)
 
-The 5 s startup default leaves substantial scheduling headroom. The 200 ms shutdown
-limit is about 4.3x the slowest 47 ms baseline sample: modestly above 3.5x while
-still detecting material lifecycle regressions. Set OMP_STARTUP_MAX_MS or
+The 3,000 ms startup default is intentionally a tight guardrail: about 1.08x the
+slowest 2,769 ms baseline sample. Its thin scheduling margin detects modest
+lifecycle regressions. The 200 ms shutdown limit is about 4.3x the slowest 47 ms
+baseline sample: modestly above 3.5x while still detecting material lifecycle
+regressions. Set OMP_STARTUP_MAX_MS or
 OMP_SHUTDOWN_MAX_MS to tighten or relax either limit without editing this file.
 OMP_STARTUP_INJECT_DELAY_SECONDS is a test-harness-only fault injection used to
 prove the startup limit fails when measured latency is deliberately increased.
