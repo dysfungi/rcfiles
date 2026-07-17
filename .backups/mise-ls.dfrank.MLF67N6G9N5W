@@ -12,7 +12,7 @@ lua                                   5.5.0
 node                                  22.2.0
 node                                  22.22.3
 node                                  24.18.0           ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code         2.1.210           ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code         2.1.211           ~/.config/mise/config.toml       latest
 npm:@earendil-works/pi-coding-agent   0.80.6
 npm:@earendil-works/pi-coding-agent   0.80.7            ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0             ~/.config/mise/config.toml       latest
@@ -38,6 +38,6 @@ stylua                                2.5.2
 taplo                                 0.10.0
 terraform                             1.15.5
 tmux                                  3.6a
-uv                                    0.11.28           ~/.config/mise/config.toml       latest
+uv                                    0.11.29           ~/.config/mise/config.toml       latest
 vultr-cli                             3.10.0            ~/.config/mise/config.toml       latest
 yarn                                  1.22.22
