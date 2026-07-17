@@ -71,9 +71,10 @@ read, and inline locals (`{{ "{{" }} $my_github_token := ... {{ "}}" }}`). Never
 format and emitted into rendered output belongs to that tool's namespace. Snake the SOURCE identifier;
 map it back to the required key in the OUTPUT. Litmus: is the string a key in a file chezmoi renders
 *for another program to read*? If yes, match that program's spelling in output and only snake the
-source-side variable. Known external-output keys: `mcpServers` (MCP client config; source key is
-`mcp_servers`), Ollama Modelfile `num_ctx`/`num_predict`/`temperature`, pi-mcp-adapter
-`clientName`/`bearerToken`/`httpUrl`.
+source-side variable. Pi renders MCP config through the `pi-mcp-adapter` output contract; omp renders
+`mcp.json` directly through native transports. Both use `.chezmoidata/mcp-servers.yaml`. Known
+external-output keys: `mcpServers` (MCP client config; source key is `mcp_servers`), Ollama Modelfile
+`num_ctx`/`num_predict`/`temperature`, pi-mcp-adapter `clientName`/`bearerToken`/`httpUrl`.
 
 ## Packages (`.chezmoidata/packages.yaml`)
 

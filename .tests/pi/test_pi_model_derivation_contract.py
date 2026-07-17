@@ -48,7 +48,7 @@ def _fixture_catalog(
             "max_tokens": 1,
             "cost": {"input": 0, "output": 0},
             "enabled": True,
-            "subagent_roles": [role],
+            "roles": [role],
         }
         if role == "scout":
             model["gateway"] = {
@@ -194,6 +194,48 @@ def test_template_rejects_invalid_thinking_map_contracts(
 
     assert result.returncode != 0
     assert expected in result.stderr
+
+
+def test_template_allows_missing_role_assignments(tmp_path: Path) -> None:
+    """An absent role lets the consumer fall back to its session model."""
+    catalog = _fixture_catalog()
+    _fixture_model(catalog).pop("roles")
+
+    result = _render_models(_fixture_source(tmp_path, catalog), tmp_path)
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_template_rejects_ambiguous_effort_qualified_roles(tmp_path: Path) -> None:
+    """Effort variants still compete for one base role assignment."""
+    catalog = _fixture_catalog()
+    models = catalog["my"]["llm"]["models"]
+    models[0]["roles"].append("plan:high")
+    models[1]["roles"].append("plan:low")
+
+    result = _render_models(_fixture_source(tmp_path, catalog), tmp_path)
+
+    assert result.returncode != 0
+    assert '2 enabled models claim roles "plan"' in result.stderr
+
+
+@pytest.mark.parametrize(
+    ("role", "valid"),
+    [
+        pytest.param("plan:high", True, id="omp-role-effort-is-valid"),
+        pytest.param("scout:high", False, id="pi-role-effort-is-rejected"),
+    ],
+)
+def test_schema_hook_limits_effort_to_omp_roles(
+    tmp_path: Path, role: str, valid: bool
+) -> None:
+    """Only OMP's role vocabulary may carry an effort suffix."""
+    catalog = _fixture_catalog()
+    _fixture_model(catalog)["roles"].append(role)
+
+    result = _schema_result(tmp_path, catalog)
+
+    assert (result.returncode == 0) is valid, result.stdout + result.stderr
 
 
 def _schema_result(

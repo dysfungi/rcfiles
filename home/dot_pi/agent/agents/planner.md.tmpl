@@ -2,20 +2,21 @@
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
 {{- $model := "" -}}
 {{- range $candidate := $ns.models -}}
-  {{- if and (hasKey $candidate "subagent_roles") (has "planner" $candidate.subagent_roles) -}}
+  {{- if and $candidate.enabled (hasKey $candidate "roles") (has "planner" $candidate.roles) -}}
     {{- $model = $candidate.id -}}
     {{- if hasKey $candidate "gateway" -}}
       {{- $model = printf "%s/%s" (dig "gateway" "provider" "" $candidate) $candidate.id -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}
-{{- if eq $model "" -}}{{ fail "pi agent planner: no catalog model has subagent_roles planner" }}{{- end -}}
 ---
 name: planner
 description: Creates implementation plans from context and requirements
 tools: read, grep, find, ls, mcp
 execution: read-only
+{{- if ne $model "" }}
 model: {{ $model }}
+{{- end }}
 ---
 
 You are a planning specialist. You receive context (from a scout) and requirements, then produce a clear implementation plan.

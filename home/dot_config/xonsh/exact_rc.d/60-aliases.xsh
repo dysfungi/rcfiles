@@ -328,6 +328,7 @@ def __rc_interactive_aliases_agents(aliases):
     # gemini chains through agy.)
     aliases["agy"] = "mise x -E agent -- agy"
     aliases["codex"] = "mise x -E agent -- codex"
+    aliases["omp"] = "mise x -E agent -- omp"
     aliases["pi"] = "mise x -E agent -- pi"
 
 

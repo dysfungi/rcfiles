@@ -2,17 +2,18 @@
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
 {{- $model := "" -}}
 {{- range $candidate := $ns.models -}}
-  {{- if and (hasKey $candidate "subagent_roles") (has "worker" $candidate.subagent_roles) -}}
+  {{- if and $candidate.enabled (hasKey $candidate "roles") (has "worker" $candidate.roles) -}}
     {{- $model = $candidate.id -}}
   {{- end -}}
 {{- end -}}
-{{- if eq $model "" -}}{{ fail "pi agent worker: no catalog model has subagent_roles worker" }}{{- end -}}
 ---
 name: worker
 description: General-purpose subagent with full capabilities, isolated context
 tools: read, grep, find, ls, bash, write, edit, mcp, audit_metadata
 execution: worktree-write
+{{- if ne $model "" }}
 model: {{ $model }}
+{{- end }}
 ---
 
 You are a worker agent with full capabilities. You operate in an isolated context window to handle delegated tasks without polluting the main conversation.

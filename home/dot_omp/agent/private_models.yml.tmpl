@@ -1,0 +1,105 @@
+{{- /*
+  OMP native providers, generated from the shared LLM catalog.
+
+  Gateway-backed enabled models become OMP provider/model definitions. Models
+  without a gateway remain OMP built-ins, matching Pi's custom-provider scope.
+  `one_m` is represented by the TrueFoundry [1m] model variant; `adaptive`
+  selects OMP's native Anthropic adaptive-thinking mode.
+*/ -}}
+{{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+{{ includeTemplate "llm/validate.tmpl" $ns -}}
+{{- $provider_apis := list "openai-completions" "openai-responses" "openai-codex-responses" "azure-openai-responses" "anthropic-messages" "google-generative-ai" "google-gemini-cli" "google-vertex" -}}
+{{- $thinking_levels := list "minimal" "low" "medium" "high" "xhigh" "max" -}}
+{{- $providers := list -}}
+{{- $seen := dict -}}
+{{- range $m := $ns.models -}}
+  {{- if and $m.enabled (hasKey $m "gateway") -}}
+    {{- if not (has $m.gateway.api $provider_apis) -}}
+      {{- fail (printf "omp models.yml: model %s gateway API %q has no OMP equivalent" $m.id $m.gateway.api) -}}
+    {{- end -}}
+    {{- $provider_name := $m.gateway.provider -}}
+    {{- if contains "/" $m.id -}}
+      {{- $provider_name = first (splitList "/" $m.id) -}}
+    {{- end -}}
+    {{- if hasKey $seen $provider_name -}}
+      {{- $existing := index $seen $provider_name -}}
+      {{- if ne ($existing | mustToJson) ($m.gateway | mustToJson) -}}
+        {{- fail (printf "omp models.yml: provider %q groups incompatible gateways" $provider_name) -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $_ := set $seen $provider_name $m.gateway -}}
+      {{- $providers = append $providers (dict "name" $provider_name "gateway" $m.gateway) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+providers:
+{{- range $provider := $providers }}
+  {{ $provider.name | quote }}:
+    baseUrl: {{ $provider.gateway.base_url | quote }}
+    apiKey: {{ onepasswordRead $provider.gateway.api_key_op | quote }}
+    api: {{ $provider.gateway.api | quote }}
+    models:
+    {{- $rendered := list -}}
+    {{- range $m := $ns.models -}}
+      {{- if and $m.enabled (hasKey $m "gateway") -}}
+        {{- $model_provider := $m.gateway.provider -}}
+        {{- if contains "/" $m.id -}}
+          {{- $model_provider = first (splitList "/" $m.id) -}}
+        {{- end -}}
+        {{- if eq $model_provider $provider.name -}}
+          {{- $model_id := $m.id -}}
+          {{- if contains "/" $m.id -}}
+            {{- $model_id = trimPrefix (printf "%s/" $provider.name) $m.id -}}
+            {{- if eq $model_id $m.id -}}
+              {{- fail (printf "omp models.yml: model %s does not match provider %q" $m.id $provider.name) -}}
+            {{- end -}}
+          {{- end -}}
+          {{- $rendered = append $rendered (dict "model" $m "id" $model_id "context_window" $m.ctx "one_m" false) -}}
+          {{- if dig "one_m" false $m -}}
+            {{- $rendered = append $rendered (dict "model" $m "id" (printf "%s[1m]" $model_id) "context_window" 1000000 "one_m" true) -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- range $entry := $rendered }}
+      {{- $m := $entry.model }}
+      {{- $reasoning := dig "reasoning" false $m }}
+      {{- if and $reasoning (not (hasKey $m "thinking_level_map")) -}}
+        {{- fail (printf "omp models.yml: reasoning model %s lacks thinking_level_map" $m.id) -}}
+      {{- end }}
+      - id: {{ $entry.id | quote }}
+        name: {{ printf "%s%s" (default $m.id (dig "display_name" "" $m)) (ternary " 1M" "" $entry.one_m) | quote }}
+        reasoning: {{ $reasoning }}
+      {{- if $reasoning }}
+        {{- if not (hasKey $m.thinking_level_map $.default_thinking_level) -}}
+          {{- fail (printf "omp models.yml: model %s does not map default thinking level %q" $m.id $.default_thinking_level) -}}
+        {{- end -}}
+        {{- if eq (index $m.thinking_level_map $.default_thinking_level) nil -}}
+          {{- fail (printf "omp models.yml: model %s does not support default thinking level %q" $m.id $.default_thinking_level) -}}
+        {{- end }}
+        thinking:
+          mode: {{ if dig "adaptive" false $m }}anthropic-adaptive{{ else if eq $m.gateway.api "google-generative-ai" }}google-level{{ else }}effort{{ end }}
+          efforts:
+          {{- range $level := $thinking_levels }}
+            {{- if ne (index $m.thinking_level_map $level) nil }}
+            - {{ $level }}
+            {{- end }}
+          {{- end }}
+          defaultLevel: {{ $.default_thinking_level }}
+          effortMap:
+          {{- range $level := $thinking_levels }}
+            {{- $native := index $m.thinking_level_map $level }}
+            {{- if ne $native nil }}
+            {{ $level }}: {{ $native | quote }}
+            {{- end }}
+          {{- end }}
+      {{- end }}
+        contextWindow: {{ $entry.context_window }}
+        maxTokens: {{ $m.max_tokens }}
+        cost:
+          input: {{ $m.cost.input }}
+          output: {{ $m.cost.output }}
+          cacheRead: {{ dig "cost" "cache_read" 0 $m }}
+          cacheWrite: {{ dig "cost" "cache_write" 0 $m }}
+    {{- end }}
+{{- end }}

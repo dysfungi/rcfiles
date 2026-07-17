@@ -110,3 +110,4 @@ x 2026-07-16 (B) Fix Hammerspoon WezTerm mainWindow() nil-but-real-windows-exist
 x 2026-07-15 Fix flaky .tests/tmux/test_direct_shell.py::test_managed_tmux_config_resets_stale_login_and_preserves_pane_cwd: new tmux pane transiently reports pane_current_command=tmux before the configured shell replaces it; wait for the shell process instead of asserting immediately. +tmux +testing
 x 2026-07-16 (C) p4config consolidation cleanup +p4 session:4a117878-58cc-4919-947b-ba84e3472f6a
 x 2026-07-16 Implement read-only Pi audit_metadata extension + instruction; strip stale worktree_commit guidance from pi-worktree fork +worktree:feat/pi-audit-metadata-tool @chezmoi
+x 2026-07-17 Refactor skill/subagent templating: extract reusable bodies from my-planning and my-code-review into shared partials; compose pi planner/reviewer agent definitions from them plus pi-specific frontmatter and delegation contracts +pi +skills @follow-up

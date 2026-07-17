@@ -91,7 +91,7 @@ def _render_synthetic_default(
         f"vendor = {json.dumps(vendor)}\n"
         "enabled = true\n"
         'default_for = ["pi"]\n'
-        'subagent_roles = ["scout", "planner", "reviewer", "worker"]\n'
+        'roles = ["scout", "planner", "reviewer", "worker"]\n'
         f"{gateway}"
         "\n[data.riot.llm]\n"
         "models = []\n"
