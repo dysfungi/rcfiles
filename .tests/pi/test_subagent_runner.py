@@ -26,6 +26,10 @@ pytestmark = [
         PI is None or NODE is None,
         reason="Pi CLI and Node.js are required for subagent runner runtime coverage",
     ),
+    pytest.mark.skipif(
+        os.name == "nt",
+        reason="subagent runner runtime coverage requires POSIX process groups",
+    ),
 ]
 
 

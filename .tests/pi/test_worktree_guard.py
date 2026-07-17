@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -23,6 +24,10 @@ pytestmark = [
     pytest.mark.skipif(
         PI is None or NODE is None,
         reason="Pi CLI and Node.js are required for worktree-guard runtime coverage",
+    ),
+    pytest.mark.skipif(
+        os.name == "nt",
+        reason="worktree-guard runtime coverage requires POSIX process groups",
     ),
 ]
 
