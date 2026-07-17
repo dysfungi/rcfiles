@@ -59,6 +59,13 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - Subagent child launches must retain normal context-file discovery; never pass `--no-context-files` or `-nc`. `--no-session` isolates session history only and remains intentional.
 - `/plan` is interactive-root-only. Spawned JSON workers do not enable their own plan-mode extension, but inherit `PI_ROOT_PHASE` and are downgraded to read-only while the root remains in plan phase.
 - The root alone owns `worktree_start`, `worktree_status`, and `worktree_stop`. Before delegating implementation, activate one worktree; workers receive a topology-validated initial cwd automatically, use direct Git there, and must not invoke worktree lifecycle tools. This is cooperative launch routing, not path containment: workers must not access paths outside their assigned worktree.
+{{- else if hasSuffix "/.omp/agent/AGENTS.md" $.chezmoi.targetFile }}
+
+**omp specifics:**
+
+- Use the built-in `task` tool for subagent fan-out. v1 uses omp's bundled default agent roles as-is; no custom role files or launcher extension are configured.
+- `task.isolation.mode: auto` with `merge: branch` enables Git-only isolation when a task item opts in. In a non-Git directory, its read-only repository-root check produces a visible error without side effects rather than silently falling back.
+- omp v1 has no root-thread guard, plan-mode extension, MCP-mutation policy, or `worktree_start`/`worktree_status`/`worktree_stop` lifecycle tools. `tools.approvalMode: yolo` auto-approves without those guardrails; confine early use to disposable directories or branches until the tracked gaps are ported.
 {{- end }}
 
 ## Mode discipline
@@ -69,6 +76,14 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - Before presenting any plan for approval, run the `my-code-review` self-review pass (a fresh sub-agent) and address its findings first.
 
 ## Always-on guardrails — read the referenced skill before acting in its domain; don't rely on remembering it
+{{- if hasSuffix "/.omp/agent/AGENTS.md" $.chezmoi.targetFile }}
+
+- Follow `my-task-tracking`: maintain an active tasklist every session.
+- Follow `my-agent-memory`: treat learning-as-instructions as continuous, and capture durable learnings as skills.
+- Follow `my-engineering-principles`: less is more, and it applies to code.
+- Follow `my-writing` for design/technical prose (README intros, design docs, project retrospectives): read it before drafting.
+- Follow `my-commenting` for every comment or docstring: explain durable WHY, not what; never leak task/PR/ticket narrative into the source.
+{{- else }}
 
 - Follow `my-git` for every git action: push immediately after every commit, and make file edits only inside an isolated git worktree (hook-enforced).
 - Follow `my-task-tracking`: maintain an active tasklist every session.
@@ -76,6 +91,7 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 - Follow `my-engineering-principles`: less is more, and it applies to code.
 - Follow `my-writing` for design/technical prose (README intros, design docs, project retrospectives): read it before drafting, and defer PR/commit/incident text to `my-audit-trail`.
 - Follow `my-commenting` for every comment or docstring: explain durable WHY, not what; never leak task/PR/ticket narrative into the source.
+{{- end }}
 
 [less-is-more]: https://en.wikipedia.org/wiki/Less_is_more
 {{ if .is_riot_machine }}
