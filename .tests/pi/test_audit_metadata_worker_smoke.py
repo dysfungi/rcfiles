@@ -2,15 +2,16 @@
 
 The extension's unit harness controls its registration surface and runtime inputs. This
 slow smoke test instead starts the installed Pi CLI in the same child-mode environment
-used by the subagent launcher. It deliberately loads no extension by path: success proves
-that the rendered global extension is discoverable by a real worker and returns a valid
-runtime-owned metadata block.
+used by the subagent launcher. It deliberately loads no extension by path and supplies
+the worker's actual allowlist: success proves the global extension survives Pi's child
+tool filtering and returns a valid runtime-owned metadata block.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -19,7 +20,9 @@ from typing import Any
 import pytest
 
 PI = shutil.which("pi")
-LIVE_EXTENSION = Path.home() / ".pi" / "agent" / "extensions" / "audit-metadata.ts"
+LIVE_AGENT_ROOT = Path.home() / ".pi" / "agent"
+LIVE_EXTENSION = LIVE_AGENT_ROOT / "extensions" / "audit-metadata.ts"
+WORKER_AGENT = LIVE_AGENT_ROOT / "agents" / "worker.md"
 PROMPT = "Call the audit_metadata tool exactly once. Then respond only with the tool result, unchanged."
 
 pytestmark = [
@@ -29,6 +32,13 @@ pytestmark = [
         reason="The applied Pi CLI audit_metadata extension is required for worker smoke coverage",
     ),
 ]
+
+
+def _worker_tool_allowlist() -> str:
+    """Return the applied worker's tools passed by the real subagent launcher."""
+    match = re.search(r"^tools: (?P<tools>.+)$", WORKER_AGENT.read_text(), re.MULTILINE)
+    assert match is not None, f"worker tools allowlist not found in {WORKER_AGENT}"
+    return match["tools"]
 
 
 def _worker_environment() -> dict[str, str]:
@@ -88,8 +98,8 @@ def _assert_valid_runtime_block(result: dict[str, Any]) -> None:
     )
 
 
-def test_applied_pi_worker_discovers_and_calls_audit_metadata() -> None:
-    """A real Pi worker discovers the applied extension and returns verified metadata."""
+def test_worker_allowlist_preserves_audit_metadata_tool() -> None:
+    """The worker allowlist must retain the skill-mandated audit metadata tool."""
     assert PI is not None
     result = subprocess.run(
         [
@@ -97,10 +107,9 @@ def test_applied_pi_worker_discovers_and_calls_audit_metadata() -> None:
             "--mode",
             "json",
             "--no-session",
-            "--no-builtin-tools",
             "--tools",
-            "audit_metadata",
-            "--print",
+            _worker_tool_allowlist(),
+            "-p",
             PROMPT,
         ],
         check=False,
