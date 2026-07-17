@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from conftest import _clean_env
+from _test_env import _clean_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
