@@ -108,3 +108,35 @@ def test_fast_deselects_slow_unknown_and_marked_tests(
     result = pytester.runpytest("--fast", "--duration-file=durations.json", "-q")
 
     result.assert_outcomes(passed=1, deselected=2)
+
+
+def test_store_durations_omits_skipped_tests(pytester: pytest.Pytester) -> None:
+    """Quarantined tests do not acquire a duration from their skip setup report."""
+    repository_root = Path(__file__).resolve().parents[1]
+    pytester.makeconftest((repository_root / "conftest.py").read_text(encoding="utf-8"))
+    classifier_directory = pytester.path / ".tests"
+    classifier_directory.mkdir()
+    (classifier_directory / "_fast_classify.py").write_text(
+        (repository_root / ".tests" / "_fast_classify.py").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    pytester.makepyfile(
+        test_recording="""
+            import pytest
+
+            def test_measured():
+                pass
+
+            @pytest.mark.skip(reason="quarantined")
+            def test_skipped():
+                pass
+        """
+    )
+
+    result = pytester.runpytest(
+        "--store-durations", "--duration-file=durations.json", "-q"
+    )
+
+    result.assert_outcomes(passed=1, skipped=1)
+    durations = json.loads((pytester.path / "durations.json").read_text())
+    assert durations["durations"].keys() == {"test_recording.py::test_measured"}

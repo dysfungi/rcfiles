@@ -38,6 +38,7 @@ class _DurationRecorder:
 
     existing: dict[str, float]
     observed: dict[str, float] = field(default_factory=dict)
+    skipped: set[str] = field(default_factory=set)
 
 
 _duration_recorder: _DurationRecorder | None = None
@@ -122,6 +123,12 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
     """Accumulate setup, call, and teardown time for each test protocol."""
     if _duration_recorder is None:
         return
+    if report.outcome == "skipped":
+        # Skipped tests intentionally have no runtime budget and must not persist a
+        # setup-report duration that would classify them after their quarantine ends.
+        _duration_recorder.skipped.add(report.nodeid)
+        _duration_recorder.observed.pop(report.nodeid, None)
+        return
     if report.when not in {"setup", "call", "teardown"}:
         return
 
@@ -141,8 +148,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     duration_file = _duration_file(session.config)
     durations = dict(recorder.existing)
+    for nodeid in recorder.skipped:
+        durations.pop(nodeid, None)
     for nodeid, observed in recorder.observed.items():
-        durations[nodeid] = max(durations.get(nodeid, 0.0), observed)
+        if nodeid not in recorder.skipped:
+            durations[nodeid] = max(durations.get(nodeid, 0.0), observed)
 
     duration_file.parent.mkdir(parents=True, exist_ok=True)
     payload = {"version": DURATION_FILE_VERSION, "durations": durations}

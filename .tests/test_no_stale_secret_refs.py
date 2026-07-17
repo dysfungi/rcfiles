@@ -48,6 +48,8 @@ _ALLOWED_FILES = {
     ".tests/test_no_stale_secret_refs.py",
     # Asserts the cron runner contains no ".secrets" literal.
     ".tests/local-bin/test_chezmoi_update_cron.py",
+    # Generated node IDs include intentional forbidden-pattern test parameter labels.
+    ".test_durations",
 }
 
 # Audit-trail snapshots legitimately record historical machine state.
