@@ -4,6 +4,7 @@ asdf:luizm/asdf-shfmt                 3.13.1
 chezmoi                               2.71.0
 gh                                    2.96.0            ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0            ~/.config/mise/config.toml       latest
+github:can1357/oh-my-pi               17.0.0            ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 jq                                    1.8.2             ~/.config/mise/config.toml       latest
@@ -15,7 +16,7 @@ npm:@anthropic-ai/claude-code         2.1.210           ~/.config/mise/config.to
 npm:@earendil-works/pi-coding-agent   0.80.6
 npm:@earendil-works/pi-coding-agent   0.80.7            ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0             ~/.config/mise/config.toml       latest
-npm:@tobilu/qmd                       2.5.3             ~/.config/mise/config.toml       latest
+npm:@tobilu/qmd                       2.5.3
 npm:markdownlint-cli                  0.48.0
 ollama                                0.23.4
 pipx:bandit                           1.9.4             ~/.config/mise/config.toml       latest
