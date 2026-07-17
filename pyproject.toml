@@ -9,7 +9,7 @@ test = ["pytest", "pytest-fail-slow", "pyyaml", "xonsh==0.24.0"]
 [tool.pytest.ini_options]
 testpaths = [".tests"]
 markers = [
-    "slow: runtime or integration tests (run in full validation and dedicated CI, not pre-commit)",
+    "slow: manual force-slow override atop automatic duration-based classification",
 ]
 
 [tool.ruff]
