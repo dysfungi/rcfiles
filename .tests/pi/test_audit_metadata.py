@@ -40,15 +40,35 @@ INVALID_CASES = [
         INVALID_VALUES,
     )
 ]
-NO_ARGUMENT_SCENARIOS = {
-    "missing-version": "rejects an unprovable Pi harness label rather than emitting one",
-    "missing-model": "routes through validation instead of dereferencing undefined",
-    "fresh-snapshot": "never caches model, session, host, or version across invocations",
-    "extension-surface": "registers only a tool, no commands/events/exec/bash override",
-}
-NO_ARGUMENT_CASES = [
-    pytest.param(scenario, id=f"{scenario}: {guarantee}")
-    for scenario, guarantee in NO_ARGUMENT_SCENARIOS.items()
+SINGLE_SCENARIO_CASES = [
+    pytest.param(
+        "extraction",
+        id="extraction: returns the exact live model, session, and host values in details",
+    ),
+    pytest.param(
+        "output-format",
+        id="output-format: emits the verified Pi version once as the metadata block's harness provenance",
+    ),
+    pytest.param(
+        "default-runtime",
+        id="default-runtime: reads the current host and Pi version through the extension's default runtime wrapper",
+    ),
+    pytest.param(
+        "missing-version",
+        id="missing-version: rejects an unprovable Pi harness label rather than emitting one",
+    ),
+    pytest.param(
+        "missing-model",
+        id="missing-model: routes through validation instead of dereferencing undefined",
+    ),
+    pytest.param(
+        "fresh-snapshot",
+        id="fresh-snapshot: never caches model, session, host, or version across invocations",
+    ),
+    pytest.param(
+        "extension-surface",
+        id="extension-surface: registers only a tool, no commands/events/exec/bash override",
+    ),
 ]
 
 pytestmark = pytest.mark.skipif(
@@ -72,21 +92,6 @@ def _run_harness(scenario: str, *args: str) -> None:
     assert result.stdout == "audit metadata runtime harness: ok\n"
 
 
-def test_audit_metadata_extracts_runtime_values() -> None:
-    """Return the exact live model, session, and host values in details."""
-    _run_harness("extraction")
-
-
-def test_audit_metadata_formats_paste_ready_runtime_metadata() -> None:
-    """Emit the verified Pi version once as the metadata block's harness provenance."""
-    _run_harness("output-format")
-
-
-def test_audit_metadata_uses_live_default_runtime_identity() -> None:
-    """Read the current host and Pi version through the extension's default runtime wrapper."""
-    _run_harness("default-runtime")
-
-
 @pytest.mark.parametrize(("field", "value"), INVALID_CASES)
 def test_audit_metadata_rejects_invalid_values_without_a_result(
     field: str, value: str
@@ -95,7 +100,7 @@ def test_audit_metadata_rejects_invalid_values_without_a_result(
     _run_harness("invalid-value", field, json.dumps(value))
 
 
-@pytest.mark.parametrize(("scenario",), NO_ARGUMENT_CASES)
-def test_audit_metadata_exercises_no_argument_scenarios(scenario: str) -> None:
+@pytest.mark.parametrize(("scenario",), SINGLE_SCENARIO_CASES)
+def test_audit_metadata_exercises_single_scenario_harness_checks(scenario: str) -> None:
     """Exercise no-argument scenarios; each pytest ID states its regression guarantee."""
     _run_harness(scenario)
