@@ -95,3 +95,23 @@ wording legitimately changed? If the latter, it's bloat.
 
 - Invoke the test runner via `my-mise-en-place` (e.g. a mise-managed `pytest`), not a
   bare binary. Lint/validate alongside via `my-linting`.
+
+## Iteration with slow suites
+
+- During iterative fixes, run the changed test file or test (`mise x -- pytest
+  path/to/test_x.py -v` or `mise x -- pytest path/to/test_x.py::test_name`), not the full
+  suite. Reserve `mise run test` and `pre-commit run --all-files` for the final gate.
+- Likewise, use `pre-commit run --files <touched-files>` while iterating. If it still takes
+  full-suite time, inspect its invocation in `.pre-commit-config.yaml`: a hook with
+  `pass_filenames: false` can run every test regardless of the files passed.
+- Subprocess-heavy full suites can take 5–15+ minutes; concurrent sessions, stale subprocesses,
+  or ordinary load can exceed 60–600s hook timeouts without a code regression.
+- A timeout is not automatically a regression. Check `ps aux` for heavy or orphaned work and
+  `uptime` for load averages, then retry after contention clears; extend timeouts only with a
+  documented reason.
+- Never kill unrelated processes, including concurrent agent sessions, without explicit user
+  authorization. First establish that a process is genuinely orphaned (no live parent or
+  attached terminal/tmux client, and stale for a long time), and report full before/after evidence.
+- Real subprocess harnesses that spawn CLIs such as `pi`, `node`, or `git` trade speed and
+  contention tolerance for behavioral realism. That trade-off supports the preference for real
+  inputs and outputs, and makes scoped iteration especially important.
