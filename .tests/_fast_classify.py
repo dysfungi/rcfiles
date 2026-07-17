@@ -41,10 +41,9 @@ def load_durations(path: Path) -> dict[str, float]:
 
     if not isinstance(payload, dict):
         raise ValueError(f"Invalid duration file {path}: expected an object")
-    if payload.get("version") != DURATION_FILE_VERSION:
-        raise ValueError(
-            f"Unsupported duration file version in {path}: {payload.get('version')!r}"
-        )
+    version = payload.get("version")
+    if type(version) is not int or version != DURATION_FILE_VERSION:
+        raise ValueError(f"Unsupported duration file version in {path}: {version!r}")
 
     durations = payload.get("durations")
     if not isinstance(durations, dict):

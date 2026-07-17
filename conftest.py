@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 import os
 import sys
 import tempfile
@@ -16,6 +17,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
+
+try:
+    import fcntl
+except ImportError:
+    fcntl = None
 
 _TESTS_DIRECTORY = Path(__file__).with_name(".tests")
 _classifier_spec = importlib.util.spec_from_file_location(
@@ -36,7 +42,6 @@ load_durations = _classifier.load_durations
 class _DurationRecorder:
     """Duration data collected for one successful pytest session."""
 
-    existing: dict[str, float]
     observed: dict[str, float] = field(default_factory=dict)
     skipped: set[str] = field(default_factory=set)
 
@@ -51,6 +56,16 @@ def _duration_file(config: pytest.Config) -> Path:
     return Path(config.rootpath) / configured_path
 
 
+def _parse_slow_threshold(value: str) -> float:
+    """Parse a threshold that can safely classify measured test durations."""
+    threshold = float(value)
+    if not math.isfinite(threshold) or threshold < 0:
+        raise pytest.UsageError(
+            "--slow-threshold must be finite and greater than or equal to zero"
+        )
+    return threshold
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register duration-classification controls."""
     group = parser.getgroup("fast tests")
@@ -61,7 +76,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
     group.addoption(
         "--slow-threshold",
-        type=float,
+        type=_parse_slow_threshold,
         default=0.2,
         help="Classify tests at or above this duration in seconds as slow (default: 0.2).",
     )
@@ -78,15 +93,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_sessionstart(session: pytest.Session) -> None:
-    """Load previous measurements before an optional recording session begins."""
+    """Validate persisted data before optional duration recording begins."""
     global _duration_recorder
     if not session.config.getoption("store_durations"):
         _duration_recorder = None
         return
 
-    _duration_recorder = _DurationRecorder(
-        load_durations(_duration_file(session.config))
-    )
+    load_durations(_duration_file(session.config))
+    _duration_recorder = _DurationRecorder()
 
 
 def pytest_collection_modifyitems(
@@ -146,15 +160,36 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     if recorder is None or exitstatus != pytest.ExitCode.OK:
         return
 
-    duration_file = _duration_file(session.config)
-    durations = dict(recorder.existing)
+    _write_durations(_duration_file(session.config), recorder)
+
+
+def _write_durations(duration_file: Path, recorder: _DurationRecorder) -> None:
+    """Merge one successful session's measurements into the duration file."""
+    duration_file.parent.mkdir(parents=True, exist_ok=True)
+    if fcntl is None:
+        _merge_and_write_durations(duration_file, recorder)
+        return
+
+    lock_path = duration_file.with_name(f"{duration_file.name}.lock")
+    with lock_path.open("a", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        try:
+            _merge_and_write_durations(duration_file, recorder)
+        finally:
+            fcntl.flock(lock_file, fcntl.LOCK_UN)
+
+
+def _merge_and_write_durations(
+    duration_file: Path, recorder: _DurationRecorder
+) -> None:
+    """Reload, max-merge, and atomically replace a duration file."""
+    durations = load_durations(duration_file)
     for nodeid in recorder.skipped:
         durations.pop(nodeid, None)
     for nodeid, observed in recorder.observed.items():
         if nodeid not in recorder.skipped:
             durations[nodeid] = max(durations.get(nodeid, 0.0), observed)
 
-    duration_file.parent.mkdir(parents=True, exist_ok=True)
     payload = {"version": DURATION_FILE_VERSION, "durations": durations}
     temporary_path: Path | None = None
     try:
