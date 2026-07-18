@@ -3,6 +3,7 @@ chezmoi                               2.70.5
 dotnet                                10.0.300 (symlink)
 gh                                    2.96.0              ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0              ~/.config/mise/config.toml       latest
+github:can1357/oh-my-pi               17.0.2 (missing)    ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 hadolint                              2.14.0
