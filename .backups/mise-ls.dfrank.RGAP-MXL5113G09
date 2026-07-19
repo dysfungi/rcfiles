@@ -3,14 +3,14 @@ chezmoi                               2.70.5
 dotnet                                10.0.300 (symlink)
 gh                                    2.96.0              ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0              ~/.config/mise/config.toml       latest
-github:can1357/oh-my-pi               17.0.2              ~/.config/mise/config.toml       latest
+github:can1357/oh-my-pi               17.0.4              ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 hadolint                              2.14.0
 jq                                    1.8.2               ~/.config/mise/config.toml       latest
 lua                                   5.5.0
 node                                  24.18.0             ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code         2.1.212             ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code         2.1.214             ~/.config/mise/config.toml       latest
 npm:@earendil-works/pi-coding-agent   0.80.6
 npm:@earendil-works/pi-coding-agent   0.80.10             ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0               ~/.config/mise/config.toml       latest
