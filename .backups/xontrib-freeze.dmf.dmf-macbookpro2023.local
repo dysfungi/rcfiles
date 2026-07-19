@@ -2,6 +2,7 @@ anyio==4.14.1
 async-generator==1.10
 certifi==2026.6.17
 charset-normalizer==3.4.7
+click==8.4.2
 coconut==3.2.0
 cpyparsing==2.4.7.2.4.3
 gnureadline==8.3.3
@@ -14,12 +15,11 @@ pyperclip==1.11.0
 requests==2.34.2
 setuptools==82.0.1
 tstr==0.4.1
-typing-extensions==4.15.0
+typing-extensions==4.16.0
 ujson==5.12.1
 urllib3==2.7.0
 wcwidth==0.8.2
-xonsh==0.23.8
-xontrib-1password==0.3.2
+xonsh==0.24.0
 xontrib-dracula==0.1.1
 xontrib-sh==0.3.2
 xontrib-term-integrations==0.2.3
