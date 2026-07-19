@@ -20,8 +20,6 @@ brew "sqlite"
 brew "archey4"
 # List ASCII idiomatic names and octal/decimal code-point forms
 brew "ascii"
-# Extendable version manager with support for Ruby, Node.js, Erlang & more
-brew "asdf"
 # GNU internationalization (i18n) and localization (l10n) library
 brew "gettext"
 # Bourne-Again SHell, a UNIX command interpreter
@@ -283,4 +281,5 @@ cask "todoist-app", args: { appdir: "/Applications" }
 cask "vlc", args: { appdir: "/Applications" }
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm"
+npm "@anthropic-ai/claude-code"
 npm "corepack"
