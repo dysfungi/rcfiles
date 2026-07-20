@@ -5,7 +5,7 @@ dbmate                                2.33.0
 dotnet                                9.0.202 (symlink)
 dotnet                                9.0.315 (symlink)
 github:aaronriekenberg/rust-parallel  1.23.0             ~/.config/mise/config.toml  latest
-github:can1357/oh-my-pi               17.0.5 (missing)   ~/.config/mise/config.toml  latest
+github:can1357/oh-my-pi               17.0.5             ~/.config/mise/config.toml  latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 github:vultr/vultr-cli                3.10.0
