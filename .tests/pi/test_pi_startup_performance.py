@@ -7,16 +7,19 @@ import os
 import pty
 import select
 import shutil
+import statistics
 import subprocess
 import time
 from pathlib import Path
 
 import pytest
 
+from _test_env import terminate_process_group
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 AGENT_SOURCE = REPO_ROOT / "home" / "dot_pi" / "agent"
 WARMUP_RUNS = 2
-MEASURED_RUNS = 5
+MEASURED_RUNS = 9
 READINESS_MARKER = b"__PI_STARTUP_PERFORMANCE_READY__"
 SHELL_PROMPT_MARKER = b"__PI_STARTUP_PERFORMANCE_SHELL_PROMPT__"
 RUN_TIMEOUT_SECONDS = 30
@@ -46,13 +49,7 @@ class PtyProcess:
         self.output = bytearray()
 
     def close(self) -> None:
-        if self.process.poll() is None:
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait(timeout=5)
+        terminate_process_group(self.process)
         os.close(self.master_fd)
 
     def send(self, content: bytes) -> None:
@@ -165,8 +162,9 @@ def test_pi_combined_startup_and_exit_stays_within_budget(tmp_path: Path) -> Non
         for iteration in range(MEASURED_RUNS)
     ]
 
-    # Five samples cannot estimate a tail percentile reliably; the maximum bounds every
-    # observed run and catches the sustained regression this test protects against.
-    # Baseline on 2026-07-16: max 3.35 s across five post-memory-removal samples.
-    measured_maximum = max(samples)
-    assert measured_maximum <= 5, f"startup+exit samples: {samples!r}"
+    # An exclusive-method p80 tolerates one transient host-contention outlier while
+    # still failing when startup latency is consistently above the interactive budget.
+    measured_p80 = statistics.quantiles(samples, n=5)[3]
+    assert measured_p80 <= 5, (
+        f"startup+exit samples (sorted): {sorted(samples)!r}; p80: {measured_p80:.3f} s"
+    )

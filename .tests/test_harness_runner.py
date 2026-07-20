@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -49,6 +51,47 @@ def test_runner_reaps_sigterm_ignoring_descendants_after_timeout(
     assert process_group_match is not None
     with pytest.raises(ProcessLookupError):
         os.killpg(int(process_group_match.group(1)), 0)
+
+
+class _WindowsFallbackProcess:
+    def __init__(self) -> None:
+        self.terminated = False
+        self.killed = False
+        self.wait_timeouts: list[float] = []
+
+    def poll(self) -> None:
+        return None
+
+    def terminate(self) -> None:
+        self.terminated = True
+
+    def wait(self, *, timeout: float) -> int:
+        self.wait_timeouts.append(timeout)
+        if not self.killed:
+            raise subprocess.TimeoutExpired("test process", timeout)
+        return 0
+
+    def kill(self) -> None:
+        self.killed = True
+
+
+def test_terminate_process_group_uses_process_cleanup_on_windows(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Windows cleanup reaps the leader without POSIX process-group APIs."""
+    process = _WindowsFallbackProcess()
+
+    def fail_killpg(*_: object) -> None:
+        raise AssertionError("Windows fallback must not use os.killpg")
+
+    monkeypatch.setattr(_test_env.os, "name", "nt")
+    monkeypatch.setattr(_test_env.os, "killpg", fail_killpg)
+
+    _test_env.terminate_process_group(cast(subprocess.Popen[Any], process), grace=0.2)
+
+    assert process.terminated
+    assert process.killed
+    assert process.wait_timeouts == [0.2, 0.2]
 
 
 def test_mise_runtime_resolution_skips_with_missing_mise_diagnostics(

@@ -14,7 +14,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import pytest
 
@@ -35,39 +35,65 @@ def _process_group_exists(process_group: int) -> bool:
         os.killpg(process_group, 0)
     except ProcessLookupError:
         return False
+    except PermissionError:
+        # Darwin can reject signal 0 for a process group containing only a
+        # just-terminated zombie; reaping its leader completes cleanup.
+        return False
     return True
 
 
-def _terminate_and_reap_process_group(
-    process: subprocess.Popen[str],
+def terminate_process_group(
+    process: subprocess.Popen[Any],
     *,
-    termination_grace_seconds: float = _PROCESS_GROUP_TERMINATION_TIMEOUT_SECONDS,
+    grace: float = _PROCESS_GROUP_TERMINATION_TIMEOUT_SECONDS,
 ) -> None:
-    """End every harness descendant, including one retaining a captured pipe."""
+    """Terminate and reap a harness process and, on POSIX, its session descendants."""
+    if os.name == "nt":
+        if process.poll() is not None:
+            return
+        process.terminate()
+        try:
+            process.wait(timeout=grace)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=grace)
+        return
+
     process_group = process.pid
+    if process.poll() is not None and not _process_group_exists(process_group):
+        return
+
+    killed = False
     try:
         os.killpg(process_group, signal.SIGTERM)
     except ProcessLookupError:
-        return
+        pass
+    else:
+        deadline = time.monotonic() + grace
+        while True:
+            # Reap the session leader during the grace period. On Darwin, a
+            # terminated-but-unreaped leader can keep its process group visible.
+            process.poll()
+            if not _process_group_exists(process_group):
+                break
+            if time.monotonic() >= deadline:
+                try:
+                    os.killpg(process_group, signal.SIGKILL)
+                    killed = True
+                except ProcessLookupError:
+                    pass
+                break
+            time.sleep(0.05)
 
-    deadline = time.monotonic() + termination_grace_seconds
-    while _process_group_exists(process_group):
-        if time.monotonic() >= deadline:
+    try:
+        process.wait(timeout=grace)
+    except subprocess.TimeoutExpired:
+        if not killed:
             try:
                 os.killpg(process_group, signal.SIGKILL)
             except ProcessLookupError:
-                return
-            break
-        time.sleep(0.05)
-
-    try:
-        process.wait(timeout=termination_grace_seconds)
-    except subprocess.TimeoutExpired:
-        try:
-            os.killpg(process_group, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        process.wait(timeout=termination_grace_seconds)
+                pass
+        process.wait(timeout=grace)
 
 
 def _diagnostic_output(output: str | bytes | None) -> str:
@@ -101,9 +127,7 @@ def _run_process_group(
     try:
         stdout, stderr = process.communicate(timeout=timeout_seconds)
     except subprocess.TimeoutExpired as error:
-        _terminate_and_reap_process_group(
-            process, termination_grace_seconds=termination_grace_seconds
-        )
+        terminate_process_group(process, grace=termination_grace_seconds)
         stdout, stderr = process.communicate()
         raise AssertionError(
             f"Timed out after {timeout_seconds} seconds during {phase}.\n"
@@ -112,9 +136,7 @@ def _run_process_group(
             f"stderr:\n{stderr or _diagnostic_output(error.stderr)}"
         ) from error
     finally:
-        _terminate_and_reap_process_group(
-            process, termination_grace_seconds=termination_grace_seconds
-        )
+        terminate_process_group(process, grace=termination_grace_seconds)
 
     return subprocess.CompletedProcess(command, process.returncode, stdout, stderr)
 
