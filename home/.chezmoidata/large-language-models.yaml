@@ -3,6 +3,10 @@
 # (pi, omp, codex, claude, agy, ollama) DERIVE their native config from this catalog
 # so a model is declared once and funnels everywhere.
 #
+# For TrueFoundry-routed models, verify and refresh context windows, pricing, and
+# reasoning levels with TrueFoundry's list-models API—not scraped public provider
+# documentation: https://www.truefoundry.com/docs/apply-api-create-models#list-models
+#
 # Per-model fields (generic — no tool-prefixed keys):
 #   id           canonical model id (as the gateway/provider expects it)
 #   vendor       maker: anthropic | openai | google  (harness-compat filter)
