@@ -42,6 +42,7 @@ def decide(cases: list[dict]) -> list[dict]:
     "tool_name",
     [
         "subagent",
+        "audit_metadata",
         "write",
         "edit",
         "questionnaire",

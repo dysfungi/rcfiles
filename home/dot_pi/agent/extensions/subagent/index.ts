@@ -29,7 +29,7 @@ import {
 import { Container, Markdown, Spacer, Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { type AgentConfig, type AgentExecution, type AgentScope, discoverAgents } from "./agents.ts";
-import { childEnvironment } from "./child-env.mjs";
+import { childEnvironment, rootIdentityEnvelope } from "./child-env.mjs";
 import { acquireWorktreeLease, releaseWorktreeLease, resolveApprovedWorktree } from "../worktree-approval-registry.mjs";
 
 const MAX_PARALLEL_TASKS = 8;
@@ -324,6 +324,7 @@ function prepareRequests(defaultCwd: string, sessionId: string, agents: AgentCon
 
 async function runSingleAgent(
 	sessionId: string,
+	rootIdentity: string,
 	prepared: PreparedAgent,
 	agentName: string,
 	task: string,
@@ -399,7 +400,7 @@ async function runSingleAgent(
 			const invocation = getPiInvocation(args);
 			const proc = spawn(invocation.command, invocation.args, {
 				cwd: effectiveCwd,
-				env: childEnvironment(process.env, { execution, approval: lease }),
+				env: childEnvironment(process.env, { execution, approval: lease, rootIdentity }),
 				shell: false,
 				stdio: ["ignore", "pipe", "pipe"],
 			});
@@ -581,6 +582,8 @@ export default function (pi: ExtensionAPI) {
 			const hasTasks = (params.tasks?.length ?? 0) > 0;
 			const hasSingle = Boolean(params.agent && params.task);
 			const modeCount = Number(hasChain) + Number(hasTasks) + Number(hasSingle);
+			const sessionId = ctx.sessionManager.getSessionId();
+			const rootIdentity = rootIdentityEnvelope(process.env, ctx);
 
 			const makeDetails =
 				(mode: "single" | "parallel" | "chain") =>
@@ -630,7 +633,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if (params.chain && params.chain.length > 0) {
-				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, params.chain, true);
+				const preflight = prepareRequests(ctx.cwd, sessionId, agents, params.chain, true);
 				if (!preflight.prepared)
 					return {
 						content: [{ type: "text", text: `Chain launch rejected: ${preflight.reason}` }],
@@ -660,7 +663,8 @@ export default function (pi: ExtensionAPI) {
 						: undefined;
 
 					const result = await runSingleAgent(
-						ctx.sessionManager.getSessionId(),
+						sessionId,
+						rootIdentity,
 						preflight.prepared[i],
 						step.agent,
 						taskWithContext,
@@ -729,7 +733,7 @@ export default function (pi: ExtensionAPI) {
 					}
 				};
 
-				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, params.tasks);
+				const preflight = prepareRequests(ctx.cwd, sessionId, agents, params.tasks);
 				if (!preflight.prepared)
 					return {
 						content: [{ type: "text", text: `Parallel launch rejected: ${preflight.reason}` }],
@@ -739,7 +743,8 @@ export default function (pi: ExtensionAPI) {
 
 				const results = await mapWithConcurrencyLimit(params.tasks, MAX_CONCURRENCY, async (t, index) => {
 					const result = await runSingleAgent(
-						ctx.sessionManager.getSessionId(),
+						sessionId,
+						rootIdentity,
 						preflight.prepared![index],
 						t.agent,
 						t.task,
@@ -779,7 +784,7 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			if (params.agent && params.task) {
-				const preflight = prepareRequests(ctx.cwd, ctx.sessionManager.getSessionId(), agents, [{ agent: params.agent, cwd: params.cwd }]);
+				const preflight = prepareRequests(ctx.cwd, sessionId, agents, [{ agent: params.agent, cwd: params.cwd }]);
 				if (!preflight.prepared)
 					return {
 						content: [{ type: "text", text: `Agent launch rejected: ${preflight.reason}` }],
@@ -787,7 +792,8 @@ export default function (pi: ExtensionAPI) {
 						isError: true,
 					};
 				const result = await runSingleAgent(
-					ctx.sessionManager.getSessionId(),
+					sessionId,
+					rootIdentity,
 					preflight.prepared[0],
 					params.agent,
 					params.task,

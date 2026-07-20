@@ -3,9 +3,9 @@ name: my-audit-trail
 description: >-
   Audit-trail conventions for durable, LLM-authored records. Use when
   authoring a git commit body, pull request (PR) description, Jira comment, incident
-  note, or any change record: explicit agent attribution, per-change rationale, and compact
-  grep-friendly metadata (Co-Authored-By / Model / Model-Provider / Session-ID /
-  Username / Hostname) with each value's source recorded inline.
+  note, or any change record: an explicit Authored-By trailer, per-change rationale, and compact
+  grep-friendly runtime provenance (Model / Model-Provider / Model-Gateway / Session-ID / Hostname)
+  with each value's source recorded inline.
 ---
 
 # Audit records
@@ -15,31 +15,33 @@ Jira comment, incident note, change record — make authorship and rationale exp
 
 ## Attribution & rationale
 
-- State agent authorship via an `Authored By` field naming the tool/agent used.
+- State agent authorship via an `Authored-By` trailer naming the harness and its version.
 - Include a concise summary explaining each material change and WHY.
 - If materially changing a Jira ticket's saved fields (title, description, acceptance
   criteria, scope, status), add a Jira comment recording each change + rationale.
 
-## Commit co-authorship (agent GitHub identity)
+## Commit authorship
 
-The human is commit author and committer; the agent machine user is co-author.
-{{- if hasPrefix "dot_claude/" $.chezmoi.sourceFile }}
-Claude Code appends this exact trailer automatically via the `attribution.commit`
-setting — do **not** add it manually:
-{{- else }}
-Append this exact trailer to every agent-authored commit:
-{{- end }}
+The human remains commit author and committer. Append an `Authored-By` trailer to every
+agent-authored commit with the verified harness name and version. Never emit a
+`Co-Authored-By` trailer.
 
-```text
-Co-Authored-By: {{ .my.github_agent.username }} <{{ .my.github_agent.email }}>
-```
+## Runtime provenance block (keep it greppable)
 
-## Compact metadata (keep it greppable)
+Use this authoritative field order:
 
-Include: `Co-Authored-By`, `Model`, `Model-Provider`, `Session-ID`, `Username`, `Hostname`.
-Record each value's source inline — e.g. `Model: claude-opus-4-8 (source: session)`.
-Terse source labels: `session` for live runtime values; the config filename for applied
-config (e.g. `~/.codex/config.toml`).
+1. `Authored-By`
+2. `Model`
+3. `Model-Provider`
+4. `Model-Gateway` — conditional: emit only when the model is routed through a
+   gateway/proxy; omit the line entirely for direct providers.
+5. `Session-ID`
+6. `Hostname`
+
+For harnesses without a runtime metadata tool, record each value's source inline — e.g.
+`Model: claude-opus-4-8 (source: session)`. Terse source labels: `session` for live
+runtime values; the applied config filename (e.g. `~/.codex/config.toml`) for config
+values.
 
 ## Resolution order (per attribute)
 

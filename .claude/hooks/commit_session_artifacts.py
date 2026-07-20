@@ -30,11 +30,31 @@ WHY it always exits 0:
 """
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
 
 ARTIFACT_FILES = [".claude/settings.json", "todo.txt", "done.txt"]
+_VERSION_PATTERN = re.compile(r"\b\d+(?:\.\d+)+(?:[-+][0-9A-Za-z.-]+)?\b")
+
+
+def claude_code_identity() -> tuple[str, str]:
+    """Return Claude Code's identity and the source that verified it."""
+    try:
+        result = subprocess.run(
+            ["claude", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "Claude Code", "unavailable"
+
+    match = _VERSION_PATTERN.search(result.stdout) if result.returncode == 0 else None
+    if match:
+        return f"Claude Code {match.group()}", "claude --version"
+    return "Claude Code", "unavailable"
 
 
 def git(*args: str, cwd: Path) -> subprocess.CompletedProcess:
@@ -61,18 +81,17 @@ def has_changes(repo_root: Path) -> list[str]:
 
 def build_commit_message(changed: list[str], session_id: str) -> str:
     file_list = ", ".join(changed)
-    username = os.environ.get("USER", "unknown")
     hostname = os.uname().nodename
     model = os.environ.get("CLAUDE_MODEL", "unknown")
+    authored_by, authored_by_source = claude_code_identity()
     return (
         f"chore(session): auto-commit session artifacts\n"
         f"\n"
         f"Files: {file_list}\n"
         f"\n"
-        f"Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\n"
+        f"Authored-By: {authored_by} (source: {authored_by_source})\n"
         f"Model: {model} (source: session)\n"
         f"Session-ID: {session_id} (source: session)\n"
-        f"Username: {username} (source: session)\n"
         f"Hostname: {hostname} (source: session)"
     )
 

@@ -41,6 +41,7 @@ def test_subagent_execution_preflight_and_leases() -> None:
         key: value
         for key, value in os.environ.items()
         if not key.startswith(("GIT_", "PI_SUBAGENT", "PI_WORKTREE"))
+        and key != "PI_ROOT_IDENTITY"
     }
     package_dir, node = _mise_pi_runtime_paths(REPO_ROOT, environment)
     result = _run_process_group(

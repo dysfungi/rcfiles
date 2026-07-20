@@ -58,6 +58,7 @@ def _fixture_catalog(
                 "base_url": "https://example.invalid/v1",
                 "api": "openai-completions",
                 "api_key_op": "op://fixture/token",
+                "routed_via_gateway": True,
             }
             model["reasoning"] = reasoning
             if thinking_level_map is not None:

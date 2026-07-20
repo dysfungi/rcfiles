@@ -1,16 +1,15 @@
 {{- includeTemplate ".chezmoitemplates/agents/skills/my-audit-trail.SKILL.md.tmpl" . | trimSuffix "\n" }}
 
-## Pi worker runtime metadata
+## Pi runtime metadata
 
-The shared examples above use generic per-field `(source: ...)` annotations. For Pi, the
-literal authoritative format is `audit_metadata`'s returned block: one `Agent-Harness: Pi
-<version>` line followed by plain field lines with no per-field suffixes. Call it and paste
-exactly what it returns, not the shared example's shape.
+`audit_metadata` returns the exhaustive, authoritative Pi provenance block. In any session
+that authors a durable record, call it once and paste its output verbatim. Add nothing else:
+no `Username`, no `Co-Authored-By`, and no derived, guessed, or hand-written fields.
 
-In an execution/worker session that authors a durable record, call `audit_metadata` once
-before authoring it and paste its returned block verbatim. Never hand-write, guess, infer
-from config or defaults, or use `unknown` for Model, Model-Provider, Session-ID, or Hostname;
-`audit_metadata` is their only valid source.
+The block contains `Authored-By`, `Model`, `Model-Provider`, `Model-Gateway` when present,
+`Session-ID`, and `Hostname`. It reports the root session's identity, automatically propagated
+through subagent launches, and is callable from both root and worker sessions. Its output is
+the only valid source for every field in the block; do not add `(source: ...)` suffixes.
 
 `git commit` and `gh pr create` remain direct and un-intercepted: nothing attaches this block
 or blocks publication if it is omitted. This is a manual, cooperative requirement.

@@ -4,6 +4,7 @@ import { isAbsolute, relative, resolve } from "node:path";
 const ROOT_MODES = new Set(["tui", "rpc"]);
 const EXACTLY_ALLOWED_TOOLS = new Set([
 	"subagent",
+	"audit_metadata",
 	"write",
 	"edit",
 	"questionnaire",
