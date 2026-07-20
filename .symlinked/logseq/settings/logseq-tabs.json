@@ -1,4 +1,5 @@
 {
+  "disabled": false,
   "tabs:toggle-pin": "",
   "tabs:close": "mod+shift+w",
   "tabs:select-next": "ctrl+tab",
@@ -6,6 +7,5 @@
   "tabs:inherit-custom-css": false,
   "tabs:show-single-tab": true,
   "tabs:close-button-left": false,
-  "tabs:hide-close-all-button": false,
-  "disabled": false
+  "tabs:hide-close-all-button": false
 }

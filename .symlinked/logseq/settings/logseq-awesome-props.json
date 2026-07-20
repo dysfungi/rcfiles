@@ -1,4 +1,5 @@
 {
+  "disabled": false,
   "hideHeading": null,
   "hideDotProps": true,
   "hideSetOfProps": "propToHide,propAnother,color,hidetitle,banner",
@@ -80,6 +81,5 @@
   "usersIconsHeading": null,
   "iconsPropsPage": "awesome-props-icons",
   "otherHeading": null,
-  "pluginUpdateNotify": true,
-  "disabled": false
+  "pluginUpdateNotify": true
 }

@@ -1,4 +1,5 @@
 {
+  "disabled": false,
   "tabsHeading": null,
   "tabsPosition": "TopPanel",
   "tabsStyle": "Awesome",
@@ -18,6 +19,5 @@
   "contentHeading": null,
   "alwaysShowNewBlockBullet": false,
   "otherHeading": null,
-  "killAnimations": true,
-  "disabled": false
+  "killAnimations": true
 }
