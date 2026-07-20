@@ -29,6 +29,8 @@ from typing import Any, TextIO
 import pytest
 import yaml
 
+from _test_env import terminate_process_group
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 CATALOG = MANAGED_ROOT / ".chezmoidata" / "large-language-models.yaml"
@@ -347,15 +349,7 @@ def _close_stdin(process: subprocess.Popen[str]) -> None:
 
 def _terminate_and_reap(process: subprocess.Popen[str]) -> None:
     """Bound a failed request without leaving a Pi child for later tests."""
-    if process.poll() is not None:
-        return
-
-    process.terminate()
-    try:
-        process.wait(timeout=PROCESS_TERMINATION_TIMEOUT_SECONDS)
-    except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait(timeout=PROCESS_TERMINATION_TIMEOUT_SECONDS)
+    terminate_process_group(process, grace=PROCESS_TERMINATION_TIMEOUT_SECONDS)
 
 
 def _close_and_reap(process: subprocess.Popen[str]) -> None:
@@ -467,6 +461,7 @@ def _run_runtime_check(
             encoding="utf-8",
             errors="replace",
             env=environment,
+            start_new_session=True,
         )
         responses, response_reader = _start_response_reader(process)
         try:
@@ -580,6 +575,7 @@ def test_rpc_timeout_reaps_child_and_joins_response_reader(tmp_path: Path) -> No
             encoding="utf-8",
             errors="replace",
             env=_clean_environment(),
+            start_new_session=True,
         )
         responses, response_reader = _start_response_reader(process)
         try:

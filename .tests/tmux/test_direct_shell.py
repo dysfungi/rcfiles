@@ -32,6 +32,8 @@ from typing import Literal
 
 import pytest
 
+from _test_env import terminate_process_group
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 TMUX_CONFIG = MANAGED_ROOT / "dot_config" / "tmux" / "tmux.conf"
@@ -382,10 +384,8 @@ Path(sys.argv[1]).write_text(
                 f"tmux client {client.process.pid} detachment",
             )
             # Detached tmux clients need not exit while their owning PTY remains
-            # open. Reap this test-owned process after tmux has detached it.
-            if client.process.poll() is None:
-                client.process.kill()
-            client.process.wait(timeout=_TIMEOUT_SECONDS)
+            # open. Reap this test-owned client process group after tmux detaches it.
+            terminate_process_group(client.process)
         except subprocess.TimeoutExpired as error:
             raise AssertionError(
                 f"tmux client did not detach: {client.process.pid}"
@@ -420,9 +420,7 @@ Path(sys.argv[1]).write_text(
         self.command("kill-server")
         for client in self.clients:
             try:
-                if client.process.poll() is None:
-                    client.process.kill()
-                client.process.wait(timeout=_TIMEOUT_SECONDS)
+                terminate_process_group(client.process)
             finally:
                 with suppress(OSError):
                     os.close(client.master_fd)

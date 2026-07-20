@@ -25,6 +25,8 @@ from typing import Literal
 
 import pytest
 
+from _test_env import terminate_process_group
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANAGED_ROOT = REPO_ROOT / "home"
 MAIL_MODULE = MANAGED_ROOT / "dot_config" / "xonsh" / "exact_rc.d" / "85-mail.xsh"
@@ -103,13 +105,11 @@ class InteractiveXonsh:
         return self.read_until(PROMPT_MARKER)
 
     def close(self) -> None:
-        """Reap only the test-owned interactive process and its PTY."""
+        """Reap the test-owned interactive process group and its PTY."""
         if self.closed:
             return
         self.closed = True
-        if self.process.poll() is None:
-            self.process.kill()
-        self.process.wait(timeout=_TIMEOUT_SECONDS)
+        terminate_process_group(self.process)
         os.close(self.master_fd)
 
 
