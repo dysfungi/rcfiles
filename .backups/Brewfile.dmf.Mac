@@ -1,5 +1,5 @@
-tap "1password/tap"
-tap "jesseduffield/lazydocker"
+tap "1password/tap", trusted: true
+tap "jesseduffield/lazydocker", trusted: true
 # Search tool like grep, but optimized for programmers
 brew "ack"
 # Run your GitHub Actions locally
@@ -232,6 +232,8 @@ brew "zlib"
 brew "zsh"
 # Additional completion definitions for zsh
 brew "zsh-completions"
+# A simple terminal UI for docker, written in Go
+brew "jesseduffield/lazydocker/lazydocker"
 # Password manager that keeps all passwords secure behind one password
 cask "1password", args: { appdir: "/Applications" }
 # Command-line interface for 1Password
@@ -281,4 +283,5 @@ cask "todoist-app", args: { appdir: "/Applications" }
 cask "vlc", args: { appdir: "/Applications" }
 # GPU-accelerated cross-platform terminal emulator and multiplexer
 cask "wezterm"
+npm "@anthropic-ai/claude-code"
 npm "corepack"
