@@ -73,6 +73,7 @@ is_wsl = false
 
 path_list = {{ $managed_paths | toToml }}
 path_str = {{ $managed_paths | join .chezmoi.pathListSeparator | replace "\\" "/" | quote }}
+path_home_list = {{ without $paths_home (joinPath .chezmoi.homeDir ".local/share/mise/shims") | toToml }}
 
 github_token = {{ $my_github_token | quote }}
 {{- if $is_riot_machine }}

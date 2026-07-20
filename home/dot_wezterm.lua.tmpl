@@ -84,15 +84,18 @@ if is_unix_like then
   local usrLocalSbin = "/usr/local/sbin"
   local homebrewBin = "/opt/homebrew/bin"
   local homeLocal = wezterm.home_dir .. "/.local"
-  local miseShims = homeLocal .. "/share/mise/shims"
-  local homeLocalBin = homeLocal .. "/bin"
   local xBin = homeLocal .. "/xonsh-env/xbin"
 
   local parentPaths = filterExistingDirs(split(os.getenv "PATH" or "", ":"))
+  -- xBin is retained because wezterm searches myPaths to LOCATE the xonsh binary
+  -- to spawn (firstFoundPathFor below); xonsh lives only in ~/.local/xonsh-env/xbin
+  -- and is absent from the minimal PATH a GUI launch (Dock/Spotlight) inherits from
+  -- launchd. ~/.local/bin and mise shims are intentionally NOT listed as PATH entries
+  -- here: mise `_.path` supplies ~/.local/bin (and mise activation the shims) at the
+  -- front of every interactive shell, with a keep-first dedup dropping any duplicate
+  -- that macOS path_helper preserves.
   local myPaths = filterExistingDirs {
     xBin,
-    homeLocalBin,
-    miseShims,
     usrLocalBin,
     usrLocalSbin,
     homebrewBin,
@@ -166,7 +169,6 @@ elseif is_windows then
 
   config.set_environment_variables = {
     PATH = table.concat({
-      xonshBin,
       gitBin,
       os.getenv "PATH",
     }, ";"),
