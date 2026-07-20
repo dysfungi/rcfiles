@@ -1,13 +1,13 @@
 annotated-doc==0.0.4
 annotated-types==0.7.0
-anyio==4.14.1
+anyio==4.14.2
 bottle==0.13.4
 cachetools==7.1.4
 certifi==2026.6.17
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
 click==8.4.2
 fancycompleter==0.11.1
-fastapi==0.139.0
+fastapi==0.139.2
 greenlet==3.5.3
 h11==0.16.0
 httpcore==1.0.9
@@ -18,7 +18,7 @@ msgpack==1.2.1
 packaging==26.2
 pdbpp==0.12.1
 pinboard==2.1.9
-pip @ file:///private/var/folders/1r/b8l6nzhj4zdbz5jmjdhqbprw0000gn/T/tmp5hel3src/pip-26.1.2-py3-none-any.whl
+pip @ file:///private/var/folders/1r/b8l6nzhj4zdbz5jmjdhqbprw0000gn/T/tmp5hel3src/pip-26.1.2-py3-none-any.whl#sha256=382ff9f685ee3bc25864f820aa50505825f10f5458ffff07e30a6d96e5715cab
 pluggy==1.6.0
 pydantic==2.13.4
 pydantic-core==2.46.4
