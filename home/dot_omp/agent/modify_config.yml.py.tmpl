@@ -51,7 +51,7 @@
       "marketplace" (dict "autoUpdate" "off")
       "personality" "pragmatic"
       "steeringMode" "all"
-      "plan" (dict "defaultOnStartup" true) -}}
+      "plan" (dict "enabled" true "defaultOnStartup" true) -}}
 """Merge managed OMP preferences into its mutable ``config.yml`` state.
 
 OMP may write unrelated runtime settings to this file. Chezmoi renders the
