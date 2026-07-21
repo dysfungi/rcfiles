@@ -49,6 +49,7 @@ PROCESS_EXIT_TIMEOUT_SECONDS = 30
 PROCESS_TERMINATION_TIMEOUT_SECONDS = 5
 
 RIOT_SCOPE_IDS = [
+    "openai/openai/gpt-5.6-sol",
     "openai/openai/gpt-5.6-terra",
     "openai/openai/gpt-5.6-luna",
     "truefoundry/claude-vertex/anthropic-claude-opus-4-8",
@@ -70,6 +71,11 @@ RUNTIME_RAW_OPENAI_MODEL = {
 }
 
 RUNTIME_RIOT_SCOPED_MODELS = [
+    {
+        "provider": "openai",
+        "id": "openai/gpt-5.6-sol",
+        "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
+    },
     {
         "provider": "openai",
         "id": "openai/gpt-5.6-terra",
@@ -107,16 +113,16 @@ RUNTIME_RIOT_SCOPED_MODELS = [
     },
 ]
 
-RUNTIME_DEFAULT_MODEL = RUNTIME_RIOT_SCOPED_MODELS[2]
+RUNTIME_DEFAULT_MODEL = RUNTIME_RIOT_SCOPED_MODELS[3]
 RUNTIME_RIOT_CYCLE_RESULTS = [
-    *RUNTIME_RIOT_SCOPED_MODELS[3:],
-    *RUNTIME_RIOT_SCOPED_MODELS[:3],
+    *RUNTIME_RIOT_SCOPED_MODELS[4:],
+    *RUNTIME_RIOT_SCOPED_MODELS[:4],
 ]
 RUNTIME_ROLE_MODELS = {
-    "planner": RUNTIME_RIOT_SCOPED_MODELS[3],
-    "worker": RUNTIME_RIOT_SCOPED_MODELS[0],
-    "reviewer": RUNTIME_RIOT_SCOPED_MODELS[0],
-    "scout": RUNTIME_RIOT_SCOPED_MODELS[1],
+    "planner": RUNTIME_RIOT_SCOPED_MODELS[0],
+    "worker": RUNTIME_RIOT_SCOPED_MODELS[1],
+    "reviewer": RUNTIME_RIOT_SCOPED_MODELS[1],
+    "scout": RUNTIME_RIOT_SCOPED_MODELS[2],
 }
 
 
