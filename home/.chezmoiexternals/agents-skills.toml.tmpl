@@ -65,10 +65,11 @@ refreshPeriod = "168h"
 include = ["*/agents/**"]
 stripComponents = 2
 
+# Temporary until https://gh.riotgames.com/live-operations/agent-skills/pull/13 merges: source top-level skills from its head branch.
 [riot-liveops-dot-agents-skills]
 targetPath = ".agents/skills"
 type = "archive"
-url = "https://{{ .chezmoi.username }}:{{ .riot_github_token }}@gh.riotgames.com/live-operations/agent-skills/archive/main.tar.gz"
+url = "https://{{ .chezmoi.username }}:{{ .riot_github_token }}@gh.riotgames.com/live-operations/agent-skills/archive/refs/heads/feat/riot-uneco-flx-skills.tar.gz"
 refreshPeriod = "168h"
 include = ["*/skills/**"]
 stripComponents = 2
