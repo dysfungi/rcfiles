@@ -119,3 +119,4 @@ x 2026-07-20 Pin LiveOps agent skills external to open PR 13 branch +chezmoi +sk
 x 2026-07-20 (B) Assign missing OMP model role defaults +omp +models @worktree:.worktree/fix/omp-model-role-defaults session:019f8263-4a74-7000-abdf-d90058378e9b agent:omp model:truefoundry-openai/openai/gpt-5.6-sol
 x 2026-07-20 (B) Fix pytest xonsh plugin dependency: declared xonsh==0.24.0 imports undeclared prompt_toolkit, causing the configured fast pre-commit hook to fail in fresh worktrees +testing +chezmoi @bug
 x 2026-07-20 (B) Restore OMP TrueFoundry Opus default +omp @worktree:.worktree/fix/omp-truefoundry-anthropic
+x 2026-07-20 (A) Fix OMP TrueFoundry Opus budget-thinking regression +omp @worktree:.worktree/fix/omp-truefoundry-budget
