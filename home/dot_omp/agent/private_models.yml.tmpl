@@ -7,9 +7,9 @@
   use API-key auth: relying on OMP's token heuristic can select its OAuth client,
   whose beta query parameter is rejected by TrueFoundry. Models without a gateway
   remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
-  the TrueFoundry [1m] model variant. For TrueFoundry's Anthropic Messages gateway,
-  OMP uses manual budget thinking: the gateway's Vertex backend rejects OMP's
-  adaptive-thinking mode, while Pi continues to use the catalog's `adaptive` flag.
+  the TrueFoundry [1m] model variant. TrueFoundry's Vertex backend requires OMP's
+  native adaptive-thinking mode for catalog models marked `adaptive`, but rejects
+  strict tool definitions.
 */ -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
@@ -41,6 +41,10 @@ providers:
     apiKey: {{ onepasswordRead $provider.gateway.api_key_op | quote }}
     auth: apiKey
     api: {{ $provider.gateway.api | quote }}
+    {{- if and (eq $provider.gateway.provider "truefoundry") (eq $provider.gateway.api "anthropic-messages") }}
+    # TrueFoundry's Vertex backend rejects OMP's strict-tool request path.
+    disableStrictTools: true
+    {{- end }}
     models:
     {{- $rendered := list -}}
     {{- range $m := $ns.models -}}
@@ -70,7 +74,7 @@ providers:
           {{- fail (printf "omp models.yml: model %s does not support default thinking level %q" $m.id $.default_thinking_level) -}}
         {{- end }}
         thinking:
-          mode: {{ if and (eq $m.gateway.provider "truefoundry") (eq $m.gateway.api "anthropic-messages") }}anthropic-budget-effort{{ else if dig "adaptive" false $m }}anthropic-adaptive{{ else if eq $m.gateway.api "google-generative-ai" }}google-level{{ else }}effort{{ end }}
+          mode: {{ if dig "adaptive" false $m }}anthropic-adaptive{{ else if eq $m.gateway.api "google-generative-ai" }}google-level{{ else }}effort{{ end }}
           efforts:
           {{- range $level := $thinking_levels }}
             {{- if ne (index $m.thinking_level_map $level) nil }}
