@@ -7,8 +7,9 @@
   use API-key auth: relying on OMP's token heuristic can select its OAuth client,
   whose beta query parameter is rejected by TrueFoundry. Models without a gateway
   remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
-  the TrueFoundry [1m] model variant; `adaptive`
-  selects OMP's native Anthropic adaptive-thinking mode.
+  the TrueFoundry [1m] model variant. TrueFoundry's Vertex backend requires OMP's
+  native adaptive-thinking mode for catalog models marked `adaptive`, but rejects
+  strict tool definitions.
 */ -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
@@ -40,6 +41,10 @@ providers:
     apiKey: {{ onepasswordRead $provider.gateway.api_key_op | quote }}
     auth: apiKey
     api: {{ $provider.gateway.api | quote }}
+    {{- if and (eq $provider.gateway.provider "truefoundry") (eq $provider.gateway.api "anthropic-messages") }}
+    # TrueFoundry's Vertex backend rejects OMP's strict-tool request path.
+    disableStrictTools: true
+    {{- end }}
     models:
     {{- $rendered := list -}}
     {{- range $m := $ns.models -}}
