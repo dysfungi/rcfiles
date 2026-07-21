@@ -7,7 +7,7 @@
 # reasoning levels with TrueFoundry's list-models API—not scraped public provider
 # documentation: https://www.truefoundry.com/docs/apply-api-create-models#list-models
 #
-# Per-model fields (generic — no tool-prefixed keys):
+# Per-model fields (generic plus explicit OMP wire overrides):
 #   id           canonical model id (as the gateway/provider expects it)
 #   vendor       maker: anthropic | openai | google  (harness-compat filter)
 #   alias        optional CLI handle; claude reads opus/sonnet/haiku
@@ -19,6 +19,8 @@
 #                so `routed_via_gateway` distinguishes actual gateway routing.
 #   reasoning,ctx,max_tokens,cost,one_m,adaptive   pi catalog facts
 #                (ctx/max_tokens/cost required by pi for ENABLED gateway models)
+#   omp_thinking_mode optional OMP wire-mode override when a gateway differs
+#                from Pi's transport behavior
 #   thinking_level_map complete Pi logical-level map for reasoning models:
 #                all seven keys (off/minimal/low/medium/high/xhigh/max) are
 #                required; null hides an unsupported level. Values are native
@@ -308,7 +310,8 @@ riot:
         ctx: 200000
         max_tokens: 32000
         one_m: true
-        adaptive: true # Vertex rejects legacy thinking for opus 4.7+; force adaptive
+        adaptive: true # Pi's TrueFoundry route requires adaptive thinking.
+        omp_thinking_mode: budget # OMP's Messages route rejects adaptive thinking.
         cost: &opus_cost
           input: 15
           output: 75
