@@ -82,8 +82,6 @@ $defs:
         type: boolean
       adaptive:
         type: boolean
-      omp_thinking_mode:
-        enum: [anthropic-adaptive, budget, effort, google-level]
       cost:
         $ref: "#/$defs/cost"
       enabled:
