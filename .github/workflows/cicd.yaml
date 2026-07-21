@@ -82,5 +82,5 @@ jobs:
           # Keep direct test dependencies aligned with uv.lock.
           python -m venv .venv
           source .venv/bin/activate
-          python -m pip install --disable-pip-version-check pytest==9.1.1 xonsh==0.24.0
+          python -m pip install --disable-pip-version-check pytest==9.1.1 "xonsh[ptk]==0.24.0"
           python -m pytest .tests/tmux/test_direct_shell.py .tests/xonsh/test_mail.py -v
