@@ -63,8 +63,9 @@ Keep the root/main conversation thread as **pure orchestration**. Route read-hea
 
 **omp specifics:**
 
-- Use the built-in `task` tool for subagent fan-out. v1 uses omp's bundled default agent roles as-is; no custom role files or launcher extension are configured.
-- `task.isolation.mode: auto` with `merge: branch` enables Git-only isolation when a task item opts in. In a non-Git directory, its read-only repository-root check produces a visible error without side effects rather than silently falling back.
+- Outside native plan mode, use the built-in `task` tool for subagent fan-out. Inside native plan mode, use `plan_task` only when work requires Bash, write/xd-device, or MCP; native `task` plus eval `agent()` remain read-only upstream.
+- `plan_task` starts a separate non-plan process in the same cwd and can mutate it despite the root's read-only mode. That worker independently loads MCP/xdev and is not registered in the parent's hub/agent lifecycle.
+- `task.isolation.mode: auto` with `merge: branch` enables Git-only isolation when a built-in task item opts in. In a non-Git directory, its read-only repository-root check produces a visible error without side effects rather than silently falling back.
 - omp v1 has no root-thread guard, plan-mode extension, MCP-mutation policy, or `worktree_start`/`worktree_status`/`worktree_stop` lifecycle tools. `tools.approvalMode: yolo` auto-approves without those guardrails; confine early use to disposable directories or branches until the tracked gaps are ported.
 {{- end }}
 

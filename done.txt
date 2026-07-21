@@ -120,3 +120,4 @@ x 2026-07-20 (B) Assign missing OMP model role defaults +omp +models @worktree:.
 x 2026-07-20 (B) Fix pytest xonsh plugin dependency: declared xonsh==0.24.0 imports undeclared prompt_toolkit, causing the configured fast pre-commit hook to fail in fresh worktrees +testing +chezmoi @bug
 x 2026-07-20 (B) Restore OMP TrueFoundry Opus default +omp @worktree:.worktree/fix/omp-truefoundry-anthropic
 x 2026-07-20 (A) Fix OMP TrueFoundry Opus budget-thinking regression +omp @worktree:.worktree/fix/omp-truefoundry-budget
+x 2026-07-20 (B) Implement OMP plan_task RPC escape hatch +omp @worktree:.worktree/feat/omp-plan-task session:019f8294-1796-7000-9954-c26a1ca8b3f7 agent:omp model:truefoundry-openai/openai/gpt-5.6-terra
