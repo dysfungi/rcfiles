@@ -40,6 +40,6 @@ stylua                                2.5.2
 taplo                                 0.10.0
 terraform                             1.15.5
 tmux                                  3.6a
-uv                                    0.11.29           ~/.config/mise/config.toml       latest
+uv                                    0.11.30           ~/.config/mise/config.toml       latest
 vultr-cli                             3.10.0            ~/.config/mise/config.toml       latest
 yarn                                  1.22.22
