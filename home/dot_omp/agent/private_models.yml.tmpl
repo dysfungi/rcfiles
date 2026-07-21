@@ -7,8 +7,9 @@
   use API-key auth: relying on OMP's token heuristic can select its OAuth client,
   whose beta query parameter is rejected by TrueFoundry. Models without a gateway
   remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
-  the TrueFoundry [1m] model variant; `adaptive`
-  selects OMP's native Anthropic adaptive-thinking mode.
+  the TrueFoundry [1m] model variant. For TrueFoundry's Anthropic Messages gateway,
+  OMP uses manual budget thinking: the gateway's Vertex backend rejects OMP's
+  adaptive-thinking mode, while Pi continues to use the catalog's `adaptive` flag.
 */ -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
 {{ includeTemplate "llm/validate.tmpl" $ns -}}
@@ -69,7 +70,7 @@ providers:
           {{- fail (printf "omp models.yml: model %s does not support default thinking level %q" $m.id $.default_thinking_level) -}}
         {{- end }}
         thinking:
-          mode: {{ if dig "adaptive" false $m }}anthropic-adaptive{{ else if eq $m.gateway.api "google-generative-ai" }}google-level{{ else }}effort{{ end }}
+          mode: {{ if and (eq $m.gateway.provider "truefoundry") (eq $m.gateway.api "anthropic-messages") }}anthropic-budget-effort{{ else if dig "adaptive" false $m }}anthropic-adaptive{{ else if eq $m.gateway.api "google-generative-ai" }}google-level{{ else }}effort{{ end }}
           efforts:
           {{- range $level := $thinking_levels }}
             {{- if ne (index $m.thinking_level_map $level) nil }}
