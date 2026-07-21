@@ -133,6 +133,12 @@ def _run(script: Path, stdin: str) -> subprocess.CompletedProcess[str]:
             id="truefoundry-anthropic-with-slash-delimited-model-id",
         ),
         pytest.param(
+            "google-vertex",
+            "claude-vertex/fixture-model",
+            "google-vertex/claude-vertex/fixture-model",
+            id="google-vertex-with-slash-delimited-model-id",
+        ),
+        pytest.param(
             "truefoundry-openai",
             "openai/gpt-5-mini",
             "truefoundry-openai/openai/gpt-5-mini",

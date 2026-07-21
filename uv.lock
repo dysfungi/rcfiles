@@ -12,7 +12,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-fail-slow" },
     { name = "pyyaml" },
-    { name = "xonsh" },
+    { name = "xonsh", extra = ["ptk"] },
 ]
 
 [package.metadata]
@@ -22,7 +22,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-fail-slow" },
     { name = "pyyaml" },
-    { name = "xonsh", specifier = "==0.24.0" },
+    { name = "xonsh", extras = ["ptk"], specifier = "==0.24.0" },
 ]
 
 [[package]]
@@ -62,12 +62,33 @@ wheels = [
 ]
 
 [[package]]
+name = "prompt-toolkit"
+version = "3.0.52"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wcwidth" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a1/96/06e01a7b38dce6fe1db213e061a4602dd6032a8a97ef6c1a862537732421/prompt_toolkit-3.0.52.tar.gz", hash = "sha256:28cde192929c8e7321de85de1ddbe736f1375148b02f2e17edd840042b1be855", size = 434198, upload-time = "2025-08-27T15:24:02.057Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/03/0d3ce49e2505ae70cf43bc5bb3033955d2fc9f932163e84dc0779cc47f48/prompt_toolkit-3.0.52-py3-none-any.whl", hash = "sha256:9aac639a3bbd33284347de5ad8d68ecc044b91a762dc39b7c21095fcd6a19955", size = 391431, upload-time = "2025-08-27T15:23:59.498Z" },
+]
+
+[[package]]
 name = "pygments"
 version = "2.20.0"
 source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz", hash = "sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f", size = 4955991, upload-time = "2026-03-29T13:29:33.898Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl", hash = "sha256:81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176", size = 1231151, upload-time = "2026-03-29T13:29:30.038Z" },
+]
+
+[[package]]
+name = "pyperclip"
+version = "1.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/52/d87eba7cb129b81563019d1679026e7a112ef76855d6159d24754dbd2a51/pyperclip-1.11.0.tar.gz", hash = "sha256:244035963e4428530d9e3a6101a1ef97209c6825edab1567beac148ccc1db1b6", size = 12185, upload-time = "2025-09-26T14:40:37.245Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/df/80/fc9d01d5ed37ba4c42ca2b55b4339ae6e200b456be3a1aaddf4a9fa99b8c/pyperclip-1.11.0-py3-none-any.whl", hash = "sha256:299403e9ff44581cb9ba2ffeed69c7aa96a008622ad0c46cb575ca75b5b84273", size = 11063, upload-time = "2025-09-26T14:40:36.069Z" },
 ]
 
 [[package]]
@@ -146,6 +167,15 @@ wheels = [
 ]
 
 [[package]]
+name = "wcwidth"
+version = "0.8.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/34/74/c6428f875774288bec1396f5bfcbc2d925700a4dad61727fd5f2b12f249d/wcwidth-0.8.2.tar.gz", hash = "sha256:91fbef97204b96a3d4d421609b80340b760cf33e26da123ff243d76b1fda8dda", size = 1466253, upload-time = "2026-06-29T18:11:11.601Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/42/3e5985a0a7e57de470b320c6d6a1a67c844f6737a587f3d44dd13d1819e7/wcwidth-0.8.2-py3-none-any.whl", hash = "sha256:d63947694a0539a1d51e01eda7caf800c291020e6cdd7e28ad7b14dd33ad4f85", size = 323166, upload-time = "2026-06-29T18:11:09.888Z" },
+]
+
+[[package]]
 name = "xonsh"
 version = "0.24.0"
 source = { registry = "https://pypi.org/simple" }
@@ -155,4 +185,10 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/36/f3/012e918eeadcecc07c1e06f3904d4ffea6a9a1c2dd4c24c6a37b6bf58122/xonsh-0.24.0-py312-none-any.whl", hash = "sha256:59b8e0d6d3c739aa5295f823d277888b465eb84abdcff010e04556d61f047408", size = 817374, upload-time = "2026-07-02T11:02:41.889Z" },
     { url = "https://files.pythonhosted.org/packages/60/24/f594ce2a4864eb4cc650608adbc13e1c4737af9503e689e82488a8772c6d/xonsh-0.24.0-py313-none-any.whl", hash = "sha256:4e5b1b936305e2ebd3901a60d588e2b8aaf28d1af60cbc7696a21cb45d2672db", size = 817975, upload-time = "2026-07-02T11:02:41.835Z" },
     { url = "https://files.pythonhosted.org/packages/f5/89/5f80e6be505c4c6326f7802ca5561c635c996bf667cb175d5919a76e4059/xonsh-0.24.0-py314-none-any.whl", hash = "sha256:c8fe2aa1e3a88bc106a47f5892b6b9c97d9ba83571b8c7a979db784dd2922529", size = 817948, upload-time = "2026-07-02T11:02:35.388Z" },
+]
+
+[package.optional-dependencies]
+ptk = [
+    { name = "prompt-toolkit" },
+    { name = "pyperclip" },
 ]
