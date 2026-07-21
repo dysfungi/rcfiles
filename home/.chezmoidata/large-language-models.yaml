@@ -230,7 +230,7 @@ my:
           cache_read: 0.15
           cache_write: 0
         enabled: true
-      - id: gemini-3.1-flash-lite # personal: no -preview suffix
+      - id: gemini-3.1-flash-lite # GA: no -preview suffix (see riot entry, line 368)
         vendor: google
         gateway: *google
         display_name: Gemini 3.1 Flash-Lite
@@ -365,7 +365,7 @@ riot:
           cache_write: 0
         enabled: true
         roles: [designer]
-      - id: google-vertexai/gemini-3.1-flash-lite-preview
+      - id: google-vertexai/gemini-3.1-flash-lite # GA: no -preview suffix (see personal entry, line 233)
         vendor: google
         gateway: *tf_openai
         display_name: Gemini 3.1 Flash-Lite
