@@ -28,6 +28,14 @@ A Git-worktree approval establishes the Git workflow and local-file-mutation tru
 
 Perforce-native write isolation equivalent to Git worktrees is not currently provided; use separate P4 workspaces to prevent concurrent changelist reassignment.
 
+## Line-Ending Preservation & Pre-Shelve Audit
+
+- Prefer surgical, targeted edits for existing text files instead of rewriting the whole file.
+- If a full rewrite is unavoidable, explicitly write the file with LF (`\n`) line endings.
+- Avoid PowerShell `Set-Content`, `Out-File`, and Windows redirection (`>`) for source or configuration files unless both the encoding and line endings are explicitly controlled.
+- Before shelving, run a byte-level newline audit over every changed text file. Reject `\r\r\n`, `\r\n`, and lone `\r`; changed text files must contain LF-only line endings.
+- Review `p4 diff` before shelving. Newline-only corruption changes nearly every line and must be corrected before the shelf is created.
+
 ## Submit Rules
 
 - **Sync-before-submit**: Always `p4 sync` before `p4 submit`. Resolve conflicts with `p4 resolve -am` (auto-merge) before retrying.
