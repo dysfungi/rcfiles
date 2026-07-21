@@ -267,7 +267,7 @@ def test_manages_native_plan_leaves_without_claiming_unmanaged_siblings(
         ),
         """plan:
   enabled: false
-  defaultOnStartup: true
+  defaultOnStartup: false
   userPreference: retain-me
 """,
     )
@@ -275,7 +275,7 @@ def test_manages_native_plan_leaves_without_claiming_unmanaged_siblings(
     assert result.returncode == 0, result.stderr
     assert yaml.safe_load(result.stdout)["plan"] == {
         "enabled": True,
-        "defaultOnStartup": False,
+        "defaultOnStartup": True,
         "userPreference": "retain-me",
     }
 
