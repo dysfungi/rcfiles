@@ -29,6 +29,7 @@ pipx:yamllint                         1.38.0
 poetry                                2.4.1
 pre-commit                            4.6.0             ~/.config/mise/config.toml       latest
 python                                3.11.7
+python                                3.12.13
 python                                3.13.14           ~/.config/mise/config.toml       3.13
 python                                3.14.3
 ruff                                  0.15.22           ~/.config/mise/config.toml       latest
