@@ -350,34 +350,34 @@ riot:
         enabled: true
         default_for: [agy]
         roles: [vision]
-      - id: google-vertexai/gemini-3.5-flash
+      - id: google-vertexai/gemini-3.6-flash
         vendor: google
         gateway: *tf_openai
-        display_name: Gemini 3.5 Flash
+        display_name: Gemini 3.6 Flash
         reasoning: true
         thinking_level_map: *thinking_google_flash_openai
         ctx: 1048576
         max_tokens: 65536
         cost:
           input: 1.5
-          output: 9.0
+          output: 7.5
           cache_read: 0.15
-          cache_write: 0
+          cache_write: 1.0
         enabled: true
         roles: [designer]
-      - id: google-vertexai/google-gemini-3.1-flash-lite
+      - id: google-vertexai/gemini-3.5-flash-lite
         vendor: google
         gateway: *tf_openai
-        display_name: Gemini 3.1 Flash-Lite
+        display_name: Gemini 3.5 Flash-Lite
         reasoning: true
         thinking_level_map: *thinking_google_flash_openai
         ctx: 1048576
         max_tokens: 65536
         cost:
-          input: 0.25
-          output: 1.5
-          cache_read: 0.025
-          cache_write: 0
+          input: 0.3
+          output: 2.5
+          cache_read: 0.03
+          cache_write: 1.0
         enabled: true
         roles: [tiny]
       # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
