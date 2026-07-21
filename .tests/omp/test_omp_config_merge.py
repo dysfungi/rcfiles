@@ -269,15 +269,18 @@ def test_manages_native_plan_leaves_without_claiming_unmanaged_siblings(
   enabled: false
   defaultOnStartup: false
   userPreference: retain-me
+defaultThinkingLevel: high
 """,
     )
 
     assert result.returncode == 0, result.stderr
-    assert yaml.safe_load(result.stdout)["plan"] == {
+    merged = yaml.safe_load(result.stdout)
+    assert merged["plan"] == {
         "enabled": True,
         "defaultOnStartup": True,
         "userPreference": "retain-me",
     }
+    assert merged["defaultThinkingLevel"] == "auto"
 
 
 def test_malformed_yaml_fails_loudly_without_a_traceback(tmp_path: Path) -> None:
