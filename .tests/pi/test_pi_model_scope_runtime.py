@@ -55,8 +55,8 @@ RIOT_SCOPE_IDS = [
     "truefoundry/claude-vertex/anthropic-claude-opus-4-8",
     "truefoundry/claude-vertex/anthropic-claude-sonnet-5",
     "openai/google-vertexai/gemini-3.1-pro-preview",
-    "openai/google-vertexai/gemini-3.5-flash",
-    "openai/google-vertexai/google-gemini-3.1-flash-lite",
+    "openai/google-vertexai/gemini-3.6-flash",
+    "openai/google-vertexai/gemini-3.5-flash-lite",
 ]
 # The runtime fixture fixes its own level so role resolution remains independent
 # of future catalog-default changes.
@@ -103,12 +103,12 @@ RUNTIME_RIOT_SCOPED_MODELS = [
     },
     {
         "provider": "openai",
-        "id": "google-vertexai/gemini-3.5-flash",
+        "id": "google-vertexai/gemini-3.6-flash",
         "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
     {
         "provider": "openai",
-        "id": "google-vertexai/google-gemini-3.1-flash-lite",
+        "id": "google-vertexai/gemini-3.5-flash-lite",
         "thinkingLevel": RUNTIME_FIXTURE_THINKING_LEVEL,
     },
 ]
