@@ -37,6 +37,9 @@
   {{- end -}}
 {{- end -}}
 {{- $managed := dict
+      "colorBlindMode" true
+      "symbolPreset" "nerd"
+      "setupVersion" 1
       "tools" (dict "approvalMode" "yolo")
       "task" (dict "isolation" (dict "mode" "auto" "merge" "branch"))
       "mcp" (dict "enableProjectConfig" false)
