@@ -1,0 +1,15 @@
+{{- /*
+  Gateway-routing provenance for audit_metadata. This non-secret companion to
+  private_models.json is rendered for the active machine only. Pi's custom
+  provider configuration also represents direct endpoints (for example Google),
+  so only catalog entries explicitly marked routed_via_gateway appear here.
+*/ -}}
+{{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
+{{ includeTemplate "llm/validate.tmpl" $ns -}}
+{{- $providers := dict -}}
+{{- range $m := $ns.models -}}
+  {{- if and $m.enabled (hasKey $m "gateway") (dig "gateway" "routed_via_gateway" false $m) -}}
+    {{- $_ := set $providers $m.gateway.provider $m.gateway.name -}}
+  {{- end -}}
+{{- end -}}
+{{ $providers | mustToJson }}

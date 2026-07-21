@@ -121,7 +121,8 @@ $defs:
   gateway:
     type: object
     additionalProperties: false
-    required: [id, provider, name, base_url, api, api_key_op]
+    required:
+      [id, provider, name, base_url, api, api_key_op, routed_via_gateway]
     properties:
       id:
         type: string
@@ -142,6 +143,8 @@ $defs:
           ]
       api_key_op:
         type: string
+      routed_via_gateway:
+        type: boolean
 
   cost:
     type: object

@@ -63,7 +63,7 @@ function writeAgents(root) {
 	writeAgent(root, "invalid", "not-a-class");
 }
 
-function runner(cwd, sessionId) {
+function runner(cwd, sessionId, model = { id: "root-model", provider: "root-provider" }) {
 	let tool;
 	subagentExtension({
 		registerTool(definition) {
@@ -75,6 +75,7 @@ function runner(cwd, sessionId) {
 		ctx: {
 			cwd,
 			hasUI: false,
+			model,
 			sessionManager: { getSessionId: () => sessionId },
 			ui: { confirm: async () => false },
 		},
@@ -177,7 +178,7 @@ function resultText(result) {
 	return content.text;
 }
 
-function fakePi() {
+function fakePi({ extensionPath, packageDir }) {
 	const directory = mkdtempSync(join(tmpdir(), "pi-subagent-fake-"));
 	const script = join(directory, "pi.mjs");
 	const log = join(directory, "invocations.jsonl");
@@ -185,6 +186,9 @@ function fakePi() {
 		script,
 		[
 			'import { appendFileSync, existsSync } from "node:fs";',
+			'import { createRequire } from "node:module";',
+			'import { join, resolve } from "node:path";',
+			'import { pathToFileURL } from "node:url";',
 			"const record = {",
 			"\tcwd: process.cwd(),",
 			"\targs: process.argv.slice(2),",
@@ -195,7 +199,31 @@ function fakePi() {
 			"\trepoRoot: process.env.PI_WORKTREE_REPO_ROOT,",
 			"\tgeneration: process.env.PI_WORKTREE_GENERATION,",
 			"\tbranch: process.env.PI_WORKTREE_BRANCH,",
+			"\trootIdentity: process.env.PI_ROOT_IDENTITY,",
+			"\tlevel: process.env.FAKE_PI_NESTED_LEVEL,",
+			"\tprocessId: process.pid,",
+			"\tparentProcessId: process.ppid,",
 			"};",
+			"let recorded = false;",
+			'const recordInvocation = () => { if (!recorded) { appendFileSync(process.env.FAKE_PI_LOG, `${JSON.stringify(record)}\\n`); recorded = true; } };',
+			'if (process.env.FAKE_PI_BEHAVIOR === "nested-launcher" && process.env.FAKE_PI_NESTED_LEVEL === "first") {',
+			"\trecordInvocation();",
+			"\tconst packageDir = process.env.FAKE_PI_PACKAGE_DIR;",
+			"\tconst require = createRequire(pathToFileURL(join(packageDir, \"package.json\")));",
+			"\tconst nodeModules = join(packageDir, \"node_modules\");",
+			"\tconst jiti = require(\"jiti\")(import.meta.url, { alias: {",
+			"\t\t\"@earendil-works/pi-ai\": join(nodeModules, \"@earendil-works\", \"pi-ai\", \"dist\", \"index.js\"),",
+			"\t\t\"@earendil-works/pi-coding-agent\": join(packageDir, \"dist\", \"index.js\"),",
+			"\t\t\"@earendil-works/pi-tui\": join(nodeModules, \"@earendil-works\", \"pi-tui\", \"dist\", \"index.js\"),",
+			"\t\ttypebox: join(nodeModules, \"typebox\", \"build\", \"index.mjs\"),",
+			"\t} });",
+			"\tconst { default: subagentExtension } = await jiti.import(resolve(process.env.FAKE_PI_SUBAGENT_EXTENSION));",
+			"\tlet tool;",
+			"\tsubagentExtension({ registerTool(definition) { tool = definition; } });",
+			"\tprocess.env.FAKE_PI_NESTED_LEVEL = \"grandchild\";",
+			"\tconst result = await tool.execute(\"nested-subagent-test\", { agent: \"reader\", task: \"launch the grandchild\", agentScope: \"project\", confirmProjectAgents: false }, undefined, undefined, { cwd: process.cwd(), hasUI: false, model: { id: \"model-B\", provider: \"provider-B\" }, sessionManager: { getSessionId: () => \"session-B\" }, ui: { confirm: async () => false } });",
+			'\tif (result.isError) throw new Error(result.content?.[0]?.text ?? "nested launcher failed");',
+			"}",
 			'if (process.env.FAKE_PI_BEHAVIOR === "hold" || process.env.FAKE_PI_BEHAVIOR === "ignore-term") {',
 			'\tif (process.env.FAKE_PI_BEHAVIOR === "ignore-term") process.on("SIGTERM", () => {});',
 			"\tconst release = process.env.FAKE_PI_RELEASE;",
@@ -205,7 +233,7 @@ function fakePi() {
 			"\t\tprocess.exit(0);",
 			"\t}, 10);",
 			"}",
-			'appendFileSync(process.env.FAKE_PI_LOG, `${JSON.stringify(record)}\\n`);',
+			"recordInvocation();",
 			'if (process.env.FAKE_PI_BEHAVIOR === "signal") process.kill(process.pid, "SIGTERM");',
 		].join("\n"),
 	);
@@ -222,6 +250,15 @@ function invocations(log) {
 	} catch {
 		return [];
 	}
+}
+
+function rootIdentity(model, provider, sessionId) {
+	return JSON.stringify({ model, provider, sessionId });
+}
+
+function assertRootIdentity(record, expected) {
+	assert.equal(record.rootIdentity, expected, "child must receive the exact root identity envelope");
+	assert.deepEqual(JSON.parse(record.rootIdentity), JSON.parse(expected));
 }
 
 function assertChildLaunchArgs(log) {
@@ -279,6 +316,128 @@ function approve(root, worker, sessionId) {
 	});
 	assert.equal(approval.ok, true, approval.reason);
 	return approval.approval;
+}
+
+async function testRootIdentityPropagatesAcrossLaunchModes(fake) {
+	const { root } = worktreeFixture();
+	writeAgents(root);
+	const cases = [
+		["single", { agent: "reader", task: "inspect", agentScope: "project", confirmProjectAgents: false }, 1],
+		[
+			"parallel",
+			{
+				tasks: [
+					{ agent: "reader", task: "inspect the first concern" },
+					{ agent: "reviewer", task: "inspect the second concern" },
+				],
+				agentScope: "project",
+				confirmProjectAgents: false,
+			},
+			2,
+		],
+		[
+			"chain",
+			{
+				chain: [
+					{ agent: "reader", task: "inspect first" },
+					{ agent: "reviewer", task: "review {previous}" },
+				],
+				agentScope: "project",
+				confirmProjectAgents: false,
+			},
+			2,
+		],
+	];
+	for (const [mode, params, expectedLaunches] of cases) {
+		writeFileSync(fake.log, "");
+		const model = { id: `root-${mode}-model`, provider: `root-${mode}-provider` };
+		const sessionId = `root-${mode}-session`;
+		const result = await withFakePi(fake, () => invoke(runner(root, sessionId, model), params));
+		assert.equal(result.isError, undefined, resultText(result));
+		const records = invocations(fake.log);
+		assert.equal(records.length, expectedLaunches, `${mode} launch count`);
+		const expected = rootIdentity(model.id, model.provider, sessionId);
+		for (const record of records) assertRootIdentity(record, expected);
+		assertChildLaunchArgs(fake.log);
+	}
+}
+
+async function testNestedRootIdentityIsForwardedUnchanged(fake, packageDir) {
+	assert.equal(process.env.PI_ROOT_IDENTITY, undefined, "nested forwarding must begin at the root");
+	const { root } = worktreeFixture();
+	writeAgents(root);
+	const rootModel = { id: "model-A", provider: "provider-A" };
+	const rootSessionId = "session-A";
+	const envelope = rootIdentity(rootModel.id, rootModel.provider, rootSessionId);
+	const result = await withFakePi(
+		fake,
+		() =>
+			invoke(runner(root, rootSessionId, rootModel), {
+				agent: "reader",
+				task: "launch the nested child",
+				agentScope: "project",
+				confirmProjectAgents: false,
+			}),
+		{
+			FAKE_PI_BEHAVIOR: "nested-launcher",
+			FAKE_PI_NESTED_LEVEL: "first",
+			FAKE_PI_PACKAGE_DIR: packageDir,
+			FAKE_PI_SUBAGENT_EXTENSION: extensionPath,
+		},
+	);
+	assert.equal(result.isError, undefined, resultText(result));
+	const records = invocations(fake.log);
+	assert.equal(records.length, 2, "the first-level child must spawn one real grandchild");
+	const [firstLevelRecord, grandchildRecord] = records;
+	assert.equal(firstLevelRecord.level, "first");
+	assert.equal(grandchildRecord.level, "grandchild");
+	assert.notEqual(firstLevelRecord.processId, grandchildRecord.processId, "nested forwarding must cross a real process boundary");
+	assert.equal(grandchildRecord.parentProcessId, firstLevelRecord.processId, "the grandchild must be spawned by the first-level child");
+	assertRootIdentity(firstLevelRecord, envelope);
+	assertRootIdentity(grandchildRecord, envelope);
+	assert.deepEqual(JSON.parse(grandchildRecord.rootIdentity), {
+		model: "model-A",
+		provider: "provider-A",
+		sessionId: "session-A",
+	});
+	assert.notDeepEqual(JSON.parse(grandchildRecord.rootIdentity), {
+		model: "model-B",
+		provider: "provider-B",
+		sessionId: "session-B",
+	});
+	assertChildLaunchArgs(fake.log);
+}
+
+async function testRootIdentityValidationFailsLoud(fake) {
+	const { root } = worktreeFixture();
+	writeAgents(root);
+	const params = { agent: "reader", task: "reject invalid root identity", agentScope: "project", confirmProjectAgents: false };
+	await assert.rejects(
+		() => withFakePi(fake, () => invoke(runner(root, "invalid-root", { id: "", provider: "root-provider" }), params)),
+		/PI_ROOT_IDENTITY context field 'model' must be a non-empty string/,
+	);
+	assert.deepEqual(invocations(fake.log), []);
+
+	await assert.rejects(
+		() => withFakePi(fake, () => invoke(runner(root, "nested-invalid-root"), params), { PI_ROOT_IDENTITY: "not-json" }),
+		/PI_ROOT_IDENTITY envelope contains invalid JSON/,
+	);
+	assert.deepEqual(invocations(fake.log), []);
+
+	for (const [caseName, inherited, pattern] of [
+		["missing-provider", { model: "root-model", sessionId: "root-session" }, /missing field 'provider'/],
+		["blank-provider", { model: "root-model", provider: " ", sessionId: "root-session" }, /field 'provider' must be a non-empty string/],
+		["non-string-provider", { model: "root-model", provider: 42, sessionId: "root-session" }, /field 'provider' must be a non-empty string/],
+		["missing-session-id", { model: "root-model", provider: "root-provider" }, /missing field 'sessionId'/],
+		["blank-session-id", { model: "root-model", provider: "root-provider", sessionId: " \t" }, /field 'sessionId' must be a non-empty string/],
+		["non-string-session-id", { model: "root-model", provider: "root-provider", sessionId: 42 }, /field 'sessionId' must be a non-empty string/],
+	]) {
+		await assert.rejects(
+			() => withFakePi(fake, () => invoke(runner(root, `invalid-${caseName}`), params), { PI_ROOT_IDENTITY: JSON.stringify(inherited) }),
+			pattern,
+		);
+		assert.deepEqual(invocations(fake.log), [], `${caseName} must reject before spawning a child`);
+	}
 }
 
 async function testReadOnlyExecution(fake) {
@@ -1012,7 +1171,13 @@ async function testSignalTerminationAndAbortEscalation(fake) {
 const previousPhase = process.env.PI_ROOT_PHASE;
 process.env.PI_ROOT_PHASE = "execute";
 try {
-	const fake = fakePi();
+	const fake = fakePi({ extensionPath, packageDir });
+	await testRootIdentityPropagatesAcrossLaunchModes(fake);
+	writeFileSync(fake.log, "");
+	await testNestedRootIdentityIsForwardedUnchanged(fake, packageDir);
+	writeFileSync(fake.log, "");
+	await testRootIdentityValidationFailsLoud(fake);
+	writeFileSync(fake.log, "");
 	await testReadOnlyExecution(fake);
 	writeFileSync(fake.log, "");
 	await testModelScopePassThrough(fake);

@@ -12,9 +12,11 @@
 #   vendor       maker: anthropic | openai | google  (harness-compat filter)
 #   alias        optional CLI handle; claude reads opus/sonnet/haiku
 #   display_name optional pi picker label; else derived from id
-#   gateway      *anchor (id/provider/name/base_url/api/api_key_op); omit for
-#                built-ins (pi provider then = vendor). `id` is the stable logical
-#                gateway identifier used where a harness needs its own provider name.
+#   gateway      *anchor (id/provider/name/base_url/api/api_key_op/routed_via_gateway);
+#                omit for built-ins (pi provider then = vendor). `id` is the stable
+#                logical gateway identifier used where a harness needs its own provider
+#                name. Custom-provider entries may still target a direct vendor endpoint,
+#                so `routed_via_gateway` distinguishes actual gateway routing.
 #   reasoning,ctx,max_tokens,cost,one_m,adaptive   pi catalog facts
 #                (ctx/max_tokens/cost required by pi for ENABLED gateway models)
 #   thinking_level_map complete Pi logical-level map for reasoning models:
@@ -128,6 +130,7 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       base_url: &tf_base "https://truefoundry.riotgames.io/api/llm"
       api: anthropic-messages
       api_key_op: &tf_key "op://Riot/TrueFoundry - Personal Access Token/credential"
+      routed_via_gateway: true
     truefoundry-openai: &tf_openai
       id: truefoundry-openai
       # same TF endpoint, OpenAI wire — serves openai/* AND google-vertexai/*
@@ -144,6 +147,7 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       # /v1/chat/completions (needs /v1/responses); gemini works on it too.
       api: openai-responses
       api_key_op: *tf_key
+      routed_via_gateway: true
     google: &google # personal, direct to Google
       id: google
       provider: google
@@ -151,6 +155,7 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       base_url: "https://generativelanguage.googleapis.com/v1beta"
       api: google-generative-ai
       api_key_op: "op://CLI/Gemini API Key - Frankish/credential"
+      routed_via_gateway: false
 
 my:
   llm:
