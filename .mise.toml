@@ -16,6 +16,7 @@ python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 # Pi 0.80.6 requires Node >=22.19.0; pin the runtime used by its RPC regression.
 node = "24.18.0"
 "npm:@earendil-works/pi-coding-agent" = "0.80.6"
+bun = "latest"
 uv                     = "latest"
 chezmoi                = "latest"
 "pipx:pre-commit"      = "latest"

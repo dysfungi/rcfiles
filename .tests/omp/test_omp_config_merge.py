@@ -252,6 +252,34 @@ def test_empty_stdin_is_a_valid_new_omp_config(tmp_path: Path) -> None:
     }
 
 
+def test_manages_native_plan_leaves_without_claiming_unmanaged_siblings(
+    tmp_path: Path,
+) -> None:
+    """Native plan entry stays enabled while user-owned plan state survives."""
+    result = _run(
+        _render_script(
+            tmp_path,
+            _catalog(
+                [],
+                gateway_id="truefoundry-anthropic",
+                model_id="claude-vertex/fixture-model",
+            ),
+        ),
+        """plan:
+  enabled: false
+  defaultOnStartup: false
+  userPreference: retain-me
+""",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert yaml.safe_load(result.stdout)["plan"] == {
+        "enabled": True,
+        "defaultOnStartup": True,
+        "userPreference": "retain-me",
+    }
+
+
 def test_malformed_yaml_fails_loudly_without_a_traceback(tmp_path: Path) -> None:
     """Invalid persisted OMP state is reported instead of being overwritten."""
     result = _run(
