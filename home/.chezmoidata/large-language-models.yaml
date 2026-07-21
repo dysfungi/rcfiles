@@ -276,7 +276,7 @@ riot:
           cache_write: 3.125
         enabled: true
         default_for: [codex]
-        roles: [reviewer, worker, "slow:high"]
+        roles: [reviewer, worker, task, "advisor:medium", "slow:high"]
       - id: openai/gpt-5.6-luna
         vendor: openai
         gateway: *tf_openai
@@ -345,6 +345,7 @@ riot:
           cache_write: 0
         enabled: true
         default_for: [agy]
+        roles: ["vision:high"]
       - id: google-vertexai/gemini-3.5-flash
         vendor: google
         gateway: *tf_openai
@@ -359,6 +360,7 @@ riot:
           cache_read: 0.15
           cache_write: 0
         enabled: true
+        roles: ["designer:high"]
       - id: google-vertexai/gemini-3.1-flash-lite-preview
         vendor: google
         gateway: *tf_openai
@@ -373,6 +375,7 @@ riot:
           cache_read: 0.025
           cache_write: 0
         enabled: true
+        roles: ["tiny:minimal"]
       # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
       # thus unreachable via /model (re-enable by flipping the flag); haiku still
       # feeds claude via its alias. Kept here for quick re-enable + id/spec record.
