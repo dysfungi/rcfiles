@@ -4,9 +4,9 @@
   Gateway-backed enabled models become OMP provider/model definitions keyed by
   their catalog gateway id. Each model id stays verbatim because TrueFoundry
   requires its complete catalog id on the wire. Gateway credentials explicitly
-  use API-key auth: relying on OMP's token heuristic can select its OAuth client,
-  whose beta query parameter is rejected by TrueFoundry. Models without a gateway
-  remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
+  use API-key auth: OMP's OAuth client emits a beta query parameter, and TrueFoundry
+  rejects Anthropic beta headers. This route therefore cannot use beta-gated Anthropic
+  features such as adaptive thinking and context management. Models without a gateway remain OMP built-ins, matching Pi's custom-provider scope. `one_m` is represented by
   the TrueFoundry [1m] model variant; `adaptive` selects OMP's native Anthropic
   adaptive-thinking mode unless `omp_thinking_mode` provides a route-specific override.
 */ -}}

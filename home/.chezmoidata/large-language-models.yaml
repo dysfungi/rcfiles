@@ -125,8 +125,8 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       xhigh: null
       max: null
   gateways:
-    truefoundry-anthropic:
-      &tf_anthropic # OMP selects Vertex-safe Anthropic request shaping by provider ID.
+    # TrueFoundry rejects Anthropic beta headers, so OMP uses its beta-free Vertex shaping.
+    truefoundry-anthropic: &tf_anthropic
       id: google-vertex
       provider: truefoundry
       name: TrueFoundry (Riot)
@@ -311,7 +311,7 @@ riot:
         max_tokens: 32000
         one_m: true
         adaptive: true # Pi's TrueFoundry route requires adaptive thinking.
-        omp_thinking_mode: budget # OMP's Messages route rejects adaptive thinking.
+        omp_thinking_mode: budget # Avoids TrueFoundry's beta-gated adaptive thinking and context management.
         cost: &opus_cost
           input: 15
           output: 75
