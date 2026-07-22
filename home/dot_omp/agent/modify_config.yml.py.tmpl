@@ -54,19 +54,181 @@ from typing import Any
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 
+AUTO = -1
+
 MODEL_ROLES: dict[str, str] = json.loads({{ $model_roles | mustToJson | quote }})
 MANAGED_MODEL_ROLE_NAMES: list[str] = json.loads(
     {{ $target_roles | mustToJson | quote }}
 )
 MANAGED: dict[str, Any] = {
+    ################################
+    # https://omp.sh/docs/settings #
+    # `omp config list`            #
+    ################################
+
+    ##############
+    # APPEARANCE #
+    ##############
+
+    "colorBlindMode": True,
+    "display": {
+        "cacheMissMarker": True,
+        "collapseCompacted": True,
+        "shimmer": "classic",
+        "showTokenUsage": True,
+        "smoothStreaming": True,
+    },
+    "statusLine": {
+        "compactThinkingLevel": False,
+        "preset": "nerd",
+        "separator": "powerline-thin",
+        "showHookStatus": True,
+    },
+    "symbolPreset": "nerd",
+    "terminal": {
+        "showImages": True,
+        "showProgress": True,
+    },
+    "theme": {
+        # "dark": "TODO",
+        # "light": "TODO",
+    },
+    "tui": {
+        "hyperlinks": "auto",
+        "imeSafeCursor": False,
+        "renderMermaid": True,
+        "scrollbackRebuild": False,
+        "textSizing": False,
+        "tight": True,
+    },
+
+    ###########
+    # CONTEXT #
+    ###########
+
+    "compaction": {
+        # https://omp.sh/docs/compaction
+        "autoContinue": True,
+        "enabled": True,  # auto-compaction; disabled still allows /compact
+        "handoffSaveToDisk": True,
+        "midTurnEnabled": False,
+        "remoteEnabled": True,
+        "strategy": "context-full",
+        "thresholdPercent": AUTO,
+        "thresholdTokens": 100_000,
+    },
+
+    ###############
+    # INTERACTION #
+    ###############
+
+    "ask": {
+        "notify": "on",
+        "timeout": 0,
+    },
+    "doubleEscapeAction": "tree",
+    "followUpMode": "one-at-a-time",
+    "interruptMode": "immediate",
+    "loop": {
+        "mode": "prompt",
+    },
+    "marketplace": {
+        "autoUpdate": "off",
+    },
+    "power": {
+        "sleepPrevention": "idle",
+    },
+    "startup": {
+        "checkUpdate": False,
+        "quiet": True,
+        "setupWizard": False,
+        "showSplash": False,
+    },
+    "steeringMode": "all",
+
+    ############
+    # INTERNAL #
+    ############
+
+    "setupVersion": 1,
+
+    ##########
+    # MEMORY #
+    ##########
+
     "autolearn": {
         "enabled": True,
     },
-    "colorBlindMode": True,
-    "compaction": {
-        "remoteEnabled": False,
+    "memory": {
+      "backend": "local",
     },
+
+    #########
+    # MODEL #
+    #########
+
     "defaultThinkingLevel": "auto",
+    "hideThinkingBlock": False,
+    "omitThinking": False,
+    "personality": "pragmatic",
+    "proseOnlyThinking": True,
+    "retry": {
+        "fallbackChains": {},
+        "fallbackRevertPolicy": "cooldown-expiry",
+        "maxDelayMs": 300_000,
+        "maxRetries": 10,
+        "modelFallback": True,
+    },
+
+    #############
+    # PROVIDERS #
+    #############
+
+    "providers": {
+        "autoThinkingModel": "qwen3-1.7b",
+        "memoryModel": "qwen3-1.7b",
+        "tinyModel": "qwen3-0.6b",
+        "unexpectedStopModel": "qwen3-1.7b",
+    },
+    "searxng": {
+        # "endpoint": "TODO",
+        # "token": "TODO",
+    },
+    "secrets": {
+        "enabled": True,
+    },
+
+    #########
+    # TASKS #
+    #########
+
+    "goal": {
+        "enabled": True,
+        "statusInFooter": True,
+    },
+    "plan": {
+        "defaultOnStartup": True,
+        "enabled": True,
+    },
+    "task": {
+        "isolation": {
+            "commits": "generic",
+            "mode": "auto",
+            "merge": "branch",
+        },
+        "showResolvedModelBadge": False,
+    },
+    "title": {
+        "refreshOnReplan": True,
+    },
+
+    #########
+    # TOOLS #
+    #########
+
+    "debug": {
+        "enabled": False,
+    },
     "dev": {
         "autoqa": True,
         "autoqaConsent": "granted",
@@ -74,43 +236,13 @@ MANAGED: dict[str, Any] = {
     "github": {
         "enabled": True,
     },
-    "marketplace": {
-        "autoUpdate": "off",
-    },
     "mcp": {
         "enableProjectConfig": False,
     },
-    "memory": {
-      "backend": "local",
-    },
-    "personality": "pragmatic",
-    "plan": {
-        "defaultOnStartup": True,
-        "enabled": True,
-    },
-    "providers": {
-        "autoThinkingModel": "qwen3-1.7b",
-        "memoryModel": "qwen3-1.7b",
-        "tinyModel": "qwen3-0.6b",
-        "unexpectedStopModel": "qwen3-1.7b",
-    },
-    "secrets": {
-        "enabled": True,
-    },
-    "setupVersion": 1,
-    "startup": {
-        "checkUpdate": False,
-    },
-    "steeringMode": "all",
-    "symbolPreset": "nerd",
-    "task": {
-        "isolation": {
-            "mode": "auto",
-            "merge": "branch",
-        },
-    },
     "tools": {
+        "approval": {},
         "approvalMode": "yolo",
+        "format": "auto",
     },
 }
 
