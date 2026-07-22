@@ -36,26 +36,6 @@
     {{- $_ := set $model_roles $target_role (first $matches) -}}
   {{- end -}}
 {{- end -}}
-{{- $managed := dict
-      "colorBlindMode" true
-      "symbolPreset" "nerd"
-      "setupVersion" 1
-      "tools" (dict "approvalMode" "yolo")
-      "task" (dict "isolation" (dict "mode" "auto" "merge" "branch"))
-      "mcp" (dict "enableProjectConfig" false)
-      "secrets" (dict "enabled" true)
-      "compaction" (dict "remoteEnabled" false)
-      "providers" (dict "autoThinkingModel" "qwen3-1.7b" "memoryModel" "qwen3-1.7b" "unexpectedStopModel" "qwen3-1.7b" "tinyModel" "qwen3-0.6b")
-      "memory" (dict "backend" "local")
-      "autolearn" (dict "enabled" true)
-      "github" (dict "enabled" true)
-      "dev" (dict "autoqa" true "autoqaConsent" "granted")
-      "startup" (dict "checkUpdate" false)
-      "marketplace" (dict "autoUpdate" "off")
-      "personality" "pragmatic"
-      "steeringMode" "all"
-      "plan" (dict "enabled" true "defaultOnStartup" true)
-      "defaultThinkingLevel" "auto" -}}
 """Merge managed OMP preferences into its mutable ``config.yml`` state.
 
 OMP may write unrelated runtime settings to this file. Chezmoi renders the
@@ -74,11 +54,65 @@ from typing import Any
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 
-MANAGED: dict[str, Any] = json.loads({{ $managed | mustToJson | quote }})
 MODEL_ROLES: dict[str, str] = json.loads({{ $model_roles | mustToJson | quote }})
 MANAGED_MODEL_ROLE_NAMES: list[str] = json.loads(
     {{ $target_roles | mustToJson | quote }}
 )
+MANAGED: dict[str, Any] = {
+    "autolearn": {
+        "enabled": True,
+    },
+    "colorBlindMode": True,
+    "compaction": {
+        "remoteEnabled": False,
+    },
+    "defaultThinkingLevel": "auto",
+    "dev": {
+        "autoqa": True,
+        "autoqaConsent": "granted",
+    },
+    "github": {
+        "enabled": True,
+    },
+    "marketplace": {
+        "autoUpdate": "off",
+    },
+    "mcp": {
+        "enableProjectConfig": False,
+    },
+    "memory": {
+      "backend": "local",
+    },
+    "personality": "pragmatic",
+    "plan": {
+        "defaultOnStartup": True,
+        "enabled": True,
+    },
+    "providers": {
+        "autoThinkingModel": "qwen3-1.7b",
+        "memoryModel": "qwen3-1.7b",
+        "tinyModel": "qwen3-0.6b",
+        "unexpectedStopModel": "qwen3-1.7b",
+    },
+    "secrets": {
+        "enabled": True,
+    },
+    "setupVersion": 1,
+    "startup": {
+        "checkUpdate": False,
+    },
+    "steeringMode": "all",
+    "symbolPreset": "nerd",
+    "task": {
+        "isolation": {
+            "mode": "auto",
+            "merge": "branch",
+        },
+    },
+    "tools": {
+        "approvalMode": "yolo",
+    },
+}
 
 
 def read_config(content: str, yaml: YAML) -> MutableMapping[str, Any]:
