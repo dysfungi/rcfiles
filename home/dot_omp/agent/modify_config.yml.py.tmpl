@@ -1,7 +1,10 @@
-#!/usr/bin/env -S uv run --script --no-project
+#!/usr/bin/env -S uv run --no-project --script
 # vim: ft=gotmpl.python
 # /// script
-# dependencies = ["ruamel.yaml"]
+# dependencies = [
+#   "deepmerge",
+#   "pyyaml",
+# ]
 # ///
 {{/* OMP settings live in a mutable config.yml, so only managed leaves merge. */ -}}
 {{- $ns := .is_riot_machine | ternary .riot.llm .my.llm -}}
@@ -46,20 +49,28 @@ The built-in ``modelRoles`` entries are reconciled rather than merely merged:
 otherwise a removed catalog assignment would leave OMP selecting a stale model.
 Custom role names remain OMP-user-owned state.
 """
+import enum
 import json
 import sys
-from collections.abc import Mapping, MutableMapping
 from typing import Any
 
-from ruamel.yaml import YAML
-from ruamel.yaml.comments import CommentedMap
+import deepmerge
+import yaml
 
-AUTO = -1
+class CompactionThreshold(enum.IntEnum):
+    AUTO = -1
 
-MODEL_ROLES: dict[str, str] = json.loads({{ $model_roles | mustToJson | quote }})
-MANAGED_MODEL_ROLE_NAMES: list[str] = json.loads(
-    {{ $target_roles | mustToJson | quote }}
-)
+
+class SteeringMode(enum.StrEnum):
+    ALL = "all"
+    ONE_AT_A_TIME = "one-at-a-time"
+
+
+class Switch(enum.StrEnum):
+    ON = "on"
+    OFF = "off"
+
+
 MANAGED: dict[str, Any] = {
     ################################
     # https://omp.sh/docs/settings #
@@ -111,11 +122,16 @@ MANAGED: dict[str, Any] = {
         "autoContinue": True,
         "enabled": True,  # auto-compaction; disabled still allows /compact
         "handoffSaveToDisk": True,
+        "idleEnabled": True,
+        "idleThresholdTokens": 50_000,
         "midTurnEnabled": False,
         "remoteEnabled": True,
-        "strategy": "context-full",
-        "thresholdPercent": AUTO,
-        "thresholdTokens": 150_000,
+        "strategy": "shake",
+        "thresholdPercent": 60,
+        "thresholdTokens": 120_000,
+    },
+    "contextPromotion": {
+        "enabled": False,
     },
 
     ###############
@@ -123,17 +139,17 @@ MANAGED: dict[str, Any] = {
     ###############
 
     "ask": {
-        "notify": "on",
+        "notify": Switch.ON,
         "timeout": 0,
     },
     "doubleEscapeAction": "tree",
-    "followUpMode": "one-at-a-time",
+    "followUpMode": SteeringMode.ONE_AT_A_TIME,
     "interruptMode": "immediate",
     "loop": {
         "mode": "prompt",
     },
     "marketplace": {
-        "autoUpdate": "off",
+        "autoUpdate": Switch.OFF,
     },
     "power": {
         "sleepPrevention": "idle",
@@ -144,7 +160,7 @@ MANAGED: dict[str, Any] = {
         "setupWizard": False,
         "showSplash": False,
     },
-    "steeringMode": "all",
+    "steeringMode": SteeringMode.ALL,
 
     ############
     # INTERNAL #
@@ -169,6 +185,7 @@ MANAGED: dict[str, Any] = {
 
     "defaultThinkingLevel": "auto",
     "hideThinkingBlock": False,
+    "modelRoles": json.loads({{ $model_roles | mustToJson | quote }}),
     "omitThinking": False,
     "personality": "pragmatic",
     "proseOnlyThinking": True,
@@ -247,77 +264,22 @@ MANAGED: dict[str, Any] = {
 }
 
 
-def read_config(content: str, yaml: YAML) -> MutableMapping[str, Any]:
-    """Load OMP state without discarding comments or unmanaged settings."""
-    if not content.strip():
-        return CommentedMap()
-
-    try:
-        config = yaml.load(content)
-    except Exception as error:
-        raise SystemExit(f"omp config.yml: invalid YAML: {error}") from error
-    if config is None:
-        return CommentedMap()
-    if not isinstance(config, MutableMapping):
-        raise SystemExit("omp config.yml: root must be a mapping")
-    return config
-
-
-def merge_managed_preferences(
-    target: MutableMapping[str, Any], managed: Mapping[str, Any], path: str = ""
-) -> None:
-    """Set managed leaves while preserving mappings owned by OMP."""
-    for key, value in managed.items():
-        key_path = f"{path}.{key}" if path else key
-        if isinstance(value, Mapping):
-            existing = target.get(key)
-            if existing is None:
-                existing = CommentedMap()
-                target[key] = existing
-            if not isinstance(existing, MutableMapping):
-                raise SystemExit(f"omp config.yml: {key_path} must be a mapping")
-            merge_managed_preferences(existing, value, key_path)
-        else:
-            target[key] = value
-
-
-def reconcile_model_roles(config: MutableMapping[str, Any]) -> None:
-    """Reconcile built-in roles without taking ownership of custom role names."""
-    existing = config.get("modelRoles")
-    if existing is None:
-        # Treat null like an absent mapping so it cannot survive as a dead override.
-        config.pop("modelRoles", None)
-    elif not isinstance(existing, MutableMapping):
-        raise SystemExit("omp config.yml: modelRoles must be a mapping")
-
-    for role in MANAGED_MODEL_ROLE_NAMES:
-        if role in MODEL_ROLES:
-            if existing is None:
-                existing = CommentedMap()
-                config["modelRoles"] = existing
-            existing[role] = MODEL_ROLES[role]
-            continue
-        if existing is not None and role in existing:
-            del existing[role]
-        print(
-            f"WARNING: modelRoles.{role} has no backing model, removing",
-            file=sys.stderr,
-        )
-
-    if existing is not None and not existing:
-        # OMP defaults modelRoles to {}, so avoid persisting an empty override.
-        del config["modelRoles"]
+def configure_yaml():
+    yaml.SafeDumper.add_multi_representer(
+      enum.IntEnum,
+      yaml.representer.SafeRepresenter.represent_int,
+    )
+    yaml.SafeDumper.add_multi_representer(
+      enum.StrEnum,
+      yaml.representer.SafeRepresenter.represent_str,
+    )
 
 
 def main() -> None:
-    yaml = YAML(typ="rt")
-    yaml.preserve_quotes = True
-    yaml.indent(mapping=2, sequence=4, offset=2)
-
-    config = read_config(sys.stdin.read(), yaml)
-    merge_managed_preferences(config, MANAGED)
-    reconcile_model_roles(config)
-    yaml.dump(config, sys.stdout)
+    configure_yaml()
+    config = yaml.safe_load(sys.stdin.read())
+    deepmerge.always_merger.merge(config, MANAGED)
+    yaml.safe_dump(config, sys.stdout)
 
 
 if __name__ == "__main__":
