@@ -1,0 +1,81 @@
+#!/usr/bin/env -S uv run --no-project --script
+# vim: ft=gotmpl.python
+# /// script
+# dependencies = [
+#   "deepmerge",
+#   "pyyaml",
+# ]
+# ///
+{{/* OMP settings live in a mutable config.yml, so only managed leaves merge. */ -}}
+"""Merge managed OMP keybindings/hotkeys into its mutable ``keybindings.yml`` state."""
+import enum
+import sys
+from typing import Any
+
+import deepmerge
+import yaml
+
+MANAGED: dict[str, Any] = {
+    #################################################################################################
+    # https://omp.sh/docs/keybindings                                                               #
+    # https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/src/config/keybindings.ts #
+    # https://github.com/can1357/oh-my-pi/blob/main/packages/tui/src/keybindings.ts                 #
+    # `/hotkeys`                                                                                    #
+    #################################################################################################
+
+    #######################
+    # EDITOR - NAVIGATION #
+    #######################
+
+    ####################
+    # EDITOR - EDITING #
+    ####################
+
+    "tui.input.newLine": ["enter", "shift+enter"],  # default: ["shift+enter", "ctrl+j"]
+    "tui.input.submit": ["ctrl+enter", "ctrl+j"],  # default: "enter"
+
+    #####################
+    # EDITOR - CONTROLS #
+    #####################
+
+    "app.exit": "shift+ctrl+d",  # default: "ctrl+d"
+
+    ##########
+    # MODELS #
+    ##########
+
+    "app.model.cycleForward": "alt+right",  # default: "ctrl+p"
+    "app.model.cycleBackward": "alt+left",  # default: "shift+ctrl+p"
+
+    ###################################
+    # DASHBOARDS - NAVIGATOR SURFACES #
+    ###################################
+
+    ####################
+    # PLAN MODE CHORDS #
+    ####################
+
+    "app.plan.toggle": "shift+alt+p",  # default: "shift+alt+p"
+}
+
+
+def configure_yaml():
+    yaml.SafeDumper.add_multi_representer(
+      enum.IntEnum,
+      yaml.representer.SafeRepresenter.represent_int,
+    )
+    yaml.SafeDumper.add_multi_representer(
+      enum.StrEnum,
+      yaml.representer.SafeRepresenter.represent_str,
+    )
+
+
+def main() -> None:
+    configure_yaml()
+    config = yaml.safe_load(sys.stdin.read()) or {}
+    deepmerge.always_merger.merge(config, MANAGED)
+    yaml.safe_dump(config, sys.stdout)
+
+
+if __name__ == "__main__":
+    main()

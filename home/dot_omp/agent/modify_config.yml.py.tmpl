@@ -277,7 +277,7 @@ def configure_yaml():
 
 def main() -> None:
     configure_yaml()
-    config = yaml.safe_load(sys.stdin.read())
+    config = yaml.safe_load(sys.stdin.read()) or {}
     deepmerge.always_merger.merge(config, MANAGED)
     yaml.safe_dump(config, sys.stdout)
 
