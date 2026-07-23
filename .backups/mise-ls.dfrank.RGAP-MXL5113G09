@@ -4,14 +4,14 @@ chezmoi                               2.70.5
 dotnet                                10.0.300 (symlink)
 gh                                    2.96.0              ~/.config/mise/conf.d/riot.toml  latest
 github:aaronriekenberg/rust-parallel  1.23.0              ~/.config/mise/config.toml       latest
-github:can1357/oh-my-pi               17.0.6              ~/.config/mise/config.toml       latest
+github:can1357/oh-my-pi               17.0.7              ~/.config/mise/config.toml       latest
 github:hadolint/hadolint              2.14.0
 github:mvdan/sh                       3.13.1
 hadolint                              2.14.0
 jq                                    1.8.2               ~/.config/mise/config.toml       latest
 lua                                   5.5.0
 node                                  24.18.0             ~/.config/mise/config.toml       lts
-npm:@anthropic-ai/claude-code         2.1.216             ~/.config/mise/config.toml       latest
+npm:@anthropic-ai/claude-code         2.1.217             ~/.config/mise/config.toml       latest
 npm:@earendil-works/pi-coding-agent   0.80.6
 npm:@earendil-works/pi-coding-agent   0.81.1              ~/.config/mise/config.toml       latest
 npm:@opengsd/get-shit-done-redux      1.1.0               ~/.config/mise/config.toml       latest
@@ -24,7 +24,7 @@ pipx:mypy                             2.3.0               ~/.config/mise/config.
 pipx:neovim-remote                    2.5.1               ~/.config/mise/config.toml       latest
 pipx:pre-commit                       4.6.0
 pipx:yamllint                         1.38.0
-pre-commit                            4.6.0               ~/.config/mise/config.toml       latest
+pre-commit                            4.6.1               ~/.config/mise/config.toml       latest
 python                                3.13.14             ~/.config/mise/config.toml       3.13
 ruff                                  0.15.22             ~/.config/mise/config.toml       latest
 rust                                  stable (symlink)    ~/.config/mise/config.toml       stable
@@ -32,5 +32,5 @@ shellcheck                            0.11.0
 shfmt                                 3.13.1
 stylua                                2.5.2
 taplo                                 0.10.0
-uv                                    0.11.30             ~/.config/mise/config.toml       latest
+uv                                    0.11.31             ~/.config/mise/config.toml       latest
 vultr-cli                             3.10.0              ~/.config/mise/config.toml       latest
