@@ -145,7 +145,9 @@ x: # YAML anchors only — NOT machine data (docker-compose `x-` convention).
       name: TrueFoundry OpenAI (Riot)
       base_url: *tf_base
       # openai-responses (not -completions): gpt-5.6 rejects tools+reasoning on
-      # /v1/chat/completions (needs /v1/responses); gemini works on it too.
+      # /v1/chat/completions (needs /v1/responses); gemini text/vision (no tools) works on it too —
+      # tool-calling Gemini does NOT (see the KNOWN DEFECT comment on the google-vertexai/* models
+      # below).
       api: openai-responses
       api_key_op: *tf_key
       routed_via_gateway: true
@@ -281,6 +283,7 @@ riot:
           cache_read: 0.25
           cache_write: 3.125
         enabled: true
+        roles: [designer, advisor]
       - id: openai/gpt-5.6-luna
         vendor: openai
         gateway: *tf_openai
@@ -295,6 +298,7 @@ riot:
           cache_read: 0.1
           cache_write: 1.25
         enabled: true
+        roles: [tiny, smol, commit]
       - id: claude-vertex/anthropic-claude-opus-4-8
         vendor: anthropic
         alias: opus
@@ -332,6 +336,23 @@ riot:
           cache_write: 3.75
         enabled: true
         roles: [default, worker, task]
+      # KNOWN DEFECT (2026-07): omp roles that attach tool schemas (any tool-calling agent —
+      # scout/sonic/librarian via `smol`, the designer agent via `designer`, the advisor via
+      # `advisor`) must NOT resolve to a google-vertexai/* model on this `tf_openai`
+      # (api: openai-responses) gateway. TrueFoundry's openai-responses wire forwards
+      # JSON-Schema nullable unions (`"type": ["number","null"]`, e.g. omp's built-in `grep`
+      # tool's `skip` param, or omp's `commit` agentic tools' `scope` param) unsanitized to its
+      # Vertex/Gemini backend, which rejects them: 400 "Invalid JSON payload received... Proto
+      # field is not repeating, cannot start list." Root cause is fixed upstream for omp's own
+      # google-vertex/google-antigravity providers (can1357/oh-my-pi issue #11 — their shared
+      # schema normalizer collapses array-valued `type` into `nullable: true`) but that fix is
+      # NOT reachable here: openai-responses.ts's tool-schema builder is a separate code path
+      # with zero Google-specific sanitization (correct behavior for real OpenAI, which
+      # natively supports type-array unions) — no omp upgrade fixes this for TrueFoundry-routed
+      # Gemini. These 3 models stay `enabled` for manual/no-tool-calling use (chat, vision
+      # description) but carry no tool-calling omp role; those roles route to `openai/gpt-5.6-*`
+      # on this same gateway instead, which proxies to real OpenAI infra and never touches
+      # Vertex's proto schema.
       - id: google-vertexai/gemini-3.1-pro-preview
         vendor: google
         gateway: *tf_openai
@@ -347,7 +368,7 @@ riot:
           cache_write: 0
         enabled: true
         default_for: [agy]
-        roles: [vision, reviewer, advisor]
+        roles: [vision, reviewer]
       - id: google-vertexai/gemini-3.6-flash
         vendor: google
         gateway: *tf_openai
@@ -362,7 +383,7 @@ riot:
           cache_read: 0.15
           cache_write: 1.0
         enabled: true
-        roles: [designer, scout]
+        roles: [scout]
       - id: google-vertexai/gemini-3.5-flash-lite
         vendor: google
         gateway: *tf_openai
@@ -377,7 +398,6 @@ riot:
           cache_read: 0.03
           cache_write: 1.0
         enabled: true
-        roles: [tiny, smol, commit]
       # Dormant below (enabled: false): ABSENT from pi's models.json + rotation and
       # thus unreachable via /model (re-enable by flipping the flag); haiku still
       # feeds claude via its alias. Kept here for quick re-enable + id/spec record.
