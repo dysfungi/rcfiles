@@ -15,7 +15,9 @@ from typing import Any
 import deepmerge
 import yaml
 
-MANAGED: dict[str, Any] = {
+Config = dict[str, Any]
+
+MANAGED: Config = {
     #################################################################################################
     # https://omp.sh/docs/keybindings                                                               #
     # https://github.com/can1357/oh-my-pi/blob/main/packages/coding-agent/src/config/keybindings.ts #
@@ -70,11 +72,25 @@ def configure_yaml():
     )
 
 
+def merge_configs(base: Config, overrides: Config) -> Config:
+    merger = deepmerge.Merger(
+        [
+            (dict, ["merge"]),
+            (list, ["append_unique"]),
+            (set, ["union"]),
+        ],
+        ["override"],
+        ["override"],
+    )
+    config = merger.merge(base, overrides)
+    return config
+
+
 def main() -> None:
     configure_yaml()
-    config = yaml.safe_load(sys.stdin.read()) or {}
-    deepmerge.always_merger.merge(config, MANAGED)
-    yaml.safe_dump(config, sys.stdout)
+    original: Config = yaml.safe_load(sys.stdin.read()) or {}
+    merged = merge_configs(original, MANAGED)
+    yaml.safe_dump(merged, sys.stdout)
 
 
 if __name__ == "__main__":
