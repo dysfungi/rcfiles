@@ -57,6 +57,14 @@ from typing import Any
 import deepmerge
 import yaml
 
+class CompactionStrategy(enum.StrEnum):
+    OFF = "off"
+    CONTEXT_FULL = "context-full"
+    HANDOFF = "handoff"
+    SHAKE = "shake"
+    SNAPCOMPACT = "snapcompact"  # Requires vision model
+
+
 class CompactionThreshold(enum.IntEnum):
     AUTO = -1
 
@@ -126,7 +134,7 @@ MANAGED: dict[str, Any] = {
         "idleThresholdTokens": 50_000,
         "midTurnEnabled": False,
         "remoteEnabled": True,
-        "strategy": "shake",
+        "strategy": CompactionStrategy.SHAKE,
         "thresholdPercent": 60,
         "thresholdTokens": 120_000,
     },
